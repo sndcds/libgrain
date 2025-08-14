@@ -608,7 +608,7 @@ namespace Grain {
          *           otherwise.
          */
         bool setByCSV(const String& csv, char delimiter) noexcept {
-            setByCSV(csv.utf8(), delimiter);
+            return setByCSV(csv.utf8(), delimiter);
         }
 
         /**

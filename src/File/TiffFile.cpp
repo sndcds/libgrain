@@ -296,6 +296,7 @@ namespace Grain {
             case TiffType::IFD8:
                 return 8;
         }
+        return 0;
     }
 
 

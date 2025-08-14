@@ -104,6 +104,7 @@ namespace Grain {
 
         bool setByCSV(const char* csv) noexcept  {
             // TODO: Implement!
+            return false;
         }
 
         bool setByCSV(const String& csv) noexcept  {
