@@ -579,9 +579,9 @@ namespace Grain {
 
 
         // File
-        [[nodiscard]] ErrorCode writeToFile(const String& file_path, CanOverwrite can_overwrite) const noexcept;
-        [[nodiscard]] ErrorCode writeToFile(const String& file_path, CanOverwrite can_overwrite, int64_t offset, int64_t length) const noexcept;
-        [[nodiscard]] ErrorCode writeRegionToFile(const String& file_path, int32_t region_index, CanOverwrite can_overwrite) const noexcept;
+        ErrorCode writeToFile(const String& file_path, CanOverwrite can_overwrite) const noexcept;
+        ErrorCode writeToFile(const String& file_path, CanOverwrite can_overwrite, int64_t offset, int64_t length) const noexcept;
+        ErrorCode writeRegionToFile(const String& file_path, int32_t region_index, CanOverwrite can_overwrite) const noexcept;
 
         [[nodiscard]] static Signal* createFromFile(const String& file_path, DataType data_type = DataType::Float) noexcept;
 

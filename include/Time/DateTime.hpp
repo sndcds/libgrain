@@ -13,11 +13,11 @@
 #define GrainDateTime_hpp
 
 #include "Type/Object.hpp"
+#include <chrono>
 
 
 namespace Grain {
 
-    class Calendar;
     class Timestamp;
 
 
@@ -37,29 +37,15 @@ namespace Grain {
      *       members of `DateTime` via the `friend` declaration.
      */
     class DateTime {
-        friend class Calendar;
         friend class Timestamp;
 
     public:
-        static constexpr int32_t kFormattedStrBufferSize = 20;
-
-    protected:
-        int8_t m_day{};             ///< Day of the month (1-31)
-        int8_t m_month{};           ///< Month of the year (1-12)
-        int32_t m_year{};           ///< Year (e.g., 2023)
-        int8_t m_hour{};            ///< Hour of the day (0-23)
-        int8_t m_minute{};          ///< Minute of the hour (0-59)
-        int8_t m_second{};          ///< Second of the minute (0-59)
-        int8_t m_day_of_week{};     ///< Day of the week (0-6), where 0 is Monday
-        int16_t m_day_of_year{};    ///< Day of the year (1-366)
-        int8_t m_week_of_month{};   ///< Week of the month (1-5)
-        int8_t m_week_of_year{};    ///< Week of the year (1-52/53)
+        static constexpr int32_t kFormattedStrBufferSize = 60;
 
     public:
-        DateTime();
-        DateTime(const Calendar& calendar);
-        DateTime(const Calendar& calendar, const Timestamp& timestamp);
-        explicit DateTime(const Calendar& calendar, uint16_t day, uint16_t month, int32_t year, uint16_t hour, uint16_t minute, uint16_t second);
+        DateTime(bool use_utc = false);
+        explicit DateTime(const Timestamp& timestamp);
+        explicit DateTime(uint16_t day, uint16_t month, int32_t year, uint16_t hour, uint16_t minute, uint16_t second);
 
         virtual ~DateTime() {}
 
@@ -72,12 +58,12 @@ namespace Grain {
 
         friend std::ostream& operator << (std::ostream& os, const DateTime& o) {
             char buffer[kFormattedStrBufferSize];
-            o.toDateStr(kFormattedStrBufferSize, buffer);
-            os << buffer;
-            o.toTimeStr(kFormattedStrBufferSize, buffer);
-            os << " " << buffer;
-            return os;
+            o.toStr(kFormattedStrBufferSize, buffer);
+            return os << buffer;
         }
+
+        void now() noexcept;
+        void set(std::tm tm) noexcept;
 
         [[nodiscard]] int32_t day() const noexcept { return m_day; }
         [[nodiscard]] int32_t month() const noexcept { return m_month; }
@@ -90,13 +76,35 @@ namespace Grain {
         [[nodiscard]] int32_t weekOfMonth() const noexcept { return m_week_of_month; }
         [[nodiscard]] int32_t weekOfYear() const noexcept { return m_week_of_year; }
 
+        void toStr(int32_t max_length, char* out_str) const noexcept;
         void toDateStr(int32_t max_length, char* out_str) const noexcept;
         void toTimeStr(int32_t max_length, char* out_str) const noexcept;
         void toDateString(String& out_string) const noexcept;
         void toTimeString(String& out_string) const noexcept;
 
-        void addDays(const Calendar& calendar, int32_t days) noexcept;
-        void addMonths(const Calendar& calendar, int32_t months) noexcept;
+        void addSeconds(int32_t seconds) noexcept;
+        void addMinutes(int32_t minutes) noexcept { addSeconds(minutes * 60); }
+        void addHours(int32_t hours) noexcept { addSeconds(hours * 60 * 60); }
+        void addDays(int32_t days) noexcept { addSeconds(days * 24 * 60 * 60); }
+        void addMonths(int32_t months) noexcept;
+
+        [[nodiscard]] std::tm toTm() noexcept;
+
+        [[nodiscard]] static int32_t utcOffsetSeconds() noexcept;
+
+    protected:
+        int8_t m_day{};             ///< Day of the month (1-31)
+        int8_t m_month{};           ///< Month of the year (1-12)
+        int32_t m_year{};           ///< Year (e.g., 2023)
+        int8_t m_hour{};            ///< Hour of the day (0-23)
+        int8_t m_minute{};          ///< Minute of the hour (0-59)
+        int8_t m_second{};          ///< Second of the minute (0-59)
+        int8_t m_day_of_week{};     ///< Day of the week (0-6), where 0 is Monday
+        int16_t m_day_of_year{};    ///< Day of the year (1-366)
+        int8_t m_week_of_month{};   ///< Week of the month (1-5)
+        int8_t m_week_of_year{};    ///< Week of the year (1-52/53)
+        int32_t m_utc_offset_sec{}; ///< UTF offset in seconds
+        bool m_utc_flag{};
     };
 
 
