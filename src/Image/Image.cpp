@@ -3119,24 +3119,17 @@ namespace Grain {
         int width = lr.imgdata.sizes.raw_width;
         int height = lr.imgdata.sizes.raw_height;
         int pitch = width;
-        float scale = 1.0f / white_level;
+        float scale = 1.0f / static_cast<float>(white_level);
 
         std::cout << "raw_width: " << width << std::endl;
         std::cout << "raw_height: " << height << std::endl;
         std::cout << "raw: " << (long)raw << std::endl;
 
-        struct A {
-            const char *code;
-            int32_t cfa_pattern;
-        };
-
-        static const A table[] = {
-                { "RGBG", Image::kCFAPatternGRBG },
-                { "RGBG", Image::kCFAPatternRGGB },
-                { "RGBG", Image::kCFAPatternGBRG },
-                { "RGBG", Image::kCFAPatternBGGR },
-                { "RGBG", Image::kCFAPatternRGGB },
-        };
+        constexpr fourcc_t grbg = Type::fourcc('G', 'R', 'B', 'G');
+        constexpr fourcc_t rggb = Type::fourcc('R', 'G', 'G', 'B');
+        constexpr fourcc_t gbrg = Type::fourcc('G', 'B', 'R', 'G');
+        constexpr fourcc_t bggr = Type::fourcc('B', 'G', 'G', 'R');
+        constexpr fourcc_t rgbg = Type::fourcc('R', 'G', 'B', 'G'); // Lumix S5 returns this, which must be interpreted as 'RGGB'!
 
         fourcc_t cfa_pattern_code = 0x0;
         for (int32_t i = 0; i < 4; i++) {
@@ -3152,20 +3145,20 @@ namespace Grain {
 
         int32_t cfa_pattern = kCFAPatternUnknown;
         switch (cfa_pattern_code) {
-            case 'GRBG':
+            case grbg:
                 cfa[0][0] = 1; cfa[0][1] = 0; cfa[1][0] = 2; cfa[1][1] = 1;
                 cfa_pattern = kCFAPatternGRBG;
                 break;
-            case 'RGGB':
-            case 'RGBG':  // Lumix S5 returns this, which must be interpreted as 'RGGB'!
+            case rggb:
+            case rgbg: // Lumix S5 returns this, which must be interpreted as 'RGGB'!
                 cfa[0][0] = 0; cfa[0][1] = 1; cfa[1][0] = 1; cfa[1][1] = 2;
                 cfa_pattern = kCFAPatternRGGB;
                 break;
-            case 'GBRG':
+            case gbrg:
                 cfa[0][0] = 1; cfa[0][1] = 2; cfa[1][0] = 0; cfa[1][1] = 1;
                 cfa_pattern = kCFAPatternGBRG;
                 break;
-            case 'BGGR':
+            case bggr:
                 cfa[0][0] = 2; cfa[0][1] = 1; cfa[1][0] = 1; cfa[1][1] = 0;
                 cfa_pattern = kCFAPatternBGGR;
                 break;
@@ -3174,7 +3167,7 @@ namespace Grain {
 
         auto d = (float *)image->pixelDataPtr();
 
-        pitch = lr.imgdata.sizes.raw_pitch / sizeof(uint16_t);
+        pitch = static_cast<int>(lr.imgdata.sizes.raw_pitch / sizeof(uint16_t));
 
         float pixel[4];
         ImageAccess ia(image, pixel);
@@ -3186,8 +3179,8 @@ namespace Grain {
         for (int32_t y = 0; y < 2; y++) {
             for (int32_t x = 0; x < 2; x++) {
                 int32_t color = cfa[y % 2][x % 2];
-                cfa_scale[y][x] = (1.0f / (mmax[y % 2][x % 2] - mmin[y % 2][x % 2])) * c.pre_mul[color];
-                cfa_scale[y][x] = (1.0f / mmax[y % 2][x % 2]) * c.pre_mul[color];
+                cfa_scale[y][x] = (1.0f / static_cast<float>(mmax[y % 2][x % 2] - mmin[y % 2][x % 2])) * c.pre_mul[color];
+                cfa_scale[y][x] = (1.0f / static_cast<float>(mmax[y % 2][x % 2])) * c.pre_mul[color];
             }
         }
 

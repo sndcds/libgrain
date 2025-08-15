@@ -1532,10 +1532,10 @@ namespace Grain {
 
             setPos(0);
             fourcc_t form_chunk_id = readFourCC();
-            if (form_chunk_id == 'FORM') {
+            if (form_chunk_id == Type::fourcc('F', 'O', 'R', 'M')) {
                 skip(4);
                 fourcc_t form_type_id = readFourCC();
-                if (form_type_id == 'AIFF') {
+                if (form_type_id == Type::fourcc('A', 'I', 'F', 'F')) {
                     result = true;
                 }
             }
@@ -1567,10 +1567,10 @@ namespace Grain {
             setPos(0);
 
             fourcc_t form_chunk_id = readFourCC();
-            if (form_chunk_id == 'FORM') {
+            if (form_chunk_id == Type::fourcc('F', 'O', 'R', 'M')) {
                 skip(4);
                 fourcc_t form_type_id = readFourCC();
-                if (form_type_id == 'AIFC') {
+                if (form_type_id == Type::fourcc('A', 'I', 'F', 'C')) {
                     result = true;
                 }
             }
@@ -1602,10 +1602,10 @@ namespace Grain {
 
             setPos(0);
             fourcc_t form_chunk_id = readFourCC();
-            if (form_chunk_id == 'RIFF') {
+            if (form_chunk_id == Type::fourcc('R', 'I', 'F', 'F')) {
                 skip(4);
                 fourcc_t form_type_id = readFourCC();
-                if (form_type_id == 'WAVE') {
+                if (form_type_id == Type::fourcc('W', 'A', 'V', 'E')) {
                     result = true;
                 }
             }
@@ -1646,7 +1646,7 @@ namespace Grain {
 
                 int32_t brand_index = 0;
 
-                if (atom_type == 'ftyp') {
+                if (atom_type == Type::fourcc('f', 't', 'y', 'p')) {
 
                     // Max 16 + 1 brands
                     int32_t brands_count = std::clamp(static_cast<int32_t>((atom_size - 16) / sizeof(fourcc_t)), 0, 16) + 1;
@@ -1659,7 +1659,7 @@ namespace Grain {
                         }
 
                         fourcc_t brand = readFourCC();
-                        if (brand == 'qt  ') {
+                        if (brand == Type::fourcc('g', 't', ' ', ' ')) {
                             result = true;
                         }
 
@@ -1669,11 +1669,11 @@ namespace Grain {
                     break;
                 }
                 else {
-                    switch (atom_type) {
-                        case 'mdat': mdat_found = true; break;
-                        case 'moov': moov_found = true; break;
-                        default:
-                            break;
+                    if (atom_type == Type::fourcc('m', 'd', 'a', 't')) {
+                        mdat_found = true;
+                    }
+                    else if (atom_type == Type::fourcc('m', 'o', 'o', 'v')) {
+                        moov_found = true;
                     }
 
                     if (mdat_found && moov_found) {
@@ -1722,7 +1722,7 @@ namespace Grain {
 
             int32_t brand_index = 0;
 
-            if (atom_type == 'ftyp') {
+            if (atom_type == Type::fourcc('f', 't', 'y', 'p')) {
 
                 // Max 16 + 1 brands
                 int32_t brands_count = std::clamp(static_cast<int32_t>((atom_size - 16) / sizeof(fourcc_t)), 0, 16) + 1;
@@ -1735,7 +1735,7 @@ namespace Grain {
                     }
 
                     fourcc_t brand = readFourCC();
-                    if (brand == 'mp41' || brand == 'mp42') {
+                    if (brand == Type::fourcc('m', 'p', '4', '1') || brand == Type::fourcc('m', 'p', '4', '2')) {
                         result = true;
                     }
 
@@ -1859,7 +1859,7 @@ namespace Grain {
 
             setPos(0);
             fourcc_t chunk_type = readFourCC();
-            if (chunk_type == 'MThd') {
+            if (chunk_type == Type::fourcc('M', 'T', 'h', 'd')) {
                 result = true;
             }
 

@@ -855,7 +855,7 @@ namespace Grain {
             }
         }
 
-        [[nodiscard]] static fourcc_t fourcc(char c1, char c2, char c3, char c4) {
+        [[nodiscard]] static constexpr fourcc_t fourcc(char c1, char c2, char c3, char c4) {
             return (static_cast<fourcc_t>(static_cast<unsigned char>(c1)) << 24) |
                    (static_cast<fourcc_t>(static_cast<unsigned char>(c2)) << 16) |
                    (static_cast<fourcc_t>(static_cast<unsigned char>(c3)) << 8)  |
@@ -872,7 +872,7 @@ namespace Grain {
                    (static_cast<fourcc_t>(static_cast<unsigned char>(str[3])));
         }
 
-        static char* fourCCToStr(fourcc_t value, char* out_str) noexcept {
+        static const char* fourCCToStr(fourcc_t value, char* out_str) noexcept {
             if (!out_str) return nullptr;
 
             // Always extract by shifting — no aliasing issues, works on any endianness

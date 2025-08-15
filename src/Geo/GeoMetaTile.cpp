@@ -265,7 +265,7 @@ namespace Grain {
                             throw Error::specific(kErrTempFileNotFound);
                         }
 
-                        if (tile_order == 'row_') {
+                        if (tile_order == Type::fourcc('r', 'o', 'w', '_')) {
                             // Row-major order.
                             temp_index++;
                         }
