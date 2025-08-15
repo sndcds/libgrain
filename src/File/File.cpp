@@ -1487,8 +1487,8 @@ namespace Grain {
             int64_t remembered_pos = pos();
             setPos(0);
             fourcc_t signature = readFourCC();
-            fourcc_t mm = Type::buildFourCC(0x4D, 0x4D, 0x00, 0x2A);  // "MM"
-            fourcc_t ii = Type::buildFourCC(0x49, 0x49, 0x2A, 0x00);  // "II"
+            fourcc_t mm = Type::fourcc(0x4D, 0x4D, 0x00, 0x2A);  // "MM"
+            fourcc_t ii = Type::fourcc(0x49, 0x49, 0x2A, 0x00);  // "II"
 
             setPos(remembered_pos);
             result = signature == mm || signature == ii;

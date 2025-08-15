@@ -855,94 +855,33 @@ namespace Grain {
             }
         }
 
-        /**
-         *  @brief Converts a FourCC value to a string representation.
-         *
-         *  This function takes a FourCC (Four Character Code) value and converts it
-         *  into a string. The FourCC value is a 32-bit value representing a
-         *  four-character code commonly used for identifying file types, video
-         *  codecs, etc. The function converts the value into a human-readable
-         *  string, with non-printable characters replaced by spaces.
-         *
-         *  @param value The FourCC value to be converted.
-         *  @param out_str A pointer to a character array where the result string
-         *                 will be stored. It should be large enough to store a
-         *                 4-character string (plus a null terminator).
-         *
-         *  @return A pointer to the output string (`out_str`).
-         *
-         *  @note The function will replace non-printable characters (ASCII < 32)
-         *        with spaces. If `out_str` is `nullptr`, no action is taken.
-         */
-        static char* fourCCToStr(fourcc_t value, char* out_str) noexcept {
-            if (out_str != nullptr) {
-                char* c = reinterpret_cast<char*>(&value);
-
-                if constexpr (std::endian::native == std::endian::little) {
-                    out_str[0] = c[3] >= 32 ? c[3] : ' ';
-                    out_str[1] = c[2] >= 32 ? c[2] : ' ';
-                    out_str[2] = c[1] >= 32 ? c[1] : ' ';
-                    out_str[3] = c[0] >= 32 ? c[0] : ' ';
-                }
-                else if constexpr (std::endian::native == std::endian::big) {
-                    out_str[0] = c[0] >= 32 ? c[0] : ' ';
-                    out_str[1] = c[1] >= 32 ? c[1] : ' ';
-                    out_str[2] = c[2] >= 32 ? c[2] : ' ';
-                    out_str[3] = c[3] >= 32 ? c[3] : ' ';
-                }
-
-                out_str[4] = 0;
-            }
-            return out_str;
+        [[nodiscard]] static fourcc_t fourcc(char c1, char c2, char c3, char c4) {
+            return (static_cast<fourcc_t>(static_cast<unsigned char>(c1)) << 24) |
+                   (static_cast<fourcc_t>(static_cast<unsigned char>(c2)) << 16) |
+                   (static_cast<fourcc_t>(static_cast<unsigned char>(c3)) << 8)  |
+                   (static_cast<fourcc_t>(static_cast<unsigned char>(c4)));
         }
 
-        /**
-         *  @brief Converts a string to a FourCC (Four Character Code).
-         *
-         *  This function takes a string of at least 4 characters and converts it
-         *  into a FourCC value (a 32-bit integer) by interpreting each character in
-         *  the string as one byte. The string must contain exactly 4 characters or
-         *  more. If the string length is less than 4, the function will return 0.
-         *
-         *  @param str A pointer to a null-terminated string containing at least
-         *             4 characters.
-         *
-         *  @return A FourCC value representing the 4 characters in the string, or 0
-         *          if the string is invalid.
-         *
-         *  @note The function assumes the input string is in the standard ASCII
-         *        character encoding.
-         */
         [[nodiscard]] static fourcc_t fourCCFromStr(const char* str) noexcept {
-            if (str && str[0] && str[1] && str[2] && str[3]) {
-                return static_cast<fourcc_t>(
-                        (static_cast<std::uint32_t>(str[0]) << 24) |
-                        (static_cast<std::uint32_t>(str[1]) << 16) |
-                        (static_cast<std::uint32_t>(str[2]) << 8)  |
-                        static_cast<std::uint32_t>(str[3]));
+            if (!str || !str[0] || !str[1] || !str[2] || !str[3]) {
+                return 0;
             }
-            return 0;
+            return (static_cast<fourcc_t>(static_cast<unsigned char>(str[0])) << 24) |
+                   (static_cast<fourcc_t>(static_cast<unsigned char>(str[1])) << 16) |
+                   (static_cast<fourcc_t>(static_cast<unsigned char>(str[2])) << 8)  |
+                   (static_cast<fourcc_t>(static_cast<unsigned char>(str[3])));
         }
 
-        /**
-         *  @brief Constructs a FourCC code from four individual bytes.
-         *
-         *  This function builds a 32-bit FourCC code by packing four 8-bit values
-         *  into a single 32-bit unsigned integer, in big-endian order:
-         *  `a` is the most significant byte, `d` is the least.
-         *
-         *  @param a The first character (most significant byte).
-         *  @param b The second character.
-         *  @param c The third character.
-         *  @param d The fourth character (least significant byte).
-         *  @return A 32-bit FourCC code.
-         */
-        [[nodiscard]] static fourcc_t buildFourCC(uint8_t a, uint8_t b, uint8_t c, uint8_t d) noexcept {
-            return static_cast<fourcc_t>(
-                    (static_cast<std::uint32_t>(a) << 24) |
-                    (static_cast<std::uint32_t>(b) << 16) |
-                    (static_cast<std::uint32_t>(c) << 8)  |
-                    static_cast<std::uint32_t>(d));
+        static char* fourCCToStr(fourcc_t value, char* out_str) noexcept {
+            if (!out_str) return nullptr;
+
+            // Always extract by shifting — no aliasing issues, works on any endianness
+            for (int i = 0; i < 4; ++i) {
+                unsigned char ch = static_cast<unsigned char>((value >> (8 * (3 - i))) & 0xFF);
+                out_str[i] = (ch >= 32) ? static_cast<char>(ch) : ' ';
+            }
+            out_str[4] = '\0';
+            return out_str;
         }
 
         /**

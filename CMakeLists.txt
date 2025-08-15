@@ -153,6 +153,11 @@ add_library(libgrain STATIC
         src/Signal/SignalLadderFilter.cpp
 )
 
+# Add the warning flag for GCC/Clang
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(libgrain PRIVATE -Wmultichar)
+endif()
+
 
 if (APPLE)
     target_sources(libgrain PRIVATE
