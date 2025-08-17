@@ -18,8 +18,6 @@
 #include "Math/Random.hpp"
 #include "DSP/RingBuffer.hpp"
 
-// TODO: !!!!! Check all casts like (int32_t), (int32_t*) ...
-
 
 namespace Grain {
 
@@ -2074,8 +2072,9 @@ namespace Grain {
         }
 
         // Destination (this) must be 1, 2 or 4 channel
+        #warning "Signal::mixByAudioPos() must be implemented"
+        /*
 
-        /* TODO: Implement!
         GrAudioLocationSystem aps;
         switch (mChannelCount) {
             case 1: aps.setMono(); break;
@@ -2117,7 +2116,6 @@ namespace Grain {
 
 
     void Signal::clear() noexcept {
-
         if (hasData()) {
             memset(m_data.raw, 0, dataSize());
         }
@@ -2125,7 +2123,6 @@ namespace Grain {
 
 
     void Signal::clear(int64_t length) noexcept {
-
         if (hasData()) {
             if (length > m_sample_count) {
                 length = m_sample_count;
@@ -2136,7 +2133,6 @@ namespace Grain {
 
 
     void Signal::clear(int64_t offset, int64_t length) noexcept {
-
         if (hasData()) {
             if (offset < 0) {
                 length += offset;
@@ -2154,13 +2150,11 @@ namespace Grain {
 
 
     void Signal::clearChannel(int32_t channel) noexcept {
-
         clearChannel(channel, 0, m_sample_count);
     }
 
 
     void Signal::clearChannel(int32_t channel, int64_t offset, int64_t length) noexcept {
-
         if (hasChannelAndData(channel) == false) {
             return;
         }

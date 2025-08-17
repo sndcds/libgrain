@@ -80,11 +80,7 @@ namespace Grain {
 
 
     GraphicContext::~GraphicContext() noexcept {
-        #if defined(__APPLE__) && defined(__MACH__)
-            CGColorSpaceRelease(m_cg_color_space);
-        #endif
-
-        GRAIN_RELEASE(m_image);
+        _freeResources();
     }
 
 
@@ -93,13 +89,59 @@ namespace Grain {
         m_stroke_color.black();
     }
 
+    void GraphicContext::_freeResources() noexcept {
+        #if defined(__APPLE__) && defined(__MACH__)
+            CGColorSpaceRelease(m_cg_color_space);
+            m_cg_color_space = nullptr;
+        #endif
+        if (_m_cairo_cr) {
+            cairo_destroy(_m_cairo_cr);
+            _m_cairo_cr = nullptr;
+        }
+        if (_m_cairo_surface != nullptr) {
+            cairo_surface_destroy(_m_cairo_surface);
+            _m_cairo_surface = nullptr;
+        }
+
+        GRAIN_RELEASE(m_image);
+        m_image = nullptr;
+    }
+
+    void GraphicContext::_setImage(Image* image) noexcept {
+        _freeResources();
+
+        if (image == nullptr) {
+            m_image = image;
+            return;
+        }
+
+        GRAIN_RETAIN(image);
+        m_image = image;
+
+        if (m_engine == Engine::Cairo) {
+            if (image->colorModel() == Color::Model::RGBA && image->isFloat()) {
+                _m_cairo_surface = cairo_image_surface_create_for_data(
+                        reinterpret_cast<unsigned char*>(image->mutPixelDataPtr()),
+                        CAIRO_FORMAT_RGBA128F, // Cairo's pixel format
+                        static_cast<int>(m_width),
+                        static_cast<int>(m_height),
+                        image->bytesPerRow());
+                _m_cairo_cr = cairo_create(_m_cairo_surface);
+            }
+        }
+#if defined(__APPLE__) && defined(__MACH__)
+        if (m_engine == Engine::CoreGraphics) {
+            _macos_setImage(image);
+        }
+#endif
+    }
+
 
 #if defined(__APPLE__) && defined(__MACH__)
-    void GraphicContext::_setImage(Image* image) noexcept {
+    void GraphicContext::_macos_setImage(Image* image) noexcept {
         if (image != nullptr) {
             GRAIN_RETAIN(image);
             m_image = image;
-
             image->graphicContext(this);
 
             m_width = image->width();
@@ -139,10 +181,6 @@ namespace Grain {
                 CGContextSetStrokeColorSpace(m_cg_context, m_cg_color_space);
             }
         }
-    }
-#else
-    void GraphicContext::_setImage(Image* image) noexcept {
-        // TODO: Implement linux version
     }
 #endif
 
@@ -1073,7 +1111,7 @@ namespace Grain {
         catmull_rom_curve.pointOnCurve(0.0, point);
         moveTo(point);
         for (int32_t i = 1; i <= resolution; i++) {
-            catmull_rom_curve.pointOnCurve((double)i / resolution, point);
+            catmull_rom_curve.pointOnCurve(static_cast<double>(i) / resolution, point);
             lineTo(point);
         }
 
@@ -2083,7 +2121,7 @@ drawIcon(icon, icon->getCenteredRect(rect), icon_color, icon_alpha);
 
 
     void GraphicContext::addTextPath(const char* text, const Font* font) const noexcept {
-        /* TODO: !!!!!!
+        /* TODO: !!!!!! Implement!
         if (text == nullptr || font == nullptr) {
             return;
         }

@@ -51,14 +51,12 @@ namespace Grain {
 
 
     int32_t GraphicPath::pointCount() const noexcept {
-
-        return (int32_t)m_points.size();
+        return static_cast<int32_t>(m_points.size());
     }
 
 
     int32_t GraphicPath::segmentCount() const noexcept {
-
-        return m_closed ? (int32_t)m_points.size() : (int32_t)m_points.size() - 1;
+        return m_closed ? static_cast<int32_t>(m_points.size()) : static_cast<int32_t>(m_points.size()) - 1;
     }
 
 
@@ -74,7 +72,7 @@ namespace Grain {
         double area = 0;
         Vec2d c;
 
-        int32_t n = (int32_t)m_points.size();
+        int32_t n = static_cast<int32_t>(m_points.size());
         for (int32_t i = 0; i < n; i++) {
             int j = (i + 1) % n;  // Wrap around to the first vertex
             Vec2d pi = m_points[i].m_anchor;

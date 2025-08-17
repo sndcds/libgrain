@@ -277,8 +277,8 @@ namespace Grain {
                 throw Error::specific(kErrRangeNotValid);
             }
 
-            m_x_tile_count = (int32_t)floor(m_scan_xy_range_dbl.width() / m_tile_width) + 1;
-            m_y_tile_count = (int32_t)floor(m_scan_xy_range_dbl.height() / m_tile_height) + 1;
+            m_x_tile_count = static_cast<int32_t>(floor(m_scan_xy_range_dbl.width() / m_tile_width)) + 1;
+            m_y_tile_count = static_cast<int32_t>(floor(m_scan_xy_range_dbl.height() / m_tile_height)) + 1;
             m_tile_count = m_x_tile_count * m_y_tile_count;
 
             if (m_tile_count > m_tile_count_limit) { throw Error::specific(kErrToManyTilesFound); }
@@ -604,13 +604,13 @@ namespace Grain {
      */
     int64_t CVF2TileManager::tileIndexAtTileManagerPos(const Vec2d& pos, Vec2i& out_tile_xy_index) noexcept {
 
-        int32_t xi = (int32_t)((pos.m_x - m_scan_xy_range_dbl.m_min_x) / m_tile_width);
-        int32_t yi = (int32_t)((pos.m_y - m_scan_xy_range_dbl.m_min_y) / m_tile_height);
+        int32_t xi = static_cast<int32_t>((pos.m_x - m_scan_xy_range_dbl.m_min_x) / m_tile_width);
+        int32_t yi = static_cast<int32_t>((pos.m_y - m_scan_xy_range_dbl.m_min_y) / m_tile_height);
 
         if (xi >= 0 && xi < m_x_tile_count && yi >= 0 && yi < m_y_tile_count) {
             out_tile_xy_index.m_x = xi;
             out_tile_xy_index.m_y = yi;
-            return (int64_t)yi * m_x_tile_count + xi;
+            return static_cast<int64_t>(yi) * m_x_tile_count + xi;
         }
         else {
             out_tile_xy_index.m_x = -1;
@@ -933,8 +933,8 @@ namespace Grain {
                 throw Error::specific(kErrNoTilesInvolved);
             }
 
-            int32_t image_width = (int32_t)round(total_bounds.width() + 1);
-            int32_t image_height = (int32_t)round(total_bounds.height() + 1);
+            int32_t image_width = static_cast<int32_t>(round(total_bounds.width())) + 1;
+            int32_t image_height = static_cast<int32_t>(round(total_bounds.height())) + 1;
 
 
             auto image = Image::createRGBAFloat(image_width, image_height);

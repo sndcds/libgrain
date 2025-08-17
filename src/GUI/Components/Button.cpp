@@ -30,7 +30,7 @@ namespace Grain {
 
 
     Button* Button::add(View* view, const Rectd& rect, const char* text, int32_t tag) {
-        return (Button*)Component::addComponentToView(new(std::nothrow) Button(rect, text, tag), view);
+        return (Button*)Component::addComponentToView(new(std::nothrow) Button(rect, text, tag), view, AddFlags::kNone);
     }
 
 
@@ -43,6 +43,7 @@ namespace Grain {
         m_is_selected = selected;
         needsDisplay();
     }
+
 
 
     void Button::draw(const Rectd& dirty_rect) noexcept {
@@ -102,7 +103,7 @@ namespace Grain {
 
         RectEdgesf style_padding(10.0f, 0.0f, 4.0f, 4.0f);
         Alignment style_text_alignment = Alignment::Center;
-        Font* style_font = App::monoFont();
+        Font* style_font = App::uiFont();
 
         if (hasText()) {
             Rectd text_rect = boundsRect();

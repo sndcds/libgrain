@@ -51,19 +51,19 @@ namespace Grain {
         String name() const noexcept { return m_name; }
 
         static const NamedColor gretagMacbethColor(Color::GretagMacbethColor index) noexcept {
-            return NamedColor::g_gretag_macbeth_colors[std::clamp<int32_t>((int32_t)index, 0, kGretagMacbethColorCount - 1)];
+            return NamedColor::g_gretag_macbeth_colors[std::clamp<int32_t>(static_cast<int32_t>(index), 0, kGretagMacbethColorCount - 1)];
         }
 
         static const float* gretagMacbethColorDataPtr(Color::GretagMacbethColor index) noexcept {
-            return NamedColor::g_gretag_macbeth_colors[std::clamp<int32_t>((int32_t)index, 0, kGretagMacbethColorCount - 1)].m_data;
+            return NamedColor::g_gretag_macbeth_colors[std::clamp<int32_t>(static_cast<int32_t>(index), 0, kGretagMacbethColorCount - 1)].m_data;
         }
 
         static const NamedColor crayolaColor(Color::CrayolaColor index) noexcept {
-            return NamedColor::g_crayola_colors[std::clamp<int32_t>((int32_t)index, 0, kCrayolaColorCount - 1)];
+            return NamedColor::g_crayola_colors[std::clamp<int32_t>(static_cast<int32_t>(index), 0, kCrayolaColorCount - 1)];
         }
 
         static const float* crayolaColorDataPtr(Color::CrayolaColor index) noexcept {
-            return NamedColor::g_crayola_colors[std::clamp<int32_t>((int32_t)index, 0, kCrayolaColorCount - 1)].m_data;
+            return NamedColor::g_crayola_colors[std::clamp<int32_t>(static_cast<int32_t>(index), 0, kCrayolaColorCount - 1)].m_data;
         }
     };
 

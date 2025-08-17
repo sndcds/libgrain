@@ -50,12 +50,12 @@ namespace Grain {
 
             freeCache();
 
-            m_cache_data = (int64_t*)std::malloc(sizeof(int64_t) * value_count);
+            m_cache_data = static_cast<int64_t*>(std::malloc(sizeof(int64_t) * value_count));
             if (!m_cache_data) {
                 return ErrorCode::MemCantAllocate;
             }
 
-            auto dst = (int64_t*)m_cache_data;
+            auto dst = static_cast<int64_t*>(m_cache_data);
             for (int32_t y = 0; y < m_height; y++) {
                 readRow(y);
                 for (uint32_t x = 0; x < m_width; x++) {
@@ -76,7 +76,7 @@ namespace Grain {
             return CVF2::kUndefinedValue;
         }
         else {
-            return ((int64_t*)m_cache_data)[y * m_width + x];
+            return (static_cast<int64_t*>(m_cache_data))[y * m_width + x];
         }
     }
 
@@ -144,7 +144,7 @@ namespace Grain {
                     return 0; // TODO: Error handling needed!
                 }
             }
-            return ((int64_t*)m_cache_data)[pos.m_y * m_width + pos.m_x];
+            return (static_cast<int64_t*>(m_cache_data))[pos.m_y * m_width + pos.m_x];
         }
 
         setPos(m_row_offsets_pos + pos.m_y * 4);
@@ -218,7 +218,7 @@ namespace Grain {
         }
 
         if (!m_row_values) {
-            m_row_values = (int64_t*)std::malloc(sizeof(int64_t) * m_width);
+            m_row_values = static_cast<int64_t*>(std::malloc(sizeof(int64_t) * m_width));
             if (!m_row_values) {
                 Exception::throwStandard(ErrorCode::MemCantAllocate);
             }
@@ -330,8 +330,8 @@ namespace Grain {
 
             double xyz_min_x = range.minX().asDouble();
             double xyz_min_y = range.minY().asDouble();
-            int64_t xyz_last_x = (int64_t)round(range.maxX().asDouble());
-            int64_t xyz_last_y = (int64_t)round(range.maxY().asDouble());
+            int64_t xyz_last_x = static_cast<int64_t>(round(range.maxX().asDouble()));
+            int64_t xyz_last_y = static_cast<int64_t>(round(range.maxY().asDouble()));
 
             int32_t xyz_line_count = 0;
             String xyz_line;
@@ -350,7 +350,7 @@ namespace Grain {
                         Exception::throwSpecific(kErrXYOutOfRange);
                     }
 
-                    int64_t value = valueAtPos(Vec2i((int32_t)x, (int32_t)y), true);
+                    int64_t value = valueAtPos(Vec2i(static_cast<int32_t>(x), static_cast<int32_t>(y)), true);
                     z_value.setInt64(value, z_decimals);
 
                     if (z_value != xyz_coord.m_z) {

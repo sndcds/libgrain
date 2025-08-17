@@ -162,11 +162,11 @@ namespace Grain {
 
         static const bool sridInfo(SRIDIndex index, GeoSRIDInfo& out_info) noexcept {
             if (index >= SRIDIndex::First && index <= SRIDIndex::Last) {
-                out_info = g_srid_info[(int32_t)index];
+                out_info = g_srid_info[static_cast<int32_t>(index)];
                 return true;
             }
             else {
-                out_info = g_srid_info[(int32_t)SRIDIndex::Count];
+                out_info = g_srid_info[static_cast<int32_t>(SRIDIndex::Count)];
                 return false;
             }
         }

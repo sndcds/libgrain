@@ -164,7 +164,7 @@ namespace Grain {
         void encodeData();
         void finish();
 
-        static int64_t _maxDiff(uint32_t digits) { return (int64_t)round(pow(16, digits)) - 1 - 1; }
+        static int64_t _maxDiff(uint32_t digits) { return static_cast<int64_t>(round(pow(16, digits))) - 1 - 1; }
 
         void _startRow();
         uint8_t _extractNibble(uint64_t value, int32_t position);

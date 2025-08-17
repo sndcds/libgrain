@@ -157,7 +157,7 @@ namespace Grain {
             prepareEntry(TiffTag::ImageHeight, TiffType::Long, 1, image->height());
             prepareEntry(TiffTag::BitsPerSample, TiffType::Short, 1, bits_per_sample);
             prepareEntry(TiffTag::RowsPerStrip, TiffType::Long, 1, image->height());
-            prepareEntry(TiffTag::StripByteCounts, TiffType::Long, 1, (uint32_t)image->memSize());
+            prepareEntry(TiffTag::StripByteCounts, TiffType::Long, 1, static_cast<uint32_t>(image->memSize()));
 
             prepareEntry(TiffTag::SamplesPerPixel, TiffType::Short, 1, samples_per_pixel);
             prepareEntry(TiffTag::SampleFormat, TiffType::Short, 1, sample_format);
@@ -201,7 +201,7 @@ namespace Grain {
                 }
 
                 if (m_geo_tie_points.size() > 0) {
-                    prepareEntry(TiffTag::GeoModelTiepoint, TiffType::Double, (uint32_t)(m_geo_tie_points.size() * 6), 0, m_temp_data_file->pos());
+                    prepareEntry(TiffTag::GeoModelTiepoint, TiffType::Double, static_cast<uint32_t>(m_geo_tie_points.size() * 6), 0, m_temp_data_file->pos());
                     for (auto& tie_point : m_geo_tie_points) {
                         tie_point.m_raster_pos.writeToFile(*m_temp_data_file);
                         tie_point.m_model_pos.writeToFile(*m_temp_data_file);
@@ -213,18 +213,20 @@ namespace Grain {
 
                 if (m_geo_double_param_count > 0) {
                     prepareEntry(TiffTag::GeoDoubleParams, TiffType::Double, m_geo_double_param_count, 0, m_temp_data_file->pos());
-                    // TODO:!!! m_temp_data_file->writeVec3d(); Implement!
+                    for (int32_t i = 0; i < m_geo_double_param_count; i++) {
+                        m_temp_data_file->writeValue<double>(0);
+                    }
                 }
 
                 {
                     const char* buffer = "-999999";
-                    prepareEntry(TiffTag::GDAL_NoData, TiffType::Ascii, (uint32_t)strlen(buffer) + 1, 0, m_temp_data_file->pos());
+                    prepareEntry(TiffTag::GDAL_NoData, TiffType::Ascii, static_cast<uint32_t>(strlen(buffer)) + 1, 0, m_temp_data_file->pos());
                     m_temp_data_file->writeData<uint8_t>(reinterpret_cast<const uint8_t*>(buffer), 8);
                 }
 
                 // GeoDirectory must allways be the last call
                 if (m_geo_entry_preparations.size() > 0) {
-                    uint32_t key_directory_size = (uint32_t)(m_geo_entry_preparations.size() * 4 + 4); // 4 shorts per entry + 4 short for header
+                    uint32_t key_directory_size = static_cast<uint32_t>(m_geo_entry_preparations.size() * 4 + 4); // 4 shorts per entry + 4 short for header
                     prepareEntry(TiffTag::GeoDirectory, TiffType::Short, key_directory_size, 0);
                 }
             }
@@ -270,7 +272,7 @@ namespace Grain {
 
 
     void TiffFile::writeTag(TiffTag tag) {
-        writeValue<uint16_t>((uint16_t)tag);
+        writeValue<uint16_t>(static_cast<uint16_t>(tag));
     }
 
 
@@ -302,8 +304,8 @@ namespace Grain {
 
     void TiffFile::writeEntry(TiffEntryPreparation& entry_preparation) {
         auto e = &entry_preparation.m_entry;
-        writeValue<uint16_t>((uint16_t)e->m_tag);
-        writeValue<uint16_t>((uint16_t)e->m_type);
+        writeValue<uint16_t>(static_cast<uint16_t>(e->m_tag));
+        writeValue<uint16_t>(static_cast<uint16_t>(e->m_type));
         writeValue<uint32_t>(e->m_count);
 
         if (entry_preparation.m_temp_file_pos < 0) {
@@ -326,8 +328,8 @@ namespace Grain {
 
 
     void TiffFile::writeGeoEntry(GeoTiffEntry& entry) {
-        writeValue<uint16_t>((uint16_t)entry.m_key);
-        writeValue<uint16_t>((uint16_t)entry.m_location);
+        writeValue<uint16_t>(static_cast<uint16_t>(entry.m_key));
+        writeValue<uint16_t>(static_cast<uint16_t>(entry.m_location));
         writeValue<uint16_t>(entry.m_count);
         writeValue<uint16_t>(entry.m_offset);
 
@@ -405,7 +407,7 @@ namespace Grain {
         for (auto& ep : m_entry_preparations) {
             ep.m_pos_in_file = pos();
             if (ep.m_temp_file_pos >= 0) {
-                ep.m_entry.m_offset = (uint32_t)(ep.m_temp_file_pos + data_offset);
+                ep.m_entry.m_offset = static_cast<uint32_t>(ep.m_temp_file_pos + data_offset);
             }
 
             writeEntry(ep);
@@ -452,12 +454,12 @@ namespace Grain {
                 case TiffTag::StripOffsets:
                     // Supports only images with a single strip
                     setPos(ep.m_pos_in_file + 8);
-                    writeValue<uint32_t>((uint32_t)m_pixel_data_pos);
+                    writeValue<uint32_t>(static_cast<uint32_t>(m_pixel_data_pos));
                     break;
 
                 case TiffTag::GeoDirectory:
                     setPos(ep.m_pos_in_file + 8);
-                    writeValue<uint32_t>((uint32_t)m_geo_directory_pos);
+                    writeValue<uint32_t>(static_cast<uint32_t>(m_geo_directory_pos));
                     break;
 
                 default:
@@ -492,7 +494,7 @@ namespace Grain {
                     while (ia.stepX()) {
                         ia.read();
                         for (int32_t i = 0; i < m_used_component_count; i++) {
-                            writeValue<uint8_t>((uint8_t)round(pixel[i] * max_value));
+                            writeValue<uint8_t>(static_cast<uint8_t>(round(pixel[i] * max_value)));
                         }
                     }
                 }
@@ -503,7 +505,7 @@ namespace Grain {
                     while (ia.stepX()) {
                         ia.read();
                         for (int32_t i = 0; i < m_used_component_count; i++) {
-                            writeValue<uint16_t>((uint16_t)round(pixel[i] * max_value));
+                            writeValue<uint16_t>(static_cast<uint16_t>(round(pixel[i] * max_value)));
                         }
                     }
                 }
@@ -514,7 +516,7 @@ namespace Grain {
                     while (ia.stepX()) {
                         ia.read();
                         for (int32_t i = 0; i < m_used_component_count; i++) {
-                            writeValue<uint32_t>((uint32_t)round(pixel[i] * max_value));
+                            writeValue<uint32_t>(static_cast<uint32_t>(round(pixel[i] * max_value)));
                         }
                     }
                 }

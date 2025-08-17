@@ -122,8 +122,8 @@ namespace Grain {
 
         bool cvf2FileIsOpen() const noexcept { return m_cache_cvf2_file_index >= 0; }
         void crsPosToTileXY(const Vec2d& crs_pos, Vec2i& out_xy) const noexcept {
-            out_xy.m_x = (int32_t)Math::remap(m_bbox_dbl.m_min_x, m_bbox_dbl.m_max_x, 0, m_width - 1, crs_pos.m_x);
-            out_xy.m_y = (int32_t)Math::remap(m_bbox_dbl.m_min_y, m_bbox_dbl.m_max_y, 0, m_height - 1, crs_pos.m_y);
+            out_xy.m_x = static_cast<int32_t>(Math::remap(m_bbox_dbl.m_min_x, m_bbox_dbl.m_max_x, 0, m_width - 1, crs_pos.m_x));
+            out_xy.m_y = static_cast<int32_t>(Math::remap(m_bbox_dbl.m_min_y, m_bbox_dbl.m_max_y, 0, m_height - 1, crs_pos.m_y));
         }
 
         bool hasValueGrid() noexcept;

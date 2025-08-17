@@ -64,7 +64,7 @@ namespace Grain {
             meta_file.writeValue<int32_t>(tile_y);
             meta_file.writeValue<int32_t>(zoom);
 
-            uint32_t tile_offs = (uint32_t)(meta_file.pos() + tile_n * sizeof(GeoMetaTileEntry));
+            uint32_t tile_offs = static_cast<uint32_t>(meta_file.pos() + tile_n * sizeof(GeoMetaTileEntry));
             uint32_t tile_max_size = 0;
 
             // Write header
@@ -76,7 +76,7 @@ namespace Grain {
                     if (File::fileExists(file_path)) {
                         File tile_file(file_path);
                         tile_file.startRead();
-                        tile_file_size = (int32_t)tile_file.size();
+                        tile_file_size = static_cast<int32_t>(tile_file.size());
                         if (tile_file_size > tile_max_size) {
                             tile_max_size = tile_file_size;
                         }
@@ -218,7 +218,7 @@ namespace Grain {
             meta_file.writeValue<int32_t>(tile_index.m_y);
             meta_file.writeValue<int32_t>(zoom);
 
-            uint32_t tile_offs = (uint32_t)(meta_file.pos() + tile_n * sizeof(GeoMetaTileEntry));
+            uint32_t tile_offs = static_cast<uint32_t>(meta_file.pos() + tile_n * sizeof(GeoMetaTileEntry));
             uint32_t tile_img_max_size = 0;
 
             for (int32_t pass = 0; pass < 2; pass++) {
@@ -231,7 +231,7 @@ namespace Grain {
                         if (File::fileExists(tile_img_file_path)) {
                             File tile_img_file(tile_img_file_path);
                             tile_img_file.startRead();
-                            tile_img_file_size = (int32_t)tile_img_file.size();
+                            tile_img_file_size = static_cast<int32_t>(tile_img_file.size());
 
                             if (pass == 0) {
                                 meta_file.writeValue<int32_t>(tile_offs);
@@ -421,8 +421,8 @@ namespace Grain {
             m_curr_index = start_index;
 
             // Compute the new meta tile position.
-            int32_t tile_x_offset = (int32_t)(m_curr_index % m_horizontal_tile_n);
-            int32_t tile_y_offset = (int32_t)(m_curr_index / m_horizontal_tile_n);
+            int32_t tile_x_offset = static_cast<int32_t>(m_curr_index % m_horizontal_tile_n);
+            int32_t tile_y_offset = static_cast<int32_t>(m_curr_index / m_horizontal_tile_n);
 
             m_curr_tile.m_x = m_first_tile.m_x + tile_x_offset * kGridSize;
             m_curr_tile.m_y = m_first_tile.m_y + tile_y_offset * kGridSize;
@@ -488,7 +488,7 @@ namespace Grain {
 
         Vec2i tile_min = m_first_tile;
         Vec2i tile_max = m_first_tile;
-        tile_max.translate(kGridSize * (int32_t)m_horizontal_tile_n, kGridSize * (int32_t)m_vertical_tile_n);
+        tile_max.translate(kGridSize * static_cast<int32_t>(m_horizontal_tile_n), kGridSize * static_cast<int32_t>(m_vertical_tile_n));
 
         Vec2d latlon1;
         Vec2d latlon2;

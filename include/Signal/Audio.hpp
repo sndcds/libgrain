@@ -228,8 +228,9 @@ namespace Grain {
         [[nodiscard]] static float soundIntensity(float initial_intensity, float attenuation, float distance);
 
         #if defined(__APPLE__) && defined(__MACH__)
-            // TODO: Implement!
+            #warning "Audio.logAudioStreamBasicDescription() must be implemented"
             static void logAudioStreamBasicDescription(std::ostream& os, AudioStreamBasicDescription& asbd, const char* name) noexcept;
+            #warning "Audio.logAudioBufferList() must be implemented"
             static void logAudioBufferList(std::ostream& os, AudioBufferList& abl, const char* name) noexcept;
         #endif
     };

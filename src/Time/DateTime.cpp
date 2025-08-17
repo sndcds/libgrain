@@ -22,12 +22,12 @@ namespace Grain {
 
 
     DateTime::DateTime(const Timestamp& timestamp) {
-        // TODO: Implement!
+        #warning "DateTime::DateTime(const Timestamp& timestamp) must be implemented"
     }
 
 
     DateTime::DateTime(uint16_t day, uint16_t month, int32_t year, uint16_t hour, uint16_t minute, uint16_t second) {
-        // TODO: Implement!
+        #warning "DateTime::DateTime(uint16_t day, uint16_t month, int32_t year, uint16_t hour, uint16_t minute, uint16_t second) must be implemented"
     }
 
 

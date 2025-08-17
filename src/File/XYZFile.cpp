@@ -175,8 +175,8 @@ namespace Grain {
             RangeCubeFix range = xyz_file1->range();
 
             // Calculate image size
-            int64_t image_width = (int64_t)range.width().asInt64() + 1;
-            int64_t image_height = (int64_t)range.height().asInt64() + 1;
+            int64_t image_width = static_cast<int64_t>(range.width().asInt64()) + 1;
+            int64_t image_height = static_cast<int64_t>(range.height().asInt64()) + 1;
             if (image_width < 1) {
                 throw Error::specific(kErrImageWidthLessThanOne);
             }
@@ -200,7 +200,7 @@ namespace Grain {
             xyz_file2->m_step_x = xyz_file1->m_step_x;
             xyz_file2->m_step_y = xyz_file1->m_step_y;
 
-            image = Image::createLuminaFloat((int32_t)image_width, (int32_t)image_height);
+            image = Image::createLuminaFloat(static_cast<int32_t>(image_width), static_cast<int32_t>(image_height));
             if (image == nullptr) {
                 throw Error::specific(6);
             }
@@ -243,8 +243,8 @@ namespace Grain {
                         throw ErrorCode::UnexpectedData;
                     }
 
-                    int32_t x = (int32_t)round(xyz_coord.m_x - xyz_min_x);
-                    int32_t y = image_height - 1 - (int32_t)round(xyz_coord.m_y - xyz_min_y);
+                    int32_t x = static_cast<int32_t>(round(xyz_coord.m_x - xyz_min_x));
+                    int32_t y = image_height - 1 - static_cast<int32_t>(round(xyz_coord.m_y - xyz_min_y));
 
                     auto p = (float*)ia.ptrAt(x, y);
                     if (p != nullptr) {
@@ -323,7 +323,7 @@ namespace Grain {
                 throw ErrorCode::UnsupportedDimension;
             }
 
-            cvf2 = new(std::nothrow) CVF2((int32_t)xyz_width, (int32_t)xyz_height, unit, min_digits, max_digits);
+            cvf2 = new(std::nothrow) CVF2(static_cast<int32_t>(xyz_width), static_cast<int32_t>(xyz_height), unit, min_digits, max_digits);
             if (cvf2 == nullptr) {
                 throw ErrorCode::ClassInstantiationFailed;
             }
@@ -347,8 +347,8 @@ namespace Grain {
                     if (!xyz_coord.setByCSV(xyz_line, ' ')) {
                         throw ErrorCode::UnexpectedData;
                     }
-                    int32_t x = (int32_t)round(xyz_coord.m_x.asDouble() - xyz_min_x);
-                    int32_t y = (int32_t)round(xyz_coord.m_y.asDouble() - xyz_min_y);
+                    int32_t x = static_cast<int32_t>(round(xyz_coord.m_x.asDouble() - xyz_min_x));
+                    int32_t y = static_cast<int32_t>(round(xyz_coord.m_y.asDouble() - xyz_min_y));
                     cvf2->pushValueToData(x, y, xyz_coord.m_z.asInt64(z_decimals));
                     xyz_line_count++;
                 }

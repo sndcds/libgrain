@@ -39,7 +39,6 @@ namespace Grain {
 
 
     LMS::LMS(const RGB& rgb) {
-
         m_data[0] = 0.4122214708 * rgb.m_data[0] + 0.5363325363 * rgb.m_data[1] + 0.0514459929 * rgb.m_data[2];
         m_data[1] = 0.2119034982 * rgb.m_data[0] + 0.6806995451 * rgb.m_data[1] + 0.1073969566 * rgb.m_data[2];
         m_data[2] = 0.0883024619 * rgb.m_data[0] + 0.2817188376 * rgb.m_data[1] + 0.6299787005 * rgb.m_data[2];
@@ -47,14 +46,12 @@ namespace Grain {
 
 
     const Mat3f LMS::fromCIEXYZMatrix(LMS::Method method) {
-
-        return g_from_ciexyz_matrices[std::clamp<int32_t>((int32_t)method, 0, kMethodCount)];
+        return g_from_ciexyz_matrices[std::clamp<int32_t>(static_cast<int32_t>(method), 0, kMethodCount)];
     }
 
 
     const Mat3f LMS::toCIEXYZMatrix(LMS::Method method) {
-
-        return g_to_ciexyz_matrices[std::clamp<int32_t>((int32_t)method, 0, kMethodCount)];
+        return g_to_ciexyz_matrices[std::clamp<int32_t>(static_cast<int32_t>(method), 0, kMethodCount)];
     }
 
 

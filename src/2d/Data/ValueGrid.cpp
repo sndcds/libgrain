@@ -220,7 +220,7 @@ namespace Grain {
                     }
                     else {
                         if (n > 1) {
-                            sum = (T)std::round((double)sum / n);
+                            sum = (T)std::round(static_cast<double>(sum) / n);
                         }
                         setValueAtXY(dst_x_offset + x / 2, dst_y_offset + y / 2, sum);
                     }
@@ -566,7 +566,7 @@ namespace Grain {
                     src = (flip_y == true) ? ptrForRow(ia.flippedY()) : ptrForRow(ia.y());
 
                     while (ia.stepX()) {
-                        float v = (float)*src++;
+                        float v = static_cast<float>(*src++);
                         if (v < 0.0f) {
                             v = 0.0f;
                         }
@@ -620,12 +620,12 @@ namespace Grain {
                     while (ia.stepX()) {
                         T v =* src++;
                         if (v == undefined_value) {
-                            pixel[0] = (float)m_min_value;
+                            pixel[0] = static_cast<float>(m_min_value);
                             pixel[1] = 0.0f;
                             undefined_value_count++;
                         }
                         else {
-                            pixel[0] = (float)v;
+                            pixel[0] = static_cast<float>(v);
                             pixel[1] = 1.0f;
                         }
                         ia.write();

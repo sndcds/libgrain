@@ -33,13 +33,12 @@
     namespace Grain {
         Image* _mac_loadImageFromFile(const String& file_path, Image::PixelType pixel_type);
     } // namespace Grain
-
 #endif
 
 
 namespace Grain {
 
-    ImageAccess::ImageAccess(Image *image, float *transfer_ptr) {
+    ImageAccess::ImageAccess(Image* image, float* transfer_ptr) {
         undefine();
 
         if (image && image->isUsable()) {
@@ -94,13 +93,13 @@ namespace Grain {
         setTransferPtr_r32(_m_component_values_float);
 
         if (m_width > 0 && m_height > 0 &&
-                m_color_model != Color::Model::Undefined &&
-                m_component_count > 0 &&
+            m_color_model != Color::Model::Undefined &&
+            m_component_count > 0 &&
             m_pixel_type != Image::PixelType::Undefined &&
-                _m_pixel_data_ptr &&
-                _m_pixel_data_step > 0 &&
-                _m_row_data_step > 0 &&
-                _m_plane_data_step > 0) {
+            _m_pixel_data_ptr &&
+            _m_pixel_data_step > 0 &&
+            _m_row_data_step > 0 &&
+            _m_plane_data_step > 0) {
             m_usable = true;
         }
         else {
@@ -1257,7 +1256,6 @@ namespace Grain {
             */
         }
         catch (ErrorCode err) {
-            m_last_err = err;
         }
 
         return _m_cg_context_ref;
@@ -1906,79 +1904,79 @@ namespace Grain {
      *  @note The function assumes `_m_pixel_data` contains valid image data and
      *        that the image dimensions and bit depth are correctly set.
      */
-     /* TODO !!!!!!
-    NSBitmapImageRep *Image::createNSBitmapImageRep() {
+    /* TODO !!!!!!
+   NSBitmapImageRep *Image::createNSBitmapImageRep() {
 
-        if (!isUsable()) {
-            return nil;
-        }
+       if (!isUsable()) {
+           return nil;
+       }
 
-        if (dataType() != Image::PixelType::Float && dataType() != Image::PixelType::UInt8 && dataType() != Image::PixelType::UInt16) {
-            return nil;
-        }
+       if (dataType() != Image::PixelType::Float && dataType() != Image::PixelType::UInt8 && dataType() != Image::PixelType::UInt16) {
+           return nil;
+       }
 
-        std::cout << "....1\n";
-        const size_t width_px = static_cast<size_t>(width());
-        const size_t height_px = static_cast<size_t>(height());
-        const size_t bytes_per_component = isFloat() ? sizeof(float) : 1;
-        const size_t components_per_pixel = componentCount();
-        const size_t bytes_per_pixel = components_per_pixel * bytes_per_component;
-        const size_t bytes_per_row = width_px * bytes_per_pixel;
+       std::cout << "....1\n";
+       const size_t width_px = static_cast<size_t>(width());
+       const size_t height_px = static_cast<size_t>(height());
+       const size_t bytes_per_component = isFloat() ? sizeof(float) : 1;
+       const size_t components_per_pixel = componentCount();
+       const size_t bytes_per_pixel = components_per_pixel * bytes_per_component;
+       const size_t bytes_per_row = width_px * bytes_per_pixel;
 
-        std::cout << "width_px: " << width_px << std::endl;
-        std::cout << "height_px: " << height_px << std::endl;
-        std::cout << "bytes_per_component: " << bytes_per_component << std::endl;
-        std::cout << "components_per_pixel: " << components_per_pixel << std::endl;
-        std::cout << "bytes_per_pixel: " << bytes_per_pixel << std::endl;
-        std::cout << "bytes_per_row: " << bytes_per_row << std::endl;
-
-
-        CGColorSpaceRef color_space = CGColorSpaceCreateDeviceRGB();
+       std::cout << "width_px: " << width_px << std::endl;
+       std::cout << "height_px: " << height_px << std::endl;
+       std::cout << "bytes_per_component: " << bytes_per_component << std::endl;
+       std::cout << "components_per_pixel: " << components_per_pixel << std::endl;
+       std::cout << "bytes_per_pixel: " << bytes_per_pixel << std::endl;
+       std::cout << "bytes_per_row: " << bytes_per_row << std::endl;
 
 
-        CGBitmapInfo bitmap_info{};
-        bitmap_info |= kCGBitmapByteOrderDefault;
-
-        if (isFloat()) {
-            bitmap_info |= kCGBitmapFloatComponents;
-        }
-
-        if (hasAlpha()) {
-            bitmap_info |= kCGImageAlphaPremultipliedLast;
-        }
-        else {
-            bitmap_info |= kCGImageAlphaNone;
-        }
+       CGColorSpaceRef color_space = CGColorSpaceCreateDeviceRGB();
 
 
-        CGContextRef context = CGBitmapContextCreate(
-                _m_pixel_data,
-                width(),
-                height(),
-                bitsPerComponent(),
-                bytesPerRow(),
-                color_space,
-                bitmap_info
-        );
+       CGBitmapInfo bitmap_info{};
+       bitmap_info |= kCGBitmapByteOrderDefault;
 
-        if (!context) {
+       if (isFloat()) {
+           bitmap_info |= kCGBitmapFloatComponents;
+       }
+
+       if (hasAlpha()) {
+           bitmap_info |= kCGImageAlphaPremultipliedLast;
+       }
+       else {
+           bitmap_info |= kCGImageAlphaNone;
+       }
+
+
+       CGContextRef context = CGBitmapContextCreate(
+               _m_pixel_data,
+               width(),
+               height(),
+               bitsPerComponent(),
+               bytesPerRow(),
+               color_space,
+               bitmap_info
+       );
+
+       if (!context) {
 //        return nil;
-        }
+       }
 
 
-        CGImageRef cg_image = CGBitmapContextCreateImage(context);
-        NSBitmapImageRep *bitmap_rep = [[NSBitmapImageRep alloc] initWithCGImage:cg_image];
+       CGImageRef cg_image = CGBitmapContextCreateImage(context);
+       NSBitmapImageRep *bitmap_rep = [[NSBitmapImageRep alloc] initWithCGImage:cg_image];
 
-        std::cout << "....7\n";
-        // Cleanup
-        CGImageRelease(cg_image);
-        CGContextRelease(context);
-        CGColorSpaceRelease(color_space);
+       std::cout << "....7\n";
+       // Cleanup
+       CGImageRelease(cg_image);
+       CGContextRelease(context);
+       CGColorSpaceRelease(color_space);
 
-        std::cout << "....8\n";
-        return bitmap_rep;
-    }
-      */
+       std::cout << "....8\n";
+       return bitmap_rep;
+   }
+     */
 
     /* TODO !!!!!!!
     NSBitmapImageRep *Image::createNSBitmapImageRep1(bool use_alpha) {
@@ -2976,12 +2974,12 @@ namespace Grain {
 
 
     Image *Image::createFromFile(const String& file_path, Image::PixelType data_type) {
-        #if defined(__APPLE__) && defined(__MACH__)
-            return _mac_loadImageFromFile(file_path, data_type);
-        #else
-            #warning "loadImageFromFile is only implemented for macOS
+#if defined(__APPLE__) && defined(__MACH__)
+        return _mac_loadImageFromFile(file_path, data_type);
+#else
+        #warning "loadImageFromFile is only implemented for macOS
             return nullptr;
-        #endif
+#endif
     }
 
 
@@ -3234,7 +3232,7 @@ namespace Grain {
     Image *Image::copyWithNewSettings(
             Color::Model color_model,
             PixelType data_type)
-            noexcept {
+    noexcept {
 
         // TODO: Choose between 601 and 709 grayscale conversion!
         auto image = new (std::nothrow) Image(color_model, m_width, m_height, data_type);

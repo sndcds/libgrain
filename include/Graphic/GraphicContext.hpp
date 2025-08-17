@@ -35,10 +35,12 @@
     #include <CoreGraphics/CoreGraphics.h>
 #endif
 
+#include <cairo/cairo.h>
+
 
 namespace Grain {
 
-
+    // Forward declarations
     class Bezier;
     class CatmullRomCurve;
     class Font;
@@ -54,49 +56,56 @@ namespace Grain {
     class PDFWriter;
 
 
+    // Class GraphicContext
     class GraphicContext {
-
         friend class Image;
 
     public:
+        enum class Engine {
+            Undefined = -1,
+            Cairo = 0,
+            CoreGraphics = 1,
+            Default = Cairo
+        };
 
         enum class BlendMode {
             Undefined = -1,
             Normal = 0,
-            Multiply,
-            Screen,
-            Overlay,
-            Darken,
-            Lighten,
-            ColorDodge,
-            ColorBurn,
-            SoftLight,
-            HardLight,
-            Difference,
-            Exclusion,
-            Hue,
-            Saturation,
-            Color,
-            Luminosity,
-            Clear,
-            Copy,
-            SourceIn,
-            SourceOut,
-            SourceAtop,
-            DestinationOver,
-            DestinationIn,
-            DestinationOut,
-            DestinationAtop,
-            XOR,
-            PlusDarker,
-            PlusLighter,
+            Multiply = 1,
+            Screen = 2,
+            Overlay = 3,
+            Darken = 4,
+            Lighten = 5,
+            ColorDodge = 6,
+            ColorBurn = 7,
+            SoftLight = 8,
+            HardLight = 9,
+            Difference = 10,
+            Exclusion = 11,
+            Hue = 12,
+            Saturation = 13,
+            Color = 14,
+            Luminosity = 15,
+            Clear = 16,
+            Copy = 17,
+            SourceIn = 18,
+            SourceOut = 19,
+            SourceAtop = 20,
+            DestinationOver = 21,
+            DestinationIn = 22,
+            DestinationOut = 23,
+            DestinationAtop = 24,
+            XOR = 25,
+            PlusDarker = 26,
+            PlusLighter = 27,
 
             First = 0,
             Last = PlusLighter
         };
 
-
     protected:
+        Engine m_engine = Engine::Cairo;
+
         bool m_flipped_y = true;        ///< true, if vertical axis is flipped
         double m_width = 0.0;           ///< Pixel width
         double m_height = 0.0;          ///< Pixel height
@@ -118,6 +127,8 @@ namespace Grain {
             CGColorSpaceRef m_cg_color_space = nullptr;
         #endif
 
+        cairo_surface_t* _m_cairo_surface = nullptr;
+        cairo_t* _m_cairo_cr = nullptr;
 
     public:
         explicit GraphicContext(Component* component) noexcept;
@@ -126,7 +137,15 @@ namespace Grain {
         ~GraphicContext() noexcept;
 
         void _init() noexcept;
+        void _freeResources() noexcept;
+
         void _setImage(Image* image) noexcept;
+        #if defined(__APPLE__) && defined(__MACH__)
+            void _macos_setImage(Image* image) noexcept;
+        #endif
+
+        [[nodiscard]] cairo_surface_t* cairoSurface() { return _m_cairo_surface; }
+        [[nodiscard]] cairo_t* cairoCr() { return _m_cairo_cr; }
 
         [[nodiscard]] double width() const noexcept { return m_width; }
         [[nodiscard]] double height() const noexcept { return m_height; }
@@ -180,18 +199,18 @@ namespace Grain {
         void setOpaque() const noexcept { setAlpha(1.0f); }
 
         void setFillClearColor() noexcept { setFillColor(1, 0); }
-        void setFillColor(const RGB& color, float alpha = 1) noexcept;
+        virtual void setFillColor(const RGB& color, float alpha = 1.0f) noexcept;
         void setFillColor(const RGBA& color) noexcept;
-        void setFillColor(float r, float g, float b, float alpha = 1) noexcept;
-        void setFillColor(float v, float alpha = 1) noexcept { setFillColor(v, v, v, alpha); }
-        void setStrokeColor(const RGB& color, float alpha = 1) noexcept;
+        void setFillColor(float r, float g, float b, float alpha = 1.0f) noexcept;
+        void setFillColor(float v, float alpha = 1.0f) noexcept { setFillColor(v, v, v, alpha); }
+        void setStrokeColor(const RGB& color, float alpha = 1.0f) noexcept;
         void setStrokeColor(const RGBA& color) noexcept;
-        void setStrokeColor(float r, float g, float b, float alpha = 1) noexcept;
-        void setStrokeColor(float v, float alpha = 1) noexcept { setStrokeColor(v, v, v, alpha); }
-        void setDrawColor(const RGB& color, float alpha = 1) noexcept;
+        void setStrokeColor(float r, float g, float b, float alpha = 1.0f) noexcept;
+        void setStrokeColor(float v, float alpha = 1.0f) noexcept { setStrokeColor(v, v, v, alpha); }
+        void setDrawColor(const RGB& color, float alpha = 1.0f) noexcept;
         void setDrawColor(const RGBA& color) noexcept;
-        void setDrawColor(float r, float g, float b, float alpha = 1) noexcept;
-        void setDrawColor(float v, float alpha = 1) noexcept { setDrawColor(v, v, v, alpha); }
+        void setDrawColor(float r, float g, float b, float alpha = 1.0f) noexcept;
+        void setDrawColor(float v, float alpha = 1.0f) noexcept { setDrawColor(v, v, v, alpha); }
 
         void setDebugFgColor(const RGBA& color) noexcept { m_debug_fg_color = color; }
         void setDebugBgColor(const RGBA& color) noexcept { m_debug_bg_color = color; }
@@ -302,7 +321,7 @@ namespace Grain {
                     blend_mode = BlendMode::Normal;
                 }
 
-                CGContextSetBlendMode(m_cg_context, cg_blend_modes[(int32_t)blend_mode]);
+                CGContextSetBlendMode(m_cg_context, cg_blend_modes[static_cast<int32_t>(blend_mode)]);
             #else
                 // TODO: Implement linux version
             #endif
@@ -511,8 +530,8 @@ namespace Grain {
         void strokeCatmullRomCurve(const CatmullRomCurve& catmull_rom_curve, float t_beg, float t_end, int32_t resolution = -1) noexcept;
 
         // Rect
-        void fillRect(double x, double y, double width, double height) noexcept;
-        void fillRect(const Rectd& rect) noexcept;
+        virtual void fillRect(double x, double y, double width, double height) noexcept;
+        virtual void fillRect(const Rectd& rect) noexcept;
         void fillRect(const Rectd& rect, double radius) noexcept;
         void fillRoundBar(double x, double y, double width, double height) noexcept;
         void fillRoundBar(const Rectd& rect) noexcept;

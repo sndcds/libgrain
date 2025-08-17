@@ -82,14 +82,19 @@
 #include "Geo/GeoProj.hpp"
 
 #include "Graphic/GraphicContext.hpp"
+#include "Graphic/CairoContext.hpp"
 #include "Graphic/Font.hpp"
 
 #include "GUI/Screen.hpp"
 #include "GUI/Window.hpp"
+#include "GUI/Event.hpp"
 #include "GUI/View.hpp"
 #include "GUI/Component.hpp"
 #include "GUI/ValueComponent.hpp"
+#include "GUI/Component.hpp"
 #include "GUI/Style.hpp"
+#include "GUI/Components/Button.hpp"
+#include "GUI/Components/Checkbox.hpp"
 
 #include "Image/Image.hpp"
 
@@ -128,5 +133,6 @@
 #include "Type/Range.hpp"
 #include "Type/Type.hpp"
 #include "Type/FixProperty.hpp"
+
 
 #endif

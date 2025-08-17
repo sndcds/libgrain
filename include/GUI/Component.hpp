@@ -80,6 +80,11 @@ namespace Grain {
             Custom
         };
 
+        enum AddFlags {
+            kNone,
+            kWantsLayer = 0x1
+        };
+
         enum class ActionType {
             None = 0,
             StateChanged,
@@ -93,6 +98,17 @@ namespace Grain {
         ~Component() noexcept override;
 
         [[nodiscard]] const char* className() const noexcept override { return "Component"; }
+
+        friend std::ostream& operator << (std::ostream& os, const Component* o) {
+            o == nullptr ? os << "Component nullptr" : os << *o;
+            return os;
+        }
+
+        friend std::ostream& operator << (std::ostream& os, const Component& o) {
+            os << (int32_t)o.m_type << std::endl; // TODO: Implement!
+            return os;
+        }
+
 
 
         #if defined(__APPLE__) && defined(__MACH__)
@@ -337,7 +353,7 @@ namespace Grain {
         void drawRect(GraphicContext &gc, const Rectd &rect) const noexcept;
 
         // Utils
-        static Component* addComponentToView(Component* component, View* view) noexcept;
+        static Component* addComponentToView(Component* component, View* view, AddFlags flags) noexcept;
         void _setParent(Component* parent) noexcept { m_parent = parent; }
 
     protected:

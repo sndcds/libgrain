@@ -110,9 +110,11 @@ add_library(libgrain STATIC
         src/GUI/View.cpp
         src/GUI/Event.cpp
         src/GUI/Components/Button.cpp
+        src/GUI/Components/Checkbox.cpp
         src/GUI/Style.cpp
 
         src/Graphic/GraphicContext.cpp
+        src/Graphic/CairoContext.cpp
         src/Graphic/Font.cpp
 
         src/Image/Image.cpp

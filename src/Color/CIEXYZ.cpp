@@ -229,7 +229,7 @@ namespace Grain {
             p = std::numeric_limits<float>::max();
         }
 
-        *temperature = (float)p;
+        *temperature = static_cast<float>(p);
 
         return true;
     }

@@ -73,13 +73,13 @@ namespace Grain {
         T centerY() const noexcept { return m_height / 2; }
         Vec2<T> center() const noexcept { return Vec2<T>(m_width / 2, m_height / 2); }
 
-        int64_t roundedWidth() noexcept { return (int64_t)std::round(m_width); }
-        int64_t roundedHeight() noexcept { return (int64_t)std::round(m_height); }
+        int64_t roundedWidth() noexcept { return static_cast<int64_t>(std::round(m_width)); }
+        int64_t roundedHeight() noexcept { return static_cast<int64_t>(std::round(m_height)); }
         T area() const noexcept { return m_width * m_height; }
         double aspectRatio() const noexcept {
             if (std::fabs(m_width) > std::numeric_limits<double>::epsilon() &&
                 m_height > std::numeric_limits<double>::epsilon()) {
-                return (double)m_height / m_width;
+                return static_cast<double>(m_height) / static_cast<double>(m_width);
             }
             return DBL_MAX;
         }
@@ -103,7 +103,7 @@ namespace Grain {
         void zero() noexcept { m_width = m_height = 0; }
 
         bool setByCSV(const char* csv) noexcept  {
-            // TODO: Implement!
+            #warning "Dimension.setByCSV() must be implemented"
             return false;
         }
 

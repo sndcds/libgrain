@@ -159,7 +159,7 @@ namespace Grain {
         static Rectd mainScreenRect() noexcept;
 
         // Window
-        Window* addWindow(const char* title, const Rectd& rect, Window::Style window_style, Screen* screen) noexcept;
+        Window* addWindow(const char* title, const Rectd& rect, Window::Style window_style = Window::Style::Default, Screen* screen = nullptr) noexcept;
         [[nodiscard]] int32_t windowCount() const noexcept { return static_cast<int32_t>(m_windows.size()); }
         static Window *keyWindow() noexcept { return g_instance->m_key_window; }
 

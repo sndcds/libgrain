@@ -393,16 +393,14 @@ namespace Grain {
 
 
     uint32_t RGB::rgb24bit() const noexcept {
-
         return
-                ((uint32_t)Type::floatToUInt8(m_data[0]) << 16) +
-                ((uint32_t)Type::floatToUInt8(m_data[1]) << 8) +
-                (uint32_t)Type::floatToUInt8(m_data[2]);
+            (static_cast<uint32_t>(Type::floatToUInt8(m_data[0])) << 16) +
+            (static_cast<uint32_t>(Type::floatToUInt8(m_data[1])) << 8) +
+            static_cast<uint32_t>(Type::floatToUInt8(m_data[2]));
     }
 
 
     void RGB::values(float* out_values) const noexcept {
-
         if (out_values != nullptr) {
             out_values[0] = m_data[0];
             out_values[1] = m_data[1];
@@ -498,17 +496,17 @@ namespace Grain {
 
     void RGB::set24bit(uint32_t value) noexcept {
 
-        m_data[0] = (float)((value >> 16) & 0xFF) / 255;
-        m_data[1] = (float)((value >> 8) & 0xFF) / 255;
-        m_data[2] = (float)(value & 0xFF) / 255;
+        m_data[0] = static_cast<float>((value >> 16) & 0xFF) / 255.0f;
+        m_data[1] = static_cast<float>((value >> 8) & 0xFF) / 255.0f;
+        m_data[2] = static_cast<float>(value & 0xFF) / 255.0f;
     }
 
 
     void RGB::setUInt8(uint8_t r, uint8_t g, uint8_t b) noexcept {
 
-        m_data[0] = (float)r / 255;
-        m_data[1] = (float)g / 255;
-        m_data[2] = (float)b / 255;
+        m_data[0] = static_cast<float>(r) / 255.0f;
+        m_data[1] = static_cast<float>(g) / 255.0f;
+        m_data[2] = static_cast<float>(b) / 255.0f;
     }
 
 

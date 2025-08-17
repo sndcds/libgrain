@@ -15,7 +15,7 @@
 namespace Grain {
 
     #if defined(__APPLE__) && defined(__MACH__)
-        void _macosView_addComponent(Component* paren, Component* component);
+        void _macosView_addComponent(Component* paren, Component* component, Component::AddFlags flags);
     #endif
 
 
@@ -51,12 +51,12 @@ namespace Grain {
 
     View* View::addView(const Rectd& rect) noexcept {
         View* view = new(std::nothrow) View(rect);
-        addComponent(view);
+        addComponent(view, AddFlags::kWantsLayer);
         return view;
     }
 
 
-    Component* View::addComponent(Component* component) noexcept {
+    Component* View::addComponent(Component* component, AddFlags flags) noexcept {
         if (component != nullptr) {
             component->_setParent(this);
             m_components.push(component);
@@ -79,7 +79,7 @@ namespace Grain {
             }
 
             #if defined(__APPLE__) && defined(__MACH__)
-                _macosView_addComponent(this, component);
+                _macosView_addComponent(this, component, flags);
             #endif
         }
 

@@ -27,10 +27,10 @@ namespace Grain {
         m_data_sum = 0.0;
 
         // Allocate memory
-        m_row_values = (int64_t*)std::malloc(sizeof(int64_t) * width);
-        m_row_offsets = (int64_t*)std::malloc(sizeof(int64_t) * height);
-        m_seq_offsets = (uint32_t*)std::malloc(sizeof(uint32_t) * width);
-        m_seq_mins = (int64_t*)std::malloc(sizeof(int64_t) * width);
+        m_row_values = static_cast<int64_t*>(std::malloc(sizeof(int64_t) * width));
+        m_row_offsets = static_cast<int64_t*>(std::malloc(sizeof(int64_t) * height));
+        m_seq_offsets = static_cast<uint32_t*>(std::malloc(sizeof(uint32_t) * width));
+        m_seq_mins = static_cast<int64_t*>(std::malloc(sizeof(int64_t) * width));
         m_byte_buffer_size = sizeof(uint8_t) * width * (max_digits / 2 + 1);
         m_byte_buffer = (uint8_t*)std::malloc(m_byte_buffer_size);
     }
@@ -85,7 +85,7 @@ namespace Grain {
         m_file->writeValue<int64_t>(m_max_value);
         m_file->writeFix(m_mean_value);
 
-        m_file->writeValue<int32_t>((int32_t)m_unit);
+        m_file->writeValue<int32_t>(static_cast<int32_t>(m_unit));
 
         m_file_pos_row_offsets = m_file->pos();
         m_file->writeValue<uint32_t>(0);  // Dummy value. Will be replaced later
@@ -112,7 +112,7 @@ namespace Grain {
 
         if (m_data == nullptr) {
             auto n = (size_t)m_width * m_height;
-            m_data = (int64_t*)malloc(sizeof(int64_t) * n);
+            m_data = static_cast<int64_t*>(malloc(sizeof(int64_t) * n));
             if (m_data == nullptr) {
                 throw ErrorCode::MemCantAllocate;
             }
@@ -182,8 +182,7 @@ namespace Grain {
 
 
     uint8_t CVF2::_extractNibble(uint64_t value, int32_t position) {
-
-        return (uint8_t)((value >> ((m_curr_row_digits - position - 1) * 4)) & 0xF);
+        return static_cast<uint8_t>((value >> ((m_curr_row_digits - position - 1) * 4)) & 0xF);
     }
 
 
@@ -352,11 +351,11 @@ namespace Grain {
             int64_t row_offsets_pos = m_file->pos();
 
             for (int32_t i = 0; i < m_height; i++) {
-                m_file->writeValue<uint32_t>((uint32_t)m_row_offsets[i]);
+                m_file->writeValue<uint32_t>(static_cast<uint32_t>(m_row_offsets[i]));
             }
 
             m_file->setPos(m_file_pos_row_offsets);
-            m_file->writeValue<uint32_t>((uint32_t)row_offsets_pos);
+            m_file->writeValue<uint32_t>(static_cast<uint32_t>(row_offsets_pos));
 
             m_file_data_saved = true;
         }

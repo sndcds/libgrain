@@ -20,30 +20,30 @@ namespace Grain {
             Window::Style style,
             Screen* screen) {
 
-        auto style_bits = (uint32_t)style;
+        auto style_bits = static_cast<uint32_t>(style);
         BOOL ns_defer_flag = NO;
         NSScreen* ns_screen = screen ? (__bridge NSScreen*)screen->nsScreen() : nil;
         NSUInteger ns_style_mask = NSWindowStyleMaskBorderless;
 
-        if (style_bits & (uint32_t)Window::Style::Titled) {
+        if (style_bits & static_cast<uint32_t>(Window::Style::Titled)) {
             ns_style_mask |= NSWindowStyleMaskTitled;
         }
-        if (style_bits &  (uint32_t)Window::Style::Closable) {
+        if (style_bits &  static_cast<uint32_t>(Window::Style::Closable)) {
             ns_style_mask |= NSWindowStyleMaskClosable;
         }
-        if (style_bits & (uint32_t)Window::Style::Miniaturizable) {
+        if (style_bits & static_cast<uint32_t>(Window::Style::Miniaturizable)) {
             ns_style_mask |= NSWindowStyleMaskMiniaturizable;
         }
-        if (style_bits & (uint32_t)Window::Style::Resizable) {
+        if (style_bits & static_cast<uint32_t>(Window::Style::Resizable)) {
             ns_style_mask |= NSWindowStyleMaskResizable;
         }
-        if (style_bits & (uint32_t)Window::Style::UnifiedTitleAndToolbar) {
+        if (style_bits & static_cast<uint32_t>(Window::Style::UnifiedTitleAndToolbar)) {
             ns_style_mask |= NSWindowStyleMaskUnifiedTitleAndToolbar;
         }
-        if (style_bits & (uint32_t)Window::Style::FullScreen) {
+        if (style_bits & static_cast<uint32_t>(Window::Style::FullScreen)) {
             ns_style_mask |= NSWindowStyleMaskFullScreen;
         }
-        if (style_bits & (uint32_t)Window::Style::FullSizeContentView) {
+        if (style_bits & static_cast<uint32_t>(Window::Style::FullSizeContentView)) {
             ns_style_mask |= NSWindowStyleMaskFullSizeContentView;
         }
 

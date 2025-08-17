@@ -134,7 +134,7 @@ namespace Grain {
             };
 
             if (m_event_type >= EventType::Undefined && m_event_type <= EventType::Last) {
-                return _names[(int32_t)m_event_type];
+                return _names[static_cast<int32_t>(m_event_type)];
             }
             else {
                 return _names[0];

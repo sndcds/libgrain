@@ -73,7 +73,7 @@ namespace Grain {
 
     int32_t Polygon::segmentCount() const noexcept {
 
-        return m_closed == true ? (int32_t)m_points.size() : (int32_t)m_points.size() - 1;
+        return m_closed == true ? static_cast<int32_t>(m_points.size()) : static_cast<int32_t>(m_points.size()) - 1;
     }
 
 

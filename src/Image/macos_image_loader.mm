@@ -105,7 +105,7 @@ namespace Grain {
 
             std::cout << "alloc image\n";
 
-            image = new(std::nothrow) Image(src_color_model, (uint32_t)ns_width, (uint32_t)ns_height, pixel_type);
+            image = new(std::nothrow) Image(src_color_model, static_cast<uint32_t>(ns_width), static_cast<uint32_t>(ns_height), pixel_type);
             if (!image) {
                 throw Error::specific(4);
             }
@@ -135,8 +135,8 @@ namespace Grain {
     void _setImageAccessToNSBitmapImageRep(ImageAccess& image_access, NSBitmapImageRep *bitmap_rep) {
 
         ImageAccessSetupInfo ia_setup_info;
-        ia_setup_info.m_width = (uint32_t)[bitmap_rep pixelsWide];
-        ia_setup_info.m_height = (uint32_t)[bitmap_rep pixelsHigh];
+        ia_setup_info.m_width = static_cast<uint32_t>([bitmap_rep pixelsWide]);
+        ia_setup_info.m_height = static_cast<uint32_t>([bitmap_rep pixelsHigh]);
 
         if (ia_setup_info.m_width < 1 || ia_setup_info.m_height < 1) {
             return;
@@ -212,9 +212,9 @@ namespace Grain {
         }
 
 
-        ia_setup_info.m_pixel_data_ptr = (uint8_t*)[bitmap_rep bitmapData];
-        ia_setup_info.m_pixel_data_step = (uint32_t)ns_bits_per_pixel / 8;
-        ia_setup_info.m_row_data_step = ns_bytes_per_row > 0 ? (uint32_t)ns_bytes_per_row : ia_setup_info.m_pixel_data_step * ia_setup_info.m_width;
+        ia_setup_info.m_pixel_data_ptr = static_cast<uint8_t*>([bitmap_rep bitmapData]);
+        ia_setup_info.m_pixel_data_step = static_cast<uint32_t>(ns_bits_per_pixel) / 8;
+        ia_setup_info.m_row_data_step = ns_bytes_per_row > 0 ? static_cast<uint32_t>(ns_bytes_per_row) : ia_setup_info.m_pixel_data_step * ia_setup_info.m_width;
         ia_setup_info.m_plane_data_step = ia_setup_info.m_row_data_step * ia_setup_info.m_height;
 
         image_access.setBySetupInfo(ia_setup_info);

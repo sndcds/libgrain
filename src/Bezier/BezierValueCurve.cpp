@@ -779,7 +779,7 @@ namespace Grain {
 
     bool BezierValueCurve::removePoint(int32_t index) noexcept {
 
-        if (index >= 0 && index < (int32_t)m_points.size() - 1) {
+        if (index >= 0 && index < static_cast<int32_t>(m_points.size()) - 1) {
             m_points.erase(m_points.begin() + index);
             mustUpdate();
             return true;
@@ -795,13 +795,13 @@ namespace Grain {
 
         if (selectedPointsCount() > 0) {
 
-            int32_t n = (int32_t)m_points.size();
+            int32_t n = static_cast<int32_t>(m_points.size());
 
             m_points.erase(std::remove_if(m_points.begin(), m_points.end(), [](const BezierValueCurvePoint &point) {
                 return point.isSelected() && point.isDeleteable() && !point.isDecayBegin();
             }), m_points.end());
 
-            result = n - (int32_t)m_points.size();
+            result = n - static_cast<int32_t>(m_points.size());
             if (n > 0) {
                 mustUpdate();
             }
@@ -1080,7 +1080,7 @@ namespace Grain {
 
             for (int32_t i = index1; i < index2; i++) {
 
-                double x = bp1.m_x + (double)(i - index1) / (index2 - index1) * (bp4.m_x - bp1.m_x);
+                double x = bp1.m_x + static_cast<double>(i - index1) / (index2 - index1) * (bp4.m_x - bp1.m_x);
 
                 double roots[3];
                 int32_t n = Math::solveCubicBezier(bp1.m_x, bp2.m_x, bp3.m_x, bp4.m_x, x, roots);
@@ -1464,7 +1464,7 @@ namespace Grain {
 
 
     BezierValueCurveDrawSettings::BezierValueCurveDrawSettings() noexcept {
-/* TODO !!!!!
+/* TODO !!!!! Implement!
         m_point_colors[(int32_t)Bezier::PointType::Linear].set(1, 1, 1);
         m_point_colors[(int32_t)Bezier::PointType::Corner].set(0.5f, 0.1f, 0.5f);
         m_point_colors[(int32_t)Bezier::PointType::Smooth1].set(0.9f, 0.3f, 0.1f);
@@ -1474,15 +1474,14 @@ namespace Grain {
         */
     }
 
-    /* TODO !!!!!
+    /* TODO !!!!! Implement!
     RGB BezierValueCurveDrawSettings::pointColor(BezierValueCurvePoint *point) const noexcept {
-
         return point ? m_point_colors[(int32_t)point->pointType()] : RGB();
     }
      */
 
 
-    /* TODO !!!!!
+    /* TODO !!!!! Implement!
     void BezierValueCurveDrawSettings::setStrokeColor(const RGB& color) noexcept {
 
         m_stroke_color = color;

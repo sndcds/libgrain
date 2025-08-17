@@ -227,7 +227,7 @@ namespace Grain {
 
     void NetworkInterfaceList::update() noexcept {
 
-        /* !!!!! macOS
+        /* !!!!! macOS Implement!
         SCDynamicStoreRef store_ref = NULL;
 
         try {
@@ -465,7 +465,7 @@ namespace Grain {
             if (!(basic_info_th->flags & TH_FLAGS_IDLE)) {
                 tot_sec = tot_sec + basic_info_th->user_time.seconds + basic_info_th->system_time.seconds;
                 tot_usec = tot_usec + basic_info_th->system_time.microseconds + basic_info_th->system_time.microseconds;
-                tot_cpu = tot_cpu + basic_info_th->cpu_usage / (float)TH_USAGE_SCALE;
+                tot_cpu = tot_cpu + basic_info_th->cpu_usage / static_cast<float>(TH_USAGE_SCALE);
             }
 
         }

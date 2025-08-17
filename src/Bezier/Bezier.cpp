@@ -390,7 +390,7 @@ namespace Grain {
 
         if (lut != nullptr && resolution > 1) {
             for (int32_t i = 0; i < resolution; i++) {
-                lut[i] = posOnCurve((double)i / (resolution - 1));
+                lut[i] = posOnCurve(static_cast<double>(i) / static_cast<double>(resolution - 1));
             }
         }
     }

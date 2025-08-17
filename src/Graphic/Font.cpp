@@ -117,7 +117,7 @@ namespace Grain {
             m_underline_thickness = CTFontGetUnderlineThickness(m_ct_font);
 
             m_units_per_em = static_cast<int32_t>(CTFontGetUnitsPerEm(m_ct_font));
-            m_glyph_count = (int32_t)CTFontGetGlyphCount(m_ct_font);
+            m_glyph_count = static_cast<int32_t>(CTFontGetGlyphCount(m_ct_font));
 
             CGRect ct_bbox = CTFontGetBoundingBox(m_ct_font);
             m_bounding_box.set(ct_bbox.origin.x, ct_bbox.origin.y, ct_bbox.size.width, ct_bbox.size.height);
@@ -350,7 +350,7 @@ namespace Grain {
             CFStringRef cf_string = CFStringCreateWithCString(nullptr, text, kCFStringEncodingUTF8);
             if (cf_string != nullptr) {
                 // Get the character count
-                char_count = (int32_t)CFStringGetLength(cf_string);
+                char_count = static_cast<int32_t>(CFStringGetLength(cf_string));
                 CFRelease(cf_string);
             }
 
@@ -367,8 +367,8 @@ namespace Grain {
             CTFontGetAdvancesForGlyphs(ct_font, kCTFontOrientationDefault, glyphs, advances, char_count);
 
             for (int32_t i = 0; i < char_count; i++) {
-                out_advances[i].m_x = (double)(advances[i].width);
-                out_advances[i].m_y = (double)(advances[i].height);
+                out_advances[i].m_x = static_cast<double>(advances[i].width);
+                out_advances[i].m_y = static_cast<double>(advances[i].height);
             }
 
             result = char_count;

@@ -53,14 +53,14 @@ namespace Grain {
     }
 
     void _macosApp_beep() {
-            NSBeep();
+        NSBeep();
     }
 
     void _macosApp_updateScreenInfos(App* app) {
 
         NSArray* ns_screens = [NSScreen screens];
 
-        auto screen_count = (int32_t) [ns_screens count];
+        auto screen_count = static_cast<int32_t>([ns_screens count]);
         if (screen_count > kMaxScreenCount) {
             screen_count = kMaxScreenCount;
         }
@@ -77,7 +77,6 @@ namespace Grain {
             for (int32_t i = 0; i < screen_count; i++) {
                 auto screen = new(std::nothrow) Screen();
                 app->m_screens.push(screen);
-                std::cout << "screen: " << i << ": " << (long)screen << std::endl;
                 if (screen) {
                     NSScreen* ns_screen = [ns_screens objectAtIndex:(NSUInteger) i];
                     NSRect ns_screen_rect = [ns_screen frame];
@@ -100,8 +99,6 @@ namespace Grain {
                         min_pixel_count = curr_pixel_count;
                         app->m_smallest_screen_index = i;
                     }
-                    std::cout << "curr_pixel_count: " << curr_pixel_count << std::endl;
-
                     app->m_total_screen_pixel_count += curr_pixel_count;
                 }
             }

@@ -487,7 +487,7 @@ namespace Grain {
         static const char *undefined_name = "unknown";
 
         if (unit >= CSSUnit::First && unit <= CSSUnit::Last) {
-            return _g_css_unit_infos[(int32_t)unit].m_unit_str;
+            return _g_css_unit_infos[static_cast<int32_t>(unit)].m_unit_str;
         }
         else {
             return undefined_name;

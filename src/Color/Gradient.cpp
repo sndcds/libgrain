@@ -200,9 +200,9 @@ namespace Grain {
         auto gradient = new(std::nothrow) Gradient();
         if (gradient != nullptr) {
             if (palette >= Preset::First && palette <= Preset::Last) {
-                int32_t p_index = (int32_t)palette;
+                auto p_index = static_cast<int32_t>(palette);
                 for (int32_t i = 0; i < 16; i++) {
-                    float pos = (float)i / 15;
+                    float pos = static_cast<float>(i) / 15.0f;
                     if (flip) {
                         pos = 1.0f - pos;
                     }
@@ -250,13 +250,13 @@ namespace Grain {
         for (int32_t i = 0; i < resolution; i++) {
 
             // Smooth the gradient
-            rgb.setKelvin(k0 + (k1 - k0) / (resolution - 1) * i);
+            rgb.setKelvin(k0 + (k1 - k0) / static_cast<float>(resolution - 1) * static_cast<float>(i));
             hsv.set(rgb);
             hsv.m_data[1] *= s;
             hsv.m_data[2] *= v;
             rgb = hsv;
 
-            addStop((float)i / (resolution - 1), rgb);
+            addStop(static_cast<float>(i) / static_cast<float>(resolution - 1), rgb);
         }
     }
 
@@ -271,8 +271,8 @@ namespace Grain {
         for (int32_t i = 0; i < resolution; i++) {
 
             // Smooth the gradient
-            rgb.setHSV((float)i / (resolution - 1), s, v);
-            addStop((float)i / (resolution - 1), rgb);
+            rgb.setHSV(static_cast<float>(i) / static_cast<float>(resolution - 1), s, v);
+            addStop(static_cast<float>(i) / static_cast<float>(resolution - 1), rgb);
         }
     }
 
@@ -315,7 +315,7 @@ namespace Grain {
 
     int32_t Gradient::lastSelectedStopIndex() const noexcept {
 
-        for (int32_t index = (int32_t)m_stops.size() - 1; index >= 0; index--) {
+        for (int32_t index = static_cast<int32_t>(m_stops.size()) - 1; index >= 0; index--) {
             auto stop = m_stops.elementAtIndex(index);
             if (stop.isSelected()) {
                 return index;
@@ -439,7 +439,7 @@ namespace Grain {
 
         int32_t n = 0;
 
-        for (int32_t index = (int32_t)m_stops.size() - 1; index >= 0; index--) {
+        for (int32_t index = static_cast<int32_t>(m_stops.size()) - 1; index >= 0; index--) {
             auto stop = m_stops.elementAtIndex(index);
             if (stop.isSelected()) {
                 m_stops.removeAtIndex(index);
@@ -906,13 +906,13 @@ namespace Grain {
 
                 int32_t step_n = l_stop->m_step_count;
                 float pos = left_pos;
-                float pos_step = (right_pos - left_pos) / step_n;
+                float pos_step = (right_pos - left_pos) / static_cast<float>(step_n);
                 float pos_offset = pos_step / 100;
 
                 for (int32_t step_index = 0; step_index < step_n; step_index++) {
                     cg_gradient_locations[cg_spot_index] = pos;
 
-                    float blend = (float)step_index / step_n;
+                    float blend = static_cast<float>(step_index) / static_cast<float>(step_n);
                     // color.setBlend(left_color, right_color, blend);
                     color.mixbox(left_color, right_color, blend);
 
@@ -951,12 +951,12 @@ namespace Grain {
                 cg_spot_index++;
 
                 for (int32_t j = 1; j < m_cg_resolution; j++) {
-                    cg_stop_location = Math::remapclamped(0, m_cg_resolution, left_pos, right_pos, j);
+                    cg_stop_location = static_cast<float>(Math::remapclamped(0, m_cg_resolution, left_pos, right_pos, j));
                     cg_gradient_locations[cg_spot_index] = cg_stop_location;
 
-                    double blend = level_curve.yAtX((double)j / (m_cg_resolution / 1));
+                    double blend = level_curve.yAtX(static_cast<double>(j) / static_cast<double>(m_cg_resolution - 1));
                     // ct.setBlend(c1, c2, blend);
-                    ct.mixbox(c1, c2, blend);
+                    ct.mixbox(c1, c2, static_cast<float>(blend));
 
                     // std::cout << cg_spot_index << "  cg_stop_location: " << cg_stop_location << ", color: " << ct << ", blend: " << blend << std::endl;
 
@@ -1114,9 +1114,7 @@ namespace Grain {
 
 
     ErrorCode Gradient::saveDataFile(const String& file_path, bool canOverwrite) const noexcept {
-
-        // TODO: Implement!
-
+        #warning "Gradient::saveDataFile() must be implemented"
         auto err = ErrorCode::None;
 
         return err;
@@ -1124,8 +1122,7 @@ namespace Grain {
 
 
     ErrorCode Gradient::setFromDataFile(const String& file_path) noexcept {
-
-        // TODO: Implement!
+        #warning "Gradient::setFromDataFile() must be implemented"
         return ErrorCode::None;
     }
 
@@ -1277,7 +1274,7 @@ namespace Grain {
             GradientColorFunc func;
         };
 
-        static TypedFunction typed_functions[(int32_t)StandardFunctionType::Count] = {
+        static TypedFunction typed_functions[static_cast<int32_t>(StandardFunctionType::Count)] = {
                 { StandardFunctionType::Gradient, _standardFunc_gradient },
                 { StandardFunctionType::GradientAlpha, _standardFunc_gradientAlpha },
                 { StandardFunctionType::LUT1, _standardFunc_LUT1 },
@@ -1286,8 +1283,8 @@ namespace Grain {
                 { StandardFunctionType::Kelvin, _standardFunc_kelvin }
         };
 
-        auto index = (int32_t)function_type;
-        if (index >= 0 && index < (int32_t)StandardFunctionType::Count) {
+        auto index = static_cast<int32_t>(function_type);
+        if (index >= 0 && index < static_cast<int32_t>(StandardFunctionType::Count)) {
             _m_color_func = typed_functions[index].func;
         }
         else {

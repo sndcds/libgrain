@@ -312,7 +312,7 @@ namespace Grain {
                     { nullptr }, // Sentinel item (end of list)
             };
             static const char* unknown = "Unknown TIFF type";
-            return KeyIntPair::lookupKey((int32_t)type, items, unknown);
+            return KeyIntPair::lookupKey(static_cast<int32_t>(type), items, unknown);
         }
 
         static const char* tagName(TiffTag tag) noexcept {
@@ -405,7 +405,7 @@ namespace Grain {
                     { nullptr } // Sentinel item (end of list)
             };
             static const char* unknown = "Unknown TIFF tag";
-            return KeyIntPair::lookupKey((int32_t)tag, items, unknown);
+            return KeyIntPair::lookupKey(static_cast<int32_t>(tag), items, unknown);
         }
 
         static const char* geoKeyName(uint16_t key) noexcept {
@@ -459,7 +459,7 @@ namespace Grain {
                     { nullptr } // Sentinel item (end of list)
             };
             static const char* unknown = "Unknown GeoTIFF key";
-            return KeyIntPair::lookupKey((int32_t)key, items, unknown);
+            return KeyIntPair::lookupKey(static_cast<int32_t>(key), items, unknown);
         }
 
         static int32_t geoKeyBytes(GeoTiffKey key) noexcept {
@@ -515,7 +515,7 @@ namespace Grain {
             };
 
             int32_t index = 0;
-            while ((int32_t)table[index].key > 0) {
+            while (static_cast<int32_t>(table[index].key) > 0) {
                 if (key == table[index].key) {
                     break;
                 }

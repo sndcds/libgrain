@@ -151,12 +151,11 @@ namespace Grain {
 
 
     uint32_t RGBA::rgba32bit() const noexcept {
-
         return
-                ((uint32_t)Type::floatToUInt8(m_data[0]) << 24) +
-                ((uint32_t)Type::floatToUInt8(m_data[1]) << 16) +
-                ((uint32_t)Type::floatToUInt8(m_data[2]) << 8) +
-                (uint32_t)Type::floatToUInt8(m_alpha);
+            (static_cast<uint32_t>(Type::floatToUInt8(m_data[0])) << 24) +
+            (static_cast<uint32_t>(Type::floatToUInt8(m_data[1])) << 16) +
+            (static_cast<uint32_t>(Type::floatToUInt8(m_data[2])) << 8) +
+            static_cast<uint32_t>(Type::floatToUInt8(m_alpha));
     }
 
 

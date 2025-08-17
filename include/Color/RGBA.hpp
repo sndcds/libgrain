@@ -115,10 +115,10 @@ namespace Grain {
         void setRGBA(float r, float g, float b, float alpha) { m_data[0] = r; m_data[1] = g; m_data[2] = b; m_alpha = alpha; }
 
         void set32bit(uint32_t value) noexcept {
-            m_data[0] = (float)((value & 0xFF000000) >> 24) / 255;
-            m_data[1] = (float)((value & 0xFF0000) >> 16) / 255;
-            m_data[2] = (float)((value & 0xFF00) >> 8) / 255;
-            m_alpha = (float)(value & 0xFF) / 255;
+            m_data[0] = static_cast<float>((value & 0xFF000000) >> 24) / 255;
+            m_data[1] = static_cast<float>((value & 0xFF0000) >> 16) / 255;
+            m_data[2] = static_cast<float>((value & 0xFF00) >> 8) / 255;
+            m_alpha = static_cast<float>(value & 0xFF) / 255;
         }
 
         int32_t setByCSV(const char* csv) noexcept override;

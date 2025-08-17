@@ -200,7 +200,7 @@ namespace Grain {
                     event->_setMousePos(Vec2d(pos.x, pos.y));
                     event->_setKeyCode([ns_event keyCode]);
                     NSString *key_characters = [ns_event charactersIgnoringModifiers];
-                    int32_t key_char_count = (int32_t)[key_characters length];
+                    int32_t key_char_count = static_cast<int32_t>([key_characters length]);
                     if (key_char_count > 0) {
                         event->_setKeyChar([key_characters characterAtIndex:0]);
                     }

@@ -64,6 +64,11 @@ namespace Grain {
         Rect() noexcept : m_width(1), m_height(1) {}
 
         /**
+         *  @brief Fully initializes a rectangle with position (x, y) and dimensions (width, height).
+         */
+        Rect(T x, T y, T width, T height) noexcept : m_x(x), m_y(y), m_width(width), m_height(height) {}
+
+        /**
          *  @brief Creates a square rectangle with both width and height set to size.
          */
         explicit Rect(T size) noexcept : m_width(size), m_height(size) {}
@@ -72,11 +77,6 @@ namespace Grain {
          *  @brief Initializes a rectangle at (0, 0) with the specified width and height.
          */
         explicit Rect(T width, T height) noexcept : m_width(width), m_height(height) {}
-
-        /**
-         *  @brief Fully initializes a rectangle with position (x, y) and dimensions (width, height).
-         */
-        explicit Rect(T x, T y, T width, T height) noexcept : m_x(x), m_y(y), m_width(width), m_height(height) {}
 
         /**
          *  @brief Copies a rectangle and applies an inset by inset_size on all sides.

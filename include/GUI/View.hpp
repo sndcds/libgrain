@@ -20,9 +20,7 @@ namespace Grain {
     class View : public Component {
     public:
         explicit View(int32_t tag = 0) noexcept;
-
         explicit View(const Rectd& rect, int32_t tag = 0) noexcept;
-
         virtual ~View() noexcept;
 
         [[nodiscard]] const char* className() const noexcept override { return "View"; }
@@ -31,9 +29,9 @@ namespace Grain {
         void _init(const Rectd &rect) noexcept;
 
         virtual View* addView(const Rectd& rect) noexcept;
+        Component* addComponent(Component* component, AddFlags flags) noexcept;
 
-        Component* addComponent(Component* component) noexcept;
-
+        [[nodiscard]] ObjectList<Component*> components() noexcept { return m_components; }
         [[nodiscard]] bool hasDescendant(const Component* component) noexcept override;
 
         void draw(const Rectd& dirty_rect) noexcept override;

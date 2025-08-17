@@ -231,7 +231,7 @@ namespace Grain {
         }
 
         friend std::ostream& operator << (std::ostream& os, const Gradient& o) {
-            os << (int32_t)o.m_color_space << ", " << o.m_stops.size() << ", " << o.m_lut_resolution;
+            os << static_cast<int32_t>(o.m_color_space) << ", " << o.m_stops.size() << ", " << o.m_lut_resolution;
             os << ", " << o.m_must_sort << ", " << o.m_lut_must_update;
             return os;
         }
@@ -253,8 +253,8 @@ namespace Grain {
         bool hasStops() const noexcept { return m_stops.size() > 0; }
         bool canAccessStop(int32_t index) const noexcept { return index >= 0 || index < m_stops.size(); }
 
-        int32_t stopCount() const noexcept { return (int32_t)m_stops.size(); }
-        int32_t lastStopIndex() const noexcept { return (int32_t)m_stops.size() - 1; }
+        int32_t stopCount() const noexcept { return static_cast<int32_t>(m_stops.size()); }
+        int32_t lastStopIndex() const noexcept { return stopCount() - 1; }
         int32_t selectedStopCount() const noexcept;
 
         int32_t firstSelectedStopIndex() const noexcept;

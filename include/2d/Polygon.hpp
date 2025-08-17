@@ -39,7 +39,7 @@ namespace Grain {
         void _updateLength() noexcept;
 
         bool hasPoints() const noexcept { return pointCount() > 0; }
-        int32_t pointCount() const noexcept { return (int32_t)m_points.size(); }
+        int32_t pointCount() const noexcept { return static_cast<int32_t>(m_points.size()); }
         int32_t segmentCount() const noexcept;
         List<Vec2d>* pointsListPtr() noexcept { return &m_points; }
 

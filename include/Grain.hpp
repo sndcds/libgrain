@@ -270,7 +270,8 @@ namespace Grain {
     class Safe {
     public:
         template<typename T>
-        [[nodiscard]] static bool canSafelyDivideBy(T v); // TODO: Implement!
+        [[nodiscard]] static bool canSafelyDivideBy(T v);
+        #warning "canSafelyDivideBy must be implemented"
     };
 
     // Declare specializations

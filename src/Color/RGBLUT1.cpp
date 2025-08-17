@@ -107,11 +107,11 @@ namespace Grain {
             RGB* d = m_samples;
 
             float lut_pos = 0;
-            float lut_step = 1.0f / m_max_index;
-            float lut_sub_step = lut_step / sub_resolution;
+            float lut_step = 1.0f / static_cast<float>(m_max_index);
+            float lut_sub_step = lut_step / static_cast<float>(sub_resolution);
 
             for (int32_t i = 0; i < m_resolution; i++) {
-                lut_pos = (float)i / m_max_index;
+                lut_pos = static_cast<float>(i) / static_cast<float>(m_max_index);
                 color.black();
 
                 for (int32_t j = 0; j < sub_resolution; j++) {
@@ -121,7 +121,7 @@ namespace Grain {
                     lut_pos += lut_sub_step;
                 }
 
-                color *= 1.0f / sub_resolution;
+                color *= 1.0f / static_cast<float>(sub_resolution);
                 *d = color;
                 d++;
             }
@@ -172,7 +172,7 @@ namespace Grain {
             return;
         }
 
-        int32_t index = (int32_t)(pos * m_resolution);
+        int32_t index = static_cast<int32_t>(pos * m_resolution);
         if (index >= m_resolution - 1) {
             m_samples[m_resolution - 1].values(out_color);
             return;

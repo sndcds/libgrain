@@ -29,10 +29,10 @@ namespace Grain {
         [(NSView*)component->nsView() release];
     }
 
-    void _macosView_addComponent(Component* parent, Component* component) {
+    void _macosView_addComponent(Component* parent, Component* component, Component::AddFlags flags) {
         auto parent_ns_view = (NSView*)parent->nsView();
         auto component_ns_view = (NSView*)component->nsView();
-        component_ns_view.wantsLayer = YES;
+        component_ns_view.wantsLayer = (flags & Component::AddFlags::kWantsLayer) ? YES : NO;
         [parent_ns_view addSubview:component_ns_view];
     }
 
@@ -294,11 +294,11 @@ if (i > 10) {
 
 - (void)keyDown:(NSEvent*)ns_event {
     NSString *key_characters = [ns_event charactersIgnoringModifiers];
-    auto key_char_count = (int32_t)[key_characters length];
+    auto key_char_count = static_cast<int32_t>([key_characters length]);
 
     if (key_char_count > 0) {
 
-        auto key_char = (int32_t)[key_characters characterAtIndex:0];
+        auto key_char = static_cast<int32_t>([key_characters characterAtIndex:0]);
 
         auto ns_window = (GrainNSWindow*)[self window];
         Grain::Window *window = [ns_window window];
@@ -393,7 +393,7 @@ if (i > 10) {
             NSArray<Class> *classes = @[[NSURL class]];
             NSDictionary *options = @{};
             NSArray<NSURL*> *urls = [pasteboard readObjectsForClasses:classes options:options];
-            auto n = (int32_t)[urls count];
+            auto n = static_cast<int32_t>([urls count]);
             if (n > 0) {
 
                 Grain::StringList result_file_paths(n);

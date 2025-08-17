@@ -164,13 +164,13 @@ namespace Grain {
         t = std::clamp<double>(t, 0.0, 1.0);
 
         int32_t segment_n = segmentCount();
-        int32_t segment_index = (int32_t)(t * segment_n);
+        int32_t segment_index = static_cast<int32_t>(t * segment_n);
         int32_t last_segment_index = lastSegmentIndex();
         if (segment_index > last_segment_index) {
             segment_index = last_segment_index;
         }
 
-        float t2 = Math::remapnorm((double)segment_index / segment_n, (double)(segment_index + 1) / segment_n, t);
+        float t2 = Math::remapnorm(static_cast<double>(segment_index) / segment_n, static_cast<double>(segment_index + 1) / segment_n, t);
 
         _getPoint(segment_index, t2, m_alpha, out_point);
     }

@@ -269,31 +269,31 @@ namespace Grain {
             }
             switch (index) {
                 case 3:
-                    m_rgba.m_data[0] = (float)((hex_digits[0] << 4) + hex_digits[0]) / 255.0;
-                    m_rgba.m_data[1] = (float)((hex_digits[1] << 4) + hex_digits[1]) / 255.0;
-                    m_rgba.m_data[2] = (float)((hex_digits[2] << 4) + hex_digits[2]) / 255.0;
+                    m_rgba.m_data[0] = static_cast<float>((hex_digits[0] << 4) + hex_digits[0]) / 255.0f;
+                    m_rgba.m_data[1] = static_cast<float>((hex_digits[1] << 4) + hex_digits[1]) / 255.0f;
+                    m_rgba.m_data[2] = static_cast<float>((hex_digits[2] << 4) + hex_digits[2]) / 255.0f;
                     m_rgba.m_alpha = 1.0f;
                     m_valid = true;
                     break;
                 case 4:
-                    m_rgba.m_data[0] = (float)((hex_digits[0] << 4) + hex_digits[0]) / 255.0;
-                    m_rgba.m_data[1] = (float)((hex_digits[1] << 4) + hex_digits[1]) / 255.0;
-                    m_rgba.m_data[2] = (float)((hex_digits[2] << 4) + hex_digits[2]) / 255.0;
-                    m_rgba.m_alpha = (float)((hex_digits[3] << 4) + hex_digits[3]) / 255.0;
+                    m_rgba.m_data[0] = static_cast<float>((hex_digits[0] << 4) + hex_digits[0]) / 255.0f;
+                    m_rgba.m_data[1] = static_cast<float>((hex_digits[1] << 4) + hex_digits[1]) / 255.0f;
+                    m_rgba.m_data[2] = static_cast<float>((hex_digits[2] << 4) + hex_digits[2]) / 255.0f;
+                    m_rgba.m_alpha = static_cast<float>((hex_digits[3] << 4) + hex_digits[3]) / 255.0f;
                     m_valid = true;
                     break;
                 case 6:
-                    m_rgba.m_data[0] = (float)((hex_digits[0] << 4) + hex_digits[1]) / 255.0;
-                    m_rgba.m_data[1] = (float)((hex_digits[2] << 4) + hex_digits[3]) / 255.0;
-                    m_rgba.m_data[2] = (float)((hex_digits[4] << 4) + hex_digits[5]) / 255.0;
+                    m_rgba.m_data[0] = static_cast<float>((hex_digits[0] << 4) + hex_digits[1]) / 255.0f;
+                    m_rgba.m_data[1] = static_cast<float>((hex_digits[2] << 4) + hex_digits[3]) / 255.0f;
+                    m_rgba.m_data[2] = static_cast<float>((hex_digits[4] << 4) + hex_digits[5]) / 255.0f;
                     m_rgba.m_alpha = 1.0f;
                     m_valid = true;
                     break;
                 case 8:
-                    m_rgba.m_data[0] = (float)((hex_digits[0] << 4) + hex_digits[1]) / 255.0;
-                    m_rgba.m_data[1] = (float)((hex_digits[2] << 4) + hex_digits[3]) / 255.0;
-                    m_rgba.m_data[2] = (float)((hex_digits[4] << 4) + hex_digits[5]) / 255.0;
-                    m_rgba.m_alpha = (float)((hex_digits[6] << 4) + hex_digits[7]) / 255.0;
+                    m_rgba.m_data[0] = static_cast<float>((hex_digits[0] << 4) + hex_digits[1]) / 255.0f;
+                    m_rgba.m_data[1] = static_cast<float>((hex_digits[2] << 4) + hex_digits[3]) / 255.0f;
+                    m_rgba.m_data[2] = static_cast<float>((hex_digits[4] << 4) + hex_digits[5]) / 255.0f;
+                    m_rgba.m_alpha = static_cast<float>((hex_digits[6] << 4) + hex_digits[7]) / 255.0f;
                     m_valid = true;
                     break;
                 default:
@@ -371,7 +371,7 @@ namespace Grain {
             return false;
         }
 
-        auto err = parseColorComponents(ptr, (int32_t)(end_ptr - ptr), component_n);
+        auto err = parseColorComponents(ptr, static_cast<int32_t>(end_ptr - ptr), component_n);
         if (err != ErrorCode::None) {
             out_err = err;
             return false;
@@ -456,23 +456,28 @@ namespace Grain {
                 break;
             }
 
-            case CSSColorFunction::HWB:  // TODO: Implement!
+            case CSSColorFunction::HWB:
+                #warning "case CSSColorFunction::HWB must be implemented"
                 return false;
                 break;
 
-            case CSSColorFunction::CMYK:  // TODO: Implement!
+            case CSSColorFunction::CMYK:
+                #warning "case CSSColorFunction::CMYK must be implemented"
                 return false;
                 break;
 
-            case CSSColorFunction::Lab:  // TODO: Implement!
+            case CSSColorFunction::Lab:
+                #warning "case CSSColorFunction::Lab must be implemented"
                 return false;
                 break;
 
-            case CSSColorFunction::Lch:  // TODO: Implement!
+            case CSSColorFunction::Lch:
+                #warning "case CSSColorFunction::Lch must be implemented"
                 return false;
                 break;
 
-            case CSSColorFunction::Color:  // TODO: Implement!
+            case CSSColorFunction::Color:
+                #warning "case CSSColorFunction::Color must be implemented"
                 return false;
                 break;
 

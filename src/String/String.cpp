@@ -4130,7 +4130,7 @@ String String::fileDirPath() const noexcept {
 
             if (str[0] == '0' &&  str[1] == 'x') {  // Hexadicimal
                 int64_t length = static_cast<int64_t>(strlen(str)) - 2;
-                uint32_t* p = (uint32_t*)&out_value;
+                uint32_t* p = reinterpret_cast<uint32_t*>(&out_value);
                 *p = 0x0;
 
                 int32_t shift = 0;

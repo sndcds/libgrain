@@ -430,9 +430,9 @@ namespace Grain {
     }
 
 
-    Component* Component::addComponentToView(Component* component, View* view) noexcept {
+    Component* Component::addComponentToView(Component* component, View* view, AddFlags flags) noexcept {
         if (component != nullptr && view != nullptr) {
-            view->addComponent(component);
+            view->addComponent(component, flags);
         }
         return component;
     }

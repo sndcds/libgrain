@@ -24,11 +24,14 @@
 #include "String/String.hpp"
 
 #include "libraw/libraw.h"
+
 #include <tiffio.h>
+#include <cairo/cairo.h>
 
 
 namespace Grain {
 
+    // Forward declarations
     class RGB;
     class RGBRamp;
     class RGBA;
@@ -38,6 +41,7 @@ namespace Grain {
     class ImageAccess;
 
 
+    // Class Image
     class Image : public Object {
         friend ImageAccess;
 
@@ -141,7 +145,7 @@ namespace Grain {
         bool m_use_min_max_in_typed_tiff = false;
         Ranged m_value_range = { 0.0, 1.0 };
 
-        ErrorCode m_last_err = ErrorCode::None;
+        cairo_surface_t* _m_cairo_surface = nullptr;
 
         #if defined(__APPLE__) && defined(__MACH__)
             CGContextRef _m_cg_context_ref = nullptr;
@@ -244,8 +248,8 @@ namespace Grain {
         [[nodiscard]] uint32_t pixelDataStep() const noexcept { return _m_pixel_data_step; };
         [[nodiscard]] size_t memSize() const noexcept { return _m_mem_size; };
 
-        [[nodiscard]] const uint8_t* pixelDataPtr() const { return (uint8_t*)_m_pixel_data; }
-        uint8_t* mutPixelDataPtr() { return (uint8_t*)_m_pixel_data; }
+        [[nodiscard]] const uint8_t* pixelDataPtr() const { return reinterpret_cast<uint8_t*>(_m_pixel_data); }
+        uint8_t* mutPixelDataPtr() { return reinterpret_cast<uint8_t*>(_m_pixel_data); }
 
         uint8_t* pixelDataPtrAtRow(int32_t y) {
             if (y >= 0 && y < m_height) {
@@ -258,7 +262,7 @@ namespace Grain {
 
 
 
-        [[nodiscard]] double aspectRatio() const { return m_height > 0 ? (double)m_width / (double)m_height : 1; }
+        [[nodiscard]] double aspectRatio() const { return m_height > 0 ? static_cast<double>(m_width) / static_cast<double>(m_height) : 1; }
 
         bool camToXYZMatrix(Mat3f& out_matrix) const noexcept;
         bool camToSRGBMatrix(Mat3f& out_matrix) const noexcept;
@@ -285,7 +289,7 @@ namespace Grain {
             model_pos = m_tie_points.elementAtIndex(index * 2 + 1);
         }
 
-        [[nodiscard]] int32_t tiePointCount() const noexcept { return (int32_t)m_tie_points.size() / 2; }
+        [[nodiscard]] int32_t tiePointCount() const noexcept { return static_cast<int32_t>(m_tie_points.size()) / 2; }
 
         void setSampleValueRange(double min, double max) noexcept {
             m_value_range.m_min = min;
@@ -503,8 +507,8 @@ namespace Grain {
         inline int32_t regionWidth() const { return m_region_width; }
         inline int32_t regionHeight() const { return m_region_height; }
 
-        double xFactor() const { return m_region_width > 0 ? (double)(m_x - m_region_x1) / (m_region_width - 1) : 1; }
-        double yFactor() const { return m_region_height > 0 ? (double)(m_y - m_region_y1) / (m_region_height - 1) : 1; }
+        double xFactor() const { return m_region_width > 0 ? static_cast<double>(m_x - m_region_x1) / (m_region_width - 1) : 1; }
+        double yFactor() const { return m_region_height > 0 ? static_cast<double>(m_y - m_region_y1) / (m_region_height - 1) : 1; }
 
         inline bool isOddRow() const { return y() & 0x1; };
         inline bool isEvenRow() const { return !(y() & 0x1); };

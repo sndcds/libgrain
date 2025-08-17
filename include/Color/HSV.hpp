@@ -40,7 +40,7 @@ namespace Grain {
     public:
         HSV() noexcept {}
         HSV(float h, float s, float v) noexcept {
-            m_data[0] = h - (int32_t)h;
+            m_data[0] = h - static_cast<int32_t>(h);
             m_data[1] = s;
             m_data[2] = v;
         }
@@ -97,7 +97,10 @@ namespace Grain {
         }
 
 
-        void set(float h, float s, float v) noexcept { m_data[0] = h - (int32_t)h; m_data[1] = s; m_data[2] = v; }
+        void set(float h, float s, float v) noexcept {
+            m_data[0] = h - static_cast<int32_t>(h);
+            m_data[1] = s;
+            m_data[2] = v; }
 
         void set(const float* comp) noexcept {
             if (comp != nullptr) {

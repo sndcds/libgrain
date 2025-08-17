@@ -101,7 +101,7 @@ namespace Grain {
     void Geo::wgs84FromTileIndex(int32_t zoom, int32_t tile_x, int32_t tile_y, double& out_lon, double& out_lat) noexcept {
 
         double n = pow(2, zoom);
-        out_lon = (double)tile_x / n * 360.0 - 180.0;
+        out_lon = static_cast<double>(tile_x) / n * 360.0 - 180.0;
         double lat_rad = std::atan(std::sinh(std::numbers::pi * (1.0 - 2.0 * tile_y / n)));
         out_lat = lat_rad * 180.0 / std::numbers::pi;
     }
@@ -203,11 +203,11 @@ namespace Grain {
 
 
         // Compute Slippy tile X.
-        out_slippy_index.m_x = (int32_t)floor(((pos.m_x + 180.0) / 360.0 * (1 << zoom)) + kCorrectionFactor);
+        out_slippy_index.m_x = static_cast<int32_t>(floor(((pos.m_x + 180.0) / 360.0 * (1 << zoom)) + kCorrectionFactor));
 
         // Compute Slippy tile Y (adjusted for Web Mercator).
         double lat_rad = pos.m_y * std::numbers::pi / 180.0;
-        out_slippy_index.m_y = (int32_t)floor(((1.0 - log(tan(lat_rad) + 1.0 / cos(lat_rad)) / std::numbers::pi) / 2.0 * (1 << zoom)) + kCorrectionFactor);
+        out_slippy_index.m_y = static_cast<int32_t>(floor(((1.0 - log(tan(lat_rad) + 1.0 / cos(lat_rad)) / std::numbers::pi) / 2.0 * (1 << zoom)) + kCorrectionFactor));
 
         // Clamp tile values to valid range.
         int max_tile = (1 << zoom) - 1;

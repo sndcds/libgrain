@@ -303,8 +303,8 @@ namespace Grain {
         [[nodiscard]] int32_t defaultResolution() noexcept { return m_default_resolution; }
         void setDefaultResolution(int32_t resolution) noexcept { m_default_resolution = resolution < 2 ? 2 : resolution; }
 
-        [[nodiscard]] int32_t length() const noexcept { return (int32_t)m_points.size(); }
-        [[nodiscard]] int32_t lastPointIndex() const noexcept { return (int32_t)m_points.size() - 1; }
+        [[nodiscard]] int32_t length() const noexcept { return static_cast<int32_t>(m_points.size()); }
+        [[nodiscard]] int32_t lastPointIndex() const noexcept { return static_cast<int32_t>(m_points.size()) - 1; }
         [[nodiscard]] bool hasPoints() const noexcept { return length() > 0; }
 
         [[nodiscard]] int32_t selectedPointsCount() const noexcept;
@@ -317,12 +317,13 @@ namespace Grain {
         [[nodiscard]] Rectd bbox(bool selected_only) const noexcept;
 
         [[nodiscard]] std::vector<BezierValueCurvePoint> points() noexcept { return m_points; }
+        [[nodiscard]] int32_t pointCount() const noexcept { return static_cast<int32_t>(m_points.size()); }
         [[nodiscard]] BezierValueCurvePoint* mutPointAtIndex(int32_t index) noexcept;
         [[nodiscard]] const BezierValueCurvePoint* pointAtIndex(int32_t index) const noexcept;
         [[nodiscard]] BezierValueCurvePoint* mutFirstPoint() noexcept { return mutPointAtIndex(0); }
         [[nodiscard]] const BezierValueCurvePoint* firstPoint() const noexcept { return pointAtIndex(0); }
-        [[nodiscard]] BezierValueCurvePoint* mutLastPoint() noexcept { return mutPointAtIndex((int32_t)m_points.size() - 1); }
-        [[nodiscard]] const BezierValueCurvePoint* lastPoint() const noexcept { return pointAtIndex((int32_t)m_points.size() - 1); }
+        [[nodiscard]] BezierValueCurvePoint* mutLastPoint() noexcept { return mutPointAtIndex(pointCount() - 1); }
+        [[nodiscard]] const BezierValueCurvePoint* lastPoint() const noexcept { return pointAtIndex(pointCount() - 1); }
 
         [[nodiscard]] BezierValueCurvePoint* firstSelectedPoint() noexcept;
         [[nodiscard]] BezierValueCurvePoint* decayBeginPoint() noexcept;

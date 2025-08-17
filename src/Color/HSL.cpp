@@ -63,8 +63,7 @@ namespace Grain {
 
 
     void HSL::set(const char* csv) noexcept {
-
-        // TODO: Implement!
+        #warning "HSL::set() must be implemented"
     }
 
 
