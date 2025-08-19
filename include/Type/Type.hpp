@@ -313,7 +313,7 @@ namespace Grain {
          */
         template <typename T>
         static void copy(T* d, const T* s, int64_t count) noexcept {
-            if (d != nullptr && s != nullptr && d != s) {
+            if (d && s && d != s) {
                 memcpy(d, s, count * sizeof(T));
             }
         }
@@ -473,7 +473,7 @@ namespace Grain {
             static_assert(std::is_arithmetic_v<T>, "minOfArray requires a numeric type");
 
             T min = std::numeric_limits<T>::max();
-            if (ptr != nullptr && count > 0) {
+            if (ptr && count > 0) {
                 while (count--) {
                     if (*ptr < min) {
                         min = *ptr;
@@ -498,7 +498,7 @@ namespace Grain {
             static_assert(std::is_arithmetic_v<T>, "maxOfArray requires a numeric type");
 
             T max = std::numeric_limits<T>::lowest();
-            if (ptr != nullptr && count > 0) {
+            if (ptr && count > 0) {
                 while (count--) {
                     if (*ptr > max) {
                         max = *ptr;
@@ -521,7 +521,7 @@ namespace Grain {
         [[nodiscard]] static T absMaxOfArray(const T* ptr, int64_t count) noexcept {
             static_assert(std::is_arithmetic_v<T>, "absMaxOfArray requires a numeric type");
 
-            if (ptr == nullptr || count == 0) {
+            if (!ptr || count == 0) {
                 return T{0};
             }
 
@@ -552,7 +552,7 @@ namespace Grain {
         static void scaleArray(T* ptr, int64_t count, T scale) noexcept {
             static_assert(std::is_arithmetic_v<T>, "scaleArray requires an arithmetic type");
 
-            if (ptr != nullptr && count > 0) {
+            if (ptr && count > 0) {
                 while (count--) {
                     *ptr++ *= scale;
                 }
@@ -573,7 +573,7 @@ namespace Grain {
             static_assert(std::is_same_v<T, float> || std::is_same_v<T, double>,
                     "normalizeArrayToUnitRange requires float or double");
 
-            if (ptr == nullptr || count <= 0) return;
+            if (!ptr || count <= 0) return;
 
             T min = minOfArray(ptr, static_cast<std::size_t>(count));
             T max = maxOfArray(ptr, static_cast<std::size_t>(count));
@@ -601,7 +601,7 @@ namespace Grain {
         static void scaleArray(T* ptr, const T* factors, int64_t count) noexcept {
             static_assert(std::is_arithmetic_v<T>, "scaleArray requires an arithmetic type");
 
-            if (ptr != nullptr && factors != nullptr) {
+            if (ptr && factors) {
                 for (int64_t i = 0; i < count; i++) {
                     *ptr++ *= *factors++;
                 }
@@ -626,7 +626,7 @@ namespace Grain {
         static void clearArray(T* ptr, int64_t count) noexcept {
             static_assert(std::is_trivial_v<T>, "clearArray requires a trivial type");
 
-            if (ptr != nullptr && count > 0) {
+            if (ptr && count > 0) {
                 std::memset(ptr, 0, count * sizeof(T));
             }
         }
@@ -695,7 +695,7 @@ namespace Grain {
          */
         template <typename T>
         static void flipArray(T* ptr, int64_t count) noexcept {
-            if (ptr == nullptr || count <= 1) return;
+            if (!ptr || count <= 1) return;
 
             T* left = ptr;
             T* right = ptr + count - 1;
@@ -848,7 +848,7 @@ namespace Grain {
          */
         template <typename T>
         static void clampData(T* data, int64_t length, const T& min, const T& max) {
-            if (data != nullptr) {
+            if (data) {
                 for (int64_t i = 0; i < length; ++i) {
                     data[i] = std::clamp(data[i], min, max);
                 }
@@ -1238,7 +1238,7 @@ namespace Grain {
          * @brief Gets the type corresponding to the given name.
          */
         [[nodiscard]] static DataType typeByName(const char* name) noexcept {
-            if (name == nullptr) {
+            if (!name) {
                 return DataType::Undefined;
             }
 

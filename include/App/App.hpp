@@ -14,7 +14,7 @@
 
 #include "GUI/Screen.hpp"
 #include "GUI/Window.hpp"
-#include "GUI/Style.hpp"
+#include "GUI/GUIStyle.hpp"
 #include "String/String.hpp"
 #include "Type/List.hpp"
 #include "Core/Log.hpp"
@@ -95,7 +95,7 @@ namespace Grain {
         Font* m_mono_font = nullptr;
 
         // Style
-        StyleSet m_style_set;
+        GUIStyleSet m_gui_styles_set;
 
         // GUI
         float m_default_corner_radius = 5.0f;   // !!!!!!!!!!
@@ -122,6 +122,8 @@ namespace Grain {
             l << "total_screen_pixel_count: " << m_total_screen_pixel_count << Log::endl;
             l--;
         }
+
+        void _initGUIStyle();
 
 
         static void addMenu();
@@ -172,8 +174,20 @@ namespace Grain {
         // GUI
         static float defaultCornerRadius() noexcept { return g_instance->m_default_corner_radius; }
 
+        // Hardware
+        [[nodiscard]] static float scrollWheelSpeed() { return 1.0f; }
+
         // Style
-        static StyleSet* styleSet() noexcept { return &g_instance->m_style_set; }
+        static GUIStyle* guiStyleAtIndex(int32_t index) noexcept {
+            return g_instance->m_gui_styles_set.styleAtIndex(index);
+        }
+        static int32_t addGUIStyle() {
+            return g_instance->m_gui_styles_set.addStyle();
+        }
+        static GUIStyle* addGUIStyle(int32_t& out_index) {
+            out_index = g_instance->m_gui_styles_set.addStyle();
+            return guiStyleAtIndex(out_index);
+        }
 
         static void setKeyWindow(Window* window) noexcept;
         static void allWindowsNeedsDisplay() noexcept;

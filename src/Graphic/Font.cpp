@@ -254,7 +254,7 @@ namespace Grain {
 #if defined(__APPLE__) && defined(__MACH__)
     Dimensiond Font::macos_textDimensionUsingCTFramesetter(const char* str, int32_t byte_length) const noexcept {
         if (str == nullptr || byte_length == 0 || m_ct_font == nullptr) {
-            return Dimensiond(0, 0);
+            return { 0.0, 0.0 };
         }
 
         CFStringRef cf_str = nil;

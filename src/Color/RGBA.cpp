@@ -84,7 +84,7 @@ namespace Grain {
      */
     int32_t RGBA::setByCSV(const char* csv) noexcept {
 
-        if (csv == nullptr) {
+        if (!csv) {
             *this = kBlack;
         }
 
@@ -179,11 +179,19 @@ namespace Grain {
     }
 
 
-    void RGBA::setBlend(const RGBA &a, const RGBA &b, float t) noexcept {
-
+    void RGBA::setBlend(const RGBA &other, float t) noexcept {
         float f2 = std::clamp<float>(t, 0.0f, 1.0f);
         float f1 = 1.0f - f2;
+        m_data[0] = m_data[0] * f1 + other.m_data[0] * f2;
+        m_data[1] = m_data[1] * f1 + other.m_data[1] * f2;
+        m_data[2] = m_data[2] * f1 + other.m_data[2] * f2;
+        m_alpha = m_alpha * f1 + other.m_alpha * f2;
+    }
 
+
+    void RGBA::setBlend(const RGBA &a, const RGBA &b, float t) noexcept {
+        float f2 = std::clamp<float>(t, 0.0f, 1.0f);
+        float f1 = 1.0f - f2;
         m_data[0] = a.m_data[0] * f1 + b.m_data[0] * f2;
         m_data[1] = a.m_data[1] * f1 + b.m_data[1] * f2;
         m_data[2] = a.m_data[2] * f1 + b.m_data[2] * f2;

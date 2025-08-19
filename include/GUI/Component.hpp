@@ -16,7 +16,7 @@
 #include "Type/Object.hpp"
 #include "2d/Rect.hpp"
 #include "2d/Dimension.hpp"
-#include "GUI/Style.hpp"
+#include "GUI/GUIStyle.hpp"
 
 
 namespace Grain {
@@ -25,8 +25,8 @@ namespace Grain {
     class RGBA;
     class Component;
     class View;
+    class Textfield;
     class Event;
-    class Look;
     class Font;
     class Text;
     class GraphicContext;
@@ -93,7 +93,7 @@ namespace Grain {
 
     public:
         explicit Component(int32_t tag = 0) noexcept : Component(Rectd(0, 0, 1, 1), tag) {}
-        explicit Component(Rectd rect, int32_t tag = 0) noexcept;
+        explicit Component(const Rectd& rect, int32_t tag = 0) noexcept;
 
         ~Component() noexcept override;
 
@@ -117,6 +117,9 @@ namespace Grain {
         #endif
 
         [[nodiscard]] ComponentType componentType() const noexcept { return m_type; }
+
+        [[nodiscard]] int32_t tag() const noexcept { return m_tag; }
+        void setTag(int32_t tag) noexcept { m_tag = tag; }
 
         [[nodiscard]] double x() const noexcept { return m_rect.m_x; }
         [[nodiscard]] double y() const noexcept { return m_rect.m_y; }
@@ -154,6 +157,9 @@ namespace Grain {
         void setFlippedView(bool flipped_view ) noexcept { m_view_is_flipped = flipped_view; }
 
         [[nodiscard]] bool isNumberMode() const noexcept { return m_is_number_mode; }
+        void virtual setNumberMode(bool mode) noexcept {};
+        virtual void stepNumber(bool use_big_step, bool negative) noexcept {};
+
         [[nodiscard]] bool canGetFocus() const noexcept {
             return m_is_visible && m_can_get_focus && m_is_enabled && m_rect.m_width > 0.0 && m_rect.m_height > 0.0;
         }
@@ -181,31 +187,20 @@ namespace Grain {
         [[nodiscard]] Rectd rect() const noexcept { return m_rect; }
         [[nodiscard]] bool isRectUsable() const noexcept { return m_rect.usable(); }
         [[nodiscard]] Rectd boundsRect() const noexcept { return Rectd(m_rect.m_width, m_rect.m_height); }
+        [[nodiscard]] Rectd contentRect() const noexcept;
 
-        // Opacity
-        [[nodiscard]] float opacity() const noexcept { return m_opacity; }
-        [[nodiscard]] bool isOpaque() const noexcept { return m_opacity > 0.999f; }
-        [[nodiscard]] bool isTransparent() const noexcept { return m_opacity < 1.0f; }
-        void setOpacity(float opacity) noexcept;
 
         // Style
-        void addStyleProperty(const StyleProperty& property) { m_style_list.addProperty(property); }
+        [[nodiscard]] bool isOpaque() const noexcept { return true; }
+        void setStyleIndex(int32_t index) { m_style_index = index; }
+        [[nodiscard]] GUIStyle* guiStyle() const noexcept;
 
-        template<typename T>
-        void addStyleProperty(StylePropertyType type, T&& value) {
-            StyleProperty property(type, std::forward<T>(value));
-            m_style_list.addProperty(property);
-        }
-
-        [[nodiscard]] RGBA color() const noexcept { return RGBA(m_color[0]); }
-        [[nodiscard]] RGBA backgroundColor() const noexcept { return RGBA(m_background_color[0]); }
 
         // Text
-        [[nodiscard]] bool hasText() const noexcept { return m_text != nullptr ? m_text->length() > 0 : false; }
+        [[nodiscard]] bool hasText() const noexcept { return m_text ? m_text->length() > 0 : false; }
         void setText(const char* text_str) noexcept;
-        void setText(const String &text) noexcept;
-        void setTextAlignment(Alignment text_alignment) noexcept { m_text_alignment = text_alignment; needsDisplay(); }
-        void setTextYOffset(float text_y_offset) noexcept { m_text_y_offset = text_y_offset; needsDisplay(); }
+        void setText(const String& text) noexcept;
+        [[nodiscard]] virtual int32_t textLength() const noexcept { return m_text ? m_text->length() : 0; }
 
         //
         [[nodiscard]] virtual bool hasDescendant(const Component* component) noexcept { return false; }
@@ -221,11 +216,33 @@ namespace Grain {
         virtual void fireActionAndDisplay(ActionType action_type, const Component* excluded_component) noexcept;
         virtual void updateRepresentations(const Component* excluded_component) noexcept;
         virtual void transmit() noexcept {
-            if (m_receiver_component != nullptr) {
+            if (m_receiver_component) {
                 m_receiver_component->setByComponent(this);
             }
         }
         virtual void setByComponent(Component* component) noexcept {}
+        virtual void setReceiverComponent(Component* component) noexcept { m_receiver_component = component; }
+        virtual void setTextfield(Textfield* textfield) noexcept { m_textfield = textfield; }
+
+        void setAction(ComponentAction action) noexcept { setAction(action, nullptr); }
+        void setAction(ComponentAction action, void* action_ref) noexcept {
+            m_action = action;
+            m_action_ref = action_ref;
+        }
+        void* actionRef() const noexcept { return m_action_ref; }
+
+        void setTextChangedAction(ComponentAction action) noexcept { setTextChangedAction(action, nullptr); }
+        void setTextChangedAction(ComponentAction action, void* action_ref) noexcept {
+            m_text_changed_action = action;
+            m_text_changed_action_ref = action_ref;
+        }
+        void textChangedAction() noexcept {
+            if (m_text_changed_action != nullptr) {
+                m_text_changed_action(this);
+            }
+        }
+
+
 
         // FirstResponder
         virtual void becomeFirstResponder() noexcept {}
@@ -259,8 +276,8 @@ namespace Grain {
 
         // Value
         [[nodiscard]] virtual Fix value() const noexcept { return Fix{}; }
-        virtual bool setValue(const Fix &value) noexcept { return false; }
-        virtual void setValueRange(const Fix &min, const Fix &max) noexcept {}
+        virtual bool setValue(const Fix & value) noexcept { return false; }
+        virtual void setValueRange(const Fix& min, const Fix& max) noexcept {}
         [[nodiscard]] virtual int32_t valueAsInt32() const noexcept { return 0; }
         [[nodiscard]] virtual double valueAsDouble() const noexcept { return 0; }
         virtual bool setValueInt(int32_t value) noexcept { return setValue(Fix(value)); }
@@ -268,13 +285,11 @@ namespace Grain {
 
 
         // Event
-        virtual void handleEvent(const Event &event) noexcept;
+        virtual void handleEvent(const Event& event) noexcept;
         [[nodiscard]] bool hasHandleEventFunction() const noexcept { return _m_handle_event_func != nullptr; }
         void setHandleEventFunction(ComponentHandleEventFunc func, void* ref = nullptr) noexcept;
-        bool callHandleEventFunction(const Event &event) noexcept;
-
-        // Style
-        void setLook(Look* look) noexcept;
+        bool callHandleEventFunction(const Event& event) noexcept;
+        void _interpretKeyEvents(const Event& event) noexcept;
 
         // Drawing
         virtual void draw(const Rectd& dirty_rect) noexcept {}
@@ -298,59 +313,47 @@ namespace Grain {
         virtual void forcedDisplay() const noexcept;
 
         // Mouse
-        virtual void updateAtMouseDown(const Event &event) noexcept {}
-        virtual void handleMouseDown(const Event &event) noexcept { needsDisplay(); }
-        virtual void handleMouseDrag(const Event &event) noexcept {}
-        virtual void handleMouseUp(const Event &event) noexcept {}
-        virtual void handleRightMouseDown(const Event &event) noexcept {}
-        virtual void handleRightMouseDrag(const Event &event) noexcept {}
-        virtual void handleRightMouseUp(const Event &event) noexcept {}
-        virtual void handleMouseEntered(const Event &event) noexcept {}
-        virtual void handleMouseExited(const Event &event) noexcept {}
-        virtual void handleMouseMoved(const Event &event) noexcept {}
-        virtual void handleScrollWheel(const Event &event) noexcept {
-            if (m_parent != nullptr) {
+        virtual void updateAtMouseDown(const Event& event) noexcept {}
+        virtual void handleMouseDown(const Event& event) noexcept { needsDisplay(); }
+        virtual void handleMouseDrag(const Event& event) noexcept {}
+        virtual void handleMouseUp(const Event& event) noexcept {}
+        virtual void handleRightMouseDown(const Event& event) noexcept {}
+        virtual void handleRightMouseDrag(const Event& event) noexcept {}
+        virtual void handleRightMouseUp(const Event& event) noexcept {}
+        virtual void handleMouseEntered(const Event& event) noexcept {}
+        virtual void handleMouseExited(const Event& event) noexcept {}
+        virtual void handleMouseMoved(const Event& event) noexcept {}
+        virtual void handleScrollWheel(const Event& event) noexcept {
+            if (m_parent) {
                 m_parent->handleScrollWheel(event);
             }
         }
-        virtual void handleMagnification(const Event &event) noexcept {
-            if (m_parent != nullptr) {
+        virtual void handleMagnification(const Event& event) noexcept {
+            if (m_parent) {
                 m_parent->handleMagnification(event);
             }
         }
-        virtual void handleRotation(const Event &event) noexcept {
-            if (m_parent != nullptr) {
+        virtual void handleRotation(const Event& event) noexcept {
+            if (m_parent) {
                 m_parent->handleRotation(event);
             }
         }
-        virtual void handleKeyDown(const Event &event) noexcept {
-            if (m_parent != nullptr) {
+        virtual void handleKeyDown(const Event& event) noexcept {
+            if (m_parent) {
                 m_parent->handleKeyDown(event);
             }
         }
 
         [[nodiscard]] bool hasAction() const noexcept { return m_action != nullptr; }
 
-        // Text Changed Action
-        void setTextChangedAction(ComponentAction action) noexcept {
-            setTextChangedAction(action, nullptr);
-        }
-        void setTextChangedAction(ComponentAction action, void* action_ref) noexcept {
-            m_text_changed_action = action;
-            m_text_changed_action_ref = action_ref;
-        }
-        void textChangedAction() noexcept {
-            if (m_text_changed_action != nullptr) {
-                m_text_changed_action(this);
-            }
-        }
 
         // Geometry
         virtual bool hit(const Vec2d& pos) noexcept;
         virtual bool hit(const Event& event) noexcept;
 
         // Drawing
-        void drawRect(GraphicContext &gc, const Rectd &rect) const noexcept;
+        void drawDummy(GraphicContext& gc) const noexcept;
+        void drawRect(GraphicContext& gc, const Rectd& rect) const noexcept;
 
         // Utils
         static Component* addComponentToView(Component* component, View* view, AddFlags flags) noexcept;
@@ -387,22 +390,13 @@ namespace Grain {
         bool m_draws_as_button = false;
         bool m_shows_debug_info = false;
 
-        Component* m_parent = nullptr;          ///< The parent component. Root views dont have a parent
+        Component* m_parent = nullptr;          ///< The parent component, root views don´t have a parent
         Rectd m_rect = Rectd(100.0, 100.0);     ///< Position and size of component in view
         Alignment m_edge_alignment = Alignment::No;
         RectEdgesf m_margin{};
 
         // Style
-        bool m_must_compute_style = true;
-        StyleList m_style_list;
-        uint32_t m_color[3];
-        uint32_t m_background_color[3];
-        uint32_t m_border_color[3];
-        float m_border_width[3];
-        float m_opacity = 1.0f;
-        Alignment m_text_alignment = Alignment::Center; ///< Text alignment inside the component
-        float m_text_y_offset = 0.0f;           ///< Vertical text offset
-        Font* m_font = nullptr;                 ///< Fallback font
+        int32_t m_style_index = 0;              ///<
 
         // Text
         String* m_text = nullptr;               ///< Optional text
@@ -416,31 +410,31 @@ namespace Grain {
         bool m_is_modified_since_mouse_down = false;
 
         // Connected components
-        // Textfield* textfield = nullptr; GUI!!!
-        // Label* m_label = nullptr; GUI!!!
-        // ColorWell* m_color_well = nullptr; GUI!!!
-        Component* m_receiver_component = nullptr;
-        Component* m_previous_key_component = nullptr;
-        Component* m_next_key_component = nullptr;
+        Textfield* m_textfield{};
+        // Label* m_label{}; GUI!!!
+        // ColorWell* m_color_well{}; GUI!!!
+        Component* m_receiver_component{};
+        Component* m_previous_key_component{};
+        Component* m_next_key_component{};
 
         // Action
         ActionType _m_action_type = ActionType::None;
 
         // Component specific functions
-        ComponentAction m_action = nullptr;
-        void* m_action_ref = nullptr;
+        ComponentAction m_action{};
+        void* m_action_ref{};
 
-        ComponentAction m_text_changed_action = nullptr;
-        void* m_text_changed_action_ref = nullptr;
+        ComponentAction m_text_changed_action{};
+        void* m_text_changed_action_ref{};
 
-        ComponentDrawFunc _m_draw_func = nullptr;
-        void* _m_draw_func_ref = nullptr;
+        ComponentDrawFunc _m_draw_func{};
+        void* _m_draw_func_ref{};
 
-        ComponentHandleEventFunc _m_handle_event_func = nullptr;
-        void* _m_handle_event_func_ref = nullptr;
+        ComponentHandleEventFunc _m_handle_event_func{};
+        void* _m_handle_event_func_ref{};
 
-        ComponentHandleMessageFunc _m_handle_message_func = nullptr;
-        void* _m_handle_message_func_ref = nullptr;
+        ComponentHandleMessageFunc _m_handle_message_func{};
+        void* _m_handle_message_func_ref{};
     };
 
 }

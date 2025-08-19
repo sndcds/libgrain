@@ -35,7 +35,7 @@ namespace Grain {
 
     void Polygon::_update() noexcept {
 
-        if (m_must_update == true) {
+        if (m_must_update) {
             _updateLength();
             m_must_update = false;
         }
@@ -64,7 +64,7 @@ namespace Grain {
                 prev_point = point;
             }
 
-            if (m_closed == true) {
+            if (m_closed) {
                 m_length += prev_point.distance(first_point);
             }
         }
@@ -73,7 +73,7 @@ namespace Grain {
 
     int32_t Polygon::segmentCount() const noexcept {
 
-        return m_closed == true ? static_cast<int32_t>(m_points.size()) : static_cast<int32_t>(m_points.size()) - 1;
+        return m_closed ? static_cast<int32_t>(m_points.size()) : static_cast<int32_t>(m_points.size()) - 1;
     }
 
 
@@ -193,7 +193,7 @@ namespace Grain {
                     p1 = p2;
                     src_point_index++;
 
-                    if (m_closed == true) {
+                    if (m_closed) {
                         if (src_point_index < src_point_count) {
                             p2 = m_points.elementAtIndex(src_point_index);
                         }
@@ -217,7 +217,7 @@ namespace Grain {
 
             out_polygon.setClosed(m_closed);
 
-            if (m_closed == false) {
+            if (!m_closed) {
                 out_polygon.addPoint(p2);
             }
 
@@ -237,7 +237,7 @@ namespace Grain {
             return true;
         }
         else if (t >= 1.0) {
-            if (m_closed == true) {
+            if (m_closed) {
                 out_point = m_points.elementAtIndex(0);
             }
             else {
@@ -272,7 +272,7 @@ namespace Grain {
                 p1 = p2;
                 src_point_index++;
 
-                if (m_closed == true) {
+                if (m_closed) {
                     if (src_point_index < src_point_count) {
                         p2 = m_points.elementAtIndex(src_point_index);
                     }

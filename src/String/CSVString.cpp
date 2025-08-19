@@ -26,7 +26,7 @@ namespace Grain {
 
     bool CSVLineParser::setLine(const char *str) noexcept {
 
-        m_length = str != nullptr ? static_cast<int64_t>(strlen(str)) : 0;
+        m_length = str ? static_cast<int64_t>(strlen(str)) : 0;
         if (m_length < 1) {
             return false;
         }
@@ -180,31 +180,28 @@ namespace Grain {
         return true;
     }
 
-    bool CSVLineParser::nextFix(Fix &out_value) noexcept {
 
+    bool CSVLineParser::nextFix(Fix &out_value) noexcept {
         if (next()) {
             out_value.setStr(m_curr_field.utf8());
             return true;
         }
-
         return false;
     }
 
 
     bool CSVLineParser::nextFlags(Flags &outFlags) noexcept {
-
         if (next()) {
             outFlags.set(m_curr_field.utf8());
             return true;
         }
-
         return false;
     }
 
 
     bool CSVLineParser::nextStr(char **out_str) noexcept {
 
-        if (next() && out_str != nullptr) {
+        if (next() && out_str) {
             *out_str = (char*)m_curr_field.utf8();
             return true;
         }
@@ -367,7 +364,7 @@ namespace Grain {
                             }
 
                             if (check_header_flag) {
-                                if (m_header_labels == nullptr) {
+                                if (!m_header_labels) {
                                     m_header_labels = new(std::nothrow) StringList();
                                     Error::throwCheckInstantiation(m_header_labels);
                                 }
@@ -376,7 +373,7 @@ namespace Grain {
                                 }
                             }
 
-                            if (m_field_func != nullptr) {
+                            if (m_field_func) {
                                 m_field_func(*this, csv_line_parser.currFieldString());
                             }
                         }

@@ -23,10 +23,6 @@
 #include "2d/RangeRect.hpp"
 #include "String/String.hpp"
 
-#include "libraw/libraw.h"
-
-#include <tiffio.h>
-#include <cairo/cairo.h>
 
 
 namespace Grain {
@@ -39,6 +35,8 @@ namespace Grain {
     class GraphicContext;
     class Gradient;
     class ImageAccess;
+
+    class cairo_surface_t;
 
 
     // Class Image

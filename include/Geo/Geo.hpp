@@ -20,8 +20,6 @@
 #include "String/String.hpp"
 #include "Math/Math.hpp"
 
-#include <proj.h>
-
 
 namespace Grain {
 

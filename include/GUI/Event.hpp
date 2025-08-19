@@ -23,6 +23,101 @@ namespace Grain {
 
     class Component;
 
+#if defined(__APPLE__) && defined(__MACH__)
+    enum KeyCode {
+        Enter = 0x0003,                 // NSEnterCharacter
+        Backspace = 0x0008,             // NSBackspaceCharacter
+        Tab = 0x0009,                   // NSTabCharacter
+        NewLine = 0x000a,               // NSNewlineCharacter
+        FormFeed = 0x000c,              // NSFormFeedCharacter
+        CarriageReturn = 0x000d,        // NSCarriageReturnCharacter
+        BackTab = 0x0019,               // NSBackTabCharacter
+        Delete = 0x007f,                // NSDeleteCharacter
+        LineSeparator = 0x2028,         // NSLineSeparatorCharacter
+        ParagraphSeparator = 0x2029,    // NSParagraphSeparatorCharacter
+
+        FunctionUpArrow = 0xF700,       // NSUpArrowFunctionKey
+        FunctionDownArrow = 0xF701,     // NSDownArrowFunctionKey
+        FunctionLeftArrow = 0xF702,     // NSLeftArrowFunctionKey
+        FunctionRightArrow = 0xF703,    // NSRightArrowFunctionKey
+
+        FunctionF1 = 0xF704,            // NSF1FunctionKey
+        FunctionF2 = 0xF705,            // NSF2FunctionKey
+        FunctionF3 = 0xF706,            // NSF3FunctionKey
+        FunctionF4 = 0xF707,            // NSF4FunctionKey
+        FunctionF5 = 0xF708,            // NSF5FunctionKey
+        FunctionF6 = 0xF709,            // NSF6FunctionKey
+        FunctionF7 = 0xF70A,            // NSF7FunctionKey
+        FunctionF8 = 0xF70B,            // NSF8FunctionKey
+        FunctionF9 = 0xF70C,            // NSF9FunctionKey
+        FunctionF10 = 0xF70D,           // NSF10FunctionKey
+        FunctionF11 = 0xF70E,           // NSF11FunctionKey
+        FunctionF12 = 0xF70F,           // NSF12FunctionKey
+        FunctionF13 = 0xF710,           // NSF13FunctionKey
+        FunctionF14 = 0xF711,           // NSF14FunctionKey
+        FunctionF15 = 0xF712,           // NSF15FunctionKey
+        FunctionF16 = 0xF713,           // NSF16FunctionKey
+        FunctionF17 = 0xF714,           // NSF17FunctionKey
+        FunctionF18 = 0xF715,           // NSF18FunctionKey
+        FunctionF19 = 0xF716,           // NSF19FunctionKey
+        FunctionF20 = 0xF717,           // NSF20FunctionKey
+        FunctionF21 = 0xF718,           // NSF21FunctionKey
+        FunctionF22 = 0xF719,           // NSF22FunctionKey
+        FunctionF23 = 0xF71A,           // NSF23FunctionKey
+        FunctionF24 = 0xF71B,           // NSF24FunctionKey
+        FunctionF25 = 0xF71C,           // NSF25FunctionKey
+        FunctionF26 = 0xF71D,           // NSF26FunctionKey
+        FunctionF27 = 0xF71E,           // NSF27FunctionKey
+        FunctionF28 = 0xF71F,           // NSF28FunctionKey
+        FunctionF29 = 0xF720,           // NSF29FunctionKey
+        FunctionF30 = 0xF721,           // NSF30FunctionKey
+        FunctionF31 = 0xF722,           // NSF31FunctionKey
+        FunctionF32 = 0xF723,           // NSF32FunctionKey
+        FunctionF33 = 0xF724,           // NSF33FunctionKey
+        FunctionF34 = 0xF725,           // NSF34FunctionKey
+        FunctionF35 = 0xF726,           // NSF35FunctionKey
+
+        FunctionInsert = 0xF727,        // NSInsertFunctionKey
+
+        FunctionDelete = 0xF728,        // NSDeleteFunctionKey
+        FunctionHome = 0xF729,          // NSHomeFunctionKey
+        FunctionBegin = 0xF72A,         // NSBeginFunctionKey
+        FunctionEnd = 0xF72B,           // NSEndFunctionKey
+        FunctionPageUp = 0xF72C,        // NSPageUpFunctionKey
+        FunctionPageDown = 0xF72D,      // NSPageDownFunctionKey
+        FunctionPrintScreen = 0xF72E,   // NSPrintScreenFunctionKey
+        FunctionScrollLock = 0xF72F,    // NSScrollLockFunctionKey
+        FunctionPause = 0xF730,         // NSPauseFunctionKey
+
+        FunctionSysReq = 0xF731,        // NSSysReqFunctionKey
+        FunctionBreak = 0xF732,         // NSBreakFunctionKey
+        FunctionReset = 0xF733,         // NSResetFunctionKey
+        FunctionStop = 0xF734,          // NSStopFunctionKey
+        FunctionMenu = 0xF735,          // NSMenuFunctionKey
+        FunctionUser = 0xF736,          // NSUserFunctionKey
+        FunctionSystem = 0xF737,        // NSSystemFunctionKey
+        FunctionPrint = 0xF738,         // NSPrintFunctionKey
+        FunctionClearLine = 0xF739,     // NSClearLineFunctionKey
+
+        FunctionClearDisplay = 0xF73A,  // NSClearDisplayFunctionKey
+        FunctionInsertLine = 0xF73B,    // NSInsertLineFunctionKey
+        FunctionDeleteLine = 0xF73C,    // NSDeleteLineFunctionKey
+        FunctionInsertChar = 0xF73D,    // NSInsertCharFunctionKey
+        FunctionDeleteChar = 0xF73E,    // NSDeleteCharFunctionKey
+        FunctionPrev = 0xF73F,          // NSPrevFunctionKey
+        FunctionNext = 0xF740,          // NSNextFunctionKey
+        FunctionSelect = 0xF741,        // NSSelectFunctionKey
+        FunctionExecute = 0xF742,       // NSExecuteFunctionKey
+        FunctionUndo = 0xF743,          // NSUndoFunctionKey
+        FunctionRedo = 0xF744,          // NSRedoFunctionKey
+        FunctionFind = 0xF745,          // NSFindFunctionKey
+        FunctionHelp = 0xF746,          // NSHelpFunctionKey
+        FunctionModeSwitch = 0xF747,    // NSModeSwitchFunctionKey
+    };
+#else
+    // TODO: Implement for KeyCodes for Linux
+#endif
+
     class Event {
     public:
         enum class EventType {

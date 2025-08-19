@@ -1103,27 +1103,13 @@ namespace Grain {
 
     bool Gradient::lookupFromLUT(float pos, RGB& out_color) noexcept {
 
-        if (updateLUT() == false) {
+        if (!updateLUT()) {
             return false;
         }
         else {
             m_lut->lookup(pos, out_color);
             return true;
         }
-    }
-
-
-    ErrorCode Gradient::saveDataFile(const String& file_path, bool canOverwrite) const noexcept {
-        #warning "Gradient::saveDataFile() must be implemented"
-        auto err = ErrorCode::None;
-
-        return err;
-    }
-
-
-    ErrorCode Gradient::setFromDataFile(const String& file_path) noexcept {
-        #warning "Gradient::setFromDataFile() must be implemented"
-        return ErrorCode::None;
     }
 
 
@@ -1134,7 +1120,7 @@ namespace Grain {
 
 
 #if defined(__APPLE__) && defined(__MACH__)
-    void Gradient::draw(GraphicContext& gc, const Vec2d& start_pos, const Vec2d& end_pos, bool draw_before, bool draw_after) noexcept {
+ void Gradient::draw(GraphicContext& gc, const Vec2d& start_pos, const Vec2d& end_pos, bool draw_before, bool draw_after) noexcept {
 
         if (stopCount() > 1) {
             update(gc);

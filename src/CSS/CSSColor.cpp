@@ -7,13 +7,6 @@
 //  This file is part of GrainLib, see <https://grain.one>.
 //
 
-//
-//  GrCSSColor.cpp
-//  GrainLib
-//
-//  Created by Roald Christesen on 07.01.25.
-//
-
 #include "CSS/CSSColor.hpp"
 #include "CSS/CSS.hpp"
 #include "String/String.hpp"
@@ -23,7 +16,6 @@
 
 
 namespace Grain {
-
 
     const CSSNamedColor CSSColor::_g_named_css_colors[] = {
             { "transparent", 0x00000000U },
@@ -178,7 +170,6 @@ namespace Grain {
             { nullptr } // Sentinel item (end of list).
     };
 
-
     const CSSColorFunctionInfo CSSColor::_g_color_function_infos[]  = {
             { "rgb(",   4, CSSColorFunction::RGB, 3, true },
             { "rgba(",  5, CSSColorFunction::RGBA, 4, false },
@@ -197,16 +188,7 @@ namespace Grain {
     };
 
 
-    CSSColor::CSSColor() noexcept {
-    }
-
-
-    CSSColor::~CSSColor() noexcept {
-    }
-
-
-    ErrorCode CSSColor::parseColor(const char *css_str) noexcept {
-
+    ErrorCode CSSColor::parseColor(const char* css_str) noexcept {
         auto result = ErrorCode::None;
 
         m_valid = false;
@@ -214,7 +196,7 @@ namespace Grain {
         try {
             if (!css_str) { throw ErrorCode::BadArgs; }
 
-            const char *ptr = css_str;
+            const char* ptr = css_str;
 
             // Skip all whitespaces.
             while (String::charIsWhiteSpace(*ptr)) {
@@ -242,7 +224,7 @@ namespace Grain {
     }
 
 
-    ErrorCode CSSColor::parseHex(const char *str) noexcept {
+    ErrorCode CSSColor::parseHex(const char* str) noexcept {
 
         const int32_t kMaxHexLength = 8;
         auto result = ErrorCode::None;
@@ -309,7 +291,7 @@ namespace Grain {
     }
 
 
-    bool CSSColor::parseNamed(const char *str) noexcept {
+    bool CSSColor::parseNamed(const char* str) noexcept {
 
         m_valid = false;
 
@@ -331,7 +313,7 @@ namespace Grain {
     }
 
 
-    bool CSSColor::parseFunctional(const char *str, ErrorCode &out_err) noexcept {
+    bool CSSColor::parseFunctional(const char* str, ErrorCode& out_err) noexcept {
 
         m_valid = false;
 
@@ -344,7 +326,7 @@ namespace Grain {
 
         int32_t index = 0;
 
-        const char *ptr = nullptr;
+        const char* ptr = nullptr;
 
         while (_g_color_function_infos[index].m_signature != nullptr) {
             auto info = &_g_color_function_infos[index];
@@ -529,7 +511,7 @@ namespace Grain {
     }
 
 
-    ErrorCode CSSColor::parseColorComponents(const char *str, int32_t str_length, int32_t component_n) noexcept {
+    ErrorCode CSSColor::parseColorComponents(const char* str, int32_t str_length, int32_t component_n) noexcept {
         constexpr int32_t kMaxStrLength = 256;
         m_valid = false;
         m_parsed_comp_n = 0;
@@ -560,7 +542,7 @@ namespace Grain {
         String::replaceChar(buffer, '/', ' ');
 
         int32_t index = 0;
-        char *ptr = buffer;
+        char* ptr = buffer;
         while (ptr != nullptr) {
             auto err = CSS::extractCSSValueFromStr(ptr, m_comp_values[index], &ptr);
             if (err != ErrorCode::None) {
@@ -588,7 +570,7 @@ namespace Grain {
     }
 
 
-    ErrorCode CSSColor::parseColorToRGB(const char *css_str, RGB &out_color) noexcept {
+    ErrorCode CSSColor::parseColorToRGB(const char* css_str, RGB& out_color) noexcept {
 
         CSSColor css_color;
         auto err = css_color.parseColor(css_str);
@@ -599,13 +581,13 @@ namespace Grain {
     }
 
 
-    ErrorCode CSSColor::parseColorToRGB(const String& css_string, RGB &out_color) noexcept {
+    ErrorCode CSSColor::parseColorToRGB(const String& css_string, RGB& out_color) noexcept {
 
         return parseColorToRGB(css_string.utf8(), out_color);
     }
 
 
-    ErrorCode CSSColor::parseColorToRGBA(const char *css_str, RGBA &out_color) noexcept {
+    ErrorCode CSSColor::parseColorToRGBA(const char* css_str, RGBA& out_color) noexcept {
 
         CSSColor css_color;
         auto err = css_color.parseColor(css_str);
@@ -616,7 +598,7 @@ namespace Grain {
     }
 
 
-    ErrorCode CSSColor::parseColorToRGBA(const String& css_string, RGBA &out_color) noexcept {
+    ErrorCode CSSColor::parseColorToRGBA(const String& css_string, RGBA& out_color) noexcept {
 
         return parseColorToRGBA(css_string.utf8(), out_color);
     }

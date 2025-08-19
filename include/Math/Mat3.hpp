@@ -84,7 +84,7 @@ namespace Grain {
         }
 
         void set(T* v, bool row_order = true) noexcept {
-            if (v != nullptr) {
+            if (v) {
                 T* d = mutDataPtr();
                 if (row_order) {
                     d[0] = v[0]; d[1] = v[1]; d[2] = v[2];
@@ -241,7 +241,7 @@ namespace Grain {
         }
 
         void transform2(T* values) const noexcept {
-            if (values != nullptr) {
+            if (values) {
                 const T* s = dataPtr();
                 T x = s[0] * values[0] + s[1] * values[1] + s[2];
                 T y = s[3] * values[0] + s[4] * values[1] + s[5];
@@ -251,7 +251,7 @@ namespace Grain {
         }
 
         void transform2(T* values, T* out_values) const noexcept {
-            if (values != nullptr && out_values != nullptr) {
+            if (values && out_values) {
                 const T* s = dataPtr();
                 T x = s[0] * values[0] + s[1] * values[1] + s[2];
                 T y = s[3] * values[0] + s[4] * values[1] + s[5];
@@ -271,7 +271,7 @@ namespace Grain {
         }
 
         void transform3(T* values) const noexcept {
-            if (values != nullptr) {
+            if (values) {
                 const T* s = dataPtr();
                 T v1 = s[0] * values[0] + s[1] * values[1] + s[2] * values[2];
                 T v2 = s[3] * values[0] + s[4] * values[1] + s[5] * values[2];
@@ -283,7 +283,7 @@ namespace Grain {
         }
 
         void transform3(const T* values, T* out_values) const noexcept {
-            if (values != nullptr && out_values != nullptr) {
+            if (values && out_values) {
                 const T* s = dataPtr();
                 T v1 = s[0] * values[0] + s[1] * values[1] + s[2] * values[2];
                 T v2 = s[3] * values[0] + s[4] * values[1] + s[5] * values[2];

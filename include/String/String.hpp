@@ -493,7 +493,7 @@ namespace Grain {
         StringRing(uint32_t size) : Object() {
             m_size = size < 8 ? 8 : size;
             m_strings = (String**)std::malloc(sizeof(String*) * size);
-            if (m_strings != nullptr) {
+            if (m_strings) {
                 for (uint32_t i = 0; i < size; i++) {
                     m_strings[i] = nullptr;
                 }
@@ -501,7 +501,7 @@ namespace Grain {
         }
 
         ~StringRing() override {
-            if (m_strings != nullptr) {
+            if (m_strings) {
                 for (uint32_t i = 0; i < m_size; i++) {
                     delete m_strings[i];
                 }

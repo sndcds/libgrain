@@ -46,8 +46,8 @@ namespace Grain {
         uint8_t* data = nullptr;
 
         try {
-            if (create_dir_flag == true) {
-                if (File::makeDirs(meta_file_path.fileDirPath()) == false) {
+            if (create_dir_flag) {
+                if (!File::makeDirs(meta_file_path.fileDirPath())) {
                     throw ErrorCode::FileDirNotCreated;
                 }
             }
@@ -106,7 +106,7 @@ namespace Grain {
                 for (int32_t x = 0; x < 8; x++) {
                     std::snprintf(tile_name, 256, tile_name_format.utf8(), 8 * x + y);
                     std::snprintf(file_path, 2560, "%s/%s.%s", tiles_dir_path.utf8(), tile_name, file_ext.utf8());
-                    if (File::fileExists(file_path) == true) {
+                    if (File::fileExists(file_path)) {
                         File tile_file(file_path);
                         tile_file.startRead();
                         auto tile_file_size = tile_file.size();
@@ -454,7 +454,7 @@ namespace Grain {
      */
     bool GeoMetaTileRange::nextTilePos(int64_t end_index, Vec2i& out_tile_index) noexcept {
 
-        if (m_reset_flag == true) {
+        if (m_reset_flag) {
             m_curr_index = 0;
             m_curr_tile = m_first_tile;
             m_curr_meta_index.set(0, 0);

@@ -122,7 +122,7 @@ namespace Grain {
                                 v[3] = values[_indexForXY(x + 1, y + 1)];
 
                                 int32_t n = 0;
-                                if (check_invalid == true) {
+                                if (check_invalid) {
 
                                     for (int32_t i = 0; i < 4; i++) {
                                         if (v[i] != m_invalid_value) {
@@ -563,7 +563,7 @@ namespace Grain {
                 const T* src = nullptr;
                 while (ia.stepY()) {
 
-                    src = (flip_y == true) ? ptrForRow(ia.flippedY()) : ptrForRow(ia.y());
+                    src = flip_y ? ptrForRow(ia.flippedY()) : ptrForRow(ia.y());
 
                     while (ia.stepX()) {
                         float v = static_cast<float>(*src++);
@@ -615,7 +615,7 @@ namespace Grain {
                 const T* src = nullptr;
                 while (ia.stepY()) {
 
-                    src = flip_y == true ? ptrForRow(ia.flippedY()) : ptrForRow(ia.y());
+                    src = flip_y ? ptrForRow(ia.flippedY()) : ptrForRow(ia.y());
 
                     while (ia.stepX()) {
                         T v =* src++;

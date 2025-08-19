@@ -31,8 +31,8 @@ namespace Grain {
     class GeoProj : public Object {
 
     protected:
-        PJ_CONTEXT* m_proj_context{};
-        PJ* m_proj{};
+        void* m_proj_context{};     ///< Pointer to PROJ context, see https://proj.org
+        void* m_proj{};             ///< Pointer to PROJ context, see https://proj.org
         String m_src_crs;
         String m_dst_crs;
         GepProjTransformAction m_transform_action{};
@@ -134,7 +134,7 @@ namespace Grain {
         bool transform(Vec2d* pos, int32_t n, bool inverse = false) noexcept {
             if (pos != nullptr) {
                 for (int32_t i = 0; i < n; i++) {
-                    if (transform(*pos, *pos, inverse) == false) {
+                    if (!transform(*pos, *pos, inverse)) {
                         return false;
                     }
                 }

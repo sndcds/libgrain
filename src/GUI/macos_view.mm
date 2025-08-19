@@ -37,7 +37,10 @@ namespace Grain {
     }
 
     void _macosView_setNeedsDisplay(const Component* component) {
-        [(NSView*)component->nsView() setNeedsDisplay:YES];
+        const auto& rect = component->boundsRect();
+        NSRect ns_rect = NSMakeRect(rect.m_x, rect.m_y, rect.m_width, rect.m_height);
+        [(NSView*)component->nsView() setNeedsDisplayInRect:ns_rect];
+        // [(NSView*)component->nsView() setNeedsDisplay:YES];
     }
 
     void _macosView_forcedDisplay(const Component* component) {
@@ -54,6 +57,10 @@ namespace Grain {
         }
     }
 
+    void _macosView_interpretKeyEvent(Component* component, const Event& event) {
+        [(GrainNSView*)component->nsView() interpretKeyEvents:[NSArray arrayWithObject:(NSEvent*)(event.nsEvent())]];
+    }
+
     void _macosView_setOpacity(Component* component, float opacity) {
         [(NSView*)component->nsView() setAlphaValue:opacity];
     }
@@ -66,12 +73,15 @@ namespace Grain {
     }
 
     bool _macosView_gotoView(Component* component) {
-        BOOL success = NO;
-        auto key_window = App::keyWindow();
-        if (key_window != nullptr) {
-            success = [(GrainNSWindow*)key_window->nsWindow() makeFirstResponder:(GrainNSView*)component->nsView()];
+        if (component) {
+            BOOL success = NO;
+            auto key_window = App::keyWindow();
+            if (key_window) {
+                success = [(GrainNSWindow*)key_window->nsWindow() makeFirstResponder:(GrainNSView*)component->nsView()];
+            }
+            return success;
         }
-        return success;
+        return false;
     }
 
     void _macosView_setFrame(Component* component, Rectd& rect) {
@@ -297,13 +307,12 @@ if (i > 10) {
     auto key_char_count = static_cast<int32_t>([key_characters length]);
 
     if (key_char_count > 0) {
-
         auto key_char = static_cast<int32_t>([key_characters characterAtIndex:0]);
 
         auto ns_window = (GrainNSWindow*)[self window];
         Grain::Window *window = [ns_window window];
 
-        if (window != nullptr) {
+        if (window) {
             if (key_char_count == 1) {
                 switch (key_char) {
                     case NSTabCharacter:
@@ -311,8 +320,6 @@ if (i > 10) {
                         return;
                     case NSBackTabCharacter:
                         m_component->gotoPreviousKeyComponent();
-                        return;
-                    default:
                         return;
                 }
             }

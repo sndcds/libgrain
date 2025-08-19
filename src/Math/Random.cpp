@@ -41,7 +41,7 @@ namespace Grain {
      */
     char Random::nextChar(const char* table, int32_t table_length) noexcept {
 
-        if (table != nullptr) {
+        if (table) {
             return table[Random::nextInt(table_length - 1)];
         }
         else {

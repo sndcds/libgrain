@@ -33,7 +33,6 @@ namespace Grain {
 
     class CSVScanner;
 
-
     /**
      *  @brief Parser for a single line of data in CSV format.
      *
@@ -101,16 +100,15 @@ namespace Grain {
             m_line_contains_info = setLine(nullptr);
         }
 
-        CSVLineParser(const char* str) noexcept {
+        explicit CSVLineParser(const char* str) noexcept {
             m_line_contains_info = setLine(str);
         }
 
-        CSVLineParser(const String& string) noexcept {
+        explicit CSVLineParser(const String& string) noexcept {
             m_line_contains_info = setLine(string.utf8());
         }
 
-        ~CSVLineParser() {
-        }
+        ~CSVLineParser() = default;
 
         void _init() {
         }
@@ -120,8 +118,8 @@ namespace Grain {
         [[nodiscard]] int64_t length() const noexcept { return m_length; }
         [[nodiscard]] bool isLineFinished() const noexcept { return m_line_finished; }
 
-        [[nodiscard]] int32_t parsedFieldsCount() noexcept { return m_curr_field_index + 1; }
-        [[nodiscard]] int32_t currFieldIndex() noexcept { return m_curr_field_index; }
+        [[nodiscard]] int32_t parsedFieldsCount() const noexcept { return m_curr_field_index + 1; }
+        [[nodiscard]] int32_t currFieldIndex() const noexcept { return m_curr_field_index; }
         [[nodiscard]] String currFieldString() noexcept { return m_curr_field; }
         [[nodiscard]] const char* currFieldStrPtr() noexcept { return m_curr_field.utf8(); }
         [[nodiscard]] char currFieldFirstChar() noexcept { return m_curr_field.firstAsciiChar(); }

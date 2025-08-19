@@ -430,8 +430,8 @@ namespace Grain {
             float range = (max_level - min_level);
             float scale = range != 0.0f ? 1.0f / range : 1.0f;
 
-            int32_t y = flip_y == true ? ia.height() - 1 : 0;
-            int32_t y_step = flip_y == true ? -1 : 1;
+            int32_t y = flip_y ? ia.height() - 1 : 0;
+            int32_t y_step = flip_y ? -1 : 1;
 
             while (ia.stepY()) {
                 readRow(y);

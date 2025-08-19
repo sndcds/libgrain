@@ -27,20 +27,28 @@ namespace Grain {
         }
 
         template<std::integral U>
-        Vec2Fix(const Vec2<U>& v) noexcept {
+        explicit Vec2Fix(const Vec2<U>& v) noexcept {
             std::cout << "Vec2Fix integral\n";
             m_x.setInt64(static_cast<int64_t>(v.m_x));
             m_y.setInt64(static_cast<int64_t>(v.m_y));
         }
 
         template<std::floating_point U>
-        Vec2Fix(const Vec2<U>& v) noexcept {
+        explicit Vec2Fix(const Vec2<U>& v) noexcept {
             std::cout << "Vec2Fix floating_point\n";
             m_x.setDouble(static_cast<double>(v.m_x));
             m_y.setDouble(static_cast<double>(v.m_y));
         }
 
+        explicit Vec2Fix(const char* csv, char delimiter = ',') noexcept { setByCSV(csv, delimiter); }
+        explicit Vec2Fix(const String& csv, char delimiter = ',') noexcept { setByCSV(csv, delimiter); }
+
+
         [[nodiscard]] virtual const char *className() const noexcept { return "Vec2Fix"; }
+
+        friend std::ostream& operator << (std::ostream& os, const Vec2Fix* o) {
+            return o == nullptr ? os << "Vec2Fix nullptr" : os << *o;
+        }
 
         friend std::ostream& operator << (std::ostream& os, const Vec2Fix& o) {
             os << o.m_x << ", " << o.m_y;
@@ -95,13 +103,27 @@ namespace Grain {
             }
         }
 
+        bool setByCSV(const char* csv, char delimiter) noexcept {
+            if (csv) {
+                CSVLineParser csv_line_parser(csv);
+                csv_line_parser.setDelimiter(delimiter);
+                if (!csv_line_parser.nextFix(m_x)) { return false; }
+                return csv_line_parser.nextFix(m_y);
+            }
+            return false;
+        }
+
+        bool setByCSV(const String& csv, char delimiter) noexcept {
+            return setByCSV(csv.utf8(), delimiter);
+        }
+
         void zero() noexcept { m_x = 0; m_y = 0; }
 
         void clampX(const Fix& min, const Fix& max) noexcept { m_x.clamp(min, max); }
         void clampY(const Fix& min, const Fix& max) noexcept { m_y.clamp(min, max); }
 
-        [[nodiscard]] Vec2f vec2f() const noexcept { return Vec2f(m_x.asFloat(), m_y.asFloat()); }
-        [[nodiscard]] Vec2d vec2d() const noexcept { return Vec2d(m_x.asDouble(), m_y.asDouble()); }
+        [[nodiscard]] Vec2f vec2f() const noexcept { return { m_x.asFloat(), m_y.asFloat() }; }
+        [[nodiscard]] Vec2d vec2d() const noexcept { return { m_x.asDouble(), m_y.asDouble() }; }
 
         void vec2f(Vec2f& out_vec) const noexcept {
             out_vec.m_x = m_x.asFloat();

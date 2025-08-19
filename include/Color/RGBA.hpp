@@ -42,15 +42,15 @@ namespace Grain {
 
     public:
         RGBA() noexcept : RGB(), m_alpha(1.0f) {}
+        RGBA(float r, float g, float b, float alpha) noexcept : RGB(r, g, b), m_alpha(alpha) {}
         explicit RGBA(float value) noexcept : RGB(value), m_alpha(1.0f) {}
         explicit RGBA(uint32_t value) noexcept { set32bit(value); }
-        RGBA(float r, float g, float b) noexcept : RGB(r, g, b), m_alpha(1.0f) {}
-        RGBA(float r, float g, float b, float alpha) noexcept : RGB(r, g, b), m_alpha(alpha) {}
-        RGBA(const RGB& rgb, float alpha) noexcept : RGB(rgb), m_alpha(alpha) {}
-        RGBA(const RGBA& a, const RGBA& b, float blend) noexcept { setBlend(a, b, blend); }
-        RGBA(const RGB& a, const RGBA& b, float blend) noexcept { setBlend(RGBA(a, 1.0f), b, blend); }
-        RGBA(const RGBA& a, const RGB& b, float blend) noexcept { setBlend(a, RGBA(b, 1.0f), blend); }
-        RGBA(const HSV& hsv, float alpha) noexcept : RGB(hsv), m_alpha(alpha) {}
+        explicit RGBA(float r, float g, float b) noexcept : RGB(r, g, b), m_alpha(1.0f) {}
+        explicit RGBA(const RGB& rgb, float alpha) noexcept : RGB(rgb), m_alpha(alpha) {}
+        explicit RGBA(const RGBA& a, const RGBA& b, float blend) noexcept { setBlend(a, b, blend); }
+        explicit RGBA(const RGB& a, const RGBA& b, float blend) noexcept { setBlend(RGBA(a, 1.0f), b, blend); }
+        explicit RGBA(const RGBA& a, const RGB& b, float blend) noexcept { setBlend(a, RGBA(b, 1.0f), blend); }
+        explicit RGBA(const HSV& hsv, float alpha) noexcept : RGB(hsv), m_alpha(alpha) {}
 
         RGBA(int32_t r, int32_t g, int32_t b, int32_t a, int32_t max) noexcept {
             float f = 1.0f / static_cast<float>(max);
@@ -130,6 +130,7 @@ namespace Grain {
 
 
         void setAlpha(float alpha) noexcept { m_alpha = alpha; }
+        void setBlend(const RGBA& a, float t) noexcept;
         void setBlend(const RGBA& a, const RGBA& b, float t) noexcept;
         void mixbox(const RGBA& color1, const RGBA& color2, float t) noexcept;
 

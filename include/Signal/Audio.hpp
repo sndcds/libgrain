@@ -22,6 +22,7 @@
 
 namespace Grain {
 
+    class Log;
     class LUT1;
 
     typedef struct {
@@ -228,10 +229,8 @@ namespace Grain {
         [[nodiscard]] static float soundIntensity(float initial_intensity, float attenuation, float distance);
 
         #if defined(__APPLE__) && defined(__MACH__)
-            #warning "Audio.logAudioStreamBasicDescription() must be implemented"
-            static void logAudioStreamBasicDescription(std::ostream& os, AudioStreamBasicDescription& asbd, const char* name) noexcept;
-            #warning "Audio.logAudioBufferList() must be implemented"
-            static void logAudioBufferList(std::ostream& os, AudioBufferList& abl, const char* name) noexcept;
+            static void logAudioStreamBasicDescription(Log& l, AudioStreamBasicDescription& asbd, const char* name) noexcept;
+            static void logAudioBufferList(Log& l, AudioBufferList& abl, const char* name) noexcept;
         #endif
     };
 

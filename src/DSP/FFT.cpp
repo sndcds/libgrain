@@ -47,7 +47,7 @@ namespace Grain {
                 m_fft_setup = _macos_fftSetup(log_n);
                 // We need complex buffers in two different formats!
                 m_temp_complex = (DSPComplex*)std::malloc(sizeof(DSPComplex) * m_half_length);
-                m_valid = m_fft_setup != nullptr && m_data != nullptr && m_temp_complex != nullptr;
+                m_valid = m_fft_setup && m_data && m_temp_complex;
             #endif
         }
     }
@@ -71,7 +71,7 @@ namespace Grain {
         if (log_n >= kLogNResolutionFirst && log_n <= kLogNResolutionLast) {
             int32_t index = log_n - kLogNResolutionFirst;
 
-            if (g_fft_setups[index] == nullptr) {    // Must be initialized.
+            if (!g_fft_setups[index]) {    // Must be initialized.
                 g_fft_setups[index] = vDSP_create_fftsetup(log_n, kFFTRadix2);
             }
 
@@ -107,7 +107,7 @@ namespace Grain {
         auto result = ErrorCode::None;
 
         try {
-            if (data == nullptr || out_partials == nullptr) {
+            if (!data || !out_partials) {
                 throw ErrorCode::NullData;
             }
 

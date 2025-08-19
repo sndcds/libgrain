@@ -9,6 +9,7 @@
 #include "GUI/Window.hpp"
 #include "GUI/View.hpp"
 #include "GUI/Screen.hpp"
+#include "2d/Rect.hpp"
 
 
 namespace Grain {
@@ -111,10 +112,10 @@ namespace Grain {
 
     void _macosWindow_makeFirstResponder(Window* window, Component* component) {
         if (component != nullptr) {
-            [(NSWindow*)window->nsWindow() makeFirstResponder:(NSView*)component->nsView()];
+            [(GrainNSWindow*)window->nsWindow() makeFirstResponder:(NSView*)component->nsView()];
         }
         else {
-            [(NSWindow*)window->nsWindow() makeFirstResponder:nil];
+            [(GrainNSWindow*)window->nsWindow() makeFirstResponder:nil];
         }
     }
 
@@ -151,14 +152,12 @@ namespace Grain {
 
 
 - (BOOL)canBecomeKeyWindow {
-
     return m_window->canBecomeKeyWindow();
 }
 
 
 - (void)becomeKeyWindow {
-
-    // TODO: Possibe optimization, only draw Component, which lost the focus!
+   // TODO: Possibe optimization, only draw Component, which lost the focus!
     // TODO: Not all windows must be redraw!
 
     Grain::App::setKeyWindow(m_window);
@@ -169,22 +168,16 @@ namespace Grain {
 
 
 - (void)windowDidResize:(NSNotification*)notification {
-
-    // TODO: Your code to handle the window becoming the main window.
-
     double content_width = ((NSView*)self.contentView).frame.size.width;
     double content_height = ((NSView*)self.contentView).frame.size.height;
     Grain::View* root_view = m_window->rootView();
-    /* TODO: !!!!!
     if (root_view != nullptr) {
-        root_view->setRect(0, 0, content_width, content_height);
+        root_view->setRect(Grain::Rectd(0, 0, content_width, content_height));
     }
-     */
 }
 
 
 - (void)windowDidBecomeMain:(NSNotification*)notification {
-
     // TODO: Your code to handle the window becoming the main window.
 }
 

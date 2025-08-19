@@ -120,10 +120,10 @@ namespace Grain {
         int32_t byte_count = 3;  // Assume 3 bytes by default
 
         // Check for null pointers.
-        if (codes == nullptr) {
+        if (!codes) {
             return -1;
         }
-        if (out_bytes == nullptr) {
+        if (!out_bytes) {
             return -2;
         }
 

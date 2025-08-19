@@ -54,7 +54,7 @@ namespace Grain {
 
         uint32_t result = 0;
 
-        if (hex == nullptr) {
+        if (!hex) {
             return ErrorCode::NullData;
         }
 

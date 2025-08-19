@@ -899,7 +899,7 @@ namespace Grain {
         auto result = ErrorCode::None;
 
         try {
-            if (out_buffer == nullptr) {
+            if (!out_buffer) {
                 Exception::throwStandard(ErrorCode::NullData);
             }
 
@@ -982,7 +982,7 @@ namespace Grain {
      *  @throws `Exception` if something went wrong.
      */
     void File::write8BitData(const uint8_t* data, int64_t length) {
-        if (data == nullptr) {
+        if (!data) {
             Exception::throwStandard(ErrorCode::NullData);
         }
 
@@ -995,7 +995,7 @@ namespace Grain {
     template <typename U>
     void File::writeData(const U* data, int64_t length) {
 
-        if (data == nullptr) {
+        if (!data) {
             Exception::throwStandard(ErrorCode::NullData);
         }
 
@@ -2015,7 +2015,7 @@ namespace Grain {
             return nullptr;
         }
 
-        if (buffer == nullptr) {
+        if (!buffer) {
             buffer = (uint8_t*)malloc(raw_data_size);
             malloc_flag = true;
         }
@@ -2072,7 +2072,7 @@ namespace Grain {
     File* File::createFile(const String& file_path) {
 
         auto file = new(std::nothrow) File(file_path);
-        if (file == nullptr) {
+        if (!file) {
             Exception::throwStandard(ErrorCode::FileInstantiationFailed);
         }
         return file;
@@ -2206,7 +2206,7 @@ namespace Grain {
 
         int32_t err_count = 0;
 
-        if (curr_depth < 0 || curr_depth >= max_depth || action == nullptr) {
+        if (curr_depth < 0 || curr_depth >= max_depth || !action) {
             return 0;
         }
 
@@ -2437,12 +2437,12 @@ NSString *file = [NSString stringWithUTF8String:file_path.utf8()];
         FILE* file = nullptr;
 
         try {
-            if (pos == nullptr || bytes != nullptr) {
+            if (!pos || bytes != nullptr) {
                 Exception::throwStandard(ErrorCode::NullData);
             }
 
             file = std::fopen(file_path.utf8(), "r+b");
-            if (file == nullptr) {
+            if (!file) {
                 Exception::throwStandard(ErrorCode::FileCantOpen);
             }
 
@@ -2502,7 +2502,7 @@ NSString *file = [NSString stringWithUTF8String:file_path.utf8()];
             }
 
             file = std::fopen(file_path.utf8(), "r+b");
-            if (file == nullptr) {
+            if (!file) {
                 Exception::throwStandard(ErrorCode::FileCantOpen);
             }
 
@@ -2987,7 +2987,7 @@ NSString *file = [NSString stringWithUTF8String:file_path.utf8()];
             auto file_size = file.size();
 
             buffer = (uint8_t*)std::malloc(file_size);
-            if (buffer == nullptr) {
+            if (!buffer) {
                 Exception::throwStandard(ErrorCode::MemCantAllocate);
             }
 

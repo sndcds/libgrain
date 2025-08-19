@@ -30,7 +30,7 @@ namespace Grain {
     class RectEdges {
     public:
         RectEdges() noexcept = default;
-        explicit RectEdges(T top, T right, T bottom, T left) noexcept : m_top(top), m_right(right), m_bottom(bottom), m_left(left) {}
+        RectEdges(T top, T right, T bottom, T left) noexcept : m_top(top), m_right(right), m_bottom(bottom), m_left(left) {}
         explicit RectEdges(T horizontal, T vertical) noexcept : m_top(vertical), m_right(horizontal), m_bottom(vertical), m_left(horizontal) {}
         explicit RectEdges(T size) noexcept : m_top(size), m_right(size), m_bottom(size), m_left(size) {}
         virtual ~RectEdges() = default;
@@ -64,7 +64,7 @@ namespace Grain {
         }
 
         bool set(T* values, int32_t n) noexcept {
-            if (values != nullptr) {
+            if (values) {
                 if (n == 1) {
                     m_top = m_right = m_bottom = m_left = values[0];
                     return true;

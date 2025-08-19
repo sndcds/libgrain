@@ -35,7 +35,7 @@ namespace Grain {
 
     LUT1::~LUT1() noexcept {
 
-        if (m_use_extern_mem == false) {
+        if (!m_use_extern_mem) {
             std::free(m_samples);
         }
     }
@@ -579,7 +579,7 @@ namespace Grain {
     bool LUT1Stepper::next(float step, float* out_value) noexcept {
         bool result = m_pos < m_duration;
 
-        if (m_running == false) {
+        if (!m_running) {
             return false;
         }
 

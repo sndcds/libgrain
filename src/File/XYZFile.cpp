@@ -60,7 +60,7 @@ namespace Grain {
                     continue;
                 }
 
-                if (m_last_coordinate.setByCSV(m_line, ' ') == false) {
+                if (!m_last_coordinate.setByCSV(m_line, ' ')) {
                     throw ErrorCode::UnexpectedData;
                 }
 
@@ -239,7 +239,7 @@ namespace Grain {
             while (xyz_file2->readTrimmedLine(xyz_line)) {
                 if (xyz_line.length() > 0) {
                     Vec3d xyz_coord;
-                    if (xyz_coord.setByCSV(xyz_line, ' ') == false) {
+                    if (!xyz_coord.setByCSV(xyz_line, ' ')) {
                         throw ErrorCode::UnexpectedData;
                     }
 

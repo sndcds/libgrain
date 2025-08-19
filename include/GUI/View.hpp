@@ -34,6 +34,8 @@ namespace Grain {
         [[nodiscard]] ObjectList<Component*> components() noexcept { return m_components; }
         [[nodiscard]] bool hasDescendant(const Component* component) noexcept override;
 
+        void deselectRadioGroup(int32_t radio_group) noexcept override;
+
         void draw(const Rectd& dirty_rect) noexcept override;
 
 
@@ -46,7 +48,7 @@ namespace Grain {
         Rectd m_drag_rect;
 
         // Style
-        StyleSet m_style_set;
+        GUIStyle m_style_set;
     };
 
 

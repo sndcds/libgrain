@@ -92,7 +92,7 @@ namespace Grain {
         }
 
         void set(const T* v, bool row_order = true) noexcept {
-            if (v != nullptr) {
+            if (v) {
                 T* d = mutDataPtr();
                 if (row_order) {
                     for (int i = 0; i < 16; i++)
@@ -390,7 +390,7 @@ namespace Grain {
         }
 
         void transform3Array(T* data, int32_t n) const noexcept {
-            if (data != nullptr && n > 0) {
+            if (data && n > 0) {
                 T* d = data;
                 for (int32_t i = 0; i < n; i++) {
                     T x = m_data[0][0] * d[0] + m_data[1][0] * d[1] + m_data[2][0] * d[2] + m_data[3][0];
@@ -430,7 +430,7 @@ namespace Grain {
         }
 
         void transform3DirArray(T* data, int32_t n) const noexcept {
-            if (data != nullptr && n > 0) {
+            if (data && n > 0) {
                 T* d = data;
                 for (int32_t i = 0; i < n; i++) {
                     T x = m_data[0][0] * d[0] + m_data[1][0] * d[1] + m_data[2][0] * d[2];

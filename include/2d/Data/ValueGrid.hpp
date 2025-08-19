@@ -143,7 +143,7 @@ namespace Grain {
         }
 
         bool _initMemThrow() {
-            if (_initMem() == false) {
+            if (!_initMem()) {
                 throw ErrorCode::MemCantAllocate;
             }
             else {
@@ -210,7 +210,7 @@ namespace Grain {
                 m_min_value = maxValueForType();
                 m_max_value = minValueForType();
                 bool check_invalid = hasFeature(kFeature_Invalid_Value);
-                if (check_invalid == true) {
+                if (check_invalid) {
                     for (int32_t i = 0; i < m_value_count; i++) {
                         T v = m_values[i];
                         if (v != m_invalid_value) {

@@ -313,9 +313,6 @@ namespace Grain {
         bool updateLUT() noexcept;
         bool lookupFromLUT(float pos, RGB& out_color) noexcept;
 
-        ErrorCode saveDataFile(const String& file_path, bool can_overwrite = false) const noexcept;
-        ErrorCode setFromDataFile(const String& file_path) noexcept;
-
         void draw(GraphicContext& gc, const Vec2d& start_pos, const Vec2d& end_pos) noexcept;
         void draw(GraphicContext& gc, const Vec2d& start_pos, const Vec2d& end_pos, bool draw_before, bool draw_after) noexcept;
         void drawInRect(GraphicContext& gc, const Rectd& rect, Direction direction) noexcept;

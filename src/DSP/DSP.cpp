@@ -16,7 +16,7 @@ namespace Grain {
 
     bool DSP::hanningWindowSymmetric(int32_t window_size, float *out_data) noexcept {
 
-        if (window_size <= 1 || out_data == nullptr) {
+        if (window_size <= 1 || !out_data) {
             return false;
         }
 
@@ -30,7 +30,7 @@ namespace Grain {
 
     bool DSP::hanningWindowPeriodic(int32_t window_size, float* out_data) noexcept {
 
-        if (window_size <= 0 || out_data == nullptr) {
+        if (window_size <= 0 || !out_data) {
             return false;
         }
 
@@ -47,12 +47,12 @@ namespace Grain {
 
         // TODO: Check!!!!!
 
-        if (window_size <= 1 || out_data == nullptr) {
+        if (window_size <= 1 || !out_data) {
             return false;
         }
 
         auto buffer = new float[window_size * 2];
-        if (buffer == nullptr) {
+        if (!buffer) {
             return false;
         }
 
@@ -105,7 +105,7 @@ namespace Grain {
             return ErrorCode::BadArgs;
         }
 
-        if (out_data == nullptr) {
+        if (!out_data) {
             return ErrorCode::NullData;
         }
 

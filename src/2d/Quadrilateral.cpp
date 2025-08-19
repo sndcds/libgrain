@@ -93,7 +93,7 @@ namespace Grain {
 
     bool Quadrilateral::isSimple() const noexcept {
 
-        if (m_valid_points == false) {
+        if (!m_valid_points) {
             return false;
         }
 
@@ -329,7 +329,7 @@ namespace Grain {
      */
     bool Quadrilateral::contains(const Vec2d& pos) const noexcept {
 
-        if (m_valid_points == false) {
+        if (!m_valid_points) {
             return false;
         }
 

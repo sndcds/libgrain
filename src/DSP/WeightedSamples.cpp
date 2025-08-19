@@ -80,14 +80,14 @@ namespace Grain {
         float *new_samples = nullptr;
         size_t new_size = sizeof(float) * 2 * resolution;
 
-        if (m_samples == nullptr) {
+        if (!m_samples) {
             new_samples = (float*)std::malloc(new_size);
         }
         else {
             new_samples = (float*)std::realloc(m_samples, new_size);
         }
 
-        if (new_samples != nullptr) {
+        if (new_samples) {
             m_samples = new_samples;
             m_weights = &new_samples[resolution];
             m_resolution = resolution;
@@ -109,7 +109,7 @@ namespace Grain {
 
     void WeightedSamples::setSample(int32_t index, float value) noexcept {
 
-        if (m_samples != nullptr && index >= 0 && index < m_resolution) {
+        if (m_samples && index >= 0 && index < m_resolution) {
             m_samples[index] = value;
         }
     }
@@ -117,13 +117,13 @@ namespace Grain {
 
     float WeightedSamples::sampleAtIndex(int32_t index) const noexcept {
 
-        return m_samples != nullptr && index >= 0 && index < m_resolution ? m_samples[index] : 0;
+        return m_samples && index >= 0 && index < m_resolution ? m_samples[index] : 0;
     }
 
 
     void WeightedSamples::setWeight(int32_t index, float weight) noexcept {
 
-        if (m_weights != nullptr && index >= 0 && index < m_resolution) {
+        if (m_weights && index >= 0 && index < m_resolution) {
             m_weights[index] = weight;
         }
     }
@@ -131,7 +131,7 @@ namespace Grain {
 
     void WeightedSamples::addSample(float value, int32_t index, int32_t resolution) noexcept {
 
-        if (m_weights != nullptr && m_samples && index >= 0 && index < resolution && resolution > 0) {
+        if (m_weights && m_samples && index >= 0 && index < resolution && resolution > 0) {
 
             float t = static_cast<float>(index) / resolution;
             float real_index = t * m_resolution;
@@ -221,7 +221,7 @@ namespace Grain {
 
     void WeightedSamples::addBezier(const Bezier &bezier, int32_t bezier_resolution) noexcept {
 
-        if (m_samples == nullptr && bezier_resolution < 1) {
+        if (!m_samples && bezier_resolution < 1) {
             return;
         }
 
@@ -250,7 +250,7 @@ namespace Grain {
 
     void WeightedSamples::finish() noexcept {
 
-        if (m_samples == nullptr) {
+        if (!m_samples) {
             return;
         }
 

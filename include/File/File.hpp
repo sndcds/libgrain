@@ -184,7 +184,7 @@ namespace Grain {
          * @return
          */
         bool isBigEndianSignature(const char* buffer) const {
-            if (buffer == nullptr) {
+            if (!buffer) {
                 throw ErrorCode::NullData;
             }
             if (buffer[0] == 'I' && buffer[1] == 'I') {
@@ -199,7 +199,7 @@ namespace Grain {
         }
 
         void setEndianBySignature(const char* buffer) {
-            if (buffer == nullptr) {
+            if (!buffer) {
                 throw ErrorCode::NullData;
             }
             if (buffer[0] == 'I' && buffer[1] == 'I') {
@@ -234,14 +234,14 @@ namespace Grain {
         }
 
         static void checkBeforeReading(File* file) {
-            if (file == nullptr) {
+            if (!file) {
                 throw ErrorCode::NullData;
             }
             file->checkBeforeReading();
         }
 
         static void checkBeforeWriting(File* file) {
-            if (file == nullptr) {
+            if (!file) {
                 throw ErrorCode::NullData;
             }
             file->checkBeforeWriting();
@@ -394,7 +394,7 @@ namespace Grain {
 
         void writeQuotedString(const String* string) {
             writeQuote();
-            if (string != nullptr) {
+            if (string) {
                 writeString(*string);
             }
             writeQuote();
@@ -414,7 +414,7 @@ namespace Grain {
 
         void writeSingleQuotedString(const String* string) {
             writeSingleQuote();
-            if (string != nullptr) {
+            if (string) {
                 writeString(*string);
             }
             writeSingleQuote();

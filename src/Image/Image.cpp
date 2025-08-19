@@ -21,6 +21,9 @@
 #include "File/TiffFile.hpp"
 #include "2d/Data/CVF2.hpp"
 
+#include <libraw/libraw.h>
+#include <tiffio.h>
+#include <cairo/cairo.h>
 #include <webp/encode.h>
 #include <png.h>
 #include <jpeglib.h>
@@ -2073,7 +2076,7 @@ namespace Grain {
 
         // TODO: Error with unequal sizes!
 
-        if (isUsable() == false) {
+        if (!isUsable()) {
             return nil;
         }
 

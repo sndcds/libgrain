@@ -80,7 +80,7 @@ namespace Grain {
      *  @brief Label method for displaying a label.
      */
     void Log::label(const char* label) {
-        if (m_does_output && label != nullptr) {
+        if (m_does_output && label) {
             _applyIndent();
             m_stream << label << ": ";
         }
@@ -91,7 +91,7 @@ namespace Grain {
      *  @brief Header method for displaying a label.
      */
     void Log::header(const char* label) {
-        if (m_does_output && label != nullptr) {
+        if (m_does_output && label) {
             _applyIndent();
             m_stream << label << std::endl;
             m_needs_indent = true;  // Start indentation after the header
@@ -112,7 +112,7 @@ namespace Grain {
 
     void Log::ubyteDecimal(uint8_t* data, int32_t n, char delimiter) {
         if (m_does_output) {
-            if (data == nullptr) {
+            if (!data) {
                 m_stream << "nullptr";
             }
             else {

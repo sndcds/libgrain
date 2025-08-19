@@ -172,7 +172,7 @@ namespace Grain {
         }
 
         void add(const Vec2Fix* v) noexcept {
-            if (v != nullptr) {
+            if (v) {
                 addX(v->m_x); addY(v->m_y);
             }
         }
@@ -463,13 +463,11 @@ namespace Grain {
         }
 
         void set(T*  values, int32_t n) noexcept {
-            if (values != nullptr) {
-                if (n == 4) {
-                    m_min_x = values[0];
-                    m_min_y = values[1];
-                    m_max_x = values[2];
-                    m_max_y = values[3];
-                }
+            if (values && n == 4) {
+                m_min_x = values[0];
+                m_min_y = values[1];
+                m_max_x = values[2];
+                m_max_y = values[3];
             }
         }
 
@@ -507,7 +505,7 @@ namespace Grain {
 
         bool add(const Vec2<T>* v, int32_t n) noexcept {
             bool result = false;
-            if (v != nullptr) {
+            if (v) {
                 for (int32_t i = 0; i < n; i++) {
                     result |= add(v[i]);
                 }

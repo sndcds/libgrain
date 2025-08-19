@@ -21,11 +21,11 @@ namespace Grain {
      */
     void Color::rgb_to_hsv(const float* rgb, float* out_hsv) noexcept {
 
-        if (out_hsv == nullptr) {
+        if (!out_hsv) {
             return;
         }
 
-        if (rgb == nullptr) {
+        if (!rgb) {
             out_hsv[0] = out_hsv[1] = out_hsv[2] = 0.0f;
             return;
         }
@@ -71,11 +71,11 @@ namespace Grain {
      */
     void Color::rgb_to_hsl(const float* rgb, float* out_hsl) noexcept {
 
-        if (out_hsl == nullptr) {
+        if (!out_hsl) {
             return;
         }
 
-        if (rgb == nullptr) {
+        if (!rgb) {
             out_hsl[0] = out_hsl[1] = out_hsl[2] = 0;
             return;
         }
@@ -122,11 +122,11 @@ namespace Grain {
      */
     void Color::rgb_to_yuv601(const float* rgb, float* out_yuv) noexcept {
 
-        if (out_yuv == nullptr) {
+        if (!out_yuv) {
             return;
         }
 
-        if (rgb == nullptr) {
+        if (!rgb) {
             out_yuv[0] = out_yuv[1] = out_yuv[2] = 0.0f;
             return;
         }
@@ -146,11 +146,11 @@ namespace Grain {
      */
     void Color::rgb_to_yuv709(const float* rgb, float* out_yuv) noexcept {
 
-        if (out_yuv == nullptr) {
+        if (!out_yuv) {
             return;
         }
 
-        if (rgb == nullptr) {
+        if (!rgb) {
             out_yuv[0] = out_yuv[1] = out_yuv[2] = 0.0f;
             return;
         }
@@ -171,11 +171,11 @@ namespace Grain {
      */
     void Color::rgb_to_oklab(const float* rgb, float* out_oklab) noexcept {
 
-        if (out_oklab == nullptr) {
+        if (!out_oklab) {
             return;
         }
 
-        if (rgb == nullptr) {
+        if (!rgb) {
             out_oklab[0] = out_oklab[1] = out_oklab[2] = 0.0f;
             return;
         }
@@ -203,11 +203,11 @@ namespace Grain {
      */
     void Color::hsv_to_rgb(const float* hsv, float* out_rgb) noexcept {
 
-        if (out_rgb == nullptr) {
+        if (!out_rgb) {
             return;
         }
 
-        if (hsv == nullptr) {
+        if (!hsv) {
             out_rgb[0] = out_rgb[1] = out_rgb[2] = 0.0f;
             return;
         }
@@ -251,11 +251,11 @@ namespace Grain {
      */
     void Color::hsv_to_hsl(const float* hsv, float* out_hsl) noexcept {
 
-        if (out_hsl == nullptr) {
+        if (!out_hsl) {
             return;
         }
 
-        if (hsv == nullptr) {
+        if (!hsv) {
             out_hsl[0] = out_hsl[1] = out_hsl[2] = 0.0f;
             return;
         }
@@ -300,11 +300,11 @@ namespace Grain {
  */
     void Color::hsl_to_rgb(const float* hsl, float* out_rgb) noexcept {
 
-        if (out_rgb == nullptr) {
+        if (!out_rgb) {
             return;
         }
 
-        if (hsl == nullptr) {
+        if (!hsl) {
             out_rgb[0] = out_rgb[1] = out_rgb[2] = 0;
             return;
         }
@@ -333,11 +333,11 @@ namespace Grain {
      */
     void Color::hsl_to_hsv(const float* hsl, float* out_hsv) noexcept {
 
-        if (out_hsv == nullptr) {
+        if (!out_hsv) {
             return;
         }
 
-        if (hsl == nullptr) {
+        if (!hsl) {
             out_hsv[0] = out_hsv[1] = out_hsv[2] = 0.0f;
             return;
         }
@@ -364,11 +364,11 @@ namespace Grain {
      */
     void Color::yuv601_to_rgb(const float* yuv, float* out_rgb) noexcept {
 
-        if (out_rgb == nullptr) {
+        if (!out_rgb) {
             return;
         }
 
-        if (yuv == nullptr) {
+        if (!yuv) {
             out_rgb[0] = out_rgb[1] = out_rgb[2] = 0.0f;
             return;
         }
@@ -384,11 +384,11 @@ namespace Grain {
      */
     void Color::yuv709_to_rgb(const float* yuv, float* out_rgb) noexcept {
 
-        if (out_rgb == nullptr) {
+        if (!out_rgb) {
             return;
         }
 
-        if (yuv == nullptr) {
+        if (!yuv) {
             out_rgb[0] = out_rgb[1] = out_rgb[2] = 0.0f;
             return;
         }
@@ -404,11 +404,11 @@ namespace Grain {
      */
     void Color::lab_to_rgb(const float* lab, float* out_rgb) noexcept {
 
-        if (out_rgb == nullptr) {
+        if (!out_rgb) {
             return;
         }
 
-        if (lab == nullptr) {
+        if (!lab) {
             out_rgb[0] = out_rgb[1] = out_rgb[2] = 0.0f;
             return;
         }
@@ -438,11 +438,11 @@ namespace Grain {
      */
     void Color::oklab_to_rgb(const float* oklab, float* out_rgb) noexcept {
 
-        if (out_rgb == nullptr) {
+        if (!out_rgb) {
             return;
         }
 
-        if (oklab == nullptr) {
+        if (!oklab) {
             out_rgb[0] = out_rgb[1] = out_rgb[2] = 0;
             return;
         }
@@ -474,11 +474,11 @@ namespace Grain {
      */
     void Color::oklab_to_oklch(const float* oklab, float* out_oklch) noexcept {
 
-        if (out_oklch == nullptr) {
+        if (!out_oklch) {
             return;
         }
 
-        if (oklab == nullptr) {
+        if (!oklab) {
             out_oklch[0] = out_oklch[1] = out_oklch[2] = 0.0f;
             return;
         }
@@ -507,7 +507,7 @@ namespace Grain {
      */
     void Color::oklch_to_oklab(const float* oklch, float* out_oklab) noexcept {
 
-        if (out_oklab == nullptr) {
+        if (!out_oklab) {
             return;
         }
 

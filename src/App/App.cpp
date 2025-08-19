@@ -10,7 +10,7 @@
 #include "App/App.hpp"
 #include "Core/Hardware.hpp"
 #include "Graphic/Font.hpp"
-#include "GUI/Style.hpp"
+#include "GUI/GUIStyle.hpp"
 
 
 namespace Grain {
@@ -57,14 +57,9 @@ namespace Grain {
         m_title_ui_font = new(std::nothrow) Font(22);
         m_mono_font = new(std::nothrow) Font("SF Mono", 11); // TODO: Fallback!
 
-        // Style
-        // TODO: Load styles from file!
-        auto button_style_class = m_style_set.buttonStyleClass();
-        button_style_class->setPropertyAtType(StylePropertyType::Color, RGBA{0.1f, 0.1f, 0.1f, 1.0f});
-        button_style_class->setPropertyAtType(StylePropertyType::BackgroundColor, RGBA{0.9f, 0.9f, 0.9f, 1.0f});
-        button_style_class->setPropertyAtType(StylePropertyType::BorderColor, RGBA{0.3f, 0.3f, 0.3f, 1.0f});
-        button_style_class->setPropertyAtType(StylePropertyType::BorderWidth, 1.0f);
+        g_instance->_initGUIStyle();
     }
+
 
     App::~App() {
         // Release all Screens
@@ -72,6 +67,16 @@ namespace Grain {
             delete m_screens[i];
         }
     }
+
+
+    void App::_initGUIStyle() {
+        int32_t style_index = App::addGUIStyle();
+        if (style_index < 0) {
+            std::cerr << "Fatal: could not add GUI style\n";
+            exit(EXIT_FAILURE);
+        }
+    }
+
 
     void App::addMenu() {
         #if defined(__APPLE__) && defined(__MACH__)
@@ -117,7 +122,7 @@ namespace Grain {
                 throw Exception(ErrorCode::NullData, "App::addWindow: Window is null.");
             }
 
-            if (g_instance->m_windows.push(window) == false) {
+            if (!g_instance->m_windows.push(window)) {
                 throw Exception(ErrorCode::MemCantGrow, "App::addWindow: Could not add window to list.");
             }
         }

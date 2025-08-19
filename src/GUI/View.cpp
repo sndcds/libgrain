@@ -34,7 +34,7 @@ namespace Grain {
             delete component;
         }
 
-        /* macOS_view!!!
+        /* TODO: !!!!! macOS_view!!!
         if (m_ns_view != nil) {
             [(GrNSView*)m_ns_view removeFromSuperviewWithoutNeedingDisplay];
             [(GrNSView*)m_ns_view release];
@@ -73,7 +73,7 @@ namespace Grain {
 
                 m_curr_key_component = component;
 
-                if (m_split_view_flag == true) {
+                if (m_split_view_flag) {
                     component->setEdgeAligned();
                 }
             }
@@ -101,19 +101,34 @@ namespace Grain {
     }
 
 
+    void View::deselectRadioGroup(int32_t radio_group) noexcept {
+        if (radio_group > 0) {
+            for (auto component : m_components) {
+                if (component->radioGroup() == radio_group) {
+                    component->deselectWithoutChecking();
+                }
+            }
+        }
+    }
+
+
     void View::draw(const Rectd& dirty_rect) noexcept {
         GraphicContext gc(this);
-        Rectd bounds_rect = boundsRect();
 
-        if (m_fills_bg) {
-            gc.setFillColor(RGB(1.0f));
-            // gc.setFillColor(uiViewColor());
-            gc.fillRect(bounds_rect);
+        auto style = App::guiStyleAtIndex(m_style_index);
+        if (style) {
+            Rectd bounds_rect = boundsRect();
+
+            if (m_fills_bg) {
+                gc.setFillColor(style->viewColor());
+                gc.fillRect(bounds_rect);
+            }
+            else {
+                gc.setFillClearColor();
+                gc.fillRect(bounds_rect);
+            }
         }
-        else {
-            gc.setFillClearColor();
-            gc.fillRect(bounds_rect);
-        }
+
 
         callDrawFunction(gc);
     }

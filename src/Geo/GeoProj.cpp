@@ -12,6 +12,8 @@
 #include "Geo/GeoProj.hpp"
 #include "Geo/Geo.hpp"
 
+#include <proj.h>
+
 
 namespace Grain {
 
@@ -22,11 +24,11 @@ namespace Grain {
 
     GeoProj::~GeoProj() noexcept {
         if (m_proj != nullptr) {
-            proj_destroy(m_proj);
+            proj_destroy((PJ*)m_proj);
         }
 
         if (m_proj_context != nullptr) {
-            proj_context_destroy(m_proj_context);
+            proj_context_destroy((PJ_CONTEXT*)m_proj_context);
         }
     }
 
@@ -63,9 +65,9 @@ namespace Grain {
             }
 
             PJ_COORD in_coord = proj_coord(pos.m_x, pos.m_y, 0, 0);
-            PJ_COORD out_coord = proj_trans(m_proj, directions[inverse], in_coord);
+            PJ_COORD out_coord = proj_trans((PJ*)m_proj, directions[inverse], in_coord);
 
-            if (proj_errno(m_proj)) {
+            if (proj_errno((PJ*)m_proj)) {
                 return false;
             }
 
@@ -82,11 +84,11 @@ namespace Grain {
         Vec2d v1(range_rect.m_min_x, range_rect.m_min_y);
         Vec2d v2(range_rect.m_max_x, range_rect.m_max_y);
 
-        if (transform(v1, inverse) == false) {
+        if (!transform(v1, inverse)) {
             return false;
         }
 
-        if (transform(v2, inverse) == false) {
+        if (!transform(v2, inverse)) {
             return false;
         }
 
@@ -104,11 +106,11 @@ namespace Grain {
         Vec2d v1(range_rect.m_min_x, range_rect.m_min_y);
         Vec2d v2(range_rect.m_max_x, range_rect.m_max_y);
 
-        if (transform(v1, inverse) == false) {
+        if (!transform(v1, inverse)) {
             return false;
         }
 
-        if (transform(v2, inverse) == false) {
+        if (!transform(v2, inverse)) {
             return false;
         }
 
@@ -126,11 +128,11 @@ namespace Grain {
         Vec2d v1(range_rect.m_min_x.asDouble(), range_rect.m_min_y.asDouble());
         Vec2d v2(range_rect.m_max_x.asDouble(), range_rect.m_max_y.asDouble());
 
-        if (transform(v1, inverse) == false) {
+        if (!transform(v1, inverse)) {
             return false;
         }
 
-        if (transform(v2, inverse) == false) {
+        if (!transform(v2, inverse)) {
             return false;
         }
 
@@ -148,11 +150,11 @@ namespace Grain {
         Vec2d v1(range_rect.m_min_x.asDouble(), range_rect.m_min_y.asDouble());
         Vec2d v2(range_rect.m_max_x.asDouble(), range_rect.m_max_y.asDouble());
 
-        if (transform(v1, inverse) == false) {
+        if (!transform(v1, inverse)) {
             return false;
         }
 
-        if (transform(v2, inverse) == false) {
+        if (!transform(v2, inverse)) {
             return false;
         }
 
@@ -167,10 +169,10 @@ namespace Grain {
 
     bool GeoProj::transform(Quadrilateral& quadrilateral, bool inverse) noexcept {
 
-        if (transform(quadrilateral.m_points[0], inverse) == false) { return false; }
-        if (transform(quadrilateral.m_points[1], inverse) == false) { return false; }
-        if (transform(quadrilateral.m_points[2], inverse) == false) { return false; }
-        if (transform(quadrilateral.m_points[3], inverse) == false) { return false; }
+        if (!transform(quadrilateral.m_points[0], inverse)) { return false; }
+        if (!transform(quadrilateral.m_points[1], inverse)) { return false; }
+        if (!transform(quadrilateral.m_points[2], inverse)) { return false; }
+        if (!transform(quadrilateral.m_points[3], inverse)) { return false; }
 
         return true;
     }
@@ -185,7 +187,7 @@ namespace Grain {
      */
     bool GeoProj::transformToViewport(const Vec2d& pos, Vec2d& out_pos) noexcept {
 
-        if (transform(pos, out_pos) == true) {
+        if (transform(pos, out_pos)) {
             m_remap_rect.mapVec2(out_pos);
             return true;
         }
@@ -305,7 +307,7 @@ namespace Grain {
                 }
 
                 if (m_proj != nullptr) {
-                    proj_destroy(m_proj);
+                    proj_destroy((PJ*)m_proj);
                     m_proj = nullptr;
                 }
 
@@ -318,7 +320,7 @@ namespace Grain {
                     dst_crs = crs_4326_lonlat;
                 }
 
-                m_proj = proj_create_crs_to_crs(m_proj_context, src_crs, dst_crs, NULL);
+                m_proj = proj_create_crs_to_crs((PJ_CONTEXT*)m_proj_context, src_crs, dst_crs, NULL);
                 if (!m_proj) { throw Error::specific(2); }
 
                 if (m_src_crs == m_dst_crs) {

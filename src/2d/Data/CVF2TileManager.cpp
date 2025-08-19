@@ -40,7 +40,7 @@ namespace Grain {
      */
     ErrorCode CVF2Tile::checkValueGrid(CVF2TileManager* manager) noexcept {
 
-        if (isValid() == false) {
+        if (!isValid()) {
             return Error::specific(CVF2TileManager::kErrTileIsInvalid);
         }
 
@@ -220,7 +220,7 @@ namespace Grain {
 
         auto result = ErrorCode::None;
 
-        if (m_scan_done == true) {
+        if (m_scan_done) {
             return ErrorCode::None;
         }
 
@@ -319,7 +319,7 @@ namespace Grain {
             }
         }
 
-        if (m_bbox_used == false || file->hitBbox(m_bbox)) {
+        if (!m_bbox_used || file->hitBbox(m_bbox)) {
 
             // Extend the total range covered by the tiles
             m_scan_xy_range.add(file->range());
@@ -355,7 +355,7 @@ namespace Grain {
 
         auto result = ErrorCode::None;
 
-        if (m_running == true) {
+        if (m_running) {
             return ErrorCode::None;
         }
 
@@ -363,7 +363,7 @@ namespace Grain {
         StringList* file_list = nullptr;
 
         try {
-            if (m_scan_done == false) { throw Error::specific(kErrNotScanned); }
+            if (!m_scan_done) { throw Error::specific(kErrNotScanned); }
             if (m_scan_files_n < 1) { throw Error::specific(kErrNoCVF2FilesInDir); }
             if (m_tile_count < 1) { throw Error::specific(kErrNoTiles); }
 
@@ -451,7 +451,7 @@ namespace Grain {
 
         file->startRead();
 
-        if (m_bbox_used == false || file->hitBbox(m_bbox)) {
+        if (!m_bbox_used || file->hitBbox(m_bbox)) {
 
             Vec2i tile_xy_index;
             Vec2d center = file->centerAsVec2d();
@@ -576,7 +576,7 @@ namespace Grain {
         }
         std::cout << tile << std::endl;
 
-        if (tile->m_valid == false) {
+        if (!tile->m_valid) {
             return CVF2::kUndefinedValue;
         }
 
@@ -742,7 +742,7 @@ namespace Grain {
         auto result = ErrorCode::None;
 
         try {
-            if (m_running == false) {
+            if (!m_running) {
                 throw Error::specific(kErrTileManagerNotRunning);
             }
 
@@ -918,7 +918,7 @@ namespace Grain {
             ObjectList<CVF2Tile*> tiles_involved;
 
             for (auto tile : m_tiles) {
-                if (tile->m_valid == true) {
+                if (tile->m_valid) {
                     Quadrilateral quadrilateral(tile->m_bbox_dbl);
                     proj.transform(quadrilateral);
                     auto tile_aabb = quadrilateral.axisAlignedBbox();
@@ -1002,7 +1002,7 @@ namespace Grain {
                 throw ErrorCode::NullData;
             }
 
-            if (out_value_grid->hasValues() == false) {
+            if (!out_value_grid->hasValues()) {
                 throw Error::specific(1);  // TODO: Error Code!
             }
 
@@ -1011,7 +1011,7 @@ namespace Grain {
             GeoProj proj_wgs84_to_dst;
             proj_wgs84_to_dst.setSrcSRID(4326);
             proj_wgs84_to_dst.setDstSRID(srid);
-            if (proj_wgs84_to_dst.isValid() == false) {
+            if (!proj_wgs84_to_dst.isValid()) {
                 // TODO: Save error message!
                 throw ErrorCode::InvalidProjection;
             }
@@ -1019,7 +1019,7 @@ namespace Grain {
             GeoProj proj_dst_to_tm;
             proj_dst_to_tm.setSrcSRID(srid);
             proj_dst_to_tm.setDstSRID(m_tile_srid);
-            if (proj_dst_to_tm.isValid() == false) {
+            if (!proj_dst_to_tm.isValid()) {
                 // TODO: Save error message!
                 throw ErrorCode::InvalidProjection;
             }
@@ -1099,7 +1099,7 @@ namespace Grain {
 
             file.writeStr("crs,range_min_x,range_min_y,range_max_x,range_max_y,width,height,undefined_values,file_name,errors");
             for (auto tile : m_tiles) {
-                if (tile->m_valid == true) {
+                if (tile->m_valid) {
                     file.writeNewLine();
                     file.writeTextInt32(m_tile_srid);
                     file.writeComma();
@@ -1168,7 +1168,7 @@ namespace Grain {
             GeoMetaTileRange mtr(zoom, bbox);
             if (!mtr.valid()) { throw Error::specific(kErrMetaTileRangeFailed); }
 
-            if (mtr.setStartIndex(start_index) == false) {
+            if (!mtr.setStartIndex(start_index)) {
                 throw ErrorCode::None;  // Nothing to render
             }
 
@@ -1180,7 +1180,7 @@ namespace Grain {
 
             int64_t index = start_index;
             Vec2i tile_index;
-            while (mtr.nextTilePos(end_index, tile_index) == true) {
+            while (mtr.nextTilePos(end_index, tile_index)) {
 
                 // TODO: Implement multithreading!
 
@@ -1206,7 +1206,7 @@ namespace Grain {
                 String meta_file_name;
                 Geo::metaTilePathForTile(dst_path, zoom, tile_index, "cvf", meta_dir_path, meta_file_name);
 
-                if (File::makeDirs(meta_dir_path) == false) {
+                if (!File::makeDirs(meta_dir_path)) {
                     throw ErrorCode::FileDirNotFound;
                 }
 
@@ -1277,7 +1277,7 @@ namespace Grain {
 
             Vec2i tile_index;
             int32_t file_index = 0;
-            while (mtr.nextTilePos(tile_index) == true) {
+            while (mtr.nextTilePos(tile_index)) {
 
                 std::cout << file_index << " of " << mtr.metaTilesNeeded() << std::endl;
 
@@ -1387,7 +1387,7 @@ namespace Grain {
             log << "  overlapping tiles: " << m_start_tile_multi_inititialized_n << log.endl;
 
             log << "\nStart results:\n";
-            if (m_running == false) {
+            if (!m_running) {
                 log << "  Not started.\n";
             }
             else {
@@ -1423,7 +1423,7 @@ namespace Grain {
         proj.setSrcSRID(m_provided_bbox_srid);
         proj.setDstSRID(m_tile_srid);
 
-        if (proj.isValid() == false) {
+        if (!proj.isValid()) {
             return Error::specific(kErrBboxTransformFailed);
         }
 

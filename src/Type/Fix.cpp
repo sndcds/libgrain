@@ -42,7 +42,7 @@ namespace Grain {
      *  Implementation of assignment operator.
      */
     Fix& Fix::operator = (const String* string) {
-        if (string != nullptr) {
+        if (string) {
             setStr(string->utf8());
         }
         else {
@@ -217,7 +217,7 @@ namespace Grain {
             10000L, 1000L, 100L, 10L, 1L
         };
 
-        if (str == nullptr) {
+        if (!str) {
             return false;
         }
 

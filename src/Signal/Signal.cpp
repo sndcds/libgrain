@@ -18,6 +18,8 @@
 #include "Math/Random.hpp"
 #include "DSP/RingBuffer.hpp"
 
+#include <sndfile.h>
+
 
 namespace Grain {
 
@@ -64,7 +66,7 @@ namespace Grain {
 
         int64_t new_length = 0;
 
-        if (signal == nullptr) {
+        if (!signal) {
             return;
         }
 
@@ -77,9 +79,9 @@ namespace Grain {
             return;
         }
 
-        if (m_values == nullptr || new_length != m_length) {
+        if (!m_values || new_length != m_length) {
             m_values = (int16_t*)malloc(sizeof(int16_t) * new_length);
-            if (m_values == nullptr) {
+            if (!m_values) {
                 m_length = 0;
                 return;
             }
@@ -225,7 +227,7 @@ namespace Grain {
             auto new_data_size = static_cast<size_t>(sample_count) * channel_count * TypeInfo::byteSize(data_type);
             if (new_data_size != m_data_byte_size) {
                 void* new_data = std::realloc(m_data.raw, new_data_size);
-                if (new_data == nullptr) {
+                if (!new_data) {
                     return ErrorCode::MemCantAllocate;
                 }
                 m_data.raw = new_data;
@@ -236,7 +238,7 @@ namespace Grain {
                 size_t new_weights_size = static_cast<size_t>(sample_count) * sizeof(float);
                 if (new_weights_size != m_weights_size) {
                     auto new_weights = reinterpret_cast<float*>(std::realloc(m_weights, new_weights_size));
-                    if (new_weights == nullptr) {
+                    if (!new_weights) {
                         return ErrorCode::MemCantAllocate;
                     }
                     m_weights = new_weights;
@@ -276,13 +278,13 @@ namespace Grain {
      */
     ErrorCode Signal::checkConfiguration(Signal** signal_ptr, int32_t channel_count, int32_t sample_rate, int64_t sample_count, DataType data_type, bool weights_mode) noexcept {
 
-        if (signal_ptr == nullptr) {
+        if (!signal_ptr) {
             return ErrorCode::NullData;
         }
 
-        if (*signal_ptr == nullptr) {
+        if (!(*signal_ptr)) {
             *signal_ptr = new(std::nothrow) Signal(channel_count, sample_rate, sample_count, data_type, weights_mode);
-            if (*signal_ptr == nullptr) {
+            if (!(*signal_ptr)) {
                 return ErrorCode::ClassInstantiationFailed;
             }
             else {
@@ -444,7 +446,7 @@ namespace Grain {
     void* Signal::mutDataPtr(int32_t channel, int64_t index) const noexcept {
 
         // Basic bounds checking
-        if (m_data.raw == nullptr ||
+        if (!m_data.raw ||
             channel < 0 || channel >= m_channel_count ||
             index < 0 || index > m_last_sample_index) {
             return nullptr;
@@ -570,7 +572,7 @@ namespace Grain {
      */
     ErrorCode Signal::forEachSample(const SignalSampleFunc func, SignalSampleFuncInfo& info_ref, int32_t channel, int64_t offset, int64_t length, int64_t stride) const {
 
-        if (func == nullptr) {
+        if (!func) {
             return ErrorCode::NullPointer;
         }
 
@@ -596,7 +598,7 @@ namespace Grain {
 
         info_ref.m_signal = this;
         info_ref.m_sample_ptr.raw = mutDataPtr(channel, offset);
-        if (info_ref.m_sample_ptr.raw == nullptr) {
+        if (!info_ref.m_sample_ptr.raw) {
             return ErrorCode::UnexpectedRuntimeError;
         }
 
@@ -1405,11 +1407,11 @@ namespace Grain {
 
     int64_t Signal::copyAll(const Signal* src, int32_t src_channel, int64_t dst_offset, uint32_t dst_channel_mask) noexcept {
 
-        if (src == nullptr) {
+        if (!src) {
             return 0;
         }
 
-        if (src->hasChannelAndData(src_channel) == false) {
+        if (!src->hasChannelAndData(src_channel)) {
             return 0;
         }
 
@@ -1464,11 +1466,11 @@ namespace Grain {
 
     int64_t Signal::copySamples(const Signal* src, int64_t length, int32_t src_channel, int64_t src_offset, int32_t dst_channel, int64_t dst_offset) noexcept {
 
-        if (src == nullptr || length < 1) {
+        if (!src || length < 1) {
             return 0;
         }
 
-        if (src->hasChannelAndData(src_channel) == false || hasChannelAndData(dst_channel) == false) {
+        if (!src->hasChannelAndData(src_channel) || !hasChannelAndData(dst_channel)) {
             return 0;
         }
 
@@ -1667,7 +1669,7 @@ namespace Grain {
  */
     int64_t Signal::readSamplesAsFloatWithZeroPadding(int32_t channel, int64_t offset, int64_t length, float* out_samples) const noexcept {
 
-        if (out_samples == nullptr || !hasChannelAndData(channel)) {
+        if (!out_samples || !hasChannelAndData(channel)) {
             return 0;
         }
 
@@ -1741,11 +1743,11 @@ namespace Grain {
         int64_t n = 0;
 
         try {
-            if (out_samples == nullptr) {
+            if (!out_samples) {
                 throw ErrorCode::NullData;
             }
 
-            if (hasChannelAndData(channel) == false) {
+            if (!hasChannelAndData(channel)) {
                 throw ErrorCode::InvalidChannel;
             }
 
@@ -1805,7 +1807,7 @@ namespace Grain {
 
     int64_t Signal::writeSamples(int32_t channel, int64_t offset, int64_t length, const float* samples, CombineMode combine_mode) noexcept {
 
-        if (samples == nullptr || hasChannelAndData(channel) == false || isFloatType() == false) {
+        if (!samples || !hasChannelAndData(channel) || !isFloatType()) {
             return 0;
         }
 
@@ -1855,15 +1857,15 @@ namespace Grain {
 
     int64_t Signal::combineSamples(const Signal* src, int64_t length, int32_t src_channel, int64_t src_offset, int32_t dst_channel, int64_t dst_offset, CombineMode combine_mode, float amount) noexcept {
 
-        if (src == nullptr || length < 1) {
+        if (!src || length < 1) {
             return 0;
         }
 
-        if (isFloatType() == false) {
+        if (!isFloatType()) {
             return 0;
         }
 
-        if (src->hasChannelAndData(src_channel) == false || hasChannelAndData(dst_channel) == false) {
+        if (!src->hasChannelAndData(src_channel) || !hasChannelAndData(dst_channel)) {
             return 0;
         }
 
@@ -2031,7 +2033,7 @@ namespace Grain {
 
         int64_t n = 0;
 
-        if (src == nullptr) {
+        if (!src) {
             return 0;
         }
 
@@ -2062,7 +2064,7 @@ namespace Grain {
 // TODO: location instead of audioPos!
     int64_t Signal::mixByAudioPos(const Signal* src, int64_t length, int64_t src_offset, int64_t dst_offset, const Vec3d& audio_pos) noexcept {
 
-        if (src == nullptr) {
+        if (!src) {
             return 0;
         }
 
@@ -2155,7 +2157,7 @@ namespace Grain {
 
 
     void Signal::clearChannel(int32_t channel, int64_t offset, int64_t length) noexcept {
-        if (hasChannelAndData(channel) == false) {
+        if (!hasChannelAndData(channel)) {
             return;
         }
 
@@ -2419,7 +2421,7 @@ namespace Grain {
 
     void Signal::applyEnvelopeLUT(int32_t channel, int64_t offset, const LUT1* lut) noexcept {
 
-        if (!hasChannelAndData(channel)  || lut == nullptr) {
+        if (!hasChannelAndData(channel)  || !lut) {
             return;
         }
 
@@ -2518,7 +2520,7 @@ namespace Grain {
 
     ErrorCode Signal::resample(int32_t channel, int32_t sample_rate, int64_t offset, int64_t length, float* out_ptr, int64_t step) noexcept {
 
-        if (hasChannel(channel) == false) {
+        if (!hasChannel(channel)) {
             return ErrorCode::InvalidChannel;
         }
 
@@ -2530,7 +2532,7 @@ namespace Grain {
             return ErrorCode::SampleRateMustBeDifferent;
         }
 
-        if (isFloatType() == false) {
+        if (!isFloatType()) {
             return ErrorCode::UnsupportedDataType;
         }
 
@@ -2723,15 +2725,15 @@ namespace Grain {
             return ErrorCode::NullData;
         }
 
-        if (hasChannelAndData(channel) == false) {
+        if (!hasChannelAndData(channel)) {
             return ErrorCode::InvalidChannel;
         }
 
-        if (isFloatType() == false) {
+        if (!isFloatType()) {
             return ErrorCode::UnsupportedDataType;
         }
 
-        if (filter->isValid() == false) {
+        if (!filter->isValid()) {
             return ErrorCode::Unknown;
         }
 

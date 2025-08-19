@@ -47,7 +47,7 @@ namespace Grain {
     }
 
 
-    void Window::_setRootView(Grain::View *view) noexcept {
+    void Window::_setRootView(View *view) noexcept {
         m_root_view = view;
     }
 
@@ -56,9 +56,6 @@ namespace Grain {
         #if defined(__APPLE__) && defined(__MACH__)
             _macosWindow_init(this, title, rect, style, screen);
         #endif
-
-        std::cout << "Window::_init()\n";
-        m_style_set.build(App::styleSet());
     }
 
 

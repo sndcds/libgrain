@@ -119,15 +119,14 @@ namespace Grain {
      *  @note If `max` is `0`, the resulting color will be white.
      */
     RGB::RGB(int32_t r, int32_t g, int32_t b, int32_t max) noexcept {
-
         if (max == 0) {
             m_data[0] = m_data[1] = m_data[2] = 1.0f;
         }
         else {
-            float f = 1.0f / max;
-            m_data[0] = f * r;
-            m_data[1] = f * g;
-            m_data[2] = f * b;
+            float f = 1.0f / static_cast<float>(max);
+            m_data[0] = f * static_cast<float>(r);
+            m_data[1] = f * static_cast<float>(g);
+            m_data[2] = f * static_cast<float>(b);
         }
     }
 
@@ -151,7 +150,6 @@ namespace Grain {
      *  @see RGB(float r, float g, float b)
      */
     RGB::RGB(const float *values) noexcept {
-
         if (values != nullptr) {
             m_data[0] = values[0];
             m_data[1] = values[1];
@@ -178,7 +176,6 @@ namespace Grain {
      *        (e.g., clamping) may be required depending on the context.
      */
     RGB::RGB(const RGB& rgb, float scale) noexcept {
-
         m_data[0] = rgb.m_data[0] * scale;
         m_data[1] = rgb.m_data[1] * scale;
         m_data[2] = rgb.m_data[2] * scale;
@@ -204,7 +201,6 @@ namespace Grain {
      *  @note The `t` factor will be clamped to range `[0.0, 1.0]`.
      */
     RGB::RGB(const RGB& a, const RGB& b, float t) noexcept {
-
         setBlend(a, b, t);
     }
 
@@ -229,7 +225,6 @@ namespace Grain {
      *  @see HSV
      */
     RGB::RGB(const HSV& hsv) noexcept {
-
         Color::hsv_to_rgb(hsv.m_data, m_data);
     }
 
@@ -238,7 +233,6 @@ namespace Grain {
      *  @brief Constructor for converting an HSL color to an RGB color.
      */
     RGB::RGB(const HSL& hsl) noexcept {
-
         Color::hsl_to_rgb(hsl.m_data, m_data);
     }
 
@@ -247,7 +241,6 @@ namespace Grain {
      *  @brief Constructor for converting an YUV color to an RGB color.
      */
     RGB::RGB(const YUV& yuv, Color::Space yuv_color_space) noexcept {
-
         setYUV(yuv, yuv_color_space);
     }
 
@@ -256,7 +249,6 @@ namespace Grain {
      *  @brief Constructor for converting an CIEXYZ color to an RGB color.
      */
     RGB::RGB(const CIEXYZ& xyz) noexcept {
-
         setXYZ(xyz);
     }
 
@@ -265,7 +257,6 @@ namespace Grain {
      *  @brief Constructor for converting an CIExyY color to an RGB color.
      */
     RGB::RGB(const CIExyY& xyY) noexcept {
-
         setXyY(xyY);
     }
 
@@ -274,7 +265,6 @@ namespace Grain {
      *  @brief Constructor for converting an OKLab color to an RGB color.
      */
     RGB::RGB(const OKLab& oklab) noexcept {
-
         Color::oklab_to_rgb(oklab.m_data, m_data);
     }
 
@@ -283,7 +273,6 @@ namespace Grain {
      *  @brief Constructor for converting an OKLCh color to an RGB color.
      */
     RGB::RGB(const OKLCh& oklch) noexcept {
-
         Color::oklch_to_rgb(oklch.m_data, m_data);
     }
 
@@ -292,13 +281,10 @@ namespace Grain {
      *  @brief Constructor for converting a LMS color to an RGB color.
      */
     RGB::RGB(const LMS& lms) noexcept {
-
-        // TODO: clamp [0-1]
-
         RGB rgb;
-        m_data[0] =  4.0767416621 * lms.m_data[0] - 3.3077115913 * lms.m_data[1] + 0.2309699292 * lms.m_data[2];
-        m_data[1] = -1.2684380046 * lms.m_data[0] + 2.6097574011 * lms.m_data[1] - 0.3413193965 * lms.m_data[2];
-        m_data[2] = -0.0041960863 * lms.m_data[0] - 0.7034186147 * lms.m_data[1] + 1.7076147010 * lms.m_data[2];
+        m_data[0] =  4.0767416621f * lms.m_data[0] - 3.3077115913f * lms.m_data[1] + 0.2309699292f * lms.m_data[2];
+        m_data[1] = -1.2684380046f * lms.m_data[0] + 2.6097574011f * lms.m_data[1] - 0.3413193965f * lms.m_data[2];
+        m_data[2] = -0.0041960863f * lms.m_data[0] - 0.7034186147f * lms.m_data[1] + 1.7076147010f * lms.m_data[2];
     }
 
 
@@ -306,7 +292,6 @@ namespace Grain {
      *  @brief Constructs an RGB color object from a 24-bit color.
      */
     RGB::RGB(uint32_t value) noexcept {
-
         set24bit(value);
     }
 
@@ -315,7 +300,6 @@ namespace Grain {
      *  Constructs an RGB color object from a `GretagMacbethColor`.
      */
     RGB::RGB(Color::GretagMacbethColor gretag_macbeth_color) noexcept {
-
         setValues(NamedColor::gretagMacbethColorDataPtr(gretag_macbeth_color));
     }
 
@@ -324,7 +308,6 @@ namespace Grain {
      *  @brief Constructs an RGB color object from a `CrayolaColor`.
      */
     RGB::RGB(Color::CrayolaColor crayola_color) noexcept {
-
         setValues(NamedColor::crayolaColorDataPtr(crayola_color));
     }
 
@@ -339,54 +322,46 @@ namespace Grain {
      *        or default to black (0, 0, 0) depending on the implementation.
      */
     RGB::RGB(const char* csv) noexcept {
-
         setByCSV(csv);
     }
 
 
     RGB::RGB(const String& csv) noexcept {
-
         setByCSV(csv.utf8());
     }
 
 
     RGB& RGB::operator = (const HSV& v) {
-
         Color::hsv_to_rgb(v.m_data, m_data);
         return *this;
     }
 
 
     RGB& RGB::operator = (const HSL& v) {
-
         Color::hsl_to_rgb(v.m_data, m_data);
         return *this;
     }
 
 
     RGB& RGB::operator = (const OKLCh& v) {
-
         Color::oklch_to_rgb(v.m_data, m_data);
         return *this;
     }
 
 
     RGB& RGB::operator = (const OKLab& v) {
-
         Color::oklab_to_rgb(v.m_data, m_data);
         return *this;
     }
 
 
     RGB& RGB::operator = (Color::GretagMacbethColor v) {
-
         *this = RGB(v);
         return *this;
     }
 
 
     RGB& RGB::operator = (Color::CrayolaColor v) {
-
         *this = RGB(v);
         return *this;
     }
@@ -410,84 +385,68 @@ namespace Grain {
 
 
     void RGB::hexString(String& out_string, bool upper_case, bool c_style) const noexcept {
-
         static const char* formatStrings[] = { "%06x", "%06X", "0x%06x", "0x%06X" };
         out_string.setFormatted(16, formatStrings[upper_case | (c_style << 1)], rgb24bit());
     }
 
 
     float RGB::lumina(Color::Space yuv_color_space) const noexcept {
-
         return yuv_color_space == Color::Space::Rec601 ? lumina601() : lumina709();
     }
 
 
     float RGB::lumina601() const noexcept {
-
         return Color::kLumina601ScaleR * m_data[0] + Color::kLumina601ScaleG * m_data[1] + Color::kLumina601ScaleB * m_data[2];
     }
 
 
     float RGB::lumina709() const noexcept {
-
         return Color::kLumina709ScaleR * m_data[0] + Color::kLumina709ScaleG * m_data[1] + Color::kLumina709ScaleB * m_data[2];
     }
 
 
     float RGB::hsvValue() const noexcept {
-
         return Type::maxOf3(m_data[0], m_data[1], m_data[2]);
     }
 
 
     Vec2f RGB::CIExy() const noexcept {
-
         return CIEXYZ(*this).CIExy();
     }
 
 
     float RGB::uvAngle() const noexcept {
-
         YUV yuv(*this);
-
         Vec2f va(0.0, 0.0);
         Vec2f vb(0.0, 1.0);
         Vec2f vc(yuv.m_data[1], yuv.m_data[2]);
-
         float angle = va.angle(vb, vc);
-
         return vc.m_x > 0 ? -angle : angle;
     }
 
 
     float RGB::distance(const RGB& rgb) const noexcept {
-
         float dr = rgb.m_data[0] - m_data[0];
         float dg = rgb.m_data[1] - m_data[1];
         float db = rgb.m_data[2] - m_data[2];
-
         return std::sqrt(dr * dr + dg * dg + db * db);
     }
 
 
     float RGB::perceptualDistance(const RGB& rgb) const noexcept {
-
         float dr = rgb.m_data[0] - m_data[0];
         float dg = rgb.m_data[1] - m_data[1];
         float db = rgb.m_data[2] - m_data[2];
-
-        return std::sqrt(0.299 * dr * dr + 0.587 * dg * dg + 0.114 * db * db);
+        return static_cast<float>(std::sqrt(0.299 * dr * dr + 0.587 * dg * dg + 0.114 * db * db));
     }
 
 
     bool RGB::isDark() const noexcept {
-
         return lumina() < 0.6f;
     }
 
 
     bool RGB::isSame(const RGB& rgb, float tolerance) const noexcept {
-
         return (std::fabs(m_data[0] - rgb.m_data[0]) <= tolerance &&
                 std::fabs(m_data[1] - rgb.m_data[1]) <= tolerance &&
                 std::fabs(m_data[2] - rgb.m_data[2]) <= tolerance);
@@ -495,7 +454,6 @@ namespace Grain {
 
 
     void RGB::set24bit(uint32_t value) noexcept {
-
         m_data[0] = static_cast<float>((value >> 16) & 0xFF) / 255.0f;
         m_data[1] = static_cast<float>((value >> 8) & 0xFF) / 255.0f;
         m_data[2] = static_cast<float>(value & 0xFF) / 255.0f;
@@ -503,7 +461,6 @@ namespace Grain {
 
 
     void RGB::setUInt8(uint8_t r, uint8_t g, uint8_t b) noexcept {
-
         m_data[0] = static_cast<float>(r) / 255.0f;
         m_data[1] = static_cast<float>(g) / 255.0f;
         m_data[2] = static_cast<float>(b) / 255.0f;
@@ -511,7 +468,6 @@ namespace Grain {
 
 
     void RGB::setValues(const float* values) noexcept {
-
         if (values != nullptr) {
             m_data[0] = values[0];
             m_data[1] = values[1];
@@ -521,7 +477,6 @@ namespace Grain {
 
 
     void RGB::setValues(const float* values, float scale) noexcept {
-
         if (values != nullptr) {
             m_data[0] = values[0] * scale;
             m_data[1] = values[1] * scale;
@@ -531,25 +486,22 @@ namespace Grain {
 
 
     void RGB::setIntRGB(int32_t r, int32_t g, int32_t b, int32_t max) noexcept {
-
         if (max != 0) {
-            float f = 1.0f / max;
-            m_data[0] = f * r;
-            m_data[1] = f * g;
-            m_data[2] = f * b;
+            float f = 1.0f / static_cast<float>(max);
+            m_data[0] = f * static_cast<float>(r);
+            m_data[1] = f * static_cast<float>(g);
+            m_data[2] = f * static_cast<float>(b);
         }
     }
 
 
     void RGB::setHSV(float h, float s, float v) noexcept {
-
         float hsv[3] = { h, s, v };
         Color::hsv_to_rgb(hsv, m_data);
     }
 
 
     void RGB::setYUV(const YUV& yuv, Color::Space yuv_color_space) noexcept {
-
         switch (yuv_color_space) {
             case Color::Space::Rec601:
                 setYUV601(yuv);
@@ -564,19 +516,16 @@ namespace Grain {
 
 
     void RGB::setYUV601(const YUV& yuv) noexcept {
-
         Color::yuv601_to_rgb(yuv.dataPtr(), m_data);
     }
 
 
     void RGB::setYUV709(const YUV& yuv) noexcept {
-
         Color::yuv709_to_rgb(yuv.dataPtr(), m_data);
     }
 
 
     void RGB::setXYZ(const CIEXYZ& xyz) noexcept {
-
         float r =  3.2406f * xyz.m_data[0] - 1.5372f * xyz.m_data[1] - 0.4986f * xyz.m_data[2];
         float g = -0.9689f * xyz.m_data[0] + 1.8758f * xyz.m_data[1] + 0.0415f * xyz.m_data[2];
         float b =  0.0557f * xyz.m_data[0] - 0.2040f * xyz.m_data[1] + 1.0570f * xyz.m_data[2];
@@ -587,47 +536,38 @@ namespace Grain {
 
 
     void RGB::setXyY(const CIExyY& xyY) noexcept {
-
         CIEXYZ xyz(xyY);
         setXYZ(xyz);
     }
 
 
     void RGB::setCIExy(const Vec2f& xy) noexcept {
-
         CIEXYZ xyz(xy.m_x, xy.m_y, 1);
         setXYZ(xyz);
     }
 
 
     void RGB::setOKLab(const OKLab& oklab) noexcept {
-
         Color::oklab_to_rgb(oklab.m_data, m_data);
     }
 
 
     void RGB::setOKLCh(const OKLCh& oklch) noexcept {
-
         setOKLab(OKLab(oklch));
     }
 
 
     void RGB::setOKLCh(float l, float c, float h) noexcept {
-
         setOKLCh(OKLCh(l, c, h));
     }
 
 
+    // TODO: Support the different skin types Skin types
     void RGB::setSkinColor(Color::SkinType skin_type, float value) noexcept {
-
-        // TODO: Support the different skin types Skin types
-
         float min = 140.0f / 255;
         float max = 180.0f / 255;
-
         float r_scale = 1.5f;
         float g_scale = 1.15f;
-
         value = std::clamp<float>(value, 0.0f, 1.0f);
         m_data[2] = value * max + (1 - value) * min;
         m_data[0] = m_data[2] * r_scale;
@@ -636,27 +576,10 @@ namespace Grain {
 
 
     void RGB::setKelvin(float temperature) noexcept {
-
         CIEXYZ xyz;
         xyz.setKelvin(temperature);
         setXYZ(xyz);
         clamp();
-    }
-
-
-    void RGB::setSystemAndThreeValues(const char* color_system, float a, float b, float c) noexcept {
-
-        // TODO: Implement more color models!
-
-        if (strcmp(color_system, "hsv") == 0) {
-            setHSV(a, b, c);
-        }
-        else if (strcmp(color_system, "rgb") == 0) {
-            set(a, b, c);
-        }
-        else if (strcmp(color_system, "oklch") == 0) {
-            setOKLCh(a, b, c);
-        }
     }
 
 
@@ -678,8 +601,7 @@ namespace Grain {
      *  @note If csv is nullptr, the color is set to black.
      */
     int32_t RGB::setByCSV(const char* csv) noexcept {
-
-        if (csv == nullptr) {
+        if (!csv) {
             *this = kBlack;
             return -1;
         }
@@ -721,14 +643,12 @@ namespace Grain {
 
 
     void RGB::setPosColor(const Vec3d& pos) noexcept {
-
         Vec3d loc = pos.posToLoc();
-        setByPosOnCircle(loc.m_x, loc.m_y);
+        setByPosOnCircle(static_cast<float>(loc.m_x), static_cast<float>(loc.m_y));
     }
 
 
     void RGB::setByPosOnCircle(float angle, float distance) noexcept {
-
         float hsv[3];
         hsv[0] = static_cast<float>(Geometry::normalizeAngle(angle + 45)) / 360.0f;
         hsv[1] = std::pow(std::clamp<float>(distance, 0.0f, 1.0f), 1.6f);
@@ -738,7 +658,6 @@ namespace Grain {
 
 
     void RGB::random() noexcept {
-
         m_data[0] = Random::next();
         m_data[1] = Random::next();
         m_data[2] = Random::next();
@@ -746,7 +665,6 @@ namespace Grain {
 
 
     void RGB::random(float min, float max) noexcept {
-
         m_data[0] = Random::next(min, max);
         m_data[1] = Random::next(min, max);
         m_data[2] = Random::next(min, max);
@@ -754,28 +672,23 @@ namespace Grain {
 
 
     void RGB::randomGrey() noexcept {
-
         m_data[0] = m_data[1] = m_data[2] = Random::next();
     }
 
 
     void RGB::randomGrey(float min, float max) noexcept {
-
         m_data[0] = m_data[1] = m_data[2] = Random::next(min, max);
     }
 
 
     void RGB::randomHSV(float min_h, float max_h, float min_s, float max_s, float min_v, float max_v) noexcept {
-
         HSV hsv(Random::next(min_h, max_h), Random::next(min_s, max_s), Random::next(min_v, max_v));
         *this = hsv;
     }
 
 
     void RGB::normalize() noexcept {
-
         float max = Type::maxOf3(m_data[0], m_data[1], m_data[2]);
-
         if (max > std::numeric_limits<float>::min()) {
             float f = 1.0f / max;
             m_data[0] *= f;
@@ -786,13 +699,11 @@ namespace Grain {
 
 
     void RGB::clamp() noexcept {
-
         clamp(0.0f, 1.0f);
     }
 
 
     void RGB::clamp(float max) noexcept {
-
         if (m_data[0] > max) m_data[0] = max;
         if (m_data[1] > max) m_data[1] = max;
         if (m_data[2] > max) m_data[2] = max;
@@ -800,7 +711,6 @@ namespace Grain {
 
 
     void RGB::clamp(float min, float max) noexcept {
-
         if (m_data[0] < min) m_data[0] = min; else if (m_data[0] > max) m_data[0] = max;
         if (m_data[1] < min) m_data[1] = min; else if (m_data[1] > max) m_data[1] = max;
         if (m_data[2] < min) m_data[2] = min; else if (m_data[2] > max) m_data[2] = max;
@@ -808,14 +718,12 @@ namespace Grain {
 
 
     void RGB::clamp(const RGB& min, const RGB& max) noexcept {
-
         clampMin(min);
         clampMax(max);
     }
 
 
     void RGB::clampMin(const RGB& min) noexcept {
-
         if (m_data[0] < min.m_data[0]) m_data[0] = min.m_data[0];
         if (m_data[1] < min.m_data[1]) m_data[1] = min.m_data[1];
         if (m_data[2] < min.m_data[2]) m_data[2] = min.m_data[2];
@@ -823,7 +731,6 @@ namespace Grain {
 
 
     void RGB::clampMax(const RGB& max) noexcept {
-
         if (m_data[0] > max.m_data[0]) m_data[0] = max.m_data[0];
         if (m_data[1] > max.m_data[1]) m_data[1] = max.m_data[1];
         if (m_data[2] > max.m_data[2]) m_data[2] = max.m_data[2];
@@ -831,7 +738,6 @@ namespace Grain {
 
 
     void RGB::invert() noexcept {
-
         m_data[0] = 1.0f - m_data[0];
         m_data[1] = 1.0f - m_data[1];
         m_data[2] = 1.0f - m_data[2];
@@ -839,7 +745,6 @@ namespace Grain {
 
 
     void RGB::rotateHue(float angle) noexcept {
-
         HSV hsv(*this);
         hsv.setHue(hsv.m_data[0] + angle / 360);
         *this = hsv;
@@ -847,7 +752,6 @@ namespace Grain {
 
 
     void RGB::scale(float scale) noexcept {
-
         m_data[0] *= scale;
         m_data[1] *= scale;
         m_data[2] *= scale;
@@ -855,7 +759,6 @@ namespace Grain {
 
 
     void RGB::scaleValue(float scale) noexcept {
-
         HSV hsv(*this);
         hsv.m_data[2] *= scale;
         *this = hsv;
@@ -863,7 +766,6 @@ namespace Grain {
 
 
     void RGB::applyCDL(const CDL& cdl) noexcept {
-
         CDL_RGB cdl_rgb;
         cdl.buildCDL_RGB(cdl_rgb);
         applyCDL(cdl_rgb);
@@ -871,17 +773,13 @@ namespace Grain {
 
 
     void RGB::applyCDL(const CDL_RGB& cdl_rgb) noexcept {
-
         m_data[0] = (std::pow(m_data[0], cdl_rgb.m_gamma_rgb.m_data[0]) - cdl_rgb.m_shift1_rgb.m_data[0]) * cdl_rgb.m_gain_rgb.m_data[0] + cdl_rgb.m_shift2_rgb.m_data[0];
-
         m_data[1] = (std::pow(m_data[1], cdl_rgb.m_gamma_rgb.m_data[1]) - cdl_rgb.m_shift1_rgb.m_data[1]) * cdl_rgb.m_gain_rgb.m_data[1] + cdl_rgb.m_shift2_rgb.m_data[1];
-
         m_data[2] = (std::pow(m_data[2], cdl_rgb.m_gamma_rgb.m_data[2]) - cdl_rgb.m_shift1_rgb.m_data[2]) * cdl_rgb.m_gain_rgb.m_data[2] + cdl_rgb.m_shift2_rgb.m_data[2];
     }
 
 
     void RGB::applyRGBLUT(const LUT1& red_lut, const LUT1& green_lut, const LUT1& blue_lut) noexcept {
-
         m_data[0] = red_lut.lookup(m_data[0]);
         m_data[1] = green_lut.lookup(m_data[1]);
         m_data[2] = blue_lut.lookup(m_data[2]);
@@ -889,7 +787,6 @@ namespace Grain {
 
 
     void RGB::applyPow(float e) noexcept {
-
         if (m_data[0] >= std::numeric_limits<float>::epsilon()) {
             m_data[0] = std::pow(m_data[0], e);
         }
@@ -903,7 +800,6 @@ namespace Grain {
 
 
     void RGB::linearTosRGB() noexcept {
-
         m_data[0] = Color::linear_to_gamma(m_data[0]);
         m_data[1] = Color::linear_to_gamma(m_data[1]);
         m_data[2] = Color::linear_to_gamma(m_data[2]);
@@ -911,7 +807,6 @@ namespace Grain {
 
 
     void RGB::sRGBToLinear() noexcept {
-
         m_data[0] = Color::linear_to_gamma(m_data[0]);
         m_data[1] = Color::linear_to_gamma(m_data[1]);
         m_data[2] = Color::linear_to_gamma(m_data[2]);
@@ -919,7 +814,6 @@ namespace Grain {
 
 
     void RGB::sonySLog2ToLinear() noexcept {
-
         m_data[0] = Color::sony_SLog2_to_linear(m_data[0]);
         m_data[1] = Color::sony_SLog2_to_linear(m_data[1]);
         m_data[2] = Color::sony_SLog2_to_linear(m_data[2]);
@@ -927,7 +821,6 @@ namespace Grain {
 
 
     void RGB::sonySLog3ToLinear() noexcept {
-
         m_data[0] = Color::sony_SLog3_to_Linear(m_data[0]);
         m_data[1] = Color::sony_SLog3_to_Linear(m_data[1]);
         m_data[2] = Color::sony_SLog3_to_Linear(m_data[2]);
@@ -935,7 +828,6 @@ namespace Grain {
 
 
     void RGB::sonyLinearToSLog2() noexcept {
-
         m_data[0] = Color::sony_Linear_to_SLog2(m_data[0]);
         m_data[1] = Color::sony_Linear_to_SLog2(m_data[1]);
         m_data[2] = Color::sony_Linear_to_SLog2(m_data[2]);
@@ -943,7 +835,6 @@ namespace Grain {
 
 
     void RGB::sonyLinearToSLog3() noexcept {
-
         m_data[0] = Color::sony_Linear_to_SLog3(m_data[0]);
         m_data[1] = Color::sony_Linear_to_SLog3(m_data[1]);
         m_data[2] = Color::sony_Linear_to_SLog3(m_data[2]);
@@ -951,51 +842,42 @@ namespace Grain {
 
 
     void RGB::transform(const Mat3f& matrix) noexcept {
-
         matrix.transform3(m_data, m_data);
     }
 
 
     void RGB::transform(const Mat3f& matrix, RGB& out_rgb) const noexcept {
-
         matrix.transform3(m_data, out_rgb.m_data);
     }
 
 
     void RGB::transform(const Mat3f& matrix, CIEXYZ& out_xyz) const noexcept {
-
         RGB srgb = *this;
         srgb.sRGBToLinear();
         matrix.transform3(m_data, out_xyz.mutDataPtr());
     }
 
 
-    RGB RGB::blend(const RGB& rgb, float t) noexcept {
-
+    RGB RGB::blend(const RGB& rgb, float t) const noexcept {
         if (t < 0.0f) t = 0.0f;
         else if (t > 1.0f) t = 1.0f;
-
         return rgb * t + *this * (1.0f - t);
     }
 
 
-    void RGB::setBlend(const RGB& rgb, float t) noexcept {
-
+    void RGB::setBlend(const RGB& other, float t) noexcept {
         if (t < 0.0f) t = 0.0f;
         else if (t > 1.0f) t = 1.0f;
-
         float t_inv = 1.0f - t;
-        m_data[0] = m_data[0] * t_inv + rgb.m_data[0] * t;
-        m_data[1] = m_data[1] * t_inv + rgb.m_data[1] * t;
-        m_data[2] = m_data[2] * t_inv + rgb.m_data[2] * t;
+        m_data[0] = m_data[0] * t_inv + other.m_data[0] * t;
+        m_data[1] = m_data[1] * t_inv + other.m_data[1] * t;
+        m_data[2] = m_data[2] * t_inv + other.m_data[2] * t;
     }
 
 
     void RGB::setBlend(const RGB& a, const RGB& b, float t) noexcept {
-
         if (t < 0.0f) t = 0.0f;
         else if (t > 1.0f) t = 1.0f;
-
         float t_inv = 1.0f - t;
         m_data[0] = a.m_data[0] * t_inv + b.m_data[0] * t;
         m_data[1] = a.m_data[1] * t_inv + b.m_data[1] * t;
@@ -1004,19 +886,15 @@ namespace Grain {
 
 
     void RGB::setBlend(const RGB& a, const RGB& b, const RGB& c, float t) noexcept {
-
         if (t < 0.0f) t = 0.0f;
         else if (t > 1.0f) t = 1.0f;
-
         t >= 0.5f ? setBlend(b, c, t * 2 - 1) : setBlend(a, b, t * 2);
     }
 
 
     void RGB::setBlendWhite(float t) noexcept {
-
         if (t < 0.0f) t = 0.0f;
         else if (t > 1.0f) t = 1.0f;
-
         float t_inv = 1.0f - t;
         m_data[0] = m_data[0] * t_inv + t;
         m_data[1] = m_data[1] * t_inv + t;
@@ -1025,10 +903,8 @@ namespace Grain {
 
 
     void RGB::setBlendBlack(float t) noexcept {
-
         if (t < 0.0f) t = 0.0f;
         else if (t > 1.0f) t = 1.0f;
-
         float t_inv = 1.0f - t;
         m_data[0] *= t_inv;
         m_data[1] *= t_inv;
@@ -1037,7 +913,6 @@ namespace Grain {
 
 
     void RGB::mixbox(const RGB& color1, const RGB& color2, float t) noexcept {
-
         mixbox_latent l1, l2, lmix;
         auto c1 = color1.m_data;
         auto c2 = color2.m_data;
@@ -1052,7 +927,6 @@ namespace Grain {
 
 
     void RGB::mixbox3(const RGB& color1, const RGB& color2, const RGB& color3, float f1, float f2, float f3) noexcept {
-
         mixbox_latent l1, l2, l3, lmix;
         auto c1 = color1.m_data;
         auto c2 = color2.m_data;
@@ -1070,7 +944,6 @@ namespace Grain {
 
 
     RGBCombineFunc RGB::rgbCombineFunc(Color::CombineMode combine_mode) noexcept {
-
         switch (combine_mode) {
             case Color::CombineMode::Normal: return combineNormal;
             case Color::CombineMode::Add: return combineAdd;
@@ -1090,7 +963,6 @@ namespace Grain {
 
 
     void RGB::combineNormal(RGB& a, const RGB& b) noexcept {
-
         a.m_data[0] = b.m_data[0];
         a.m_data[1] = b.m_data[1];
         a.m_data[2] = b.m_data[2];
@@ -1098,7 +970,6 @@ namespace Grain {
 
 
     void RGB::combineAdd(RGB& a, const RGB& b) noexcept {
-
         a.m_data[0] += b.m_data[0];
         a.m_data[1] += b.m_data[1];
         a.m_data[2] += b.m_data[2];
@@ -1106,7 +977,6 @@ namespace Grain {
 
 
     void RGB::combineSubtract(RGB& a, const RGB& b) noexcept {
-
         a.m_data[0] -= b.m_data[0];
         a.m_data[1] -= b.m_data[1];
         a.m_data[2] -= b.m_data[2];
@@ -1114,7 +984,6 @@ namespace Grain {
 
 
     void RGB::combineMultiply(RGB& a, const RGB& b) noexcept {
-
         a.m_data[0] *= b.m_data[0];
         a.m_data[1] *= b.m_data[1];
         a.m_data[2] *= b.m_data[2];
@@ -1122,7 +991,6 @@ namespace Grain {
 
 
     void RGB::combineScreen(RGB& a, const RGB& b) noexcept {
-
         a.m_data[0] = Color::combineScreen(a.m_data[0], b.m_data[0]);
         a.m_data[1] = Color::combineScreen(a.m_data[1], b.m_data[1]);
         a.m_data[2] = Color::combineScreen(a.m_data[2], b.m_data[2]);
@@ -1130,7 +998,6 @@ namespace Grain {
 
 
     void RGB::combineOverlay(RGB& a, const RGB& b) noexcept {
-
         a.m_data[0] = Color::combineOverlay(a.m_data[0], b.m_data[0]);
         a.m_data[1] = Color::combineOverlay(a.m_data[1], b.m_data[1]);
         a.m_data[2] = Color::combineOverlay(a.m_data[2], b.m_data[2]);
@@ -1138,7 +1005,6 @@ namespace Grain {
 
 
     void RGB::combineSoftLight(RGB& a, const RGB& b) noexcept {
-
         a.m_data[0] = Color::combineSoftLight(a.m_data[0], b.m_data[0]);
         a.m_data[1] = Color::combineSoftLight(a.m_data[1], b.m_data[1]);
         a.m_data[2] = Color::combineSoftLight(a.m_data[2], b.m_data[2]);
@@ -1146,7 +1012,6 @@ namespace Grain {
 
 
     void RGB::combineHardLight(RGB& a, const RGB& b) noexcept {
-
         a.m_data[0] = Color::combineHardLight(a.m_data[0], b.m_data[0]);
         a.m_data[1] = Color::combineHardLight(a.m_data[1], b.m_data[1]);
         a.m_data[2] = Color::combineHardLight(a.m_data[2], b.m_data[2]);
@@ -1154,7 +1019,6 @@ namespace Grain {
 
 
     void RGB::combineHue(RGB& a, const RGB& b) noexcept {
-
         HSV hvs_a(a);
         HSV hsv_b(b);
         hvs_a.m_data[0] = hsv_b.m_data[0];
@@ -1163,7 +1027,6 @@ namespace Grain {
 
 
     void RGB::combineColor(RGB& a, const RGB& b) noexcept {
-
         HSV hvs_a(a);
         HSV hsv_b(b);
         hvs_a.m_data[0] = hsv_b.m_data[0];
@@ -1173,7 +1036,6 @@ namespace Grain {
 
 
     void RGB::combineLuminosity(RGB& a, const RGB& b) noexcept {
-
         HSV hvs_a(a);
         HSV hsv_b(b);
         hvs_a.m_data[2] = hsv_b.m_data[2];
@@ -1182,7 +1044,6 @@ namespace Grain {
 
 
     void RGB::readFromMem(const float* ptr) noexcept {
-
         if (ptr != nullptr) {
             m_data[0] = ptr[0];
             m_data[1] = ptr[1];
@@ -1192,7 +1053,6 @@ namespace Grain {
 
 
     void RGB::writeToMem(float*ptr) const noexcept {
-
         if (ptr != nullptr) {
             ptr[0] = m_data[0];
             ptr[1] = m_data[1];
@@ -1202,7 +1062,6 @@ namespace Grain {
 
 
     void RGB::writeToMemUInt8(uint8_t* ptr) const noexcept {
-
         if (ptr != nullptr) {
             ptr[0] = Type::floatToUInt8(m_data[0]);
             ptr[1] = Type::floatToUInt8(m_data[1]);
@@ -1211,9 +1070,7 @@ namespace Grain {
     }
 
 
-
     void RGB::writeToMemUInt16(uint16_t* ptr) const noexcept {
-
         if (ptr != nullptr) {
             ptr[0] = Type::floatToUInt16(m_data[0]);
             ptr[1] = Type::floatToUInt16(m_data[1]);
@@ -1223,7 +1080,6 @@ namespace Grain {
 
 
     RGB RGB::uiTextColor(bool enabled) const noexcept {
-
         RGB color = isDark() ? RGB::kWhite : RGB::kBlack;
         color.setBlend(*this, enabled ? 0.3f : 0.8f);
         return color;
@@ -1231,14 +1087,11 @@ namespace Grain {
 
 
     RGB RGB::statusColor(bool selected, bool highlighted, const RGB& bg_color, const RGB& fg_color) noexcept{
-
         RGB color = bg_color;
-
         if (highlighted) {
             color.setBlend(fg_color, 0.5f);
             return color;
         }
-
         if (selected) {
             color = fg_color;
         }
@@ -1250,7 +1103,6 @@ namespace Grain {
 #if defined(__APPLE__) && defined(__MACH__)
 
     CGColorRef RGB::createCGColor(float alpha) const noexcept {
-
         return CGColorCreateGenericRGB(m_data[0], m_data[1], m_data[2], alpha);
     }
 

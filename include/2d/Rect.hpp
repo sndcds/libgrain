@@ -609,7 +609,7 @@ namespace Grain {
          *                    operation will be performed.
          */
         void points(Vec2<T>* out_points) const noexcept {
-            if (out_points != nullptr) {
+            if (out_points) {
                 out_points[0].set(m_x, m_y);
                 out_points[1].set(m_x + m_width, m_y);
                 out_points[2].set(m_x + m_width, m_y + m_height);
@@ -618,7 +618,7 @@ namespace Grain {
         }
 
         void glVertices(T* out_vertices) const noexcept {
-            if (out_vertices != nullptr) {
+            if (out_vertices) {
                 out_vertices[0] = out_vertices[6] = m_x;
                 out_vertices[1] = out_vertices[3] = m_y;
                 out_vertices[2] = out_vertices[4] = m_x + m_width;
@@ -1630,14 +1630,14 @@ namespace Grain {
         }
 
         void mapVec2(Vec2<T>* v) const noexcept {
-            if (v != nullptr) {
+            if (v) {
                 v->m_x = (v->m_x - m_src_x) * m_src_x_a + m_dst_x;
                 v->m_y = (v->m_y - m_src_y) * m_src_y_a + m_dst_y;
             }
         }
 
         void inverseMapVec2(Vec2<T>* v) const noexcept {
-            if (v != nullptr) {
+            if (v) {
                 v->m_x = (v->m_x - m_dst_x) / m_src_x_a + m_src_x;
                 v->m_y = (v->m_y - m_dst_y) / m_src_y_a + m_src_y;
             }
@@ -1652,7 +1652,7 @@ namespace Grain {
         }
 
         void mapRect(Rect<T>* r) const noexcept {
-            if (r != nullptr) {
+            if (r) {
                 Vec2<T> p1(r->m_x, r->m_y);
                 Vec2<T> p2(r->m_x + r->m_width, r->m_y + r->m_height);
                 mapVec2(p1);
@@ -1665,7 +1665,7 @@ namespace Grain {
         }
 
         void inverseMapRect(Rect<T>* r) const noexcept {
-            if (r != nullptr) {
+            if (r) {
                 Vec2<T> p1(r->m_x, r->m_y);
                 Vec2<T> p2(r->m_x + r->m_width, r->m_y + r->m_height);
                 inverseMapVec2(p1);

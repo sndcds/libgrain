@@ -25,10 +25,9 @@ namespace Grain {
     template <class T>
     class Vec3 {
     public:
-        Vec3() noexcept : m_x(0), m_y(0), m_z(0) {}
+        Vec3() noexcept : m_x(static_cast<T>(0)), m_y(static_cast<T>(0)), m_z(static_cast<T>(0)) {}
+        Vec3(T x, T y, T z) noexcept : m_x(x), m_y(y), m_z(z) {}
         Vec3(const Vec3& other) noexcept : m_x(other.m_x), m_y(other.m_y), m_z(other.m_z) {}
-
-        explicit Vec3(T x, T y, T z) noexcept : m_x(x), m_y(y), m_z(z) {}
 
         template <typename U>
         requires (!std::same_as<U, T>)
@@ -54,12 +53,6 @@ namespace Grain {
                 return os << o.m_x << ", " << o.m_y << ", " << o.m_z;
             }
         }
-
-        #warning "Vec3::appendToString() must be implemented"
-        // bool appendToString(String& string, char delimiter, int32_t precision) const noexcept { /* TODO: Implement! */ }
-        #warning "Vec3::parseFromCSVLine() must be implemented"
-        // bool parseFromCSVLine(CSVLineParser& parser) noexcept { /* TODO: Implement! */ }
-
 
         // Move constructor (default provided by the compiler)
         Vec3(Vec3&&) = default;
@@ -175,7 +168,7 @@ namespace Grain {
 
         bool setByCSV(const char* csv, char delimiter) noexcept {
             int32_t result = 0;
-            if (csv != nullptr) {
+            if (csv) {
                 CSVLineParser csv_line_parser(csv);
                 csv_line_parser.setDelimiter(delimiter);
                 T values[3]{};

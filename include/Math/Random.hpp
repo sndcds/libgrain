@@ -154,7 +154,7 @@ namespace Grain {
          *  @brief Checks if the RandomArray has been correctly initialized.
          *  @return `true` if the array pointer is non-null and size is greater than 0.
          */
-        [[nodiscard]] bool isValid() const noexcept { return m_array != nullptr && m_array_size > 0; }
+        [[nodiscard]] bool isValid() const noexcept { return m_array && m_array_size > 0; }
 
         /**
          *  @brief Returns a random element from the array.

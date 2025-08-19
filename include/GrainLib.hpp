@@ -1,5 +1,5 @@
 //
-//  Grain.hpp
+//  GrainLib.hpp
 //
 //  Created by Roald Christesen on 14.01.24.
 //  Copyright (C) 2025 Roald Christesen. All rights reserved.
@@ -11,6 +11,8 @@
 
 #ifndef GrainLib_hpp
 #define GrainLib_hpp
+
+#include "Grain.hpp"
 
 #include <Geometry.hpp>
 
@@ -92,9 +94,10 @@
 #include "GUI/Component.hpp"
 #include "GUI/ValueComponent.hpp"
 #include "GUI/Component.hpp"
-#include "GUI/Style.hpp"
+#include "GUI/GUIStyle.hpp"
 #include "GUI/Components/Button.hpp"
 #include "GUI/Components/Checkbox.hpp"
+#include "GUI/Components/Textfield.hpp"
 
 #include "Image/Image.hpp"
 

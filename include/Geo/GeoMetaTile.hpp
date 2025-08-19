@@ -60,7 +60,7 @@ namespace Grain {
         friend std::ostream& operator << (std::ostream& os, const GeoMetaTile& o) {
             os << "GeoMetaTile\n";
             os << "  count: " << o.m_count << ", zoom: " << "x, y: " << o.m_x << ", " << o.m_y;
-            if (o.m_compressed == true) {
+            if (o.m_compressed) {
                 os << ", compressed";
             }
             os << std::endl;

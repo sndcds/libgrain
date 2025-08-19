@@ -270,8 +270,21 @@ namespace Grain {
     class Safe {
     public:
         template<typename T>
-        [[nodiscard]] static bool canSafelyDivideBy(T v);
-        #warning "canSafelyDivideBy must be implemented"
+        [[nodiscard]] static bool canSafelyDivideBy(T v) {
+            if constexpr (std::is_integral_v<T>) {
+                // For integers, check not zero and avoid INT_MIN / -1 overflow
+                if (v == 0) return false;
+                if constexpr (std::is_signed_v<T>) {
+                    return v != -1 || std::numeric_limits<T>::min() != v;
+                }
+                return true;
+            }
+            else {
+                // For unsupported types -> compile error
+                static_assert(std::is_arithmetic_v<T>, "canSafelyDivideBy only supports arithmetic types");
+            }
+        }
+
     };
 
     // Declare specializations

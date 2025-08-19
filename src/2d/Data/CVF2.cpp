@@ -192,7 +192,7 @@ namespace Grain {
             throw Error::specific(kErrFatal);
         }
 
-        if (m_high_nibble_flag == true) {
+        if (m_high_nibble_flag) {
             m_byte_buffer[m_curr_byte_index] = ((nibble & 0xF) << 4);
             m_high_nibble_flag = false;
         }
@@ -306,7 +306,7 @@ namespace Grain {
 
             bool stop = i == (m_width - 1);
 
-            if (range_flag == true) {
+            if (range_flag) {
                 _bufferValues(values, seq_count, seq_sum, seq_length, prev_min);
                 seq_sum += seq_length;
                 seq_count++;
@@ -316,7 +316,7 @@ namespace Grain {
                 m_data_def_n--;
                 i--;
             }
-            else if (stop == true) {
+            else if (stop) {
                 seq_length += 1;
                 _bufferValues(values, seq_count, seq_sum, seq_length, min);
                 seq_sum += seq_length;
@@ -392,7 +392,7 @@ namespace Grain {
 
             bool stop = i == (m_width - 1);
 
-            if (range_flag == true) {
+            if (range_flag) {
                 nibble_count += seq_length * digits;
                 seq_count++;
                 min = std::numeric_limits<int64_t>::max();
@@ -400,7 +400,7 @@ namespace Grain {
                 seq_length = 0;
                 i -= 1;
             }
-            else if (stop == true) {
+            else if (stop) {
                 seq_length += 1;
                 nibble_count += seq_length * digits;
                 seq_count++;

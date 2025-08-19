@@ -36,6 +36,8 @@
 // #include "Icon.hpp"  TODO !!!!!
 // #include "GrPDFWriter.hpp"  TODO !!!!!
 
+#include <cairo/cairo.h>
+
 
 namespace Grain {
 
@@ -95,11 +97,11 @@ namespace Grain {
             m_cg_color_space = nullptr;
         #endif
         if (_m_cairo_cr) {
-            cairo_destroy(_m_cairo_cr);
+            cairo_destroy((::cairo_t*)_m_cairo_cr);
             _m_cairo_cr = nullptr;
         }
-        if (_m_cairo_surface != nullptr) {
-            cairo_surface_destroy(_m_cairo_surface);
+        if (_m_cairo_surface) {
+            cairo_surface_destroy((::cairo_surface_t*)_m_cairo_surface);
             _m_cairo_surface = nullptr;
         }
 
@@ -126,7 +128,7 @@ namespace Grain {
                         static_cast<int>(m_width),
                         static_cast<int>(m_height),
                         image->bytesPerRow());
-                _m_cairo_cr = cairo_create(_m_cairo_surface);
+                _m_cairo_cr = cairo_create((::cairo_surface_t*)_m_cairo_surface);
             }
         }
 #if defined(__APPLE__) && defined(__MACH__)

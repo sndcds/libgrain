@@ -35,8 +35,6 @@
     #include <CoreGraphics/CoreGraphics.h>
 #endif
 
-#include <cairo/cairo.h>
-
 
 namespace Grain {
 
@@ -127,8 +125,8 @@ namespace Grain {
             CGColorSpaceRef m_cg_color_space = nullptr;
         #endif
 
-        cairo_surface_t* _m_cairo_surface = nullptr;
-        cairo_t* _m_cairo_cr = nullptr;
+        void* _m_cairo_surface = nullptr;   ///< Cairo cairo_surface_t*
+        void* _m_cairo_cr = nullptr;        ///< Cairo cairo_t*
 
     public:
         explicit GraphicContext(Component* component) noexcept;
@@ -144,8 +142,8 @@ namespace Grain {
             void _macos_setImage(Image* image) noexcept;
         #endif
 
-        [[nodiscard]] cairo_surface_t* cairoSurface() { return _m_cairo_surface; }
-        [[nodiscard]] cairo_t* cairoCr() { return _m_cairo_cr; }
+        [[nodiscard]] void* cairoSurface() { return _m_cairo_surface; }
+        [[nodiscard]] void* cairoCr() { return _m_cairo_cr; }
 
         [[nodiscard]] double width() const noexcept { return m_width; }
         [[nodiscard]] double height() const noexcept { return m_height; }

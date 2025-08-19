@@ -169,7 +169,7 @@ namespace Grain {
             }
 
             auto string_to_insert = new(std::nothrow) String(string);
-            if (string_to_insert == nullptr) {
+            if (!string_to_insert) {
                 return ErrorCode::MemCantAllocate;
             }
 
@@ -201,7 +201,7 @@ namespace Grain {
 
         [[nodiscard]] const String& stringAtIndex(int64_t index) const noexcept {
             auto string_ptr = elementAtIndex(index);
-            if (string_ptr != nullptr) {
+            if (string_ptr) {
                 return *string_ptr;
             }
             else {

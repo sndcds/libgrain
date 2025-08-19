@@ -31,7 +31,7 @@ namespace Grain {
      */
     bool BaseObject::isClass(const char* name) const noexcept {
 
-        return name != nullptr && std::strcmp(className(), name) == 0;
+        return name && std::strcmp(className(), name) == 0;
     }
 
 
@@ -100,7 +100,7 @@ namespace Grain {
      */
     void Object::retain(Object* object) {
 
-        if (object != nullptr) {
+        if (object) {
             object->m_retain_counter++;
         }
     }
@@ -116,7 +116,7 @@ namespace Grain {
      */
     Object* Object::release(Object* object) {
 
-        if (object != nullptr) {
+        if (object) {
             object->m_retain_counter--;
 
             if (object->m_retain_counter < 1) {

@@ -29,11 +29,11 @@ namespace Grain {
      */
     bool Flags::set(const char* str) noexcept {
 
-        if (String::isValidHexString(str) == false) {
+        if (!String::isValidHexString(str)) {
             return false;
         }
         else {
-            uint32_t bits = str != nullptr ? static_cast<uint32_t>(strtoul(str, NULL, 16)) : 0x0;
+            uint32_t bits = str ? static_cast<uint32_t>(strtoul(str, NULL, 16)) : 0x0;
             bool result = bits != m_bits;
             m_bits = bits;
             return result;
@@ -60,7 +60,7 @@ namespace Grain {
      */
     void Flags::toStr(char* out_str) const noexcept {
 
-        if (out_str != nullptr) {
+        if (out_str) {
             int32_t j = 0;
             int32_t k = 0;
 

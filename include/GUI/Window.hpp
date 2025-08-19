@@ -13,7 +13,7 @@
 #define GrainWindow_hpp
 
 #include "Grain.hpp"
-#include "GUI/Style.hpp"
+#include "GUI/GUIStyle.hpp"
 #include "Type/Object.hpp"
 #include "2d/Rect.hpp"
 #include "String/String.hpp"
@@ -130,9 +130,6 @@ namespace Grain {
 
         bool m_can_become_key_window = true;
         bool m_is_key_window = false;
-
-        // Style
-        StyleSet m_style_set;
     };
 
 

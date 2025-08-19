@@ -37,7 +37,7 @@ namespace Grain {
 
     void GraphicPath::_update() noexcept {
 
-        if (m_must_update == true) {
+        if (m_must_update) {
             _updateLength(m_bezier_segment_resolution);
             m_must_update = false;
         }
@@ -465,7 +465,7 @@ namespace Grain {
             auto prev_point = &m_points[point_n - 1];
             if (prev_point->m_left_flag) {
                 Bezier prev_bezier;
-                if (bezierAtIndex(point_n - 2, prev_bezier) == true) {
+                if (bezierAtIndex(point_n - 2, prev_bezier)) {
                     Vec2d prev_quadratic_control;
                     prev_bezier.approximateQuadraticBezierControlPos(prev_quadratic_control);
                     Vec2d control_pos = prev_quadratic_control.reflectedPoint(prev_point->m_anchor);

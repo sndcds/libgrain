@@ -414,7 +414,7 @@ namespace Grain {
          */
         template <typename T>
         [[nodiscard]] double medianInArray(T* array, size_t start, size_t end) {
-            if (array == nullptr || start > end) {
+            if (!array || start > end) {
                 return 0.0;
             }
             size_t size = end - start + 1;

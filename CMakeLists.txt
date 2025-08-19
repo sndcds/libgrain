@@ -111,7 +111,8 @@ add_library(libgrain STATIC
         src/GUI/Event.cpp
         src/GUI/Components/Button.cpp
         src/GUI/Components/Checkbox.cpp
-        src/GUI/Style.cpp
+        src/GUI/Components/Textfield.cpp
+        src/GUI/GUIStyle.cpp
 
         src/Graphic/GraphicContext.cpp
         src/Graphic/CairoContext.cpp

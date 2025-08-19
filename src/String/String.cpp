@@ -70,7 +70,7 @@ namespace Grain {
 
     void Utf8SingleByteDelimiterStates::setByCharsInStr(const char* str) {
 
-        if (str != nullptr) {
+        if (str) {
             const char* c = str;
             while (*c != String::EOS) {
                 setByChar(*c);
@@ -118,7 +118,7 @@ namespace Grain {
      */
     String::String(const char* str) noexcept {
 
-        if (str == nullptr) {
+        if (!str) {
             checkCapacity(kDefaultByteCapacity);
         }
         else {
@@ -138,7 +138,7 @@ namespace Grain {
      */
     String::String(const char* str, int64_t max_byte_length) noexcept {
 
-        if (str == nullptr) {
+        if (!str) {
             checkCapacity(kDefaultByteCapacity);
         }
         else {
@@ -167,7 +167,7 @@ namespace Grain {
      */
     String::String(const String* string) noexcept {
 
-        if (string != nullptr) {
+        if (string) {
             checkCapacity(string->length(), 32);
             append(string->utf8());
         }
@@ -221,7 +221,7 @@ namespace Grain {
 
     void String::_init() noexcept {
 
-        if (m_data != nullptr) {
+        if (m_data) {
             free(m_data);
         }
 
@@ -296,7 +296,7 @@ namespace Grain {
 
     const char* String::utf8() const noexcept {
 
-        return m_data != nullptr ? m_data : String::g_empty_data;
+        return m_data ? m_data : String::g_empty_data;
     }
 
 
@@ -310,7 +310,7 @@ namespace Grain {
      */
     bool String::isValidUtf8(int64_t* out_byte_index) const noexcept {
 
-        if (m_data == nullptr) {
+        if (!m_data) {
             return false;
         }
 
@@ -320,7 +320,7 @@ namespace Grain {
             int32_t seq_length = String::utf8SeqLength((uint8_t*)&m_data[byte_index]);
 
             if (seq_length < 1) {
-                if (out_byte_index != nullptr) {
+                if (out_byte_index) {
                     *out_byte_index = byte_index;
                 }
                 return false;
@@ -329,7 +329,7 @@ namespace Grain {
             byte_index += seq_length;
         }
 
-        if (out_byte_index != nullptr) {
+        if (out_byte_index) {
             *out_byte_index = byte_index;
         }
 
@@ -356,7 +356,7 @@ namespace Grain {
      */
     bool String::isAscii() const noexcept {
 
-        if (m_data != nullptr && m_byte_length > 0) {
+        if (m_data && m_byte_length > 0) {
             int64_t n = m_byte_length;
             auto p = (uint8_t*)m_data;
 
@@ -385,7 +385,7 @@ namespace Grain {
      */
     bool String::isAlphaNumeric() const noexcept {
 
-        if (m_data == nullptr || m_data[0] == String::EOS) {
+        if (!m_data || m_data[0] == String::EOS) {
             // Empty string is not considered alphanumeric
             return false;
         }
@@ -411,7 +411,7 @@ namespace Grain {
      */
     bool String::isValidNumber() const noexcept {
 
-        if (m_data == nullptr || m_data[0] == String::EOS) {
+        if (!m_data || m_data[0] == String::EOS) {
             // Empty string is not a valid number
             return false;
         }
@@ -506,7 +506,7 @@ namespace Grain {
      */
     int64_t String::byteIndexFromCharacterIndex(int64_t character_index) const noexcept {
 
-        if (isCharacterIndexInRange(character_index) == false) {
+        if (!isCharacterIndexInRange(character_index)) {
             return -1;
         }
 
@@ -536,7 +536,7 @@ namespace Grain {
      */
     int64_t String::characterIndexFromByteIndex(int64_t byte_index) const noexcept {
 
-        if (m_data == nullptr || byte_index >= m_byte_length) {
+        if (!m_data || byte_index >= m_byte_length) {
             return -1;
         }
 
@@ -626,7 +626,7 @@ namespace Grain {
      */
     int64_t String::utf8Length(const char* str) noexcept {
 
-        if (str == nullptr) {
+        if (!str) {
             return -1;
         }
         else {
@@ -875,7 +875,7 @@ namespace Grain {
      */
     int64_t String::whiteSpaceHead() const noexcept {
 
-        if (m_data == nullptr) {
+        if (!m_data) {
             return -1;  // Return error code
         }
 
@@ -891,7 +891,7 @@ namespace Grain {
                 return -1;  // Error code
             }
 
-            if (utf8IsWhiteSpace(p) == false) {
+            if (!utf8IsWhiteSpace(p)) {
                 return n;
             }
 
@@ -923,7 +923,7 @@ namespace Grain {
 
 // TODO: Should be optimized by looking for white spaces from the tail side.
 
-        if (m_data == nullptr) {
+        if (!m_data) {
             return -1;  // Return error code
         }
 
@@ -987,7 +987,7 @@ namespace Grain {
      */
     bool String::trim(TrimMode trim_mode) noexcept {
 
-        if (m_data == nullptr) {
+        if (!m_data) {
             return false;
         }
 
@@ -1181,7 +1181,7 @@ namespace Grain {
      */
     bool String::setByStr(const char* str, int64_t length) noexcept {
 
-        if (str == nullptr || length < 1) {
+        if (!str || length < 1) {
             clear();
             return true;
         }
@@ -1238,12 +1238,12 @@ namespace Grain {
         }
 
         const char* start_ptr = strchr(str, open_c);
-        if (start_ptr == nullptr) {
+        if (!start_ptr) {
             return -2;  // Missing `open_c`
         }
 
         const char* end_ptr = strrchr(str, close_c);
-        if (end_ptr == nullptr) {
+        if (!end_ptr) {
             return -3;  // Missing `close_c`
         }
 
@@ -1731,7 +1731,7 @@ namespace Grain {
      */
     bool String::insertAtCharacterIndex(const char* str, int64_t character_index) noexcept {
 
-        if (!String::isValidUtf8() || str == nullptr) {
+        if (!String::isValidUtf8() || !str) {
             return false;
         }
 
@@ -2293,11 +2293,11 @@ namespace Grain {
      */
     int64_t String::find(const char* str, int64_t index) const noexcept {
 
-        if (m_data == nullptr) {
+        if (!m_data) {
             return kFindResult_MemError;
         }
 
-        if (str == nullptr) {
+        if (!str) {
             return kFindResult_StrError;
         }
 
@@ -2311,7 +2311,7 @@ namespace Grain {
         }
 
         char* ptr = strstr(&m_data[byte_index], str);
-        if (ptr == nullptr) {
+        if (!ptr) {
             return kFindResult_NothingFound;
         }
 
@@ -2881,7 +2881,7 @@ namespace Grain {
      */
     bool String::utf8IsWhiteSpace(const char* utf8_data) noexcept {
 
-        if (utf8_data == nullptr) {
+        if (!utf8_data) {
             return false;
         }
 
@@ -3034,7 +3034,7 @@ int8_t String::valueForHexChar(char c) noexcept {
      */
     bool String::isValidHexString(const char* str) noexcept {
 
-        if (str == nullptr || *str == String::EOS) {
+        if (!str || *str == String::EOS) {
             return false;
         }
 
@@ -3071,7 +3071,7 @@ int8_t String::valueForHexChar(char c) noexcept {
      */
     const char* String::firstNonWhiteSpaceCharPtr(const char* str) noexcept {
 
-        if (str == nullptr) {
+        if (!str) {
             return nullptr;
         }
         else {
@@ -3106,7 +3106,7 @@ int8_t String::valueForHexChar(char c) noexcept {
      */
     int32_t String::utf8SeqLength(const uint8_t* c) noexcept {
 
-        if (c == nullptr) {
+        if (!c) {
             return -2;
         }
 
@@ -3150,7 +3150,7 @@ int8_t String::valueForHexChar(char c) noexcept {
      */
     bool String::isValidUtf8(const uint8_t* str) noexcept {
 
-        if (str == nullptr) {
+        if (!str) {
             return false;
         }
 
@@ -3287,7 +3287,7 @@ int8_t String::valueForHexChar(char c) noexcept {
      */
     int32_t String::splitFast(char delimiter, int32_t max_parts, int32_t part_len, char* out_parts) const noexcept {
 
-        if (max_parts < 1 || part_len < 2 || out_parts == nullptr) {
+        if (max_parts < 1 || part_len < 2 || !out_parts) {
             return -1;
         }
 
@@ -3367,7 +3367,7 @@ int8_t String::valueForHexChar(char c) noexcept {
                         break;
                     }
                 }
-                if (exists == false) {
+                if (!exists) {
                     CodePoint cp = { unicode, 1 };
                     code_points.push(cp);
                 }
@@ -3401,7 +3401,7 @@ int8_t String::valueForHexChar(char c) noexcept {
      */
     int64_t String::itoa(int64_t value, char* buffer, int32_t radix) noexcept {
 
-        if (buffer == nullptr) {
+        if (!buffer) {
             return 0;
         }
 
@@ -3626,11 +3626,11 @@ int8_t String::valueForHexChar(char c) noexcept {
      */
     bool String::checkCapacity(int64_t needed) noexcept {
 
-        if (m_data == nullptr || m_byte_capacity < 0) {
+        if (!m_data || m_byte_capacity < 0) {
             int64_t new_capacity = needed + m_extra_grow_bytes;
             m_data = (char*)calloc(new_capacity + 1, 1);
 
-            if (m_data == nullptr) {
+            if (!m_data) {
                 return false;
             }
 
@@ -3640,7 +3640,7 @@ int8_t String::valueForHexChar(char c) noexcept {
             int64_t new_capacity = needed + m_extra_grow_bytes;
             char* new_data = (char*)std::realloc(m_data, new_capacity + 1);
 
-            if (new_data == nullptr) {
+            if (!new_data) {
                 return false;
             }
 

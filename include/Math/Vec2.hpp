@@ -6,18 +6,16 @@
 //
 //  This file is part of GrainLib, see <https://grain.one>.
 //
-//  LastChecked: 13.07.2025
+//  LastChecked: 19.07.2025
 //
 
 #ifndef GrainVec2_hpp
 #define GrainVec2_hpp
 
 #include "Grain.hpp"
-#include "String/String.hpp"
 #include "String/CSVString.hpp"
 #include "Random.hpp"
 #include "File/File.hpp"
-
 
 #if defined(__APPLE__) && defined(__MACH__)
     #import <CoreGraphics/CoreGraphics.h>
@@ -37,9 +35,10 @@ namespace Grain {
     template <arithmetic T>
     class Vec2 {
     public:
-        Vec2() noexcept : m_x(0), m_y(0) {}
+        Vec2() noexcept : m_x(static_cast<T>(0)), m_y(static_cast<T>(0)) {}
+        Vec2(T x, T y) noexcept : m_x(x), m_y(y) {}
+
         Vec2(const Vec2& other) noexcept : m_x(other.m_x), m_y(other.m_y) {}
-        explicit Vec2(T x, T y) noexcept : m_x(x), m_y(y) {}
 
         template <typename U>
         requires (!std::same_as<U, T>)
@@ -69,9 +68,6 @@ namespace Grain {
                 return os << o.m_x << ", " << o.m_y;
             }
         }
-
-        bool appendToString(String& string, char delimiter, int32_t precision) const noexcept;
-        bool parseFromCSVLine(CSVLineParser& parser) noexcept;
 
         Vec2& operator = (const Vec2&) = default;
         Vec2& operator = (Vec2&&) noexcept = default;
@@ -579,19 +575,17 @@ namespace Grain {
          *          otherwise.
          */
         bool setByCSV(const char* csv, char delimiter) noexcept {
-
-            int32_t result = 0;
-
-            if (csv != nullptr) {
+            if (csv) {
                 CSVLineParser csv_line_parser(csv);
                 csv_line_parser.setDelimiter(delimiter);
                 T values[2]{};
-                result = csv_line_parser.values(2, values);
-                m_x = values[0];
-                m_y = values[1];
+                if (csv_line_parser.values(2, values) == 2) {
+                    m_x = values[0];
+                    m_y = values[1];
+                    return true;
+                }
             }
-
-            return result == 2;
+            return false;
         }
 
         /**
@@ -1260,7 +1254,7 @@ namespace Grain {
         }
 
         void pointOnArc(const Vec2* p, double t) {
-            if (p != nullptr) {
+            if (p) {
                 pointOnArc(p[0], p[1], p[2], t);
             }
         }

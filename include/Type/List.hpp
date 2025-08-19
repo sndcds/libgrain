@@ -100,7 +100,7 @@ namespace Grain {
 
         friend std::ostream& operator << (std::ostream& os, const List& o) {
             os << o.className() << " with " << o.m_size << " of " << o.m_capacity << " entries, entry size: " << o.m_element_size << " bytes";
-            if (o.m_data != nullptr) {
+            if (o.m_data) {
                 os << ", memory is allocated";
             }
             else {
@@ -139,7 +139,7 @@ namespace Grain {
         }
 
         void free() noexcept {
-            if (m_data != nullptr) {
+            if (m_data) {
                 std::free(m_data);
                 m_data = nullptr;
             }
@@ -158,7 +158,7 @@ namespace Grain {
         [[nodiscard]] int64_t memSize() const noexcept { return m_element_size * m_capacity; }
 
         [[nodiscard]] bool hasIndex(int64_t index) const noexcept {
-            return (index >= 0 && index < m_size && m_data != nullptr);
+            return (index >= 0 && index < m_size && m_data);
         }
 
         [[nodiscard]] int64_t lastIndex() const noexcept {
@@ -187,7 +187,7 @@ namespace Grain {
                 capacity = m_size;
             }
 
-            if (capacity == 0 && m_data != nullptr) {
+            if (capacity == 0 && m_data) {
                 // Release memory when capacity becomes 0
                 std::free(m_data);
                 m_data = nullptr;
@@ -198,7 +198,7 @@ namespace Grain {
             if (m_capacity == 0 && capacity > 0) {
                 // Allocate new memory
                 m_data = (T* )std::malloc(sizeof(T) * capacity);
-                if (m_data == nullptr) {
+                if (!m_data) {
                     return false;
                 }
                 m_capacity = capacity;
@@ -206,7 +206,7 @@ namespace Grain {
             else {
                 // Reallocate memory
                 T* new_data = (T* )std::realloc(m_data, sizeof(T) * capacity);
-                if (new_data == nullptr) {
+                if (!new_data) {
                     return false;
                 }
                 m_data = new_data;
@@ -227,7 +227,7 @@ namespace Grain {
         virtual bool resize(int64_t new_size, T value) noexcept {
             if (new_size > size()) {
                 int64_t new_n = new_size - size();
-                if (reserve(new_size) == false) {
+                if (!reserve(new_size)) {
                     return false;
                 }
                 for (int64_t i = 0; i < new_n; i++) {
@@ -245,7 +245,7 @@ namespace Grain {
         }
 
         virtual bool push(const T* element_ptr) noexcept {
-            if (element_ptr == nullptr) {
+            if (!element_ptr) {
                 return false;
             }
 
@@ -277,7 +277,7 @@ namespace Grain {
         }
 
         bool pop(T* out_element) noexcept {
-            if (m_size > 0 && out_element != nullptr) {
+            if (m_size > 0 && out_element) {
                 *out_element = m_data[lastIndex()];
                 removeLast();
                 return true;
@@ -292,7 +292,7 @@ namespace Grain {
 
 
         virtual bool replaceElementAtIndex(int64_t index, const T* element_ptr) noexcept {
-            if (element_ptr == nullptr || hasIndex(index) == false) {
+            if (!element_ptr || !hasIndex(index)) {
                 return false;
             }
             else {
@@ -302,7 +302,7 @@ namespace Grain {
         }
 
         virtual bool replaceLastElement(const T* element_ptr) noexcept {
-            if (element_ptr == nullptr || m_size < 1) {
+            if (!element_ptr || m_size < 1) {
                 return false;
             }
             else {
@@ -326,7 +326,7 @@ namespace Grain {
         ErrorCode sort(SortCompareFunc func) noexcept {
             auto result = ErrorCode::None;
             try {
-                if (func != nullptr && m_size > 1) {
+                if (func && m_size > 1) {
                     qsort(m_data, m_size, sizeof(T), func);
                 }
             }
@@ -433,7 +433,7 @@ namespace Grain {
          */
         virtual ErrorCode removeAtIndex(int64_t index) noexcept {
             std::cout << "removeAtIndex: " << index << std::endl;
-            if (hasIndex(index) == false) {
+            if (!hasIndex(index)) {
                 std::cout << "IndexOutOfRange!" << std::endl;
                 return ErrorCode::IndexOutOfRange;
             }
@@ -460,7 +460,7 @@ namespace Grain {
          *          failure.
          */
         virtual ErrorCode removeAtIndexReorderingAllowed(int64_t index) noexcept {
-            if (hasIndex(index) == false) {
+            if (!hasIndex(index)) {
                 return ErrorCode::IndexOutOfRange;
             }
 
@@ -582,7 +582,7 @@ namespace Grain {
          *          object is `nullptr`.
          */
         virtual bool push(T ob) noexcept override {
-            if (ob == nullptr) {
+            if (!ob) {
                 return false;
             }
             bool result = List<T>::push(ob);
@@ -606,7 +606,7 @@ namespace Grain {
          *    - `ErrorCode::MemCantGrow` if memory growth failed.
          */
         ErrorCode insertAtIndexChangeOwner(int64_t index, T ob) noexcept {
-            if (ob == nullptr) {
+            if (!ob) {
                 return ErrorCode::BadArgs;
             }
             if (index < 0 || index > this->m_size) {
@@ -614,7 +614,7 @@ namespace Grain {
             }
             if (this->m_size >= this->m_capacity) {
                 auto flag = List<T>::reserve(this->m_capacity + this->m_grow_step);
-                if (flag == false) {
+                if (!flag) {
                     return ErrorCode::MemCantGrow;
                 }
             }

@@ -12,6 +12,7 @@
 #include "GUI/Component.hpp"
 #include "GUI/View.hpp"
 #include "GUI/Event.hpp"
+#include "GUI/Components/Textfield.hpp"
 #include "App/App.hpp"
 #include "String/String.hpp"
 #include "Color/RGBA.hpp"
@@ -28,6 +29,7 @@ namespace Grain {
         void _macosView_setNeedsDisplay(const Component* component);
         void _macosView_forcedDisplay(const Component* component);
         void _macosView_selectNextKeyView(Component* component);
+        void _macosView_interpretKeyEvent(Component* component, const Event& event);
         void _macosView_setOpacity(Component* component, float opacity);
         bool _macosView_isKeyView(const Component* component);
         bool _macosView_gotoView(Component* component);
@@ -35,8 +37,7 @@ namespace Grain {
     #endif
 
 
-    Component::Component(Rectd rect, int32_t tag) noexcept : m_rect(std::move(rect)), m_tag(tag) {
-
+    Component::Component(const Rectd& rect, int32_t tag) noexcept : m_rect(rect), m_tag(tag) {
         #if defined(__APPLE__) && defined(__MACH__)
             _macosView_initForUI(this, rect);
         #endif
@@ -49,6 +50,16 @@ namespace Grain {
         #endif
 
         delete m_text;
+    }
+
+
+    Rectd Component::contentRect() const noexcept {
+        Rectd rect = boundsRect();
+        auto style = guiStyle();
+        if (style) {
+            rect.inset(style->paddingTop(), style->paddingRight(), style->paddingBottom(), style->paddingLeft());
+        }
+        return rect;
     }
 
 
@@ -77,11 +88,10 @@ namespace Grain {
             needsDisplay();
         }
 
-        /* !!!!!
-        if (m_textfield != nullptr) {
+        if (m_textfield) {
             m_textfield->setEnabled(enabled);
         }
-
+/*
         if (m_label != nullptr) {
             m_label->setEnabled(enabled);
         }
@@ -95,12 +105,8 @@ namespace Grain {
     }
 
 
-    void Component::setOpacity(float opacity) noexcept {
-        #if defined(__APPLE__) && defined(__MACH__)
-            _macosView_setOpacity(this, opacity);
-        #endif
-        m_opacity = opacity;
-        needsDisplay();
+    GUIStyle* Component::guiStyle() const noexcept {
+        return App::guiStyleAtIndex(m_style_index);
     }
 
 
@@ -129,7 +135,7 @@ namespace Grain {
 
     void Component::setNextKeyComponent(Component* component) noexcept {
         m_next_key_component = component;
-        if (component != nullptr) {
+        if (component) {
             component->m_previous_key_component = this;
         }
     }
@@ -145,10 +151,10 @@ namespace Grain {
     }
 
 
-    bool Component::gotoComponent(Component *component) noexcept {
+    bool Component::gotoComponent(Component* component) noexcept {
         if (component) {
             #if defined(__APPLE__) && defined(__MACH__)
-                return _macosView_gotoView(this);
+                return _macosView_gotoView(component);
             #else
                 // TODO: Implement linux version
                 return false;
@@ -166,6 +172,7 @@ namespace Grain {
 
 
     bool Component::gotoPreviousKeyComponent() noexcept {
+        std::cout << (long)m_previous_key_component << std::endl;
         return gotoComponent(m_previous_key_component);
     }
 
@@ -254,7 +261,7 @@ namespace Grain {
         }
 
         if (hasHandleEventFunction()) {
-            if (callHandleEventFunction(event) == true) {
+            if (callHandleEventFunction(event)) {
                 return;
             }
         }
@@ -345,6 +352,15 @@ namespace Grain {
         }
     }
 
+    void Component::_interpretKeyEvents(const Event& event) noexcept {
+        #if defined(__APPLE__) && defined(__MACH__)
+            _macosView_interpretKeyEvent(this, event);
+        #else
+            // TODO: Implement for Linux
+        #endif
+    }
+
+
 
     void Component::setDrawFunction(ComponentDrawFunc func, void* ref) noexcept {
         _m_draw_func = func;
@@ -384,49 +400,20 @@ namespace Grain {
     }
 
 
+    void Component::drawDummy(Grain::GraphicContext &gc) const noexcept {
+        gc.setStrokeColor(RGBA(1, 0, 0, 1));
+        gc.setStrokeWidth(2);
+        auto rect = boundsRect();
+        rect.inset(1.0f);
+        gc.strokeRect(rect);
+        gc.strokeLine(rect.x(), rect.y(), rect.x2(), rect.y2());
+        gc.strokeLine(rect.x(), rect.y2(), rect.x2(), rect.y());
+    }
+
+
     void Component::drawRect(GraphicContext& gc, const Rectd& rect) const noexcept {
-
-        bool style_uses_radius = true;
-        float style_corner_radius[4] = { 0.0f, 4.0f, 8.0f, 12.0f };
-
-        float border_width = m_border_width[0];
-        uint32_t border_color = m_border_color[0];
-
-        if (border_width > 0.05f) {
-            Rectd stroke_rect(rect, border_width * 0.5f);
-            gc.setStrokeColor(RGBA(border_color));
-            gc.setStrokeWidth(border_width);
-            gc.setFillColor(RGBA(m_background_color[0]));
-            if (style_uses_radius) {
-                gc.addRoundRectPath(
-                        stroke_rect,
-                        style_corner_radius[0],
-                        style_corner_radius[1],
-                        style_corner_radius[2],
-                        style_corner_radius[3]);
-                gc.drawPath();
-            }
-            else {
-                gc.fillRect(stroke_rect);
-                gc.strokeRect(stroke_rect);
-            }
-        }
-        else {
-            if (style_uses_radius) {
-                gc.addRoundRectPath(
-                        rect,
-                        style_corner_radius[0],
-                        style_corner_radius[1],
-                        style_corner_radius[2],
-                        style_corner_radius[3]);
-                gc.setFillColor(RGBA(m_background_color[0]));
-                gc.fillPath();
-            }
-            else {
-                gc.setFillColor(RGBA(m_background_color[0]));
-                gc.fillRect(rect);
-            }
-        }
+        gc.setFillColor({ 0, 0, 1, 1});
+        gc.fillRect(rect);
     }
 
 

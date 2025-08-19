@@ -103,8 +103,7 @@ namespace Grain {
         }
 
         friend std::ostream& operator << (std::ostream& os, const CVF2File& o) {
-            #warning "CVF2File operator << must be implemented"
-            return os;
+            return os << o.m_width << ", " << o.m_height << ", SRID: " << o.m_srid;
         }
 
         void log(Log& l) const {

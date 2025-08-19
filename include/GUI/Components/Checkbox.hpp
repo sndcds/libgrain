@@ -30,9 +30,9 @@ namespace Grain {
         [[nodiscard]] const char* className() const noexcept override { return "Checkbox"; }
 
 
-        static Checkbox* add(View *view, const Rectd &rect, int32_t tag = 0);
-        static Checkbox* add(View *view, const Rectd &rect, const char *text, int32_t tag = 0);
-        static Checkbox* add(View *view, const Rectd &rect, const char *text, int32_t radio_group, int32_t radio_value, int32_t tag = 0);
+        static Checkbox* add(View* view, const Rectd& rect, int32_t tag = 0);
+        static Checkbox* add(View* view, const Rectd& rect, const char* text, int32_t tag = 0);
+        static Checkbox* add(View* view, const Rectd& rect, const char* text, int32_t radio_group, int32_t radio_value, int32_t tag = 0);
 
         [[nodiscard]] int32_t selectedRadioValue() const noexcept;
 

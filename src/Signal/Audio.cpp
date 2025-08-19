@@ -11,6 +11,7 @@
 #include "Type/Type.hpp"
 #include "DSP/LUT1.hpp"
 #include "Signal/Signal.hpp"
+#include "Core/Log.hpp"
 
 
 namespace Grain {
@@ -49,7 +50,7 @@ namespace Grain {
             // Compute `g_amplitude_from_levellut`
             int32_t resolution = 1024;
             g_amplitude_from_level_lut = new(std::nothrow) LUT1(resolution);
-            if (g_amplitude_from_level_lut != nullptr) {
+            if (g_amplitude_from_level_lut) {
                 for (int32_t lut_index = 0; lut_index < resolution; lut_index++) {
                     g_amplitude_from_level_lut->setValueAtIndex(lut_index, Audio::amplitudeFromLevel(static_cast<float>(lut_index) / (resolution - 1)));
                 }
@@ -295,7 +296,7 @@ namespace Grain {
 
         static const char* classNames[12] = { "A", "Bb", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#" };
 
-        if (out_str != nullptr) {
+        if (out_str) {
             int32_t i_pitch = static_cast<int32_t>(std::roundf(pitch));
             int32_t pitch_class = pitchClass(i_pitch);
             int32_t octave = (i_pitch) / 12 - 1;
@@ -381,58 +382,63 @@ namespace Grain {
 
 
 #if defined(__APPLE__) && defined(__MACH__)
-    void Audio::logAudioStreamBasicDescription(std::ostream& os, AudioStreamBasicDescription& asbd, const char* name) noexcept {
 
-        os << "AudioStreamBasicDescription " << name << std::endl;
+    void Audio::logAudioStreamBasicDescription(Log& log, AudioStreamBasicDescription& asbd, const char* name) noexcept {
+        log << "AudioStreamBasicDescription " << name << log.endl;
+        log++;
 
-        os << "  sample rate: " << asbd.mSampleRate << std::endl;
-        os << "  format id: " << asbd.mFormatID << std::endl;
-        os << "  format flags: " << asbd.mFormatFlags << std::endl;
+        log << "sample rate: " << asbd.mSampleRate << log.endl;
+        log << "format id: " << asbd.mFormatID << log.endl;
+        log << "format flags: " << asbd.mFormatFlags << log.endl;
 
+        log++;
         if (asbd.mFormatFlags & kAudioFormatFlagIsFloat) {
-            os << "    float\n";
+            log << "float\n";
         }
         if (asbd.mFormatFlags & kAudioFormatFlagIsBigEndian) {
-            os << "    big endian\n";
+            log << "big endian\n";
         }
         if (asbd.mFormatFlags & kAudioFormatFlagIsSignedInteger) {
-            os << "    signed integer\n";
+            log << "signed integer\n";
         }
         if (asbd.mFormatFlags & kAudioFormatFlagIsPacked) {
-            os << "    is packed\n";
+            log << "is packed\n";
         }
         if (asbd.mFormatFlags & kAudioFormatFlagIsAlignedHigh) {
-            os << "    aligned high\n";
+            log << "aligned high\n";
         }
         if (asbd.mFormatFlags & kAudioFormatFlagIsNonInterleaved) {
-            os << "    non interleaved\n";
+            log << "lognon interleaved\n";
         }
         if (asbd.mFormatFlags & kAudioFormatFlagIsNonMixable) {
-            os << "    non mixable\n";
+            log << "non mixable\n";
         }
+        log--;
 
-        os << "  bytes per packet: " << asbd.mBytesPerPacket << std::endl;
-        os << "  frames per packet: " << asbd.mFramesPerPacket << std::endl;
-        os << "  bytes per frame: " << asbd.mBytesPerFrame << std::endl;
-        os << "  channels per frame: " << asbd.mChannelsPerFrame << std::endl;
-        os << "  bits per channel: " << asbd.mBitsPerChannel << std::endl;
-        os << "  reserved: " << asbd.mReserved << std::endl;
+        log << "bytes per packet: " << asbd.mBytesPerPacket << log.endl;
+        log << "frames per packet: " << asbd.mFramesPerPacket << log.endl;
+        log << "bytes per frame: " << asbd.mBytesPerFrame << log.endl;
+        log << "channels per frame: " << asbd.mChannelsPerFrame << log.endl;
+        log << "bits per channel: " << asbd.mBitsPerChannel << log.endl;
+        log << "reserved: " << asbd.mReserved << log.endl;
+        log--;
     }
 
-
-    // TODO: !!!!! Log
-    void Audio::logAudioBufferList(std::ostream& os, AudioBufferList& abl, const char* name) noexcept {
-
-        os << "AudioBufferList " << name << std::endl;
-        os << "  number buffers: " << abl.mNumberBuffers << std::endl;
-
+    void Audio::logAudioBufferList(Log& log, AudioBufferList& abl, const char* name) noexcept {
+        log << "AudioBufferList " << name << log.endl;
+        log++;
+        log << "number buffers: " << abl.mNumberBuffers << log.endl;
+        log++;
         for (uint32_t i = 0; i < abl.mNumberBuffers; i++) {
-
-            os << "    buffer index: " << i << std::endl;
-            os << "      number of channels: " << abl.mBuffers[i].mNumberChannels << std::endl;
-            os << "      data byte size: " << abl.mBuffers[i].mDataByteSize << std::endl;
-            os << "      has data: " << (abl.mBuffers[i].mData != nullptr) << std::endl;
+            log << "buffer index: " << i << log.endl;
+            log++;
+            log << "number of channels: " << abl.mBuffers[i].mNumberChannels << log.endl;
+            log << "data byte size: " << abl.mBuffers[i].mDataByteSize << log.endl;
+            log << "has data: " << (abl.mBuffers[i].mData != nullptr) << log.endl;
+            log--;
         }
+        log--;
+        log--;
     }
 
 #endif

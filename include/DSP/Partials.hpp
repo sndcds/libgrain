@@ -67,7 +67,7 @@ namespace Grain {
 
         int32_t resolution() const noexcept { return m_resolution; }
 
-        bool hasData() const noexcept { return m_amplitude_data != nullptr; }
+        bool hasData() const noexcept { return m_amplitude_data; }
         bool isPartial(int32_t index) const noexcept { return index >= 0 && index < m_resolution; }
 
         void partialAtIndex(int32_t index, float& out_amplitude, float& out_phase) const noexcept;

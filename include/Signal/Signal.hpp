@@ -31,8 +31,6 @@
 #include "Type/HiResValue.hpp"
 #include "DSP/RingBuffer.hpp"
 
-#include <sndfile.h>
-
 #if defined(__APPLE__) && defined(__MACH__)
     #include <AudioToolbox/AudioToolbox.h>
 #endif
@@ -314,7 +312,7 @@ namespace Grain {
 
         // Information about the signal
         [[nodiscard]] bool hasData() const noexcept {
-            return m_data_byte_size > 0 && m_data.raw != nullptr;
+            return m_data_byte_size > 0 && m_data.raw;
         }
 
         [[nodiscard]] bool hasChannel(int32_t channel) const noexcept {
@@ -327,7 +325,7 @@ namespace Grain {
 
         [[nodiscard]] inline bool hasSampleAtChannel(int32_t channel, int64_t index) const noexcept {
             return
-                    m_data.raw != nullptr &&
+                    m_data.raw &&
                     channel >= 0 && channel < m_channel_count &&
                     index >= 0 && index < m_last_sample_index;
         }

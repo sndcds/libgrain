@@ -157,6 +157,13 @@ namespace Grain {
         [[nodiscard]] static double pt_to_inch(double pt) { return pt /  72.0; }
         [[nodiscard]] static double pt_to_mm(double pt) { return pt / 72.0 * 25.4; }
 
+        [[nodiscard]] static inline bool isEdge(Edge edge) {
+            return static_cast<int32_t>(edge) >= 0 && static_cast<int32_t>(edge) < 4;
+        }
+        [[nodiscard]] static inline Edge sanitizedEdge(Edge edge) {
+            return static_cast<int32_t>(edge) >= 0 && static_cast<int32_t>(edge) < 4 ? edge : Edge::Top;
+        }
+
         [[nodiscard]] static double shortestAngleOnCircle(double a, double b) noexcept;
         [[nodiscard]] static double normalizeAngle(double angle) noexcept;
 

@@ -43,7 +43,7 @@ namespace Grain {
             m_grow_step = 1024;
             if (m_capacity > 0) {
                 m_data = (uint8_t*)calloc(m_capacity, 1);
-                if (m_data == nullptr) {
+                if (!m_data) {
                     m_capacity = 0;
                 }
             }
@@ -82,7 +82,7 @@ namespace Grain {
             if (size > m_capacity) {
                 int64_t new_capacity = m_capacity + m_grow_step;
                 auto new_data = (uint8_t*)std::realloc(m_data, new_capacity);
-                if (new_data == nullptr) {
+                if (!new_data) {
                     return nullptr;
                 }
 

@@ -141,9 +141,7 @@ namespace Grain {
             return os;
         }
 
-
         // Operator overloading
-
         RGB& operator = (uint32_t v) { set24bit(v); return *this; }
         RGB& operator = (float v) { m_data[0] = m_data[1] = m_data[2] = v; return *this; }
 
@@ -161,7 +159,6 @@ namespace Grain {
         RGB& operator = (const OKLab& v);
         RGB& operator = (Color::GretagMacbethColor v);
         RGB& operator = (Color::CrayolaColor v);
-
 
         bool operator == (const RGB& v) const {
             return m_data[0] == v.m_data[0] && m_data[1] == v.m_data[1] && m_data[2] == v.m_data[2];
@@ -223,14 +220,16 @@ namespace Grain {
             return *this;
         }
 
-
         // Get
+        [[nodiscard]] virtual bool isValid() noexcept {
+            return (m_data[0] >= 0.0f && m_data[1] >= 0.0f && m_data[2] >= 0.0f);
+        }
+        [[nodiscard]] virtual bool isInvalid() noexcept {
+            return (m_data[0] < 0.0f || m_data[1] < 0.0f || m_data[2] < 0.0f);
+        }
 
-        virtual bool isValid() noexcept { return (m_data[0] >= 0.0f && m_data[1] >= 0.0f && m_data[2] >= 0.0f); }
-        virtual bool isInvalid() noexcept { return (m_data[0] < 0.0f || m_data[1] < 0.0f || m_data[2] < 0.0f); }
-
-        const float* valuePtr() noexcept { return m_data; }
-        float* mutValuePtr() noexcept { return m_data; }
+        [[nodiscard]] const float* valuePtr() noexcept { return m_data; }
+        [[nodiscard]] float* mutValuePtr() noexcept { return m_data; }
         [[nodiscard]] float red() const noexcept { return m_data[0]; }
         [[nodiscard]] float green() const noexcept { return m_data[1]; }
         [[nodiscard]] float blue() const noexcept { return m_data[2]; }
@@ -257,9 +256,7 @@ namespace Grain {
 
         [[nodiscard]] RGB inverted() const noexcept { return RGB(1.0f - m_data[0], 1.0f - m_data[1], 1.0f - m_data[2]); }
 
-
         // Set
-
         virtual void setInvalid() noexcept { m_data[0] = m_data[1] = m_data[2] = -1; }
 
         virtual void black() noexcept { m_data[0] = m_data[1] = m_data[2] = 0.0f; }
@@ -289,75 +286,56 @@ namespace Grain {
         void setOKLCh(float l, float c, float h) noexcept;
         void setSkinColor(Color::SkinType skin_type, float value) noexcept;
         void setKelvin(float temperature) noexcept;
-        void setSystemAndThreeValues(const char* color_system, float a, float b, float c) noexcept;
 
         virtual int32_t setByCSV(const char* csv) noexcept;
 
         void setPosColor(const Vec3d& pos) noexcept;  // TODO: Rename!
         void setByPosOnCircle(float angle, float distance) noexcept;  // TODO: Rename!
 
-
         // Randomize
-
         void random() noexcept;
         void random(float min, float max) noexcept;
         void randomGrey() noexcept;
         void randomGrey(float min, float max) noexcept;
         void randomHSV(float min_h, float max_h, float min_s, float max_s, float min_v, float max_v) noexcept;
 
-
         // Modify
-
         void normalize() noexcept;
-
         void clamp() noexcept;
         void clamp(float max) noexcept;
         void clamp(float min, float max) noexcept;
         void clamp(const RGB& min, const RGB& max) noexcept;
         void clampMin(const RGB& min) noexcept;
         void clampMax(const RGB& max) noexcept;
-
         void invert() noexcept;
         void rotateHue(float angle) noexcept;
-
         virtual void scale(float scale) noexcept;
         void scaleValue(float scale) noexcept;
-
         void applyCDL(const CDL& cdl) noexcept;
         void applyCDL(const CDL_RGB& cdl_rgb) noexcept;
-
         void applyRGBLUT(const LUT1& red_lut, const LUT1& green_lut, const LUT1& blue_lut) noexcept;
-
         void swapRedGreen() noexcept { float temp = m_data[0]; m_data[0] = m_data[1]; m_data[1] = temp; }
         void swapRedBlue() noexcept { float temp = m_data[0]; m_data[0] = m_data[2]; m_data[2] = temp; }
         void swapGreenBlue() noexcept { float temp = m_data[1]; m_data[1] = m_data[2]; m_data[2] = temp; }
         void swap(RGB& color) noexcept { RGB temp = *this; *this = color; color = temp; }
 
-
         // Gamma etc.
-
         void applyPow(float e) noexcept;
-
         void linearTosRGB() noexcept;
         void sRGBToLinear() noexcept;
-
         void sonySLog2ToLinear() noexcept;
         void sonySLog3ToLinear() noexcept;
         void sonyLinearToSLog2() noexcept;
         void sonyLinearToSLog3() noexcept;
 
-
         // Transform
-
         void transform(const Mat3f& matrix) noexcept;
         void transform(const Mat3f& matrix, RGB& out_rgb) const noexcept;
         void transform(const Mat3f& matrix, CIEXYZ& out_xyz) const noexcept;
 
-
         // Blend
-
-        RGB blend(const RGB& rgb, float t) noexcept;
-        void setBlend(const RGB& rgb, float t) noexcept;
+        [[nodiscard]] RGB blend(const RGB& rgb, float t) const noexcept;
+        void setBlend(const RGB& other, float t) noexcept;
         void setBlend(const RGB& a, const RGB& b, float t) noexcept;
         void setBlend(const RGB& a, const RGB& b, const RGB& c, float t) noexcept;
         void setBlendWhite(float t) noexcept;
@@ -366,10 +344,8 @@ namespace Grain {
         void mixbox(const RGB& color1, const RGB& color2, float t) noexcept;
         void mixbox3(const RGB& color1, const RGB& color2, const RGB& color3, float f1, float f2, float f3) noexcept;
 
-
         // Combine
-
-        static RGBCombineFunc rgbCombineFunc(Color::CombineMode combine_mode) noexcept;
+        [[nodiscard]] static RGBCombineFunc rgbCombineFunc(Color::CombineMode combine_mode) noexcept;
 
         static void combineNormal(RGB& a, const RGB& b) noexcept;
         static void combineAdd(RGB& a, const RGB& b) noexcept;
@@ -389,9 +365,7 @@ namespace Grain {
         void writeToMemUInt8(uint8_t* ptr) const noexcept;
         void writeToMemUInt16(uint16_t* ptr) const noexcept;
 
-
         // User interface
-
         [[nodiscard]] bool isValidUiColor() const noexcept { return m_data[0] >= 0; }
         [[nodiscard]] RGB uiTextColor(bool enabled) const noexcept;
         static RGB statusColor(bool selected, bool highlighted, const RGB& bg_color, const RGB& fg_color) noexcept;
@@ -401,9 +375,7 @@ namespace Grain {
             [[nodiscard]] CGColorRef createCGColor(float alpha = 1.0f) const noexcept;
         #endif
 
-
         // Helper
-
         inline static void swap(RGB& a, RGB& b) noexcept {
             RGB temp = a;
             a = b;

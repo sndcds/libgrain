@@ -53,7 +53,7 @@ namespace Grain {
             File::start(flags);
 
             if (m_read_flag) {
-                if (m_ext_audio_file_ref == nullptr) {
+                if (!m_ext_audio_file_ref) {
                     file_path = CFStringCreateWithCString(kCFAllocatorDefault, m_file_path.utf8(), kCFStringEncodingUTF8);
                     if (!file_path) {
                         Exception::throwSpecific(0, "", m_file_path.utf8());
@@ -62,7 +62,7 @@ namespace Grain {
                     file_url = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, file_path, kCFURLPOSIXPathStyle, false);
 
                     OSStatus status = ExtAudioFileOpenURL(file_url, &m_ext_audio_file_ref);
-                    if (status != noErr || m_ext_audio_file_ref == nullptr) {
+                    if (status != noErr || !m_ext_audio_file_ref) {
                         Exception::throwStandard(ErrorCode::FileCantOpen, m_file_path.utf8());
                     }
 
@@ -78,11 +78,11 @@ namespace Grain {
         }
 
 
-        if (file_path != nullptr) {
+        if (file_path) {
             CFRelease(file_path);
         }
 
-        if (file_url != nullptr) {
+        if (file_url) {
             CFRelease(file_url);
         }
 
@@ -92,7 +92,7 @@ namespace Grain {
 
     void SignalFile::setSignalToWrite(const Signal* signal) {
 
-        if (signal != nullptr) {
+        if (signal) {
             setWriteSettings(signal->fileWriteSettings());
         }
         else {
@@ -107,7 +107,7 @@ namespace Grain {
 
     void SignalFile::setWriteSettings(SignalFileWriteSettings write_settings) {
 
-        if (m_ext_audio_file_ref == nullptr) {
+        if (!m_ext_audio_file_ref) {
             m_signal_file_write_settings = write_settings;
             m_ext_audio_file_ref = nullptr;
             m_write_flag = true;
@@ -143,7 +143,7 @@ namespace Grain {
         }
 
         checkBeforeReading();
-        if (m_ext_audio_file_ref == nullptr) {
+        if (!m_ext_audio_file_ref) {
             throw ErrorCode::FileNoHandle;
         }
 
@@ -270,7 +270,7 @@ namespace Grain {
         }
 
         checkBeforeReading();
-        if (m_ext_audio_file_ref == nullptr) {
+        if (!m_ext_audio_file_ref) {
             throw ErrorCode::FileNoHandle;
         }
 
@@ -397,7 +397,7 @@ namespace Grain {
 
     void SignalFile::write(const Signal* signal) {
 
-        if (signal != nullptr) {
+        if (signal) {
             write(signal, 0, signal->length());
         }
     }
@@ -419,7 +419,7 @@ namespace Grain {
                 Exception::throwStandard(ErrorCode::FileCantWrite);
             }
 
-            if (signal == nullptr || offset < 0 || length < 1) {
+            if (!signal || offset < 0 || length < 1) {
                 Exception::throwStandard(ErrorCode::BadArgs);
             }
 
@@ -435,7 +435,7 @@ namespace Grain {
                 Exception::throwStandard(ErrorCode::BadArgs);
             }
 
-            if (m_ext_audio_file_ref != nullptr) {
+            if (m_ext_audio_file_ref) {
                 Exception::throwSpecific(kErrExtAudioFileAllreadyOpen);
             }
 

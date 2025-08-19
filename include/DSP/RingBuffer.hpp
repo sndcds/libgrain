@@ -38,7 +38,7 @@ namespace Grain {
 
         ~RingBuffer() noexcept override {
             if (!m_use_external_mem) {
-                if (m_data != nullptr) {
+                if (m_data) {
                     std::free(m_data);
                 }
             }
@@ -63,7 +63,7 @@ namespace Grain {
         [[nodiscard]] int64_t writePos() const noexcept { return m_write_pos; }
         [[nodiscard]] T* mutDataPtr() const noexcept { return m_data; }
         [[nodiscard]] bool usesExternalMemory() const noexcept { return m_use_external_mem; }
-        [[nodiscard]] bool isUsable() const noexcept { return m_data != nullptr && m_capacity > 0; }
+        [[nodiscard]] bool isUsable() const noexcept { return m_data && m_capacity > 0; }
 
         void clear() noexcept {
             Type::clearArray<T>(m_data, m_capacity);
@@ -72,7 +72,7 @@ namespace Grain {
         }
 
         void clear(int64_t length) noexcept {
-            if (m_data != nullptr) {
+            if (m_data) {
                 int64_t pos = m_write_pos;
                 for (int64_t i = 0; i < length; i++) {
                     m_data[pos] = 0;
@@ -85,7 +85,7 @@ namespace Grain {
         }
 
         T read() noexcept {
-            if (m_data == nullptr) {
+            if (!m_data) {
                 return 0;
             }
             else {
@@ -99,7 +99,7 @@ namespace Grain {
         }
 
         void read(int64_t length, int64_t step, T* out_values) noexcept {
-            if (m_data != nullptr && out_values != nullptr) {
+            if (m_data && out_values) {
                 float *d = out_values;
                 for (int64_t i = 0; i < length; i++) {
                     *d = m_data[m_read_pos];
@@ -141,7 +141,7 @@ namespace Grain {
 
 
         void write(T value) noexcept {
-            if (m_data != nullptr) {
+            if (m_data) {
                 m_data[m_write_pos] = value;
                 m_write_pos++;
                 if (m_write_pos >= m_capacity) {
@@ -151,7 +151,7 @@ namespace Grain {
         }
 
         void write(const T* values, int64_t length) noexcept {
-            if (m_data != nullptr && values != nullptr) {
+            if (m_data && values) {
                 for (int64_t i = 0; i < length; i++) {
                     m_data[m_write_pos] = values[i];
                     m_write_pos++;
@@ -163,7 +163,7 @@ namespace Grain {
         }
 
         void writeAtRelativeIndex(int64_t index, T value) noexcept {
-            if (m_data != nullptr) {
+            if (m_data) {
                 m_data[relativeIndex(index)] = value;
             }
         }
@@ -184,7 +184,7 @@ namespace Grain {
         }
 
         void add(T value) noexcept {
-            if (m_data != nullptr) {
+            if (m_data) {
                 m_data[m_write_pos] += value;
                 m_write_pos++;
                 if (m_write_pos >= m_capacity) {
@@ -194,7 +194,7 @@ namespace Grain {
         }
 
         void add(const T* values, int64_t length) noexcept {
-            if (m_data != nullptr && values != nullptr) {
+            if (m_data && values) {
                 for (int64_t i = 0; i < length; i++) {
                     m_data[m_write_pos] += values[i];
                     m_write_pos++;
@@ -206,7 +206,7 @@ namespace Grain {
         }
 
         void mul(T value) noexcept {
-            if (m_data != nullptr) {
+            if (m_data) {
                 m_data[m_write_pos] *= value;
                 m_write_pos++;
                 if (m_write_pos >= m_capacity) {
@@ -216,7 +216,7 @@ namespace Grain {
         }
 
         void mul(const T* values, int64_t length) noexcept {
-            if (m_data != nullptr && values != nullptr) {
+            if (m_data && values) {
                 for (int64_t i = 0; i < length; i++) {
                     m_data[m_write_pos] *= values[i];
                     m_write_pos++;

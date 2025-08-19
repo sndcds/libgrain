@@ -721,7 +721,7 @@ namespace Grain {
         try {
             m_points.push_back(BezierValueCurvePoint());
             auto point = mutLastPoint();
-            if (point == nullptr) {
+            if (!point) {
                 throw ErrorCode::Specific;
             }
             point->m_bezier_value_curve = this;
@@ -747,7 +747,7 @@ namespace Grain {
             m_points.push_back(BezierValueCurvePoint());
 
             auto point = mutLastPoint();
-            if (point == nullptr) {
+            if (!point) {
                 throw ErrorCode::Specific;
             }
 
@@ -846,7 +846,7 @@ namespace Grain {
 
         auto point_a = mutPointAtIndex(segment_index);
         auto point_b = mutPointAtIndex(segment_index + 1);
-        if (point_a == nullptr || point_b == nullptr) {
+        if (!point_a || !point_b) {
             return false;
         }
 
@@ -958,7 +958,7 @@ namespace Grain {
 
     bool BezierValueCurve::fillLUT(LUT1* lut) noexcept {
 
-        if (lut == nullptr) {
+        if (!lut) {
             return false;
         }
 
@@ -1010,7 +1010,7 @@ namespace Grain {
 
         // TODO: Test, optimization
 
-        if (buffer == nullptr) {
+        if (!buffer) {
             return ErrorCode::NullData;
         }
 
@@ -1146,7 +1146,7 @@ namespace Grain {
             return false;
         }
 
-        if (m_weighted_samples == nullptr) {
+        if (!m_weighted_samples) {
             m_weighted_samples = new(std::nothrow) WeightedSamples(resolution);
         }
         else {
@@ -1155,7 +1155,7 @@ namespace Grain {
             }
         }
 
-        if (m_weighted_samples == nullptr) {
+        if (!m_weighted_samples) {
             // GrApp::addError(Gr::ERR_FATAL, "BezierCurve::_updateWeightedSamples()"); TODO: !!!!
             return false;
         }
@@ -1168,7 +1168,7 @@ namespace Grain {
 
         auto start_point = pointAtIndex(start_point_index);
         auto end_point = pointAtIndex(end_point_index);
-        if (start_point == nullptr || end_point == nullptr) {
+        if (!start_point || !end_point) {
             return false;
         }
 
@@ -1419,7 +1419,7 @@ namespace Grain {
                 min_y = std::min(min_y, point.m_pos.m_y);
                 max_y = std::max(max_y, point.m_pos.m_y);
 
-                if (point.hasVisibleControlPoints() == true) {
+                if (point.hasVisibleControlPoints()) {
                     if (index == 0) {
                         min_x = std::min(min_x, point.m_left_pos.m_x);
                         min_x = std::min(min_x, point.m_right_pos.m_x);

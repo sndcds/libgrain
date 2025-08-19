@@ -163,9 +163,9 @@ namespace Grain {
 
         [[nodiscard]] bool isValid() const noexcept {
             #if defined(__APPLE__) && defined(__MACH__)
-                return m_filter_real != nullptr && m_fft_setup != nullptr;
+                return m_filter_real && m_fft_setup;
             #else
-                return m_filter_real != nullptr;
+                return m_filter_real;
             #endif
         }
 

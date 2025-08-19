@@ -31,7 +31,7 @@ namespace Grain {
      *  This structure is used to associate a CSS named color (e.g., "red", "blue") with its numerical representation.
      */
     struct CSSNamedColor {
-        const char *m_name; ///< The name of the color as a null-terminated string, e.g. Example: `"red"`, `"blue"`, `"chartreuse"`.
+        const char* m_name; ///< The name of the color as a null-terminated string, e.g. Example: `"red"`, `"blue"`, `"chartreuse"`.
         uint32_t m_color;   ///< The numerical value of the color, typically encoded as an integer in a format such as 0xRRGGBB (hexadecimal representation), e.g. `0xFF000000` for red or `0x0000FF00` for blue.
     };
 
@@ -44,7 +44,7 @@ namespace Grain {
      *  including their signature, length, mode, and number of components.
      */
     struct CSSColorFunctionInfo {
-        const char *m_signature;    ///< The system signature string, which represents the beginning of the color definition, including the opening bracket.
+        const char* m_signature;    ///< The system signature string, which represents the beginning of the color definition, including the opening bracket.
         int32_t m_length;           ///< The length of the system signature string.
         CSSColorFunction m_function;///< The color function.
         int32_t m_component_n;      ///< The number of color components required for the system.
@@ -90,14 +90,14 @@ namespace Grain {
         static const CSSColorFunctionInfo _g_color_function_infos[];
 
     public:
-        CSSColor() noexcept;
-        ~CSSColor() noexcept;
+        CSSColor() noexcept = default;
+        ~CSSColor() noexcept = default;
 
-        ErrorCode parseColor(const char *css_str) noexcept;
-        ErrorCode parseHex(const char *str) noexcept;
-        bool parseNamed(const char *str) noexcept;
-        bool parseFunctional(const char *str, ErrorCode &out_err) noexcept;
-        ErrorCode parseColorComponents(const char *str, int32_t str_length, int32_t component_n) noexcept;
+        ErrorCode parseColor(const char* css_str) noexcept;
+        ErrorCode parseHex(const char* str) noexcept;
+        bool parseNamed(const char* str) noexcept;
+        bool parseFunctional(const char* str, ErrorCode& out_err) noexcept;
+        ErrorCode parseColorComponents(const char* str, int32_t str_length, int32_t component_n) noexcept;
 
         bool isValid() const noexcept { return m_valid; }
         bool usesModernSyntax() const noexcept { return m_modern_syntax; }

@@ -115,7 +115,7 @@ namespace Grain {
                 break;
 
             case Event::EventType::RightMouseDown:
-                if (Event::g_mouse_pressed == false && Event::g_right_mouse_pressed == false) {
+                if (!Event::g_mouse_pressed && !Event::g_right_mouse_pressed) {
                     Event::g_right_mouse_pressed = true;
                     Event::g_mouse_down_pos = event->mousePos();
                     Event::g_mouse_drag_count = 0;
@@ -164,7 +164,7 @@ namespace Grain {
 
             case Event::EventType::ScrollWheel:
                 event->_setHasPreciseScrollingDeltas(ns_event.hasPreciseScrollingDeltas);
-                if (Event::g_mouse_pressed == false && Event::g_right_mouse_pressed == false) {
+                if (!Event::g_mouse_pressed && !Event::g_right_mouse_pressed) {
                     event->_setDelta(Vec3d([ns_event deltaX], [ns_event deltaY], [ns_event deltaZ]));
                 }
                 else {
@@ -173,7 +173,7 @@ namespace Grain {
                 break;
 
             case Event::EventType::Magnification:
-                if (Event::g_mouse_pressed == false && Event::g_right_mouse_pressed == false) {
+                if (!Event::g_mouse_pressed && !Event::g_right_mouse_pressed) {
                     event->_setValue(1.0 + [ns_event magnification]);
                 }
                 else {
@@ -182,7 +182,7 @@ namespace Grain {
                 break;
 
             case Event::EventType::Rotation:
-                if (Event::g_mouse_pressed == false && Event::g_right_mouse_pressed == false) {
+                if (!Event::g_mouse_pressed && !Event::g_right_mouse_pressed) {
                     event->_setValue([ns_event rotation]);
                 }
                 else {
@@ -192,7 +192,7 @@ namespace Grain {
 
             case Event::EventType::KeyDown:
 
-                if (Event::g_mouse_pressed == false && Event::g_right_mouse_pressed == false) {
+                if (!Event::g_mouse_pressed && !Event::g_right_mouse_pressed) {
                     NSPoint mouse_location = [NSEvent mouseLocation];
                     NSRect rect = [[ns_view window] convertRectFromScreen:NSMakeRect(mouse_location.x, mouse_location.y, 1, 1)];
                     [ns_view convertPoint:rect.origin fromView:nil];

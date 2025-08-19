@@ -62,7 +62,7 @@ namespace Grain {
 
     Partials::~Partials() noexcept {
 
-        if (m_amplitude_data != nullptr && m_use_extern_mem == false) {
+        if (m_amplitude_data && !m_use_extern_mem) {
             std::free(m_amplitude_data);
         }
     }
@@ -339,7 +339,7 @@ namespace Grain {
 
     bool Partials::set(const Partials* partials) noexcept {
 
-        if (partials != nullptr) {
+        if (partials) {
             int32_t n = std::min(m_resolution, partials->m_resolution);
 
             for (int32_t i = 0; i < n; i++) {
@@ -365,7 +365,7 @@ namespace Grain {
 
     bool Partials::mul(const Partials* partials) noexcept {
 
-        if (partials != nullptr) {
+        if (partials) {
             int32_t n = std::min(m_resolution, partials->m_resolution);
             for (int32_t i = 0; i < n; i++) {
                 m_amplitude_data[i] *= partials->m_amplitude_data[i];
@@ -380,7 +380,7 @@ namespace Grain {
 
     bool Partials::complexMultiply(const Partials* partials) noexcept {
 
-        if (partials != nullptr) {
+        if (partials) {
             float* ar = m_amplitude_data;
             float* ai = m_phase_data;
             float* br = partials->m_amplitude_data;
@@ -405,7 +405,7 @@ namespace Grain {
 
     bool Partials::add(const Partials* partials) noexcept {
 
-        if (partials != nullptr) {
+        if (partials) {
             int32_t n = std::min(m_resolution, partials->m_resolution);
             for (int32_t i = 0; i < n; i++)
                 m_amplitude_data[i] += partials->m_amplitude_data[i];
@@ -518,7 +518,7 @@ namespace Grain {
 
     void Partials::setByBezierValueCurve(BezierValueCurve* bezier_value_curve, int32_t sample_rate, float amount, float shift) noexcept {
 
-        if (bezier_value_curve != nullptr) {
+        if (bezier_value_curve) {
             float root_freq = static_cast<float>(sample_rate) / static_cast<float>(m_resolution) / 2;
             float high_freq = root_freq * static_cast<float>(m_resolution - 1);
 
