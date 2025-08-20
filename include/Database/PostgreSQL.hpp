@@ -14,6 +14,7 @@
 
 #include "Grain.hpp"
 #include "Type/List.hpp"
+#include "Type/ByteOrder.hpp"
 #include "String/String.hpp"
 #include "String/StringList.hpp"
 
@@ -174,15 +175,15 @@ namespace Grain {
             out_string.clear();
 
             // Read metadata
-            int16_t n_digits = ntohs(*ptr++);   // Number of digits
-            int16_t weight = ntohs(*ptr++);     // Position of decimal point
-            int16_t sign = ntohs(*ptr++);       // Sign: 0 = positive, 1 = negative, 2 = NaN
-            int16_t dscale = ntohs(*ptr++);     // Decimal scale
+            int16_t n_digits = ntoh16(*ptr++);   // Number of digits
+            int16_t weight = ntoh16(*ptr++);     // Position of decimal point
+            int16_t sign = ntoh16(*ptr++);       // Sign: 0 = positive, 1 = negative, 2 = NaN
+            int16_t dscale = ntoh16(*ptr++);     // Decimal scale
 
             // Read digit array
             int16_t digits[n_digits];
             for (int32_t i = 0; i < n_digits; ++i) {
-                digits[i] = ntohs(*ptr++);
+                digits[i] = ntoh16(*ptr++);
             }
 
 

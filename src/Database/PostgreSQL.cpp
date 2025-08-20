@@ -148,7 +148,7 @@ namespace Grain {
                     p->m_type = PSQLPropertyType::Integer;
                     int16_t sql_value;
                     std::memcpy(&sql_value, data, sizeof(int16_t));
-                    p->m_integer = ntohs(sql_value);
+                    p->m_integer = ntoh16(sql_value);
                     break;
                 }
 
@@ -156,7 +156,7 @@ namespace Grain {
                     p->m_type = PSQLPropertyType::Integer;
                     int32_t sql_value;
                     std::memcpy(&sql_value, data, sizeof(int32_t));
-                    p->m_integer = ntohl(sql_value);
+                    p->m_integer = ntoh32(sql_value);
                     break;
                 }
 
@@ -164,7 +164,7 @@ namespace Grain {
                     p->m_type = PSQLPropertyType::Integer;
                     int64_t sql_value;
                     std::memcpy(&sql_value, data, sizeof(int64_t));
-                    p->m_integer = ntohll(sql_value);
+                    p->m_integer = ntoh64(sql_value);
                     break;
                 }
 
@@ -172,7 +172,7 @@ namespace Grain {
                     p->m_type = PSQLPropertyType::Integer;
                     uint32_t sql_value;
                     std::memcpy(&sql_value, data, sizeof(uint32_t));
-                    p->m_integer = ntohl(sql_value);
+                    p->m_integer = ntoh32(sql_value);
                     break;
                 }
 
@@ -190,7 +190,7 @@ namespace Grain {
                     p->m_type = PSQLPropertyType::Double;
                     uint32_t sql_value;
                     std::memcpy(&sql_value, data, sizeof(uint32_t));
-                    sql_value = ntohl(sql_value);  // Convert from network byte order to host byte order
+                    sql_value = ntoh32(sql_value);  // Convert from network byte order to host byte order
                     p->m_double = static_cast<double>(*reinterpret_cast<float*>(&sql_value));
                     break;
                 }
@@ -199,7 +199,7 @@ namespace Grain {
                     p->m_type = PSQLPropertyType::Double;
                     uint64_t sql_value;
                     std::memcpy(&sql_value, data, sizeof(uint64_t));
-                    sql_value = ntohll(sql_value);  // Convert from network byte order to host byte order
+                    sql_value = ntoh64(sql_value);  // Convert from network byte order to host byte order
                     p->m_double = *reinterpret_cast<double*>(&sql_value);
                     break;
                 }

@@ -9,6 +9,7 @@
 
 #include "Core/Hardware.hpp"
 #include "Type/Type.hpp"
+#include "Type/ByteOrder.hpp"
 
 #include <sys/socket.h>
 #include <net/if.h>
@@ -89,7 +90,7 @@ namespace Grain {
         }
 
         ip = ((struct sockaddr_in*) &ifr.ifr_addr)->sin_addr.s_addr;
-        ip = ntohl(ip);
+        ip = ntoh32(ip);
 
         out_ip_addr [0] = (ip >> 24) & 0xFF;
         out_ip_addr [1] = (ip >> 16) & 0xFF;

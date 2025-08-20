@@ -135,6 +135,7 @@
 #include "Type/Data.hpp"
 #include "Type/HiResValue.hpp"
 #include "Type/KeyValue.hpp"
+#include "Type/ByteOrder.hpp"
 #include "Type/Object.hpp"
 #include "Type/Fix.hpp"
 #include "Type/Flags.hpp"
