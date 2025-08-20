@@ -255,7 +255,7 @@ namespace Grain {
     }
 #else
     void TextField::draw(const Rectd& dirty_rect) noexcept {
-        #warning "TextField::draw is not implemented for Linux"
+        #warning "TextField::draw() is not implemented for Linux"
     }
 #endif
 
@@ -609,15 +609,12 @@ namespace Grain {
                     case 'a':
                         selectAll();
                         break;
-
                     case 'c':
                         copyToPasteboard();
                         break;
-
                     case 'v':
                         pasteFromPasteboard();
                         break;
-
                     case 'x':
                         if (copyToPasteboard() > 0) {
                             removeSelectedText();
@@ -721,6 +718,7 @@ namespace Grain {
     }
 
 
+#if defined(__APPLE__) && defined(__MACH__)
     int32_t TextField::cursorIndexAtPos(Vec2d pos) noexcept {
         int32_t cursor_index = -1;
         auto style = App::guiStyleAtIndex(m_style_index);
@@ -761,6 +759,11 @@ namespace Grain {
 
         return cursor_index;
     }
+#else
+    int32_t TextField::cursorIndexAtPos(Vec2d pos) noexcept {
+        #warning "TextField::cursorIndexAtPos() is not implemented for Linux"
+    }
+#endif
 
 
     void TextField::_checkSelectionAndCursor() noexcept {
