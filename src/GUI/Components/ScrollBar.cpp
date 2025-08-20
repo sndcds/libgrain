@@ -87,7 +87,7 @@ namespace Grain {
         Rectd bounds_rect = boundsRect();
         RGB bg_color = style->backgroundColor();
 
-        gc.setFillColor(bg_color);
+        gc.setFillRGB(bg_color);
         gc.fillRect(bounds_rect);
 
         m_track_rect = bounds_rect;
@@ -110,7 +110,7 @@ namespace Grain {
         }
 
         RGB handle_color = style->scrollBarColor();
-        gc.setFillColor(handle_color);
+        gc.setFillRGB(handle_color);
         gc.fillRoundBar(m_handle_rect);
 
         gc.restore();

@@ -45,7 +45,7 @@ namespace Grain {
     public:
         CIExyY() noexcept {}
         CIExyY(float x, float y, float Y) noexcept : m_pos(x, y), m_y(Y) {}
-        CIExyY(const RGB &rgb) noexcept;
+        CIExyY(const RGB& rgb) noexcept;
         CIExyY(const CIEXYZ &xyz) noexcept;
 
         ~CIExyY() noexcept {}
@@ -79,7 +79,7 @@ namespace Grain {
         void setY(float y) noexcept { m_y = y; }
 
         void set(float x, float y, float Y) noexcept { m_pos.m_x = x; m_pos.m_y = y; m_y = Y; }
-        void set(const RGB &rgb) noexcept;
+        void set(const RGB& rgb) noexcept;
         void set(const CIEXYZ &xyz) noexcept;
 
         void translate(float tx, float ty) noexcept { m_pos.m_x += tx; m_pos.m_y += ty; }

@@ -53,7 +53,7 @@ namespace Grain {
             return;
         }
 
-        gc.setFillColor(style->backgroundColor());
+        gc.setFillRGBA(style->backgroundColor());
         switch (style->cornerRadiusMode()) {
             case GUIStyle::CornerRadiusMode::No:
                 gc.fillRect(boundsRect());

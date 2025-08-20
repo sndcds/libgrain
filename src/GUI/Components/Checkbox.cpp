@@ -113,7 +113,7 @@ namespace Grain {
             radius = check_rect.m_width / 2;
         }
 
-        gc.setFillColor(background_color);
+        gc.setFillRGBA(background_color);
 
         if (radio_group != 0) {
             gc.fillEllipse(check_rect);
@@ -130,7 +130,7 @@ namespace Grain {
             }
             status_rect.inset(inset_size);
 
-            gc.setFillColor(style->foregroundColor());
+            gc.setFillRGBA(style->foregroundColor());
 
             if (radio_group != 0) {
                 gc.fillEllipse(status_rect);

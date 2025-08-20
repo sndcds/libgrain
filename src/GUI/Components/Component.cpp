@@ -449,7 +449,7 @@ namespace Grain {
 
 
     void Component::drawDummy(Grain::GraphicContext &gc) const noexcept {
-        gc.setStrokeColor(RGBA(1, 0, 0, 1));
+        gc.setStrokeColor(1, 0, 0, 1);
         gc.setStrokeWidth(2);
         auto rect = boundsRect();
         rect.inset(1.0f);
@@ -460,7 +460,7 @@ namespace Grain {
 
 
     void Component::drawRect(GraphicContext& gc, const Rectd& rect) const noexcept {
-        gc.setFillColor({ 0, 0, 1, 1});
+        gc.setFillColor(0, 0, 1, 1);
         gc.fillRect(rect);
     }
 

@@ -43,7 +43,7 @@ namespace Grain {
         Rectd bounds_rect = boundsRect();
         RGB bg_color = { 1, 0, 0 }; // TODO: !!!!!
 
-        gc.setFillColor(bg_color);
+        gc.setFillRGB(bg_color);
         gc.fillRect(bounds_rect);
 
         float divider_size = dividerSize();

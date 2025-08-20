@@ -49,7 +49,7 @@ namespace Grain {
             m_data[1] = s;
             m_data[2] = l;
         }
-        explicit HSL(const RGB &rgb) noexcept { set(rgb); }
+        explicit HSL(const RGB& rgb) noexcept { set(rgb); }
         explicit HSL(const HSV &hsv) noexcept { set(hsv); }
         explicit HSL(const YUV &yuv, Color::Space yuv_color_space) noexcept {
             set(yuv, yuv_color_space);
@@ -80,7 +80,7 @@ namespace Grain {
         }
 
         // Operator overloading
-        HSL& operator = (const RGB &v);
+        HSL& operator = (const RGB& v);
 
         bool operator == (const HSL &v) const {
             return m_data[0] == v.m_data[0] && m_data[1] == v.m_data[1] && m_data[2] == v.m_data[2];

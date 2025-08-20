@@ -202,42 +202,35 @@ namespace Grain {
     }
 #endif
 
-    void GraphicContext::setFillColor(const RGB& color, float alpha) noexcept {
-        m_fill_color.setRGBA(color, alpha);
-#if defined(__APPLE__) && defined(__MACH__)
-        CGContextSetRGBFillColor(m_cg_context, color.m_data[0], color.m_data[1], color.m_data[2], alpha);
-#endif
-    }
-
-
-    void GraphicContext::setFillColor(const RGBA& color) noexcept {
-        m_fill_color = color;
-#if defined(__APPLE__) && defined(__MACH__)
-        CGContextSetRGBFillColor(m_cg_context, color.m_data[0], color.m_data[1], color.m_data[2], color.m_alpha);
-#endif
-    }
-
 
     void GraphicContext::setFillColor(float r, float g, float b, float alpha) noexcept {
         m_fill_color.setRGBA(r, g, b, alpha);
-#if defined(__APPLE__) && defined(__MACH__)
-        CGContextSetRGBFillColor(m_cg_context, r, g, b, alpha);
-#endif
-    }
-
-
-    void GraphicContext::setStrokeColor(const RGB& color, float alpha) noexcept {
-        m_stroke_color.setRGBA(color, alpha);
         #if defined(__APPLE__) && defined(__MACH__)
-            CGContextSetRGBStrokeColor(m_cg_context, color.m_data[0], color.m_data[1], color.m_data[2], alpha);
+            CGContextSetRGBFillColor(m_cg_context, r, g, b, alpha);
         #endif
     }
 
 
-    void GraphicContext::setStrokeColor(const RGBA& color) noexcept {
-        m_stroke_color = color;
+    void GraphicContext::setFillRGB(const RGB& rgb) noexcept {
+        m_fill_color.setRGBA(rgb, 1.0f);
         #if defined(__APPLE__) && defined(__MACH__)
-            CGContextSetRGBStrokeColor(m_cg_context, color.m_data[0], color.m_data[1], color.m_data[2], color.m_alpha);
+            CGContextSetRGBFillColor(m_cg_context, rgb.m_data[0], rgb.m_data[1], rgb.m_data[2], 1.0f);
+        #endif
+    }
+
+
+    void GraphicContext::setFillRGBAndAlpha(const RGB& rgb, float alpha) noexcept {
+        m_fill_color.setRGBA(rgb, alpha);
+        #if defined(__APPLE__) && defined(__MACH__)
+            CGContextSetRGBFillColor(m_cg_context, rgb.m_data[0], rgb.m_data[1], rgb.m_data[2], alpha);
+        #endif
+    }
+
+
+    void GraphicContext::setFillRGBA(const RGBA& rgba) noexcept {
+        m_fill_color = rgba;
+        #if defined(__APPLE__) && defined(__MACH__)
+            CGContextSetRGBFillColor(m_cg_context, rgba.m_data[0], rgba.m_data[1], rgba.m_data[2], rgba.m_alpha);
         #endif
     }
 
@@ -250,33 +243,26 @@ namespace Grain {
     }
 
 
-    void GraphicContext::setDrawColor(const RGB& color, float alpha) noexcept {
-        m_fill_color.setRGBA(color, alpha);
-        m_stroke_color.setRGBA(color, alpha);
+    void GraphicContext::setStrokeRGB(const RGB& rgb) noexcept {
+        m_stroke_color.setRGBA(rgb, 1.0f);
         #if defined(__APPLE__) && defined(__MACH__)
-            CGContextSetRGBFillColor(m_cg_context, color.m_data[0], color.m_data[1], color.m_data[2], alpha);
-            CGContextSetRGBStrokeColor(m_cg_context, color.m_data[0], color.m_data[1], color.m_data[2], alpha);
+            CGContextSetRGBStrokeColor(m_cg_context, rgb.m_data[0], rgb.m_data[1], rgb.m_data[2], 1.0f);
         #endif
     }
 
 
-    void GraphicContext::setDrawColor(const RGBA& color) noexcept {
-        m_fill_color = color;
-        m_stroke_color = color;
+    void GraphicContext::setStrokeRGBAndAlpha(const RGB& rgb, float alpha) noexcept {
+        m_stroke_color.setRGBA(rgb, alpha);
         #if defined(__APPLE__) && defined(__MACH__)
-            CGContextSetRGBFillColor(m_cg_context, color.m_data[0], color.m_data[1], color.m_data[2], color.m_alpha);
-            CGContextSetRGBStrokeColor(m_cg_context, color.m_data[0], color.m_data[1], color.m_data[2], color.m_alpha);
+            CGContextSetRGBStrokeColor(m_cg_context, rgb.m_data[0], rgb.m_data[1], rgb.m_data[2], alpha);
         #endif
     }
 
 
-
-    void GraphicContext::setDrawColor(float r, float g, float b, float alpha) noexcept {
-        m_fill_color.setRGBA(r, g, b, alpha);
-        m_stroke_color.setRGBA(r, g, b, alpha);
+    void GraphicContext::setStrokeRGBA(const RGBA& rgba) noexcept {
+        m_stroke_color = rgba;
         #if defined(__APPLE__) && defined(__MACH__)
-            CGContextSetRGBFillColor(m_cg_context, r, g, b, alpha);
-            CGContextSetRGBStrokeColor(m_cg_context, r, g, b, alpha);
+            CGContextSetRGBStrokeColor(m_cg_context, rgba.m_data[0], rgba.m_data[1], rgba.m_data[2], rgba.m_alpha);
         #endif
     }
 
@@ -1768,14 +1754,14 @@ drawIcon(icon, icon->getCenteredRect(rect), icon_color, icon_alpha);
         Rectd roundRect = rect;
         if (bg_alpha > 0) {
 
-            setFillColor(bg_color, bg_alpha);
+            setFillRGBAndAlpha(bg_color, bg_alpha);
             fillRoundRect(roundRect, radius1, radius2, radius3, radius4);
 
             if (border_width > 0) {
 
                 roundRect.inset(border_width * 0.5f);
                 setStrokeWidth(border_width);
-                setStrokeColor(border_color, border_alpha);
+                setStrokeRGBAndAlpha(border_color, border_alpha);
                 strokeRoundRect(roundRect, radius1, radius2, radius3, radius4);
             }
         }
@@ -2086,7 +2072,7 @@ drawIcon(icon, icon->getCenteredRect(rect), icon_color, icon_alpha);
             textRect.m_width += 10;
             textRect.m_height = std::round(App::uiFont()->lineHeight() * 1.2f);
 
-            setFillColor(m_debug_bg_color);
+            setFillRGB(m_debug_bg_color);
             fillRect(textRect);
 
             textRect.insetLeft(5);
@@ -2250,7 +2236,8 @@ drawIcon(icon, icon->getCenteredRect(rect), icon_color, icon_alpha);
         high_pitch = std::clamp<int16_t>(high_pitch, low_pitch, 255);
 
         save();
-        setDrawColor(0, 0.06f);
+        setFillGrayAndAlpha(0, 0.06f);
+        setStrokeGrayAndAlpha(0, 0.06f);
 
         for (int32_t i = low_pitch; i <= high_pitch; i++) {
 
@@ -2262,17 +2249,17 @@ drawIcon(icon, icon->getCenteredRect(rect), icon_color, icon_alpha);
             double w = x1 - x0;
 
             if (i == marked_pitch) {
-                setFillColor(mark_color,  alpha + (1.0f - alpha) / 3);
+                setFillRGBAndAlpha(mark_color,  alpha + (1.0f - alpha) / 3);
             }
             else if (Audio::pitchIsBlackKey(i)) {
-                setFillColor(dark_color, alpha);
+                setFillRGBAndAlpha(dark_color, alpha);
             }
             else {
-                setFillColor(light_color, alpha);
+                setFillRGBAndAlpha(light_color, alpha);
             }
             fillRect(x0, y0, w, y1 - y0);
 
-            setFillColor(bg_color);
+            setFillRGB(bg_color);
             fillRect(x0 - w / 24, y0, w / 12, y1 - y0);
         }
 

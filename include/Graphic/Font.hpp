@@ -142,7 +142,7 @@ namespace Grain {
         [[nodiscard]] FontAttributes* buildAttributes(const RGB& color, float alpha = 1.0f) const noexcept;
 
         /* TODO: macOS ...
-        static NSDictionary* buildNSFontAttributes(const Font &font, const RGB &color, float alpha) noexcept;
+        static NSDictionary* buildNSFontAttributes(const Font &font, const RGB& color, float alpha) noexcept;
          */
     };
 

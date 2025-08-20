@@ -150,7 +150,7 @@ namespace Grain {
             Rectd bounds_rect = boundsRect();
 
             if (m_fills_bg) {
-                gc.setFillColor(style->viewColor());
+                gc.setFillRGBA(style->viewColor());
                 gc.fillRect(bounds_rect);
             }
             else {

@@ -103,7 +103,7 @@ namespace Grain {
             text_color.setBlend(background_color, 0.5f);
         }
 
-        gc.setFillColor(background_color);
+        gc.setFillRGBA(background_color);
         gc.fillRect(boundsRect());
 
         int32_t text_length = textLength();
@@ -215,7 +215,7 @@ namespace Grain {
                 if (!isEnabled()) {
                 }
 
-                gc.setFillColor(selection_background_color);
+                gc.setFillRGBA(selection_background_color);
                 gc.fillRect(rect);
             }
 
@@ -269,7 +269,7 @@ namespace Grain {
             if (!isEnabled()) {
             }
 
-            gc.setFillColor(color);
+            gc.setFillRGB(color);
             gc.fillRect(rect);
         }
     }

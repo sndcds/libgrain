@@ -46,9 +46,9 @@ namespace Grain {
                       << std::endl;
     }
 
-    void CairoContext::setFillColor(const RGB& color, float alpha) noexcept {
-        m_fill_color.setRGBA(color, alpha);
-        cairo_set_source_rgba((::cairo_t*)_m_cairo_cr, color.red(), color.green(), color.blue(), alpha);
+    void CairoContext::setFillRGBAndAlpha(const RGB& rgb, float alpha) noexcept {
+        m_fill_color.setRGBA(rgb, alpha);
+        cairo_set_source_rgba((::cairo_t*)_m_cairo_cr, rgb.red(), rgb.green(), rgb.blue(), alpha);
     }
 
     void CairoContext::fillRect(const Rectd& rect) noexcept {

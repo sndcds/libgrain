@@ -262,7 +262,7 @@ namespace Grain {
     }
 
 
-    bool CSVLineParser::nextRGB(RGB &out_color) noexcept {
+    bool CSVLineParser::nextRGB(RGB& out_color) noexcept {
 
         float values[3];
         int32_t result = nextFloats(3, values);

@@ -1283,7 +1283,7 @@ namespace Grain {
     }
 
 
-    void Image::clear(const RGB &color) noexcept {
+    void Image::clear(const RGB& color) noexcept {
 
         switch (m_color_model) {
             case Color::Model::RGB:
@@ -1479,7 +1479,7 @@ namespace Grain {
             GraphicContext gc(this);
             beginDraw();
 
-            gc.setStrokeColor(1, 0, 0);
+            gc.setStrokeRGB({ 1, 0, 0 });
             gc.setStrokeWidth(2);
             gc.strokeRect(rect);
 

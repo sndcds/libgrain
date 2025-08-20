@@ -194,21 +194,22 @@ namespace Grain {
             #endif
         }
 
-        void setOpaque() const noexcept { setAlpha(1.0f); }
+        virtual void setOpaque() const noexcept { setAlpha(1.0f); }
 
-        void setFillClearColor() noexcept { setFillColor(1, 0); }
-        virtual void setFillColor(const RGB& color, float alpha = 1.0f) noexcept;
-        void setFillColor(const RGBA& color) noexcept;
-        void setFillColor(float r, float g, float b, float alpha = 1.0f) noexcept;
-        void setFillColor(float v, float alpha = 1.0f) noexcept { setFillColor(v, v, v, alpha); }
-        void setStrokeColor(const RGB& color, float alpha = 1.0f) noexcept;
-        void setStrokeColor(const RGBA& color) noexcept;
-        void setStrokeColor(float r, float g, float b, float alpha = 1.0f) noexcept;
-        void setStrokeColor(float v, float alpha = 1.0f) noexcept { setStrokeColor(v, v, v, alpha); }
-        void setDrawColor(const RGB& color, float alpha = 1.0f) noexcept;
-        void setDrawColor(const RGBA& color) noexcept;
-        void setDrawColor(float r, float g, float b, float alpha = 1.0f) noexcept;
-        void setDrawColor(float v, float alpha = 1.0f) noexcept { setDrawColor(v, v, v, alpha); }
+        virtual void setFillClearColor() noexcept { setFillColor(1.0f, 1.0f, 1.0f, 0.0f); }
+        virtual void setFillColor(float r, float g, float b, float alpha) noexcept;
+        virtual void setFillGray(float grey) noexcept { setFillColor(grey, grey, grey, 1.0f); }
+        virtual void setFillGrayAndAlpha(float grey, float alpha) noexcept { setFillColor(grey, grey, grey, alpha); }
+        virtual void setFillRGB(const RGB& rgb) noexcept;
+        virtual void setFillRGBAndAlpha(const RGB& rgb, float alpha) noexcept;
+        virtual void setFillRGBA(const RGBA& rgba) noexcept;
+
+        virtual void setStrokeColor(float r, float g, float b, float alpha) noexcept;
+        virtual void setStrokeGray(float grey) noexcept { setStrokeColor(grey, grey, grey, 1.0f); }
+        virtual void setStrokeGrayAndAlpha(float grey, float alpha) noexcept { setStrokeColor(grey, grey, grey, alpha); }
+        virtual void setStrokeRGB(const RGB& rgb) noexcept;
+        virtual void setStrokeRGBAndAlpha(const RGB& rgb, float alpha) noexcept;
+        virtual void setStrokeRGBA(const RGBA& rgba) noexcept;
 
         void setDebugFgColor(const RGBA& color) noexcept { m_debug_fg_color = color; }
         void setDebugBgColor(const RGBA& color) noexcept { m_debug_bg_color = color; }

@@ -89,7 +89,7 @@ namespace Grain {
         void enableHorizontal() { setCanScrollHorizontal(true); }
         void enableVertical() { setCanScrollVertical(true); }
 
-        void setScrollBarColor(const RGB &color) noexcept;
+        void setScrollBarColor(const RGB& color) noexcept;
 
         void geometryChanged() noexcept override;
 

@@ -22,7 +22,7 @@ namespace Grain {
     public:
         explicit CairoContext(Image* image) noexcept;
 
-        void setFillColor(const RGB& color, float alpha) noexcept override;
+        void setFillRGBAndAlpha(const RGB& rgb, float alpha) noexcept override;
         void fillRect(const Rectd& rect) noexcept override;
     };
 }
