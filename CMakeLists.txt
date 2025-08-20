@@ -21,8 +21,8 @@ if (APPLE)
 elseif (UNIX AND NOT APPLE)
     include_directories(
             /usr/include
+            /usr/include/postgresql/
             /usr/local/include
-            # Add anything specific to Ubuntu
     )
     link_directories(
             /usr/lib
