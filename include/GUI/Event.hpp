@@ -28,7 +28,13 @@ namespace Grain {
 
     class Component;
 
-#if defined(__APPLE__) && defined(__MACH__)
+    /**
+     *  @brief
+     *  GrainLib internally uses macOS key codes for keyboard input.
+     *
+     *  On other platforms, keyboard event codes must be converted or mapped
+     *  to the corresponding macOS key codes in the event loop.
+     */
     enum KeyCode {
         Enter = 0x0003,                 // NSEnterCharacter
         Backspace = 0x0008,             // NSBackspaceCharacter
@@ -119,85 +125,6 @@ namespace Grain {
         FunctionHelp = 0xF746,          // NSHelpFunctionKey
         FunctionModeSwitch = 0xF747,    // NSModeSwitchFunctionKey
     };
-#else
-    enum KeyCode {
-        Enter          = SDLK_RETURN,      // Enter / CarriageReturn
-        Backspace      = SDLK_BACKSPACE,   // Backspace
-        Tab            = SDLK_TAB,         // Tab
-        NewLine        = SDLK_RETURN,      // NewLine (same as Enter)
-        FormFeed       = SDLK_UNKNOWN,     // No direct SDL equivalent
-        CarriageReturn = SDLK_RETURN,      // CarriageReturn
-        BackTab        = SDLK_UNKNOWN,     // No direct SDL equivalent
-        Delete         = SDLK_DELETE,      // Delete
-        LineSeparator  = SDLK_UNKNOWN,     // No direct SDL equivalent
-        ParagraphSeparator = SDLK_UNKNOWN, // No direct SDL equivalent
-
-        FunctionUpArrow    = SDLK_UP,      // Up arrow
-        FunctionDownArrow  = SDLK_DOWN,    // Down arrow
-        FunctionLeftArrow  = SDLK_LEFT,    // Left arrow
-        FunctionRightArrow = SDLK_RIGHT,   // Right arrow
-
-        FunctionF1  = SDLK_F1,
-        FunctionF2  = SDLK_F2,
-        FunctionF3  = SDLK_F3,
-        FunctionF4  = SDLK_F4,
-        FunctionF5  = SDLK_F5,
-        FunctionF6  = SDLK_F6,
-        FunctionF7  = SDLK_F7,
-        FunctionF8  = SDLK_F8,
-        FunctionF9  = SDLK_F9,
-        FunctionF10 = SDLK_F10,
-        FunctionF11 = SDLK_F11,
-        FunctionF12 = SDLK_F12,
-        FunctionF13 = SDLK_F13,
-        FunctionF14 = SDLK_F14,
-        FunctionF15 = SDLK_F15,
-        FunctionF16 = SDLK_F16,
-        FunctionF17 = SDLK_F17,
-        FunctionF18 = SDLK_F18,
-        FunctionF19 = SDLK_F19,
-        FunctionF20 = SDLK_F20,
-        FunctionF21 = SDLK_F21,
-        FunctionF22 = SDLK_F22,
-        FunctionF23 = SDLK_F23,
-        FunctionF24 = SDLK_F24,
-
-        FunctionInsert     = SDLK_INSERT,
-        FunctionDelete     = SDLK_DELETE,
-        FunctionHome       = SDLK_HOME,
-        FunctionBegin      = SDLK_UNKNOWN,  // No direct SDL equivalent
-        FunctionEnd        = SDLK_END,
-        FunctionPageUp     = SDLK_PAGEUP,
-        FunctionPageDown   = SDLK_PAGEDOWN,
-        FunctionPrintScreen= SDLK_PRINTSCREEN,
-        FunctionScrollLock = SDLK_UNKNOWN,  // No direct SDL equivalent
-        FunctionPause      = SDLK_PAUSE,
-
-        FunctionSysReq     = SDLK_UNKNOWN,
-        FunctionBreak      = SDLK_UNKNOWN,
-        FunctionReset      = SDLK_UNKNOWN,
-        FunctionStop       = SDLK_UNKNOWN,
-        FunctionMenu       = SDLK_UNKNOWN,
-        FunctionUser       = SDLK_UNKNOWN,
-        FunctionSystem     = SDLK_UNKNOWN,
-        FunctionPrint      = SDLK_PRINTSCREEN,
-        FunctionClearLine  = SDLK_UNKNOWN,
-        FunctionClearDisplay = SDLK_UNKNOWN,
-        FunctionInsertLine = SDLK_UNKNOWN,
-        FunctionDeleteLine = SDLK_UNKNOWN,
-        FunctionInsertChar = SDLK_UNKNOWN,
-        FunctionDeleteChar = SDLK_UNKNOWN,
-        FunctionPrev       = SDLK_UNKNOWN,
-        FunctionNext       = SDLK_UNKNOWN,
-        FunctionSelect     = SDLK_UNKNOWN,
-        FunctionExecute    = SDLK_UNKNOWN,
-        FunctionUndo       = SDLK_UNKNOWN,
-        FunctionRedo       = SDLK_UNKNOWN,
-        FunctionFind       = SDLK_UNKNOWN,
-        FunctionHelp       = SDLK_HELP,
-        FunctionModeSwitch = SDLK_UNKNOWN
-    };
-#endif
 
     class Event {
     public:
@@ -390,38 +317,6 @@ namespace Grain {
         void rightMousePressedFinished() const noexcept { Event::g_right_mouse_pressed = false; }
 
         [[nodiscard]] double distanceFromMouse(Vec2d pos) const noexcept { return m_mouse_pos.distance(pos); }
-
-        /* macos!!!!
-        [[nodiscard]] static uint32_t _keyMaskFromNSEvent(const NSEvent* ns_event) noexcept {
-            uint32_t key_mask = 0x0;
-            NSEventModifierFlags modifier_flags = [ns_event modifierFlags];
-            if (modifier_flags & NSEventModifierFlagCapsLock) { key_mask |= KeyMask_CapsLock; }
-            if (modifier_flags & NSEventModifierFlagShift) { key_mask |= KeyMask_Shift; }
-            if (modifier_flags & NSEventModifierFlagControl) { key_mask |= KeyMask_Control; }
-            if (modifier_flags & NSEventModifierFlagOption) { key_mask |= KeyMask_Alternate; }
-            if (modifier_flags & NSEventModifierFlagCommand) { key_mask |= KeyMask_Command; }
-            if (modifier_flags & NSEventModifierFlagNumericPad) { key_mask |= KeyMask_NumericPad; }
-            if (modifier_flags & NSEventModifierFlagHelp) { key_mask |= KeyMask_Help; }
-            if (modifier_flags & NSEventModifierFlagFunction) { key_mask |= KeyMask_Function; }
-            return key_mask;
-        }
-         */
-
-        /* macos!!!!
-        [[nodiscard]] static CGEventFlags _keyMaskToCGEventFlags(uint32_t key_mask) noexcept {
-            CGEventFlags flags = 0x0;
-            if (key_mask & KeyMask_Shift) { flags |= kCGEventFlagMaskShift; }
-            if (key_mask & KeyMask_Control) { flags |= kCGEventFlagMaskControl; }
-            if (key_mask & KeyMask_Alternate) { flags |= kCGEventFlagMaskAlternate; }
-            if (key_mask & KeyMask_Command) { flags |= kCGEventFlagMaskCommand; }
-            if (key_mask & KeyMask_NumericPad) { flags |= kCGEventFlagMaskNumericPad; }
-            if (key_mask & KeyMask_Help) { flags |= kCGEventFlagMaskHelp; }
-            if (key_mask & KeyMask_CapsLock) { flags |= kCGEventFlagMaskAlphaShift; }
-            if (key_mask & KeyMask_Function) { flags |= kCGEventFlagMaskSecondaryFn; }
-
-            return flags;
-        }
-         */
     };
 
 
