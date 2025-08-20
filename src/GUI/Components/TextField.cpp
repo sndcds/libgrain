@@ -762,6 +762,8 @@ namespace Grain {
 #else
     int32_t TextField::cursorIndexAtPos(Vec2d pos) noexcept {
         #warning "TextField::cursorIndexAtPos() is not implemented for Linux"
+        // TODO: Implement!
+        return 0;
     }
 #endif
 

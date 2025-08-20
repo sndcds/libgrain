@@ -27,7 +27,7 @@ namespace Grain {
         T m_height = 0;
 
     public:
-        Dimension() noexcept : m_width(static_type<T>(0)), m_height(static_type<T>(0)) {}
+        Dimension() noexcept : m_width(static_cast<T>(0)), m_height(static_cast<T>(0)) {}
         Dimension(T width, T height) noexcept : m_width(width), m_height(height) {}
         explicit Dimension(const char* csv, char delimiter = ',') noexcept { setByCSV(csv, delimiter); }
         explicit Dimension(const String& csv, char delimiter = ',') noexcept { setByCSV(csv, delimiter); }
