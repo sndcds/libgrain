@@ -18,6 +18,11 @@
 #include "Math/Vec3.hpp"
 #include "Time/Timestamp.hpp"
 
+#if defined(__APPLE__) && defined(__MACH__)
+#else
+    #include <SDL2/SDL.h>
+#endif
+
 
 namespace Grain {
 
@@ -115,7 +120,83 @@ namespace Grain {
         FunctionModeSwitch = 0xF747,    // NSModeSwitchFunctionKey
     };
 #else
-    // TODO: Implement for KeyCodes for Linux
+    enum KeyCode {
+        Enter          = SDLK_RETURN,      // Enter / CarriageReturn
+        Backspace      = SDLK_BACKSPACE,   // Backspace
+        Tab            = SDLK_TAB,         // Tab
+        NewLine        = SDLK_RETURN,      // NewLine (same as Enter)
+        FormFeed       = SDLK_UNKNOWN,     // No direct SDL equivalent
+        CarriageReturn = SDLK_RETURN,      // CarriageReturn
+        BackTab        = SDLK_UNKNOWN,     // No direct SDL equivalent
+        Delete         = SDLK_DELETE,      // Delete
+        LineSeparator  = SDLK_UNKNOWN,     // No direct SDL equivalent
+        ParagraphSeparator = SDLK_UNKNOWN, // No direct SDL equivalent
+
+        FunctionUpArrow    = SDLK_UP,      // Up arrow
+        FunctionDownArrow  = SDLK_DOWN,    // Down arrow
+        FunctionLeftArrow  = SDLK_LEFT,    // Left arrow
+        FunctionRightArrow = SDLK_RIGHT,   // Right arrow
+
+        FunctionF1  = SDLK_F1,
+        FunctionF2  = SDLK_F2,
+        FunctionF3  = SDLK_F3,
+        FunctionF4  = SDLK_F4,
+        FunctionF5  = SDLK_F5,
+        FunctionF6  = SDLK_F6,
+        FunctionF7  = SDLK_F7,
+        FunctionF8  = SDLK_F8,
+        FunctionF9  = SDLK_F9,
+        FunctionF10 = SDLK_F10,
+        FunctionF11 = SDLK_F11,
+        FunctionF12 = SDLK_F12,
+        FunctionF13 = SDLK_F13,
+        FunctionF14 = SDLK_F14,
+        FunctionF15 = SDLK_F15,
+        FunctionF16 = SDLK_F16,
+        FunctionF17 = SDLK_F17,
+        FunctionF18 = SDLK_F18,
+        FunctionF19 = SDLK_F19,
+        FunctionF20 = SDLK_F20,
+        FunctionF21 = SDLK_F21,
+        FunctionF22 = SDLK_F22,
+        FunctionF23 = SDLK_F23,
+        FunctionF24 = SDLK_F24,
+
+        FunctionInsert     = SDLK_INSERT,
+        FunctionDelete     = SDLK_DELETE,
+        FunctionHome       = SDLK_HOME,
+        FunctionBegin      = SDLK_UNKNOWN,  // No direct SDL equivalent
+        FunctionEnd        = SDLK_END,
+        FunctionPageUp     = SDLK_PAGEUP,
+        FunctionPageDown   = SDLK_PAGEDOWN,
+        FunctionPrintScreen= SDLK_PRINTSCREEN,
+        FunctionScrollLock = SDLK_UNKNOWN,  // No direct SDL equivalent
+        FunctionPause      = SDLK_PAUSE,
+
+        FunctionSysReq     = SDLK_UNKNOWN,
+        FunctionBreak      = SDLK_UNKNOWN,
+        FunctionReset      = SDLK_UNKNOWN,
+        FunctionStop       = SDLK_UNKNOWN,
+        FunctionMenu       = SDLK_UNKNOWN,
+        FunctionUser       = SDLK_UNKNOWN,
+        FunctionSystem     = SDLK_UNKNOWN,
+        FunctionPrint      = SDLK_PRINTSCREEN,
+        FunctionClearLine  = SDLK_UNKNOWN,
+        FunctionClearDisplay = SDLK_UNKNOWN,
+        FunctionInsertLine = SDLK_UNKNOWN,
+        FunctionDeleteLine = SDLK_UNKNOWN,
+        FunctionInsertChar = SDLK_UNKNOWN,
+        FunctionDeleteChar = SDLK_UNKNOWN,
+        FunctionPrev       = SDLK_UNKNOWN,
+        FunctionNext       = SDLK_UNKNOWN,
+        FunctionSelect     = SDLK_UNKNOWN,
+        FunctionExecute    = SDLK_UNKNOWN,
+        FunctionUndo       = SDLK_UNKNOWN,
+        FunctionRedo       = SDLK_UNKNOWN,
+        FunctionFind       = SDLK_UNKNOWN,
+        FunctionHelp       = SDLK_HELP,
+        FunctionModeSwitch = SDLK_UNKNOWN
+    };
 #endif
 
     class Event {

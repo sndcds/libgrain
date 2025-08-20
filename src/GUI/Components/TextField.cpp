@@ -255,7 +255,7 @@ namespace Grain {
     }
 #else
     void TextField::draw(const Rectd& dirty_rect) noexcept {
-
+        #warning "TextField::draw is not implemented for Linux"
     }
 #endif
 
