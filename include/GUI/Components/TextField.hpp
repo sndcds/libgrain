@@ -1,5 +1,5 @@
 //
-//  Textfield.hpp
+//  TextField.hpp
 //
 //  Created by Roald Christesen on from 02.05.2015
 //  Copyright (C) 2025 Roald Christesen. All rights reserved.
@@ -9,21 +9,20 @@
 //  LastChecked: 18.08.2025
 //
 
-#ifndef GrainTextfield_hpp
-#define GrainTextfield_hpp
+#ifndef GrainTextField_hpp
+#define GrainTextField_hpp
 
 #include "Grain.hpp"
-#include "GUI/Component.hpp"
+#include "Component.hpp"
 #include "Type/Type.hpp"
 #include "Type/Fix.hpp"
 
 
 namespace Grain {
 
-    class Textfield : public Component {
+    class TextField : public Component {
 
     protected:
-
         Fix m_value = 0;
         Fix m_min = -1000000;
         Fix m_max = 1000000;
@@ -57,14 +56,14 @@ namespace Grain {
         float m_padding[4];
 
     public:
-        Textfield(const Rectd& rect) noexcept;
-        virtual ~Textfield() noexcept;
+        TextField(const Rectd& rect) noexcept;
+        virtual ~TextField() noexcept;
 
-        const char* className() const noexcept override { return "Textfield"; }
+        const char* className() const noexcept override { return "TextField"; }
 
 
-        static Textfield* add(View* view, const Rectd& rect, const char* text = nullptr, int32_t tag = 0);
-        static Textfield* add(View* view, const Rectd& rect, Component* receiver, ComponentAction action, int32_t tag, void* action_ref);
+        static TextField* add(View* view, const Rectd& rect, const char* text = nullptr, int32_t tag = 0);
+        static TextField* add(View* view, const Rectd& rect, Component* receiver, ComponentAction action, int32_t tag, void* action_ref);
 
 
         void draw(const Rectd& dirty_rect) noexcept override;
@@ -113,7 +112,7 @@ namespace Grain {
         void setReceiverComponent(Component* receiver) noexcept override {
             m_receiver_component = receiver;
             if (m_receiver_component) {
-                m_receiver_component->setTextfield(this);
+                m_receiver_component->setTextField(this);
             }
         }
 
@@ -200,4 +199,4 @@ namespace Grain {
 
 } // End of namespace Grain
 
-#endif // GrainTextfield_hpp
+#endif // GrainTextField_hpp

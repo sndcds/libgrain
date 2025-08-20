@@ -32,7 +32,7 @@
 #include "Image/Image.hpp"
 #include "Signal/Audio.hpp"
 #include "DSP/Freq.hpp"
-#include "GUI/Component.hpp"
+#include "GUI/Components/Component.hpp"
 // #include "Icon.hpp"  TODO !!!!!
 // #include "GrPDFWriter.hpp"  TODO !!!!!
 

@@ -105,13 +105,16 @@ add_library(libgrain STATIC
 
         src/GUI/Screen.cpp
         src/GUI/Window.cpp
-        src/GUI/Component.cpp
-        src/GUI/ValueComponent.cpp
-        src/GUI/View.cpp
-        src/GUI/Event.cpp
+        src/GUI/Components/Component.cpp
+        src/GUI/Components/ValueComponent.cpp
+        src/GUI/Components/ScrollBar.cpp
         src/GUI/Components/Button.cpp
         src/GUI/Components/Checkbox.cpp
-        src/GUI/Components/Textfield.cpp
+        src/GUI/Components/TextField.cpp
+        src/GUI/Views/View.cpp
+        src/GUI/Views/ScrollView.cpp
+        src/GUI/Views/SplitView.cpp
+        src/GUI/Event.cpp
         src/GUI/GUIStyle.cpp
 
         src/Graphic/GraphicContext.cpp

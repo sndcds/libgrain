@@ -7,7 +7,7 @@
 //  This file is part of GrainLib, see <https://grain.one>.
 //
 
-#include "GUI/View.hpp"
+#include "GUI/Views/View.hpp"
 #include "Graphic/GraphicContext.hpp"
 #include "App/App.hpp"
 
@@ -16,6 +16,7 @@ namespace Grain {
 
     #if defined(__APPLE__) && defined(__MACH__)
         void _macosView_addComponent(Component* paren, Component* component, Component::AddFlags flags);
+        void _macosView_removeFromSuperview(Component* component);
     #endif
 
 
@@ -87,6 +88,28 @@ namespace Grain {
     }
 
 
+    void View::removeComponent(Component* component) noexcept {
+        if (component) {
+            int32_t index = 0;
+
+            for (auto c : m_components) {
+                if (c == component) {
+                    // TODO: !!!!! Check mFirstKeyComponent and mCurrKeyComponent ...
+                    // if (c == mFirstKeyComponent)
+                    // if (c == mCurrKeyComponent)
+                    m_components.removeAtIndex(index);
+                    break;
+                }
+                index++;
+            }
+
+            #if defined(__APPLE__) && defined(__MACH__)
+                _macosView_removeFromSuperview(component);
+            #endif
+        }
+    }
+
+
     bool View::hasDescendant(const Component *component) noexcept {
         for (auto c : m_components) {
             if (c == component) {
@@ -108,6 +131,13 @@ namespace Grain {
                     component->deselectWithoutChecking();
                 }
             }
+        }
+    }
+
+
+    void View::geometryChanged() noexcept {
+        for (auto component : m_components) {
+            component->parentGeometryChanged();
         }
     }
 

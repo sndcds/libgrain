@@ -42,15 +42,15 @@ namespace Grain {
         }
 
         Vec3Fix operator + (const Vec3Fix& other) const {
-            return Vec3Fix(m_x + other.m_x, m_y + other.m_y, m_z + other.m_z);
+            return { m_x + other.m_x, m_y + other.m_y, m_z + other.m_z };
         }
 
         Vec3Fix operator - (const Vec3Fix& other) const {
-            return Vec3Fix(m_x - other.m_x, m_y - other.m_y, m_z - other.m_z);
+            return { m_x - other.m_x, m_y - other.m_y, m_z - other.m_z };
         }
 
         Vec3Fix operator * (const Vec3Fix& other) const {
-            return Vec3Fix(m_x * other.m_x, m_y * other.m_y, m_z * other.m_z);
+            return { m_x * other.m_x, m_y * other.m_y, m_z * other.m_z };
         }
 
         [[nodiscard]] Fix x() const noexcept { return m_x; }
@@ -101,7 +101,7 @@ namespace Grain {
         }
 
 
-        bool setByCSV(const String& string, const char delimiter) noexcept;
+        bool setByCSV(const String& string, char delimiter) noexcept;
 
         void vec3f(Vec3f& out_vec) const noexcept {
             out_vec.m_x = m_x.asFloat();

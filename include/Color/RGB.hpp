@@ -106,8 +106,9 @@ namespace Grain {
 
     public:
         RGB() noexcept = default;
+        RGB(float r, float g, float b) noexcept;
+
         explicit RGB(float value) noexcept;
-        explicit RGB(float r, float g, float b) noexcept;
         explicit RGB(int32_t r, int32_t g, int32_t b, int32_t max) noexcept;
         explicit RGB(const float* values) noexcept;
         explicit RGB(const RGB& rgb, float scale) noexcept;

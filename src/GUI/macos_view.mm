@@ -6,8 +6,8 @@
 
 #include "Grain.hpp"
 #include "App/App.hpp"
-#include "GUI/View.hpp"
-#include "GUI/Component.hpp"
+#include "GUI/Views/View.hpp"
+#include "GUI/Components/Component.hpp"
 #include "GUI/Event.hpp"
 #include "2d/Rect.hpp"
 #include "String/String.hpp"
@@ -34,6 +34,10 @@ namespace Grain {
         auto component_ns_view = (NSView*)component->nsView();
         component_ns_view.wantsLayer = (flags & Component::AddFlags::kWantsLayer) ? YES : NO;
         [parent_ns_view addSubview:component_ns_view];
+    }
+
+    void _macosView_removeFromSuperview(Component* component) {
+        [(NSView*)component->nsView() removeFromSuperview];
     }
 
     void _macosView_setNeedsDisplay(const Component* component) {
@@ -65,6 +69,10 @@ namespace Grain {
         [(NSView*)component->nsView() setAlphaValue:opacity];
     }
 
+    void _macosView_setHidden(Component* component, bool hidden) {
+        [(NSView*)component->nsView() setHidden:hidden];
+    }
+
     bool _macosView_isKeyView(const Component* component) {
         auto ns_view = (GrainNSView*)component->nsView();
         auto ns_window = (GrainNSWindow*)[ns_view window];
@@ -89,8 +97,16 @@ namespace Grain {
         [(NSView*)component->nsView() setFrame:frame];
     }
 
+    void _macosView_setFrameOrigin(Component* component, double x, double y) {
+        [(NSView*)component->nsView() setFrameOrigin:NSMakePoint(x, y)];
+    }
+
+    void _macosView_setFrameSize(Component* component, double width, double height) {
+        [(NSView*)component->nsView() setFrameSize:NSMakeSize(width, height)];
+    }
+
     void _macosView_setContextByComponent(GraphicContext* gc, Component* component) {
-         gc->_init();
+        gc->_init();
         gc->macos_setCGContextByComponent([[NSGraphicsContext currentContext] CGContext], component);
     }
 }

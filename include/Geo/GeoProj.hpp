@@ -30,16 +30,11 @@ namespace Grain {
      */
     class GeoProj : public Object {
 
-    protected:
-        void* m_proj_context{};     ///< Pointer to PROJ context, see https://proj.org
-        void* m_proj{};             ///< Pointer to PROJ context, see https://proj.org
-        String m_src_crs;
-        String m_dst_crs;
-        GepProjTransformAction m_transform_action{};
-        bool m_must_update = true;
-        bool m_ignore = false;      // Ignore transformation, if `m_src_crs`and `m_dst_crs` are the same.
-
-        RemapRectd m_remap_rect;
+    public:
+        enum class Direction {
+            Forward = 1,
+            Backward = -1
+        };
 
     public:
         GeoProj() noexcept;
@@ -62,7 +57,10 @@ namespace Grain {
             _update();
         }
 
-        ~GeoProj() noexcept;
+        ~GeoProj() noexcept override;
+
+        [[nodiscard]] virtual const char* className() const noexcept override { return "GeoProj"; }
+
 
         friend std::ostream& operator << (std::ostream& os, const GeoProj* o) {
             o == nullptr ? os << "nullptr" : os << *o;
@@ -121,20 +119,22 @@ namespace Grain {
             m_remap_rect.set(src_rect, dst_rect, flip_y);
         }
 
-        bool transform(const Vec2d& pos, Vec2d& out_pos, bool inverse = false) noexcept;
-        bool transform(Vec2d& pos, bool inverse = false) noexcept { return transform(pos, pos, inverse); }
-        bool transform(Vec2d* pos, bool inverse = false) noexcept {
+        bool transform(const Vec2d& pos, Vec2d& out_pos, Direction direction = Direction::Forward) noexcept;
+        bool transform(Vec2d& pos, Direction direction = Direction::Forward) noexcept {
+            return transform(pos, pos, direction);
+        }
+        bool transform(Vec2d* pos, Direction direction = Direction::Forward) noexcept {
             if (pos != nullptr) {
-                return transform(*pos, *pos, inverse);
+                return transform(*pos, *pos, direction);
             }
             else {
                 return false;
             }
         }
-        bool transform(Vec2d* pos, int32_t n, bool inverse = false) noexcept {
+        bool transform(Vec2d* pos, int32_t n, Direction direction = Direction::Forward) noexcept {
             if (pos != nullptr) {
                 for (int32_t i = 0; i < n; i++) {
-                    if (!transform(*pos, *pos, inverse)) {
+                    if (!transform(*pos, *pos, direction)) {
                         return false;
                     }
                 }
@@ -145,13 +145,13 @@ namespace Grain {
             }
         }
 
-        bool transform(const RangeRectd& range_rect, RangeRectd& out_range_rect, bool inverse = false) noexcept;
-        bool transform(RangeRectd& range_rect, bool inverse = false) noexcept;
+        bool transform(const RangeRectd& range_rect, RangeRectd& out_range_rect, Direction direction = Direction::Forward) noexcept;
+        bool transform(RangeRectd& range_rect, Direction direction = Direction::Forward) noexcept;
 
-        bool transform(const RangeRectFix& range_rect, RangeRectFix& out_range_rect, bool inverse = false) noexcept;
-        bool transform(RangeRectFix& range_rect, bool inverse = false) noexcept;
+        bool transform(const RangeRectFix& range_rect, RangeRectFix& out_range_rect, Direction direction = Direction::Forward) noexcept;
+        bool transform(RangeRectFix& range_rect, Direction direction = Direction::Forward) noexcept;
 
-        bool transform(Quadrilateral& quadrilateral, bool inverse = false) noexcept;
+        bool transform(Quadrilateral& quadrilateral, Direction direction = Direction::Forward) noexcept;
 
 
         bool transformToViewport(const Vec2d& pos, Vec2d& out_pos) noexcept;
@@ -180,6 +180,17 @@ namespace Grain {
         static bool earthProject3857To4326(const Vec2d& pos, Vec2d& out_pos) noexcept;
 
         ErrorCode _update() noexcept;
+
+    protected:
+        void* m_proj_context{};     ///< Pointer to PROJ context, see https://proj.org
+        void* m_proj{};             ///< Pointer to PROJ context, see https://proj.org
+        String m_src_crs;
+        String m_dst_crs;
+        GepProjTransformAction m_transform_action{};
+        bool m_must_update = true;
+        bool m_ignore = false;      // Ignore transformation, if `m_src_crs`and `m_dst_crs` are the same.
+
+        RemapRectd m_remap_rect;
     };
 
 

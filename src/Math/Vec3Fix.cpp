@@ -28,8 +28,7 @@ namespace Grain {
      *
      *  @note On success, the vector's internal fixed-point values are updated.
      */
-    bool Vec3Fix::setByCSV(const String& string, const char delimiter) noexcept {
-
+    bool Vec3Fix::setByCSV(const String& string, char delimiter) noexcept {
         char buffer[3 * 100]; // Assuming maximum float representation size is 100 characters
         if (string.splitFast(delimiter, 3, 100, buffer) == 3) {
             set(&buffer[0], &buffer[100], &buffer[200]);

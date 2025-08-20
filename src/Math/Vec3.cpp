@@ -13,7 +13,7 @@
 
 namespace Grain {
 
-    template <class T>
+    template <ScalarType T>
     void Vec3<T>::readFromFile(File& file) {
         m_x = file.readValue<T>();
         m_y = file.readValue<T>();
@@ -25,7 +25,7 @@ namespace Grain {
     template void Vec3<float>::readFromFile(File&);
     template void Vec3<double>::readFromFile(File&);
 
-    template <class T>
+    template <ScalarType T>
     void Vec3<T>::writeToFile(File& file) {
         file.writeValue<T>(m_x);
         file.writeValue<T>(m_y);

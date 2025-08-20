@@ -25,7 +25,7 @@ namespace Grain {
     class RGBA;
     class Component;
     class View;
-    class Textfield;
+    class TextField;
     class Event;
     class Font;
     class Text;
@@ -59,7 +59,7 @@ namespace Grain {
             TransportButton,
             CheckBox,
             Toggle,
-            Textfield,
+            TextField,
             TextEditor,
             Knob,
             Slider,
@@ -142,6 +142,7 @@ namespace Grain {
         bool enable() noexcept { return setEnabled(true); }
         bool disable() noexcept { return setEnabled(false); }
         void toggleEnabled() noexcept{ setEnabled(!m_is_enabled); }
+        void setVisibility(bool visibility) noexcept;
 
         [[nodiscard]] bool isSelected() const noexcept { return m_is_selected; }
         virtual void setSelected(bool selected) noexcept { m_is_selected = selected; needsDisplay(); }
@@ -222,7 +223,7 @@ namespace Grain {
         }
         virtual void setByComponent(Component* component) noexcept {}
         virtual void setReceiverComponent(Component* component) noexcept { m_receiver_component = component; }
-        virtual void setTextfield(Textfield* textfield) noexcept { m_textfield = textfield; }
+        virtual void setTextField(TextField* textfield) noexcept { m_textfield = textfield; }
 
         void setAction(ComponentAction action) noexcept { setAction(action, nullptr); }
         void setAction(ComponentAction action, void* action_ref) noexcept {
@@ -252,10 +253,12 @@ namespace Grain {
 
         // Geometry
         void setRect(const Rectd& rect) noexcept;
+        void setPosition(double x, double y) noexcept;
+        void setDimension(double width, double height) noexcept;
         void setEdgeAligned() noexcept;
         void setEdgeAligned(Alignment alignment, float top, float right, float bottom, float left) noexcept;
         virtual void geometryChanged() noexcept {}
-        void parentGeometryChanged() noexcept;
+        virtual void parentGeometryChanged() noexcept;
 
         // Radio Group
         [[nodiscard]] virtual int32_t radioGroup() const noexcept { return std::numeric_limits<int32_t>::max(); }
@@ -268,7 +271,7 @@ namespace Grain {
         [[nodiscard]] bool isHighlighted() const noexcept { return m_is_highlighted; }
         virtual void setHighlighted(bool highlighted) noexcept;
         void highlight() noexcept { setHighlighted(true); }
-        void dehighlight() noexcept { setHighlighted(false); }
+        void deHighlight() noexcept { setHighlighted(false); }
 
         // Delayed
         [[nodiscard]] bool isDelayed() const noexcept { return m_is_delayed; }
@@ -410,7 +413,7 @@ namespace Grain {
         bool m_is_modified_since_mouse_down = false;
 
         // Connected components
-        Textfield* m_textfield{};
+        TextField* m_textfield{};
         // Label* m_label{}; GUI!!!
         // ColorWell* m_color_well{}; GUI!!!
         Component* m_receiver_component{};

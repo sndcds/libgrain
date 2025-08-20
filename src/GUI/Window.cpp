@@ -9,7 +9,7 @@
 
 #include "GUI/Window.hpp"
 #include "GUI/Screen.hpp"
-#include "GUI/View.hpp"
+#include "GUI/Views/View.hpp"
 #include "App/App.hpp"
 #include "Math/Vec2.hpp"
 #include "2d/Rect.hpp"

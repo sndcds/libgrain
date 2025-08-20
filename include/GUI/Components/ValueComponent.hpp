@@ -13,7 +13,7 @@
 #define GrainValueComponent_hpp
 
 #include "Grain.hpp"
-#include "GUI/Component.hpp"
+#include "GUI/Components/Component.hpp"
 
 
 namespace Grain {
@@ -99,7 +99,7 @@ namespace Grain {
         void setupReal(double min, double max, double offset, double def, double step, double big_step) noexcept;
         void setFractionalDigits(int32_t fractional_digits) noexcept;
 
-        // void setTextfield(Textfield* textfield) noexcept override; !!!!!
+        // void setTextField(TextField* textfield) noexcept override; !!!!!
         void setByComponent(Component* component) noexcept override;
 
         void setIndicatorVisibility(bool indicator_visibility) noexcept { m_indicator_visibility = indicator_visibility; needsDisplay(); }

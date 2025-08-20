@@ -6,7 +6,7 @@
 //
 //  This file is part of GrainLib, see <https://grain.one>.
 //
-//  LastChecked: 19.07.2025
+//  LastChecked: 19.08.2025
 //
 
 #ifndef GrainVec2_hpp
@@ -29,10 +29,7 @@ namespace Grain {
     class CSVLineParser;
 
 
-    template<typename T>
-    concept arithmetic = std::is_arithmetic_v<T>;
-
-    template <arithmetic T>
+    template <ScalarType T>
     class Vec2 {
     public:
         Vec2() noexcept : m_x(static_cast<T>(0)), m_y(static_cast<T>(0)) {}
@@ -1332,6 +1329,9 @@ namespace Grain {
         #if defined(__APPLE__) && defined(__MACH__)
             [[nodiscard]] CGPoint cgPoint() const noexcept { return CGPointMake(m_x, m_y); }
         #endif
+
+        void writeToFile(File& file);
+        void readFromFile(File& file);
 
     public:
         T m_x;

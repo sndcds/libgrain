@@ -19,7 +19,7 @@
 namespace Grain {
 
     /**
-     *  @class KeyValuePair
+     *  @struct KeyValuePair
      *  @brief A templated key-value pair structure for storing string keys and associated values.
      *
      *  This struct is designed to store values associated with keys. The special value

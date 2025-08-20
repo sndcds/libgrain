@@ -34,7 +34,7 @@ namespace Grain {
      *  empowers you to efficiently perform complex spatial transformations,
      *  offering accuracy and flexibility in calculations.
      */
-    template <class T>
+    template <ScalarType T>
     class Mat3 {
     public:
         Mat3() { identity(); }

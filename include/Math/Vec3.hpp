@@ -6,7 +6,7 @@
 //
 //  This file is part of GrainLib, see <https://grain.one>.
 //
-//  LastChecked: 13.07.2025
+//  LastChecked: 19.08.2025
 //
 
 #ifndef GrainVec3_hpp
@@ -22,7 +22,7 @@ namespace Grain {
 
     class File;
 
-    template <class T>
+    template <ScalarType T>
     class Vec3 {
     public:
         Vec3() noexcept : m_x(static_cast<T>(0)), m_y(static_cast<T>(0)), m_z(static_cast<T>(0)) {}
@@ -153,16 +153,12 @@ namespace Grain {
             return distance(v) <= threshold;
         }
 
-
-
-
         [[nodiscard]] double angle(const Vec3& v) const noexcept {
             T dot = m_x * v.m_x + m_y * v.m_y + m_z * v.m_z;
             T l1 = m_x * m_x + m_y * m_y + m_z * m_z;
             T l2 = v.m_x * v.m_x + v.m_y * v.m_y + v.m_z * v.m_z;
             return std::acos(dot / std::sqrt(l1 * l2)) * 180.0 / std::numbers::pi;
         }
-
 
         void set(T x, T y, T z) noexcept { m_x = x; m_y = y; m_z = z; }
 

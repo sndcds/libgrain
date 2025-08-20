@@ -101,7 +101,7 @@ namespace Grain {
                     }
                 }
 
-                dehighlight();
+                deHighlight();
                 event.mousePressedFinished();
             }
         }
@@ -132,7 +132,7 @@ namespace Grain {
             }
         }
 
-        dehighlight();
+        deHighlight();
     }
 
 } // End of namespace Grain

@@ -24,7 +24,6 @@
 
 namespace Grain {
 
-
     class GraphicContext;
     class GraphicPathPoint;
     class Bezier;

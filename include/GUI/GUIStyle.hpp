@@ -84,8 +84,10 @@ namespace Grain {
         [[nodiscard]] RGBA textSelectionBackgroundColor() const noexcept { return m_text_selection_background_color; }
         [[nodiscard]] RGBA textInfoColor() const noexcept { return m_text_info_color; }
         [[nodiscard]] RGBA textCursorColor() const noexcept { return m_text_cursor_color; }
+        [[nodiscard]] RGBA scrollBarColor() const { return { 1, 0, 0, 1 }; }
 
         [[nodiscard]] float labelGap() const { return m_label_gap; }
+        [[nodiscard]] float scrollBarPadding() const { return 3.0f; }
 
 
         void setViewColor(const RGBA& color) { m_view_color = color; }

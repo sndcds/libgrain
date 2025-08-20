@@ -1,5 +1,5 @@
 //
-//  Textfield.hpp
+//  TextField.hpp
 //
 //  Created by Roald Christesen on from 02.05.2015
 //  Copyright (C) 2025 Roald Christesen. All rights reserved.
@@ -7,8 +7,8 @@
 //  This file is part of GrainLib, see <https://grain.one>.
 //
 
-#include "GUI/Components/Textfield.hpp"
-#include "GUI/View.hpp"
+#include "GUI/Components/TextField.hpp"
+#include "GUI/Views/View.hpp"
 #include "GUI/Event.hpp"
 #include "Graphic/GraphicContext.hpp"
 #include "Graphic/Font.hpp"
@@ -18,8 +18,8 @@
 
 namespace Grain {
 
-    Textfield::Textfield(const Rectd& rect) noexcept : Component(rect, 0) {
-        m_type = ComponentType::Textfield;
+    TextField::TextField(const Rectd& rect) noexcept : Component(rect, 0) {
+        m_type = ComponentType::TextField;
         m_can_get_focus = true;
         m_text_alignment = Alignment::Left;
         m_is_editable = true;
@@ -30,13 +30,13 @@ namespace Grain {
     }
 
 
-    Textfield::~Textfield() noexcept {
+    TextField::~TextField() noexcept {
         std::free(m_info_text);
     }
 
 
-    Textfield* Textfield::add(View* view, const Rectd& rect, const char* text, int32_t tag) {
-        auto textfield = (Textfield*)Component::addComponentToView((Component*)new(std::nothrow) Textfield(rect), view, AddFlags::kNone);
+    TextField* TextField::add(View* view, const Rectd& rect, const char* text, int32_t tag) {
+        auto textfield = (TextField*)Component::addComponentToView((Component*)new(std::nothrow) TextField(rect), view, AddFlags::kNone);
 
         if (textfield) {
             textfield->setText(text);
@@ -47,17 +47,17 @@ namespace Grain {
     }
 
 
-    Textfield* Textfield::add(View* view, const Rectd& rect, Component* receiver, ComponentAction action, int32_t tag, void* action_ref) {
-        Textfield* textfield = nullptr;
+    TextField* TextField::add(View* view, const Rectd& rect, Component* receiver, ComponentAction action, int32_t tag, void* action_ref) {
+        TextField* textfield = nullptr;
 
         if (view) {
-            textfield = new(std::nothrow) Textfield(rect);
+            textfield = new(std::nothrow) TextField(rect);
 
             if (textfield) {
                 textfield->setTag(tag);
 
                 if (receiver) {
-                    receiver->setTextfield(textfield);
+                    receiver->setTextField(textfield);
                 }
                 textfield->setAction(action, action_ref);
                 view->addComponent(textfield, AddFlags::kNone);
@@ -69,7 +69,7 @@ namespace Grain {
 
 
 #if defined(__APPLE__) && defined(__MACH__)
-    void Textfield::draw(const Rectd& dirty_rect) noexcept {
+    void TextField::draw(const Rectd& dirty_rect) noexcept {
         GraphicContext gc(this);
         gc.disableFontSubpixelQuantization();
 
@@ -254,12 +254,12 @@ namespace Grain {
         }
     }
 #else
-    void Textfield::draw(const Rectd& dirty_rect) noexcept {
+    void TextField::draw(const Rectd& dirty_rect) noexcept {
 
     }
 #endif
 
-    void Textfield::drawCursor(GraphicContext& gc, float x) const noexcept {
+    void TextField::drawCursor(GraphicContext& gc, float x) const noexcept {
         if (auto style = guiStyle()) {
             Rectd rect = contentRect();
             rect.m_x = x - 1;
@@ -275,7 +275,7 @@ namespace Grain {
     }
 
 
-    bool Textfield::setEnabled(bool enabled) noexcept {
+    bool TextField::setEnabled(bool enabled) noexcept {
         bool result = Component::setEnabled(enabled);
 
         if (result && !enabled) {
@@ -287,7 +287,7 @@ namespace Grain {
     }
 
 
-    void Textfield::setNumberMode(bool mode) noexcept {
+    void TextField::setNumberMode(bool mode) noexcept {
         if (mode != m_is_number_mode) {
             m_is_number_mode = mode;
             if (m_is_number_mode) {
@@ -299,7 +299,7 @@ namespace Grain {
     }
 
 
-    void Textfield::stepNumber(bool use_big_step, bool negative) noexcept {
+    void TextField::stepNumber(bool use_big_step, bool negative) noexcept {
         Fix step = use_big_step ? m_big_step : m_step;
 
         if (negative) {
@@ -336,7 +336,7 @@ namespace Grain {
     }
 
 
-    bool Textfield::setSelection(int32_t begin, int32_t end) noexcept {
+    bool TextField::setSelection(int32_t begin, int32_t end) noexcept {
         bool changed = false;
         int32_t max = textLength();
 
@@ -367,7 +367,7 @@ namespace Grain {
     }
 
 
-    bool Textfield::setCursor(int32_t cursor_index, bool selection_mode) noexcept {
+    bool TextField::setCursor(int32_t cursor_index, bool selection_mode) noexcept {
         if (selection_mode) {
             setSelection(m_selection_drag_start, cursor_index);
         }
@@ -386,7 +386,7 @@ namespace Grain {
     }
 
 
-    bool Textfield::moveCursor(int32_t offset, bool shift_pressed) noexcept {
+    bool TextField::moveCursor(int32_t offset, bool shift_pressed) noexcept {
         int32_t new_cursor_index = std::clamp<int32_t>(m_cursor_index + offset, 0, textLength());
 
         if (new_cursor_index != m_cursor_index) {
@@ -405,7 +405,7 @@ namespace Grain {
     }
 
 
-    bool Textfield::selectWordAtCursor() noexcept {
+    bool TextField::selectWordAtCursor() noexcept {
         bool result = false;
 
         if (m_text) {
@@ -445,7 +445,7 @@ namespace Grain {
     }
 
 
-    bool Textfield::removeSelection() noexcept {
+    bool TextField::removeSelection() noexcept {
         if (m_selection_begin >= 0) {
             m_selection_begin = -1;
             m_selection_end = -1;
@@ -459,7 +459,7 @@ namespace Grain {
     }
 
 
-    bool Textfield::removeCharAheadOfCursor() noexcept {
+    bool TextField::removeCharAheadOfCursor() noexcept {
         if (m_text && m_is_editable && m_cursor_index > 0) {
             m_text->remove(m_cursor_index - 1, 1);
             m_cursor_index--;
@@ -475,7 +475,7 @@ namespace Grain {
     }
 
 
-    bool Textfield::removeSelectedText() noexcept {
+    bool TextField::removeSelectedText() noexcept {
         if (m_text && m_is_editable && hasSelection()) {
             m_text->remove(m_selection_begin, m_selection_end - m_selection_begin);
             setCursor(m_selection_begin);
@@ -493,7 +493,7 @@ namespace Grain {
     }
 
 
-    void Textfield::insertText(const char* text) noexcept {
+    void TextField::insertText(const char* text) noexcept {
         if (m_text && m_is_editable && text && strlen(text) > 0) {
             removeSelectedText();
 
@@ -508,7 +508,7 @@ namespace Grain {
     }
 
 
-    void Textfield::updateEdit() noexcept {
+    void TextField::updateEdit() noexcept {
         bool value_changed = false;
 
         if (m_is_number_mode && m_text) {
@@ -529,7 +529,7 @@ namespace Grain {
     }
 
 
-    void Textfield::handleMouseDown(const Event& event) noexcept {
+    void TextField::handleMouseDown(const Event& event) noexcept {
         m_cursor_must_be_visible = true;
 
         if (event.isMouseDoubleClicked()) {
@@ -566,7 +566,7 @@ namespace Grain {
     }
 
 
-    void Textfield::handleMouseDrag(const Event& event) noexcept {
+    void TextField::handleMouseDrag(const Event& event) noexcept {
         m_cursor_must_be_visible = true;
         int32_t new_cursor_index = cursorIndexAtPos(event.mousePos());
 
@@ -574,7 +574,7 @@ namespace Grain {
     }
 
 
-    void Textfield::handleMouseUp(const Event& event) noexcept {
+    void TextField::handleMouseUp(const Event& event) noexcept {
         m_cursor_must_be_visible = true;
 
         if (isDelayed()) {
@@ -585,11 +585,11 @@ namespace Grain {
             toggleSelection();
         }
 
-        dehighlight();
+        deHighlight();
     }
 
 
-    void Textfield::handleScrollWheel(const Event& event) noexcept {
+    void TextField::handleScrollWheel(const Event& event) noexcept {
         m_cursor_must_be_visible = false;
         m_text_x_offset += event.deltaX() * App::scrollWheelSpeed();
 
@@ -597,7 +597,7 @@ namespace Grain {
     }
 
 
-    void Textfield::handleKeyDown(const Event& event) noexcept {
+    void TextField::handleKeyDown(const Event& event) noexcept {
         m_cursor_must_be_visible = true;
         int32_t new_cursor_index = -1;
         uint32_t key_char = event.keyChar();
@@ -706,13 +706,13 @@ namespace Grain {
     }
 
 
-    void Textfield::becomeFirstResponder() noexcept {
+    void TextField::becomeFirstResponder() noexcept {
         selectAll();
         needsDisplay();
     }
 
 
-    void Textfield::resignFirstResponder() noexcept {
+    void TextField::resignFirstResponder() noexcept {
         updateEdit();
         m_cursor_index = 0;
         m_selection_begin = m_selection_end = -1;
@@ -721,7 +721,7 @@ namespace Grain {
     }
 
 
-    int32_t Textfield::cursorIndexAtPos(Vec2d pos) noexcept {
+    int32_t TextField::cursorIndexAtPos(Vec2d pos) noexcept {
         int32_t cursor_index = -1;
         auto style = App::guiStyleAtIndex(m_style_index);
 
@@ -763,7 +763,7 @@ namespace Grain {
     }
 
 
-    void Textfield::_checkSelectionAndCursor() noexcept {
+    void TextField::_checkSelectionAndCursor() noexcept {
         m_selection_begin = std::clamp<int32_t>(m_selection_begin, 0, textLength());
         m_selection_end = std::clamp<int32_t>(m_selection_end, m_selection_begin, textLength());
 
@@ -773,7 +773,7 @@ namespace Grain {
     }
 
 
-    int32_t Textfield::copyToPasteboard() noexcept {
+    int32_t TextField::copyToPasteboard() noexcept {
         int32_t result = 0;
 
         if (m_text && hasSelection()) {
@@ -785,7 +785,7 @@ namespace Grain {
     }
 
 
-    int32_t Textfield::pasteFromPasteboard() noexcept {
+    int32_t TextField::pasteFromPasteboard() noexcept {
         int32_t result = 0;
 
         if (m_text) {

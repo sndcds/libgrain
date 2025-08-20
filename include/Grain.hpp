@@ -40,6 +40,10 @@ namespace Grain {
 
     using fourcc_t = uint32_t;
 
+    // Scalar = anything that behaves like a number
+    template <typename T>
+    concept ScalarType = std::integral<T> || std::floating_point<T>;
+
 
     /**
      *  @brief Enumeration representing various data types or value classes.

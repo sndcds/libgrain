@@ -34,7 +34,7 @@ namespace Grain {
      *  `Mat4` empowers you to handle complex spatial transformations with precision and efficiency,
      *  facilitating accurate computations in a 3D environment.
      */
-    template <class T>
+    template <ScalarType T>
     class Mat4 {
     public:
         Mat4() noexcept { identity(); }

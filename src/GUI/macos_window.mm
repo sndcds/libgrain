@@ -7,7 +7,7 @@
 #include "Grain.hpp"
 #include "App/App.hpp"
 #include "GUI/Window.hpp"
-#include "GUI/View.hpp"
+#include "GUI/Views/View.hpp"
 #include "GUI/Screen.hpp"
 #include "2d/Rect.hpp"
 
@@ -168,11 +168,11 @@ namespace Grain {
 
 
 - (void)windowDidResize:(NSNotification*)notification {
-    double content_width = ((NSView*)self.contentView).frame.size.width;
-    double content_height = ((NSView*)self.contentView).frame.size.height;
+    double width = ((NSView*)self.contentView).frame.size.width;
+    double height = ((NSView*)self.contentView).frame.size.height;
     Grain::View* root_view = m_window->rootView();
-    if (root_view != nullptr) {
-        root_view->setRect(Grain::Rectd(0, 0, content_width, content_height));
+    if (root_view) {
+        root_view->setRect(Grain::Rectd(0, 0, width, height));
     }
 }
 

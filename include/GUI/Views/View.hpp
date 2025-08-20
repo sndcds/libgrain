@@ -12,12 +12,13 @@
 #ifndef GrainView_hpp
 #define GrainView_hpp
 
-#include "GUI/Component.hpp"
+#include "GUI/Components/Component.hpp"
 
 
 namespace Grain {
 
     class View : public Component {
+
     public:
         explicit View(int32_t tag = 0) noexcept;
         explicit View(const Rectd& rect, int32_t tag = 0) noexcept;
@@ -30,14 +31,17 @@ namespace Grain {
 
         virtual View* addView(const Rectd& rect) noexcept;
         Component* addComponent(Component* component, AddFlags flags) noexcept;
+        void removeComponent(Component* component) noexcept;
 
         [[nodiscard]] ObjectList<Component*> components() noexcept { return m_components; }
         [[nodiscard]] bool hasDescendant(const Component* component) noexcept override;
 
         void deselectRadioGroup(int32_t radio_group) noexcept override;
 
-        void draw(const Rectd& dirty_rect) noexcept override;
+        void geometryChanged() noexcept override; // TODO: Implement!!!!!
+        void setSplitViewFlag(bool flag) noexcept { m_split_view_flag = flag; }
 
+        void draw(const Rectd& dirty_rect) noexcept override;
 
     protected:
         Component* m_first_key_component = nullptr;

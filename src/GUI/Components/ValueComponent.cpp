@@ -7,7 +7,7 @@
 //  This file is part of GrainLib, see <https://grain.one>.
 //
 
-#include "GUI/ValueComponent.hpp"
+#include "GUI/Components/ValueComponent.hpp"
 #include "Color/Gradient.hpp"
 
 
@@ -74,7 +74,7 @@ namespace Grain {
     }
 
     /* !!!!!
-    void ValueComponent::setTextfield(Textfield* textfield) noexcept {
+    void ValueComponent::setTextField(TextField* textfield) noexcept {
 
         if (textfield != m_textfield) {
             m_textfield = textfield;

@@ -9,10 +9,10 @@
 
 #include <utility>
 
-#include "GUI/Component.hpp"
-#include "GUI/View.hpp"
+#include "GUI/Components/Component.hpp"
+#include "GUI/Views/View.hpp"
 #include "GUI/Event.hpp"
-#include "GUI/Components/Textfield.hpp"
+#include "GUI/Components/TextField.hpp"
 #include "App/App.hpp"
 #include "String/String.hpp"
 #include "Color/RGBA.hpp"
@@ -31,9 +31,12 @@ namespace Grain {
         void _macosView_selectNextKeyView(Component* component);
         void _macosView_interpretKeyEvent(Component* component, const Event& event);
         void _macosView_setOpacity(Component* component, float opacity);
+        void _macosView_setHidden(Component* component, bool hidden);
         bool _macosView_isKeyView(const Component* component);
         bool _macosView_gotoView(Component* component);
         void _macosView_setFrame(Component* component, Rectd& rect);
+        void _macosView_setFrameOrigin(Component* component, double x, double y);
+        void _macosView_setFrameSize(Component* component, double width, double height);
     #endif
 
 
@@ -102,6 +105,17 @@ namespace Grain {
         */
 
         return result;
+    }
+
+    void Component::setVisibility(bool visibility) noexcept {
+        if (m_textfield != nullptr) {
+            m_textfield->setVisibility(visibility);
+        }
+
+        m_is_visible = visibility;
+        #if defined(__APPLE__) && defined(__MACH__)
+            _macosView_setHidden(this, !m_is_visible);
+        #endif
     }
 
 
@@ -217,6 +231,40 @@ namespace Grain {
                 _macosView_setFrame(this, m_rect);
             #endif
 
+            needsDisplay();
+        }
+    }
+
+    void Component::setPosition(double x, double y) noexcept {
+        if (x != m_rect.m_x || y != m_rect.m_y) {
+            m_rect.m_x = x;
+            m_rect.m_y = y;
+
+            #if defined(__APPLE__) && defined(__MACH__)
+                _macosView_setFrameOrigin(this, x, y);
+            #endif
+
+            needsDisplay();
+        }
+    }
+
+
+    void Component::setDimension(double width, double height) noexcept {
+        if (width < 0) {
+            width = 0;
+        }
+        if (height < 0) {
+            height = 0;
+        }
+        if (width != m_rect.m_width || height != m_rect.m_height) {
+            m_rect.m_width = width;
+            m_rect.m_height = height;
+
+            #if defined(__APPLE__) && defined(__MACH__)
+                _macosView_setFrameSize(this, width, height);
+            #endif
+
+            geometryChanged();
             needsDisplay();
         }
     }

@@ -13,8 +13,8 @@
 #define GrainButton_hpp
 
 #include "Grain.hpp"
-#include "GUI/Component.hpp"
-#include "GUI/View.hpp"
+#include "Component.hpp"
+#include "GUI/Views/View.hpp"
 
 
 namespace Grain {

@@ -23,41 +23,36 @@ namespace Grain {
     }
 
     GeoProj::~GeoProj() noexcept {
-        if (m_proj != nullptr) {
+        if (m_proj) {
             proj_destroy((PJ*)m_proj);
         }
 
-        if (m_proj_context != nullptr) {
+        if (m_proj_context) {
             proj_context_destroy((PJ_CONTEXT*)m_proj_context);
         }
     }
 
 
     bool GeoProj::isValid() noexcept {
-
-        return _update() == ErrorCode::None && m_proj_context != nullptr && m_proj != nullptr;
+        return _update() == ErrorCode::None && m_proj_context && m_proj;
     }
 
 
     ErrorCode GeoProj::setSrcCrsByFile(const String& file_path) noexcept {
-
         return m_src_crs.loadText(file_path);
     }
 
 
     ErrorCode GeoProj::setDstCrsByFile(const String& file_path) noexcept {
-
         return m_dst_crs.loadText(file_path);
     }
 
 
-    bool GeoProj::transform(const Vec2d& pos, Vec2d& out_pos, bool inverse) noexcept {
+    bool GeoProj::transform(const Vec2d& pos, Vec2d& out_pos, Direction direction) noexcept {
+        const PJ_DIRECTION pj_direction = direction == Direction::Forward ? PJ_FWD : PJ_INV;
 
-        static const PJ_DIRECTION directions[2] = { PJ_FWD, PJ_INV };
-
-        if (m_transform_action != nullptr) {
-            // Call specific method.
-            return m_transform_action(pos, out_pos);  // TODO: Handle inverse!
+        if (m_transform_action) {
+            return m_transform_action(pos, out_pos); // Call specific method, TODO: Handle inverse!
         }
         else {
             if (m_must_update) {
@@ -65,7 +60,7 @@ namespace Grain {
             }
 
             PJ_COORD in_coord = proj_coord(pos.m_x, pos.m_y, 0, 0);
-            PJ_COORD out_coord = proj_trans((PJ*)m_proj, directions[inverse], in_coord);
+            PJ_COORD out_coord = proj_trans((PJ*)m_proj, pj_direction, in_coord);
 
             if (proj_errno((PJ*)m_proj)) {
                 return false;
@@ -79,16 +74,16 @@ namespace Grain {
     }
 
 
-    bool GeoProj::transform(const RangeRectd& range_rect, RangeRectd& out_range_rect, bool inverse) noexcept {
+    bool GeoProj::transform(const RangeRectd& range_rect, RangeRectd& out_range_rect, Direction direction) noexcept {
 
         Vec2d v1(range_rect.m_min_x, range_rect.m_min_y);
         Vec2d v2(range_rect.m_max_x, range_rect.m_max_y);
 
-        if (!transform(v1, inverse)) {
+        if (!transform(v1, direction)) {
             return false;
         }
 
-        if (!transform(v2, inverse)) {
+        if (!transform(v2, direction)) {
             return false;
         }
 
@@ -101,16 +96,16 @@ namespace Grain {
     }
 
 
-    bool GeoProj::transform(RangeRectd& range_rect, bool inverse) noexcept {
+    bool GeoProj::transform(RangeRectd& range_rect, Direction direction) noexcept {
 
         Vec2d v1(range_rect.m_min_x, range_rect.m_min_y);
         Vec2d v2(range_rect.m_max_x, range_rect.m_max_y);
 
-        if (!transform(v1, inverse)) {
+        if (!transform(v1, direction)) {
             return false;
         }
 
-        if (!transform(v2, inverse)) {
+        if (!transform(v2, direction)) {
             return false;
         }
 
@@ -123,16 +118,15 @@ namespace Grain {
     }
 
 
-    bool GeoProj::transform(const RangeRectFix& range_rect, RangeRectFix& out_range_rect, bool inverse) noexcept {
-
+    bool GeoProj::transform(const RangeRectFix& range_rect, RangeRectFix& out_range_rect, Direction direction) noexcept {
         Vec2d v1(range_rect.m_min_x.asDouble(), range_rect.m_min_y.asDouble());
         Vec2d v2(range_rect.m_max_x.asDouble(), range_rect.m_max_y.asDouble());
 
-        if (!transform(v1, inverse)) {
+        if (!transform(v1, direction)) {
             return false;
         }
 
-        if (!transform(v2, inverse)) {
+        if (!transform(v2, direction)) {
             return false;
         }
 
@@ -145,16 +139,15 @@ namespace Grain {
     }
 
 
-    bool GeoProj::transform(RangeRectFix& range_rect, bool inverse) noexcept {
-
+    bool GeoProj::transform(RangeRectFix& range_rect, Direction direction) noexcept {
         Vec2d v1(range_rect.m_min_x.asDouble(), range_rect.m_min_y.asDouble());
         Vec2d v2(range_rect.m_max_x.asDouble(), range_rect.m_max_y.asDouble());
 
-        if (!transform(v1, inverse)) {
+        if (!transform(v1, direction)) {
             return false;
         }
 
-        if (!transform(v2, inverse)) {
+        if (!transform(v2, direction)) {
             return false;
         }
 
@@ -167,12 +160,11 @@ namespace Grain {
     }
 
 
-    bool GeoProj::transform(Quadrilateral& quadrilateral, bool inverse) noexcept {
-
-        if (!transform(quadrilateral.m_points[0], inverse)) { return false; }
-        if (!transform(quadrilateral.m_points[1], inverse)) { return false; }
-        if (!transform(quadrilateral.m_points[2], inverse)) { return false; }
-        if (!transform(quadrilateral.m_points[3], inverse)) { return false; }
+    bool GeoProj::transform(Quadrilateral& quadrilateral, Direction direction) noexcept {
+        if (!transform(quadrilateral.m_points[0], direction)) { return false; }
+        if (!transform(quadrilateral.m_points[1], direction)) { return false; }
+        if (!transform(quadrilateral.m_points[2], direction)) { return false; }
+        if (!transform(quadrilateral.m_points[3], direction)) { return false; }
 
         return true;
     }
@@ -186,7 +178,6 @@ namespace Grain {
      *  @return True if the transformation was successful, otherwise false.
      */
     bool GeoProj::transformToViewport(const Vec2d& pos, Vec2d& out_pos) noexcept {
-
         if (transform(pos, out_pos)) {
             m_remap_rect.mapVec2(out_pos);
             return true;
@@ -205,9 +196,8 @@ namespace Grain {
      *  @return True if the transformation was successful, otherwise false.
      */
     bool GeoProj::transformFromViewport(const Vec2d& pos, Vec2d& out_pos) noexcept {
-
         m_remap_rect.inverseMapVec2(pos, out_pos);
-        return transform(out_pos, true);
+        return transform(out_pos, Direction::Forward);
     }
 
 
@@ -227,16 +217,9 @@ namespace Grain {
      *        If the height is zero, an aspect ratio cannot be calculated.
      */
     double GeoProj::ratioByMercatorBounds(const RangeRectd& bounds) noexcept {
-
         double width = bounds.width();
         double height = bounds.height();
-
-        if (std::fabs(height) < std::numeric_limits<float>::epsilon()) {
-            return -1.0; // Error.
-        }
-        else {
-            return width / height;
-        }
+        return Safe::canSafelyDivideBy(height) ? width / height : -1.0;
     }
 
 
@@ -255,7 +238,6 @@ namespace Grain {
      *        slightly less accurate than an ellipsoidal model like WGS84.
      */
     bool GeoProj::earthProject4326To3857(const Vec2d& pos, Vec2d& out_pos) noexcept {
-
         double lat_rad = pos.m_x * std::numbers::pi / 180;
         double lon_rad = pos.m_y * std::numbers::pi / 180;
         out_pos.m_x = Geo::kEarthRadius_m * lon_rad;
@@ -279,7 +261,6 @@ namespace Grain {
      *        slightly less accurate than an ellipsoidal model like WGS84.
      */
     bool GeoProj::earthProject3857To4326(const Vec2d& pos, Vec2d& out_pos) noexcept {
-
         double lon = (pos.m_x / Geo::kEarthRadius_m) * (180 / std::numbers::pi);
         double temp = exp(-pos.m_y / Geo::kEarthRadius_m);
         double lat = (std::numbers::pi / 2 - 2 * std::atan(temp)) * (180 / std::numbers::pi);
@@ -290,29 +271,27 @@ namespace Grain {
 
 
     ErrorCode GeoProj::_update() noexcept {
-
         static const char* crs_4326_lonlat = "+proj=longlat +datum=WGS84 +no_defs";
-
         auto result = ErrorCode::None;
 
         try {
-
             if (m_must_update) {
 
-                if (m_proj_context == nullptr) {
+                if (!m_proj_context) {
                     m_proj_context = proj_context_create();
-                    if (m_proj_context == nullptr) {
+                    if (!m_proj_context) {
                         throw Error::specific(1);  // TODO: Enum error code.
                     }
                 }
 
-                if (m_proj != nullptr) {
+                if (m_proj) {
                     proj_destroy((PJ*)m_proj);
                     m_proj = nullptr;
                 }
 
                 const char* src_crs = m_src_crs.utf8();
                 const char* dst_crs = m_dst_crs.utf8();
+
                 if (strcmp(src_crs, "EPSG:4326") == 0) {
                     src_crs = crs_4326_lonlat;
                 }

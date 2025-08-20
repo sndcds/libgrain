@@ -2,7 +2,7 @@
 #define GrainNSView_h
 
 #import <Cocoa/Cocoa.h>
-#include "GUI/Component.hpp"
+#include "GUI/Components/Component.hpp"
 
 @interface GrainNSView : NSView <NSDraggingDestination> {
 
