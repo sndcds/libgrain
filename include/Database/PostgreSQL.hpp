@@ -17,8 +17,6 @@
 #include "String/String.hpp"
 #include "String/StringList.hpp"
 
-#include <postgresql15/libpq-fe.h>
-
 
 namespace Grain {
 
@@ -64,7 +62,7 @@ namespace Grain {
         String m_dbname;            ///< Database name
         String m_user;              ///< User name
         String m_password;          ///< Password. Default is an empty password
-        PGconn* m_conn = nullptr;   ///< The real connection for using the database
+        void* m_conn = nullptr;   ///< The real connection for using the database
         String m_last_err_message;  ///< Last error message
         StringList m_psql_notices;
 
@@ -86,8 +84,6 @@ namespace Grain {
 
         ErrorCode open();
         void close();
-
-        static void psqlNoticeReceiver(void* arg, const PGresult* res);
     };
 
 

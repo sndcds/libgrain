@@ -11,37 +11,12 @@
 
 #include "Database/PostgreSQL.hpp"
 
+#include <postgresql15/libpq-fe.h>
+
 
 namespace Grain {
 
-    ErrorCode PSQLConnection::open() {
-        if (m_conn == nullptr) {
-            char connection_info[2056];
-            std::snprintf(connection_info, 2056, "host=%s port=%d dbname=%s user=%s password=%s", m_host.utf8(), m_port, m_dbname.utf8(), m_user.utf8(), m_password.utf8());
-
-            m_conn = PQconnectdb(connection_info);
-
-            if (PQstatus(m_conn) != CONNECTION_OK) {
-                m_last_err_message = "Unable to connect to database.";
-                return Error::specific(kErrConnectionFailed);
-            }
-
-            PQsetNoticeReceiver(m_conn, psqlNoticeReceiver, &m_psql_notices);
-        }
-
-        return ErrorCode::None;
-    }
-
-
-    void PSQLConnection::close() {
-        if (m_conn != nullptr) {
-            PQfinish(m_conn);
-            m_conn = nullptr;
-        }
-    }
-
-
-    void PSQLConnection::psqlNoticeReceiver(void *arg, const PGresult *res) {
+    void _grain_psqlNoticeReceiver(void *arg, const PGresult *res) {
         auto notices = (StringList*)arg;
 
         // Extract the notice message from the result
@@ -49,6 +24,35 @@ namespace Grain {
 
         if (message != nullptr) {
             notices->pushString(message);
+        }
+    }
+
+
+    ErrorCode PSQLConnection::open() {
+        if (!m_conn) {
+            PGconn* pg_conn = nullptr;
+            char connection_info[2056];
+            std::snprintf(connection_info, 2056, "host=%s port=%d dbname=%s user=%s password=%s", m_host.utf8(), m_port, m_dbname.utf8(), m_user.utf8(), m_password.utf8());
+
+            pg_conn = PQconnectdb(connection_info);
+
+            if (PQstatus(pg_conn) != CONNECTION_OK) {
+                m_last_err_message = "Unable to connect to database.";
+                return Error::specific(kErrConnectionFailed);
+            }
+
+            PQsetNoticeReceiver(pg_conn, _grain_psqlNoticeReceiver, &m_psql_notices);
+            m_conn = pg_conn;
+        }
+
+        return ErrorCode::None;
+    }
+
+
+    void PSQLConnection::close() {
+        if (m_conn) {
+            PQfinish((PGconn*)m_conn);
+            m_conn = nullptr;
         }
     }
 
