@@ -105,4 +105,24 @@ namespace Grain {
         }
     }
 
+    void _macosApp_copyToPasteboard(String* string, int64_t character_index, int64_t character_length) {
+        int64_t byte_index, byte_length;
+        if (string->byteRangeFromCharacterRange(character_index, character_length, byte_index, byte_length)) {
+            NSString* ns_string = [[NSString alloc] initWithBytes:string->utf8AtIndex(character_index) length:byte_length encoding:NSUTF8StringEncoding];
+            [[NSPasteboard generalPasteboard] clearContents];
+            [[NSPasteboard generalPasteboard] setString:ns_string forType:NSPasteboardTypeString];
+            [ns_string release];
+        }
+    }
+
+    int32_t _macosApp_pasteFromPasteboard(String* string, int64_t character_index) {
+        NSString* ns_string = [[NSPasteboard generalPasteboard] stringForType:NSPasteboardTypeString];
+        if (ns_string != nil) {
+            if (string->insertAtCharacterIndex([ns_string UTF8String], character_index)) {
+                return [ns_string length];
+            }
+        }
+        return 0;
+    }
+
 }

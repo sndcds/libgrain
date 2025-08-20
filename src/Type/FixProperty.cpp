@@ -42,12 +42,12 @@ namespace Grain {
     }
 
 
-    FixProperty* FixPropertyList::mutablePropertyAtIndex(int32_t index) noexcept {
+    FixProperty* FixPropertyList::mutPropertyAtIndex(int32_t index) noexcept {
         return mutElementPtrAtIndex(index);
     }
 
 
-    FixProperty* FixPropertyList::mutablePropertyPtrByName(const char* name) noexcept {
+    FixProperty* FixPropertyList::mutPropertyPtrByName(const char* name) noexcept {
         for (auto& property : *this) {
             if (strcmp(name, property.m_name) == 0) {
                 return &property;
@@ -72,7 +72,7 @@ namespace Grain {
 
 
     bool FixPropertyList::setValueAtIndex(int32_t index, const Fix& value) noexcept {
-        if (auto property_ptr = mutablePropertyAtIndex(index)) {
+        if (auto property_ptr = mutPropertyAtIndex(index)) {
             return property_ptr->setValue(value.raw());
         }
         else {
@@ -82,7 +82,7 @@ namespace Grain {
 
 
     bool FixPropertyList::resetValueAtIndex(int32_t index) noexcept {
-        if (auto property_ptr = mutablePropertyAtIndex(index)) {
+        if (auto property_ptr = mutPropertyAtIndex(index)) {
             return property_ptr->resetValue();
         }
         else {
@@ -92,7 +92,7 @@ namespace Grain {
 
 
     bool FixPropertyList::setValueByName(const char* name, const Fix& value) noexcept {
-        if (auto property_ptr = mutablePropertyPtrByName(name)) {
+        if (auto property_ptr = mutPropertyPtrByName(name)) {
             return property_ptr->setValue(value.raw());
         }
         else {
@@ -102,7 +102,7 @@ namespace Grain {
 
 
     bool FixPropertyList::resetValueByName(const char* name) noexcept {
-        if (auto property_ptr = mutablePropertyPtrByName(name)) {
+        if (auto property_ptr = mutPropertyPtrByName(name)) {
             return property_ptr->resetValue();
         }
         else {

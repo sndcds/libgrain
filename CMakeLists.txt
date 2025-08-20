@@ -10,10 +10,11 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 if (APPLE)
     include_directories(
+            /opt/local/include
             /opt/homebrew/include
-            /opt/homebrew/opt/jpeg-turbo/include
     )
     link_directories(
+            /opt/local/lib
             /opt/homebrew/lib
     )
 elseif (UNIX AND NOT APPLE)
@@ -85,6 +86,8 @@ add_library(libgrain STATIC
 
         src/CSS/CSSColor.cpp
         src/CSS/CSS.cpp
+
+        src/Database/PostgreSQL.cpp
 
         src/DSP/RingBuffer.cpp
         src/DSP/WeightedSamples.cpp

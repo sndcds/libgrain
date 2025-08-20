@@ -90,8 +90,8 @@ namespace Grain {
 
         [[nodiscard]] bool isIndex(int32_t index) const noexcept;
         bool propertyAtIndex(int32_t index, FixProperty& out_property) const noexcept;
-        [[nodiscard]] FixProperty* mutablePropertyAtIndex(int32_t index) noexcept;
-        [[nodiscard]] FixProperty* mutablePropertyPtrByName(const char* name) noexcept;
+        [[nodiscard]] FixProperty* mutPropertyAtIndex(int32_t index) noexcept;
+        [[nodiscard]] FixProperty* mutPropertyPtrByName(const char* name) noexcept;
 
 
         [[nodiscard]] Fix valueAtIndex(int32_t index) const noexcept;

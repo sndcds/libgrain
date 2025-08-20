@@ -6,7 +6,7 @@
 //
 //  This file is part of GrainLib, see <https://grain.one>.
 //
-//  LastChecked: 12.07.2025
+//  LastChecked: 20.08.2025
 //
 
 // TODO: Implement `toupper` and `tolower`

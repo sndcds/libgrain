@@ -6,13 +6,11 @@
 //
 //  This file is part of GrainLib, see <https://grain.one>.
 //
+//  LastChecked: 20.08.2025
+//
 
 #include "String/String.hpp"
-// #include <StringList.hpp>    TODO: !!!!!!
-// #include <CSVString.hpp>     TODO: !!!!!!
 #include "Math/Random.hpp"
-// #include "GrData.hpp"        TODO: !!!!!
-// #include "GrFile.hpp"        TODO: !!!!!
 #include "Time/Timestamp.hpp"
 
 #include <libgen.h>
@@ -26,6 +24,11 @@
 
 
 namespace Grain {
+
+    #if defined(__APPLE__) && defined(__MACH__)
+        void _macosApp_copyToPasteboard(String* string, int64_t character_index, int64_t character_length);
+        int32_t _macosApp_pasteFromPasteboard(String* string, int64_t character_index);
+    #endif
 
     const char* String::g_empty_data = "";
     const String String::g_empty_string;
@@ -3574,18 +3577,9 @@ int8_t String::valueForHexChar(char c) noexcept {
      */
     #if defined(__APPLE__) && defined(__MACH__)
         void String::copyToPasteboard(int64_t character_index, int64_t character_length) noexcept {
-            /* TODO: !!!!! Put into a separate .mm file
-            if (m_data != nullptr) {
-                int64_t byte_index, byte_length;
-
-                if (byteRangeFromCharacterRange(character_index, character_length, byte_index, byte_length)) {
-                    NSString* ns_string = [[NSString alloc] initWithBytes:utf8AtIndex(character_index) length:byte_length encoding:NSUTF8StringEncoding];
-                    [[NSPasteboard generalPasteboard] clearContents];
-                    [[NSPasteboard generalPasteboard] setString:ns_string forType:NSPasteboardTypeString];
-                    [ns_string release];
-                }
+            if (m_data) {
+                _macosApp_copyToPasteboard(this, character_index, character_length);
             }
-             */
         }
     #else
         void String::copyToPasteboard(int64_t character_index, int64_t character_length) noexcept {
@@ -3607,24 +3601,16 @@ int8_t String::valueForHexChar(char c) noexcept {
      */
     #if defined(__APPLE__) && defined(__MACH__)
         int64_t String::pasteFromPasteboard(int64_t character_index) noexcept {
-            int64_t result = 0;
-            /*TODO: !!!!! Put into aseparate .mm file
-
             if (m_data != nullptr) {
-
-                NSString* ns_string = [[NSPasteboard generalPasteboard] stringForType:NSPasteboardTypeString];
-                if (ns_string != nil) {
-                    if (insertAtCharacterIndex([ns_string UTF8String], character_index)) {
-                        result += [ns_string length];
-                    }
-                }
+                return _macosApp_pasteFromPasteboard(this, character_index);
             }
-            */
-            return result;
+            return 0;
         }
     #else
         int64_t String::pasteFromPasteboard(int64_t character_index) noexcept {
             #warning "String::pasteFromPasteboard() must be implemented for Linux"
+            // TODO: Implement
+            return 0;
         }
     #endif
 

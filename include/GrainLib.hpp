@@ -67,6 +67,8 @@
 #include "CSS/CSSColor.hpp"
 #include "CSS/CSS.hpp"
 
+#include "Database/PostgreSQL.hpp"
+
 #include "DSP/DSP.hpp"
 #include "DSP/FFT.hpp"
 #include "DSP/Freq.hpp"
