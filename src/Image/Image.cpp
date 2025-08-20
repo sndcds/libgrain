@@ -2977,12 +2977,12 @@ namespace Grain {
 
 
     Image *Image::createFromFile(const String& file_path, Image::PixelType data_type) {
-#if defined(__APPLE__) && defined(__MACH__)
-        return _mac_loadImageFromFile(file_path, data_type);
-#else
-        #warning "loadImageFromFile is only implemented for macOS
+        #if defined(__APPLE__) && defined(__MACH__)
+            return _mac_loadImageFromFile(file_path, data_type);
+        #else
+            #warning "loadImageFromFile is only implemented for macOS
             return nullptr;
-#endif
+        #endif
     }
 
 

@@ -3587,6 +3587,10 @@ int8_t String::valueForHexChar(char c) noexcept {
             }
              */
         }
+    #else
+        void String::copyToPasteboard(int64_t character_index, int64_t character_length) noexcept {
+            #warning "String::copyToPasteboard() must be implemented for Linux"
+        }
     #endif
 
 
@@ -3617,6 +3621,10 @@ int8_t String::valueForHexChar(char c) noexcept {
             }
             */
             return result;
+        }
+    #else
+        int64_t String::pasteFromPasteboard(int64_t character_index) noexcept {
+            #warning "String::pasteFromPasteboard() must be implemented for Linux"
         }
     #endif
 

@@ -355,10 +355,8 @@ namespace Grain {
 
         bool selectWord(int32_t cursor_index, const StringList* word_characters, const StringList* custom_delimiters, Rangei& out_range) noexcept;
 
-        #if defined(__APPLE__) && defined(__MACH__)
-            void copyToPasteboard(int64_t character_index, int64_t character_length) noexcept;
-            int64_t pasteFromPasteboard(int64_t character_index) noexcept;
-        #endif
+        void copyToPasteboard(int64_t character_index, int64_t character_length) noexcept;
+        int64_t pasteFromPasteboard(int64_t character_index) noexcept;
 
         bool checkCapacity(int64_t needed) noexcept;
         bool checkCapacity(int64_t needed, int64_t min) noexcept;
