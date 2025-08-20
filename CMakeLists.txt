@@ -11,6 +11,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 if (APPLE)
     include_directories(
             /opt/local/include
+            /opt/local/include/postgresql15/
             /opt/homebrew/include
     )
     link_directories(

@@ -11,7 +11,7 @@
 
 #include "Database/PostgreSQL.hpp"
 
-#include <postgresql15/libpq-fe.h>
+#include <libpq-fe.h>
 
 
 namespace Grain {
