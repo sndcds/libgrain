@@ -221,6 +221,7 @@ namespace Grain {
                             l << " | ";
                         }
                     }
+                    l << l.endl;
                 }
                 l << l.endl;
             }

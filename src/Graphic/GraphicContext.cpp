@@ -112,30 +112,16 @@ namespace Grain {
     void GraphicContext::_setImage(Image* image) noexcept {
         _freeResources();
 
-        if (image == nullptr) {
-            m_image = image;
+        if (!image) {
             return;
         }
 
         GRAIN_RETAIN(image);
         m_image = image;
 
-        if (m_engine == Engine::Cairo) {
-            if (image->colorModel() == Color::Model::RGBA && image->isFloat()) {
-                _m_cairo_surface = cairo_image_surface_create_for_data(
-                        reinterpret_cast<unsigned char*>(image->mutPixelDataPtr()),
-                        CAIRO_FORMAT_RGBA128F, // Cairo's pixel format
-                        static_cast<int>(m_width),
-                        static_cast<int>(m_height),
-                        image->bytesPerRow());
-                _m_cairo_cr = cairo_create((::cairo_surface_t*)_m_cairo_surface);
-            }
-        }
-#if defined(__APPLE__) && defined(__MACH__)
-        if (m_engine == Engine::CoreGraphics) {
+        #if defined(__APPLE__) && defined(__MACH__)
             _macos_setImage(image);
-        }
-#endif
+        #endif
     }
 
 

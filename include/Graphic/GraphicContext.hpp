@@ -102,8 +102,6 @@ namespace Grain {
         };
 
     protected:
-        Engine m_engine = Engine::Cairo;
-
         bool m_flipped_y = true;        ///< true, if vertical axis is flipped
         double m_width = 0.0;           ///< Pixel width
         double m_height = 0.0;          ///< Pixel height
@@ -137,7 +135,7 @@ namespace Grain {
         void _init() noexcept;
         void _freeResources() noexcept;
 
-        void _setImage(Image* image) noexcept;
+        virtual void _setImage(Image* image) noexcept;
         #if defined(__APPLE__) && defined(__MACH__)
             void _macos_setImage(Image* image) noexcept;
         #endif
