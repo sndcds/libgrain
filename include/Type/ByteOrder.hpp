@@ -1,5 +1,5 @@
 //
-//  NToH.hpp
+//  ByteOrder.hpp
 //
 //  Created by Roald Christesen on 20.08.2025
 //  Copyright (C) 2025 Roald Christesen. All rights reserved.
@@ -9,8 +9,8 @@
 //  LastChecked: 20.08.2025
 //
 
-#ifndef GrainNToH_hpp
-#define GrainNToH_hpp
+#ifndef GrainByteOrder_hpp
+#define GrainByteOrder_hpp
 
 #if defined(_WIN32) || defined(_WIN64)
     #include <winsock2.h>
@@ -76,4 +76,4 @@ namespace Grain {
     }
 }
 
-#endif
+#endif // GrainByteOrder_hpp

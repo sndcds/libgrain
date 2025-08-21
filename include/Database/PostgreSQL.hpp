@@ -21,6 +21,8 @@
 
 namespace Grain {
 
+    class PSQLPropertyList;
+
     enum class PSQLType {
         Undefined = -1,
         Boolean = 16,       // 0 or 1
@@ -45,6 +47,39 @@ namespace Grain {
         WKB = 34219         // Wellknown Binary
     };
 
+    enum class PSQLPropertyType {
+        Undefined = 0,
+        Boolean,
+        Integer,
+        Double,
+        String,
+        Numeric
+    };
+
+    enum class PSQLParamFormat {
+        Text = 0,
+        Binary = 1
+    };
+
+
+    class PSQLParam : Object {
+        friend class PSQLConnection;
+    public:
+        PSQLParam(PSQLType type, PSQLParamFormat format, const char* value, int32_t length, void* bin_ptr);
+    protected:
+        PSQLType m_type = PSQLType::Undefined;
+        PSQLParamFormat m_format = PSQLParamFormat::Text;
+        String m_value;
+        int32_t m_length;
+        void* m_bin_ptr = nullptr;  ///< Pointer to data if m_format = Binary
+    };
+
+
+    class PSQLParamList : public ObjectList<PSQLParam*> {
+    public:
+        ErrorCode addParam(PSQLType type, const char* value) noexcept;
+    };
+
 
     /**
      *  @brief A SQL database connection.
@@ -52,6 +87,24 @@ namespace Grain {
     class PSQLConnection {
 
     public:
+        enum class Status {
+            Unknown = -1,
+            Ok = 0,
+            Bad = 1,
+            Started = 2,
+            Made = 3,
+            AwaitingResponse = 4,
+            AuthOk = 5,
+            SetEnv = 6,
+            SSLStartup = 7,
+            Needed = 8,
+            CheckWriteable = 9,
+            Consume = 10,
+            GSSStartup = 11,
+            CheckTarget = 12,
+            CheckStandby = 13
+        };
+
         enum {
             kErrConnectionFailed = 0,
         };
@@ -63,28 +116,40 @@ namespace Grain {
         String m_dbname;            ///< Database name
         String m_user;              ///< User name
         String m_password;          ///< Password. Default is an empty password
-        void* m_conn = nullptr;   ///< The real connection for using the database
         String m_last_err_message;  ///< Last error message
         StringList m_psql_notices;
 
+        void *_m_pg_conn_ptr = nullptr;     ///< The real PGconn* for using the database
+        void *_m_pg_res_ptr = nullptr;      ///< PGresult*
+        int32_t _m_pg_status;               ///< ExecStatusType
+        int32_t _m_field_n = -1;
+        int32_t _m_tuple_n = -1;
+
     public:
-        friend std::ostream& operator << (std::ostream& os, const PSQLConnection* o) {
+        friend std::ostream &operator<<(std::ostream &os, const PSQLConnection *o) {
             o == nullptr ? os << "PSQLConnection nullptr" : os << *o;
             return os;
         }
 
-        friend std::ostream& operator << (std::ostream& os, const PSQLConnection& o) {
+        friend std::ostream &operator<<(std::ostream &os, const PSQLConnection &o) {
             os << "PSQLConnection:\n";
             os << "  identifier: " << o.m_identifier << std::endl;
             os << "  host: " << o.m_host << ", port: " << o.m_port << std::endl;
             os << "  dbname: " << o.m_dbname << std::endl;
             os << "  user: " << o.m_user << ", password: " << o.m_password << std::endl;
-            os << "  conn: " << o.m_conn;
+            os << "  conn: " << o._m_pg_conn_ptr;
             return os;
         }
 
-        ErrorCode open();
-        void close();
+        ErrorCode open() noexcept;
+        void close() noexcept;
+        Status status() noexcept;
+        void query(const String &sql, const PSQLParamList &param_list) noexcept;
+        void clear() noexcept;
+
+        const char* fieldName(int32_t column_index) noexcept;
+        const char* fieldValue(int32_t row_index, int32_t column_index) noexcept;
+        void logResult(Log &l) noexcept;
     };
 
 
@@ -224,16 +289,6 @@ namespace Grain {
 
             return true;
         }
-    };
-
-
-    enum class PSQLPropertyType {
-        Undefined = 0,
-        Boolean,
-        Integer,
-        Double,
-        String,
-        Numeric
     };
 
 

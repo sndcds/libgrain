@@ -176,6 +176,10 @@ namespace Grain {
         [[nodiscard]] int64_t index() const noexcept { return m_index; }
         void incIndex() noexcept { m_index++; }
 
+        void out(const char* str) {
+            m_stream << str << std::endl;
+        }
+
     private:
         void _applyIndent();
 
