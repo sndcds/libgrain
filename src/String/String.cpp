@@ -3230,43 +3230,36 @@ int8_t String::valueForHexChar(char c) noexcept {
 
 
     bool String::asBool() const noexcept {
-
         return m_data != nullptr && static_cast<bool>(0 != atoi(m_data));
     }
 
 
     int32_t String::asInt32() const noexcept {
-
         return m_data ? static_cast<int32_t>(atoi(m_data)) : 0;
     }
 
 
     int64_t String::asInt64() const noexcept {
-
         return m_data ? static_cast<int64_t>(atol(m_data)) : 0L;
     }
 
 
     float String::asFloat() const noexcept {
-
         return m_data ? static_cast<float>(parseDoubleWithDotOrComma(m_data)) : 0.0f;
     }
 
 
     double String::asDouble() const noexcept {
-
         return m_data ? parseDoubleWithDotOrComma(m_data) : 0.0;
     }
 
 
     Fix String::asFix() const noexcept {
-
         return Fix(m_data);
     }
 
 
     void String::toFix(Fix& out_fix) const noexcept {
-
         out_fix.setStr(m_data);
     }
 

@@ -70,6 +70,22 @@ namespace Grain {
         }
 
         /**
+         *  @brief Overload the << operator for const char* to safely handle nullptr.
+         */
+        Log& operator<<(const char* str) {
+            if (m_needs_indent) {
+                _applyIndent();
+            }
+            if (str == nullptr) {
+                m_stream << "(NULL)";
+            }
+            else {
+                m_stream << str;
+            }
+            return *this;
+        }
+
+        /**
          *  @brief Overload the << operator for manipulators (like std::endl).
          */
         Log& operator << (std::ostream&(*manip)(std::ostream&)) {

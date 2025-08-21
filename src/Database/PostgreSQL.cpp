@@ -50,6 +50,11 @@ namespace Grain {
     }
 
 
+    ErrorCode PSQLParamList::addParam(PSQLType type, const String& value) noexcept {
+        return addParam(type, value.utf8());
+    }
+
+
     ErrorCode PSQLConnection::open() noexcept {
         if (!_m_pg_conn_ptr) {
             PGconn* pg_conn = nullptr;
@@ -99,7 +104,7 @@ namespace Grain {
         }
     }
 
-    void PSQLConnection::query(const String &sql, const PSQLParamList& param_list) noexcept {
+    ErrorCode PSQLConnection::query(const String &sql, const PSQLParamList& param_list) noexcept {
         static constexpr int32_t kMaxParams = 32;
 
         Oid param_types[kMaxParams];
@@ -107,9 +112,11 @@ namespace Grain {
         int param_lengths[kMaxParams];
         int param_formats[kMaxParams];
 
+        m_rows_affected = -1; // Undefined
+
         auto pg_conn = (PGconn*)_m_pg_conn_ptr;
         if (!pg_conn) {
-            return;
+            return ErrorCode::DatabaseNotConnected;
         }
 
         Log l;
@@ -145,14 +152,22 @@ namespace Grain {
 
         _m_pg_res_ptr = pg_res;
         _m_pg_status = PQresultStatus(pg_res);
-        if (_m_pg_status != PGRES_TUPLES_OK && _m_pg_status != PGRES_COMMAND_OK) {
-            // TODO: Message
-            std::cerr << "Execution failed: " << PQerrorMessage(pg_conn) << ", " << _m_pg_status << std::endl;
-        }
-        else {
+        if (_m_pg_status == PGRES_TUPLES_OK) {
             _m_field_n = PQnfields(pg_res);
             _m_tuple_n = PQntuples(pg_res);
         }
+        else if (_m_pg_status == PGRES_COMMAND_OK) {
+             if (!String::strToVar(PQcmdTuples(pg_res), m_rows_affected)) {
+                 m_rows_affected = -1;
+             }
+        }
+        else {
+            // TODO: Message
+            std::cerr << "Execution failed: " << PQerrorMessage(pg_conn) << ", " << _m_pg_status << std::endl;
+            return ErrorCode::DatabaseNoResult;
+        }
+
+        return ErrorCode::None;
     }
 
 
@@ -164,7 +179,7 @@ namespace Grain {
     }
 
 
-    const char* PSQLConnection::fieldName(int32_t column_index) noexcept {
+    const char* PSQLConnection::fieldName(int32_t column_index) const noexcept {
         if (_m_pg_res_ptr && column_index >= 0 && column_index < _m_field_n) {
             return PQfname((PGresult *) _m_pg_res_ptr, column_index);
         }
@@ -173,8 +188,7 @@ namespace Grain {
         }
     }
 
-
-    const char* PSQLConnection::fieldValue(int32_t row_index, int32_t column_index) noexcept {
+    const char* PSQLConnection::fieldValue(int32_t row_index, int32_t column_index) const noexcept {
         if (_m_pg_res_ptr &&
             row_index >= 0 && row_index < _m_tuple_n &&
             column_index >= 0 && column_index < _m_field_n) {
@@ -185,29 +199,33 @@ namespace Grain {
         }
     }
 
-
-    void PSQLConnection::logResult(Log& l) noexcept {
+    void PSQLConnection::logResult(Log& l) const noexcept {
         if (_m_pg_res_ptr) {
-            auto pg_res = (PGresult *)_m_pg_res_ptr;
-            if (_m_pg_status == PGRES_TUPLES_OK || _m_pg_status == PGRES_COMMAND_OK) {
-
+            auto pg_res = (PGresult *) _m_pg_res_ptr;
+            if (_m_pg_status == PGRES_TUPLES_OK) {
                 // Print column headers
                 for (int i = 0; i < _m_field_n; i++) {
-                    std::cout << PQfname(pg_res, i);
-                    if (i < _m_field_n - 1) std::cout << " | ";
+                    l << PQfname(pg_res, i);
+                    if (i < _m_field_n - 1) {
+                        l << " | ";
+                    }
                 }
-                std::cout << "\n";
+                l << l.endl;
 
                 // Print rows
                 for (int row = 0; row < _m_tuple_n; row++) {
                     for (int col = 0; col < _m_field_n; col++) {
-                        char* value = PQgetvalue(pg_res, row, col);
-                        std::cout << (value ? value : "NULL");
-                        if (col < _m_field_n - 1) std::cout << " | ";
+                        char *value = PQgetvalue(pg_res, row, col);
+                        l << value;
+                        if (col < _m_field_n - 1) {
+                            l << " | ";
+                        }
                     }
-                    std::cout << "\n";
                 }
-
+                l << l.endl;
+            }
+            else if (_m_pg_status == PGRES_COMMAND_OK) {
+                l << "affected rows: " << m_rows_affected << l.endl;
             }
         }
     }

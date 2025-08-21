@@ -169,7 +169,11 @@ namespace Grain {
         SampleRateMustBeDifferent,
         SampleRateMustBeEqual,
 
-        CSSInternalError = 700,
+        DatabaseNotConnected = 800,
+        DatabaseNoResult = 801,
+
+
+        CSSInternalError = 1000,
         CSSInternalMemoryError,
         CSSClosingBracketMissing,
         CSSContentMissing,

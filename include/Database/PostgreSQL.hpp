@@ -78,6 +78,7 @@ namespace Grain {
     class PSQLParamList : public ObjectList<PSQLParam*> {
     public:
         ErrorCode addParam(PSQLType type, const char* value) noexcept;
+        ErrorCode addParam(PSQLType type, const String& value) noexcept;
     };
 
 
@@ -118,6 +119,7 @@ namespace Grain {
         String m_password;          ///< Password. Default is an empty password
         String m_last_err_message;  ///< Last error message
         StringList m_psql_notices;
+        int32_t m_rows_affected = -1;
 
         void *_m_pg_conn_ptr = nullptr;     ///< The real PGconn* for using the database
         void *_m_pg_res_ptr = nullptr;      ///< PGresult*
@@ -144,12 +146,16 @@ namespace Grain {
         ErrorCode open() noexcept;
         void close() noexcept;
         Status status() noexcept;
-        void query(const String &sql, const PSQLParamList &param_list) noexcept;
+        ErrorCode query(const String &sql, const PSQLParamList &param_list) noexcept;
         void clear() noexcept;
 
-        const char* fieldName(int32_t column_index) noexcept;
-        const char* fieldValue(int32_t row_index, int32_t column_index) noexcept;
-        void logResult(Log &l) noexcept;
+        const int32_t fieldCount() const noexcept {  return _m_field_n; }
+        const int32_t rowCount() const noexcept {  return _m_tuple_n; }
+        const char* fieldName(int32_t column_index) const noexcept;
+        const char* fieldValue(int32_t row_index, int32_t column_index) const noexcept;
+        int32_t rowsAffected() const noexcept { return m_rows_affected; }
+
+        void logResult(Log &l) const noexcept;
     };
 
 
