@@ -6,7 +6,7 @@
 //
 //  This file is part of GrainLib, see <https://grain.one>.
 //
-//  LastChecked: 20.08.2025
+//  LastChecked: 21.08.2025
 //
 
 #ifndef GrainPostgreSQL_hpp
@@ -114,30 +114,30 @@ namespace Grain {
         String m_identifier;        ///< Unique identifier
         String m_host;              ///< Hostname, default is 'localhost'
         int32_t m_port;             ///< TCP port, default is 5432. The full range of valid TCP ports is 1 to 65535
-        String m_dbname;            ///< Database name
+        String m_db_name;            ///< Database name
         String m_user;              ///< User name
         String m_password;          ///< Password. Default is an empty password
         String m_last_err_message;  ///< Last error message
         StringList m_psql_notices;
         int32_t m_rows_affected = -1;
 
-        void *_m_pg_conn_ptr = nullptr;     ///< The real PGconn* for using the database
-        void *_m_pg_res_ptr = nullptr;      ///< PGresult*
+        void* _m_pg_conn_ptr = nullptr;     ///< The real PGconn* for using the database
+        void* _m_pg_res_ptr = nullptr;      ///< PGresult*
         int32_t _m_pg_status;               ///< ExecStatusType
         int32_t _m_field_n = -1;
         int32_t _m_tuple_n = -1;
 
     public:
-        friend std::ostream &operator<<(std::ostream &os, const PSQLConnection *o) {
+        friend std::ostream& operator<<(std::ostream& os, const PSQLConnection* o) {
             o == nullptr ? os << "PSQLConnection nullptr" : os << *o;
             return os;
         }
 
-        friend std::ostream &operator<<(std::ostream &os, const PSQLConnection &o) {
+        friend std::ostream& operator<<(std::ostream& os, const PSQLConnection& o) {
             os << "PSQLConnection:\n";
             os << "  identifier: " << o.m_identifier << std::endl;
             os << "  host: " << o.m_host << ", port: " << o.m_port << std::endl;
-            os << "  dbname: " << o.m_dbname << std::endl;
+            os << "  db_name: " << o.m_db_name << std::endl;
             os << "  user: " << o.m_user << ", password: " << o.m_password << std::endl;
             os << "  conn: " << o._m_pg_conn_ptr;
             return os;
@@ -146,7 +146,7 @@ namespace Grain {
         ErrorCode open() noexcept;
         void close() noexcept;
         Status status() noexcept;
-        ErrorCode query(const String &sql, const PSQLParamList &param_list) noexcept;
+        ErrorCode query(const String& sql, const PSQLParamList& param_list) noexcept;
         void clear() noexcept;
 
         const int32_t fieldCount() const noexcept {  return _m_field_n; }
@@ -155,7 +155,7 @@ namespace Grain {
         const char* fieldValue(int32_t row_index, int32_t column_index) const noexcept;
         int32_t rowsAffected() const noexcept { return m_rows_affected; }
 
-        void logResult(Log &l) const noexcept;
+        void logResult(Log& l) const noexcept;
     };
 
 
@@ -187,6 +187,9 @@ namespace Grain {
         }
 
         [[nodiscard]] PSQLConnection* addConnection() noexcept;
+        [[nodiscard]] PSQLConnection* addConnection(const char* identifier, const char* host, int32_t port, const char* db_name, const char* user, const char* password) noexcept;
+
+
         [[nodiscard]] PSQLConnection* connectionByIdentifier(const String& identifier);
         [[nodiscard]] PSQLConnection* firstConnection();
     };

@@ -6,7 +6,7 @@
 //
 //  This file is part of GrainLib, see <https://grain.one>.
 //
-//  LastChecked: 20.08.2025
+//  LastChecked: 21.08.2025
 //
 
 #include "Database/PostgreSQL.hpp"
@@ -17,11 +17,11 @@
 
 namespace Grain {
 
-    void _grain_psqlNoticeReceiver(void *arg, const PGresult *res) {
+    void _grain_psqlNoticeReceiver(void* arg, const PGresult* res) {
         auto notices = (StringList*)arg;
 
         // Extract the notice message from the result
-        const char *message = PQresultErrorMessage(res);
+        const char* message = PQresultErrorMessage(res);
 
         if (message != nullptr) {
             notices->pushString(message);
@@ -59,7 +59,7 @@ namespace Grain {
         if (!_m_pg_conn_ptr) {
             PGconn* pg_conn = nullptr;
             char connection_info[2056];
-            std::snprintf(connection_info, 2056, "host=%s port=%d dbname=%s user=%s password=%s", m_host.utf8(), m_port, m_dbname.utf8(), m_user.utf8(), m_password.utf8());
+            std::snprintf(connection_info, 2056, "host=%s port=%d dbname=%s user=%s password=%s", m_host.utf8(), m_port, m_db_name.utf8(), m_user.utf8(), m_password.utf8());
 
             pg_conn = PQconnectdb(connection_info);
 
@@ -104,7 +104,7 @@ namespace Grain {
         }
     }
 
-    ErrorCode PSQLConnection::query(const String &sql, const PSQLParamList& param_list) noexcept {
+    ErrorCode PSQLConnection::query(const String& sql, const PSQLParamList& param_list) noexcept {
         static constexpr int32_t kMaxParams = 32;
 
         Oid param_types[kMaxParams];
@@ -173,7 +173,7 @@ namespace Grain {
 
     void PSQLConnection::clear() noexcept {
         if (_m_pg_res_ptr) {
-            PQclear((PGresult *) _m_pg_res_ptr);
+            PQclear((PGresult*) _m_pg_res_ptr);
             _m_pg_res_ptr = nullptr;
         }
     }
@@ -181,7 +181,7 @@ namespace Grain {
 
     const char* PSQLConnection::fieldName(int32_t column_index) const noexcept {
         if (_m_pg_res_ptr && column_index >= 0 && column_index < _m_field_n) {
-            return PQfname((PGresult *) _m_pg_res_ptr, column_index);
+            return PQfname((PGresult*) _m_pg_res_ptr, column_index);
         }
         else {
             return nullptr;
@@ -192,7 +192,7 @@ namespace Grain {
         if (_m_pg_res_ptr &&
             row_index >= 0 && row_index < _m_tuple_n &&
             column_index >= 0 && column_index < _m_field_n) {
-            return PQgetvalue((PGresult *)_m_pg_res_ptr, row_index, column_index);
+            return PQgetvalue((PGresult*)_m_pg_res_ptr, row_index, column_index);
         }
         else {
             return nullptr;
@@ -201,7 +201,7 @@ namespace Grain {
 
     void PSQLConnection::logResult(Log& l) const noexcept {
         if (_m_pg_res_ptr) {
-            auto pg_res = (PGresult *) _m_pg_res_ptr;
+            auto pg_res = (PGresult*) _m_pg_res_ptr;
             if (_m_pg_status == PGRES_TUPLES_OK) {
                 // Print column headers
                 for (int i = 0; i < _m_field_n; i++) {
@@ -215,7 +215,7 @@ namespace Grain {
                 // Print rows
                 for (int row = 0; row < _m_tuple_n; row++) {
                     for (int col = 0; col < _m_field_n; col++) {
-                        char *value = PQgetvalue(pg_res, row, col);
+                        char* value = PQgetvalue(pg_res, row, col);
                         l << value;
                         if (col < _m_field_n - 1) {
                             l << " | ";
@@ -231,7 +231,7 @@ namespace Grain {
     }
 
 
-    PSQLConnection *PSQLConnections::addConnection() noexcept {
+    PSQLConnection* PSQLConnections::addConnection() noexcept {
         auto connection = new(std::nothrow) PSQLConnection();
         if (connection) {
             m_connections.push(connection);
@@ -240,7 +240,28 @@ namespace Grain {
     }
 
 
-    PSQLConnection *PSQLConnections::connectionByIdentifier(const String &identifier) {
+    PSQLConnection* PSQLConnections::addConnection(
+            const char* identifier,
+            const char* host,
+            int32_t port,
+            const char* db_name,
+            const char* user,
+            const char* password) noexcept {
+
+        auto conn = addConnection();
+        if (conn) {
+            conn->m_identifier = identifier;
+            conn->m_host = host;
+            conn->m_port = port;
+            conn->m_db_name = db_name;
+            conn->m_user = user;
+            conn->m_password = password;
+        }
+        return conn;
+    }
+
+
+    PSQLConnection* PSQLConnections::connectionByIdentifier(const String& identifier) {
         for (auto connection : m_connections) {
             if (connection->m_identifier == identifier) {
                 connection->open();
@@ -251,7 +272,7 @@ namespace Grain {
     }
 
 
-    PSQLConnection *PSQLConnections::firstConnection() {
+    PSQLConnection* PSQLConnections::firstConnection() {
         if (m_connections.size() > 0) {
             auto connection = m_connections.first();
             if (connection != nullptr) {
@@ -279,7 +300,7 @@ namespace Grain {
     }
 
 
-    PSQLProperty *PSQLPropertyList::mutPropertyPtrAtIndex(int32_t index) noexcept {
+    PSQLProperty* PSQLPropertyList::mutPropertyPtrAtIndex(int32_t index) noexcept {
         if (m_properties != nullptr && index >= 0 && index < m_size) {
             return &m_properties[index];
         }
@@ -302,7 +323,7 @@ namespace Grain {
     void PSQLPropertyList::setPropertyAtIndexByPSQLBinaryData(
             int32_t index,
             PSQLType psql_type,
-            const void *data,
+            const void* data,
             int32_t data_size) {
         auto p = mutPropertyPtrAtIndex(index);
         if (p != nullptr) {

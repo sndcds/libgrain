@@ -576,13 +576,12 @@ namespace Grain {
          *  @return A Rect<T> representing the computed cell's position and dimensions.
          */
         [[nodiscard]] Rect cellRect(int32_t column_count, int32_t row_count, T column_spacing, T row_spacing, int32_t column_index, int32_t row_index, int32_t column_span = 1, int32_t row_span = 1, bool round_flag = false) const noexcept {
-
             Rect<T> rect;
 
-            column_count = Type::minOf<int32_t>(column_count, 1);
-            row_count = Type::minOf<int32_t>(row_count, 1);
-            column_span = Type::minOf<int32_t>(column_span, 1);
-            row_span = Type::minOf<int32_t>(row_span, 1);
+            column_count = Type::maxOf<int32_t>(column_count, 1);
+            row_count = Type::maxOf<int32_t>(row_count, 1);
+            column_span = Type::maxOf<int32_t>(column_span, 1);
+            row_span = Type::maxOf<int32_t>(row_span, 1);
 
             T total_columns_width = m_width - column_spacing * (column_count - 1);
             T total_rows_height = m_height - row_spacing * (row_count - 1);
