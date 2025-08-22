@@ -191,6 +191,13 @@ namespace Grain {
         CSSWrongUnit,
         CSSValueOverflow,
 
+        LuaCodeError = 1500,
+
+        TomlNoName = 1700,
+        TomlExpectedTableItem,
+        TomlExpectedTable,
+        TomlParseError,
+
         InvalidProjection,
 
         UnexpectedRuntimeError = 999997,

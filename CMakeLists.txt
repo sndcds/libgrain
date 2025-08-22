@@ -12,6 +12,7 @@ if (APPLE)
     include_directories(
             /opt/local/include
             /opt/local/include/postgresql15/
+            /opt/local/include/lua5.4/
             /opt/homebrew/include
     )
     link_directories(
@@ -22,6 +23,7 @@ elseif (UNIX AND NOT APPLE)
     include_directories(
             /usr/include
             /usr/include/postgresql/
+            /usr/include/lua5.4/
             /usr/local/include
     )
     link_directories(
@@ -152,6 +154,8 @@ add_library(libgrain STATIC
         src/Type/Object.cpp
         src/Type/Range.cpp
         src/Type/FixProperty.cpp
+
+        src/Scripting/Lua.cpp
 
         src/Signal/Signal.cpp
         src/Signal/Audio.cpp

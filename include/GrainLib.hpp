@@ -116,6 +116,8 @@
 #include "Math/Vec3.hpp"
 #include "Math/Vec3Fix.hpp"
 
+#include "Scripting/Lua.hpp"
+
 #include "Signal/Signal.hpp"
 #include "Signal/Audio.hpp"
 #include "Signal/SignalFilter.hpp"

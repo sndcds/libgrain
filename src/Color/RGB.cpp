@@ -485,6 +485,23 @@ namespace Grain {
     }
 
 
+    bool RGB::setSystemAndValues(const char* system_name, float v1, float v2, float v3, float v4) noexcept {
+        if (strcmp(system_name, "rgb") == 0) {
+            set(v1, v2, v3);
+            return true;
+        }
+        else if (strcmp(system_name, "hsv") == 0) {
+            setHSV(v1, v2, v3);
+            return true;
+        }
+        else if (strcmp(system_name, "oklch") == 0) {
+            setOKLCh(v1, v2, v3);
+            return true;
+        }
+        return false;
+    }
+
+
     void RGB::setIntRGB(int32_t r, int32_t g, int32_t b, int32_t max) noexcept {
         if (max != 0) {
             float f = 1.0f / static_cast<float>(max);

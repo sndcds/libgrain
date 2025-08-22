@@ -271,9 +271,9 @@ namespace Grain {
         void setValue(float value) noexcept { m_data[0] = m_data[1] = m_data[2] = value; };
         void set24bit(uint32_t value) noexcept;
         void setUInt8(uint8_t r, uint8_t g, uint8_t b) noexcept;
-
         virtual void setValues(const float* values) noexcept;
         virtual void setValues(const float* values, float scale) noexcept;
+        virtual bool setSystemAndValues(const char* system_name, float v1 = 0.0f, float v2 = 0.0f, float v3 = 0.0f, float v4 = 0.0f) noexcept;
         void setIntRGB(int32_t r, int32_t g, int32_t b, int32_t max) noexcept;
         void setHSV(float h, float s, float v) noexcept;
         void setYUV(const YUV& yuv, Color::Space yuv_color_space = Color::Space::Rec709) noexcept;

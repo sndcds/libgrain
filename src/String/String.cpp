@@ -2199,7 +2199,6 @@ namespace Grain {
      *  @return `true` on successful execution.
      */
     bool String::uuid() noexcept {
-
         if (checkCapacity(36)) {  // UUIDs are 36 characters
             uuid_t uuid;
             uuid_generate(uuid);
