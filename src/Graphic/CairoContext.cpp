@@ -95,9 +95,13 @@ namespace Grain {
     }
 
 
+    void CairoContext::setFillColor(float r, float g, float b, float alpha) noexcept {
+        m_fill_color.setRGBA(r, g, b, alpha);
+    }
+
+
     void CairoContext::setFillRGB(const RGB& rgb) noexcept {
         m_fill_color.setRGB(rgb);
-        // cairo_set_source_rgb((::cairo_t*)_m_cairo_cr, rgb.red(), rgb.green(), rgb.blue());
     }
 
 

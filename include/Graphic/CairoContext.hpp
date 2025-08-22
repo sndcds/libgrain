@@ -33,6 +33,7 @@ namespace Grain {
 
         void setImage(Image* image) noexcept override;
 
+        void setFillColor(float r, float g, float b, float alpha) noexcept override;
         void setFillRGB(const RGB& rgb) noexcept override;
         void setFillRGBAndAlpha(const RGB& rgb, float alpha) noexcept override;
       
