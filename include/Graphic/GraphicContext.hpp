@@ -547,7 +547,7 @@ namespace Grain {
         void strokeRoundBar(double x, double y, double width, double height) noexcept;
         void strokeRoundBar(const Rectd& rect) noexcept;
 
-        void strokeRect(double x, double y, double width, double height) noexcept;
+        virtual void strokeRect(double x, double y, double width, double height) noexcept;
         void strokeRect(const Rectd& rect) noexcept;
         void strokeRect(const Rectd& rect, double offset) noexcept;
         void strokeRoundRect(double x, double y, double width, double height, double radius) noexcept;

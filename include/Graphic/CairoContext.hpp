@@ -35,7 +35,14 @@ namespace Grain {
 
         void setFillRGB(const RGB& rgb) noexcept override;
         void setFillRGBAndAlpha(const RGB& rgb, float alpha) noexcept override;
+      
+        void fillRect(double x, double y, double width, double height) noexcept override;
         void fillRect(const Rectd& rect) noexcept override;
+       
+        void strokeRect(double x, double y, double width, double height) noexcept override;
+
+        [[nodiscard]] void* cairoSurface() { return _m_cairo_surface; }
+        [[nodiscard]] void* cairoContext() { return _m_cairo_cr; }
 
     };
 }

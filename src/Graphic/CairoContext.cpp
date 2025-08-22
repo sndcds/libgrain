@@ -107,6 +107,20 @@ namespace Grain {
     }
 
 
+    void CairoContext::fillRect(double x, double y, double width, double height) noexcept {
+        if (width > 0 && height > 0) {
+            cairo_set_source_rgba(
+                    (::cairo_t*)_m_cairo_cr,
+                    m_fill_color.red(),
+                    m_fill_color.green(),
+                    m_fill_color.blue(),
+                    m_fill_color.alpha());
+            cairo_rectangle((::cairo_t*)_m_cairo_cr, x, y, width, height);
+            cairo_fill((::cairo_t*)_m_cairo_cr);
+        }
+    }
+
+
     void CairoContext::fillRect(const Rectd& rect) noexcept {
         cairo_set_source_rgba(
                 (::cairo_t*)_m_cairo_cr,
@@ -116,5 +130,19 @@ namespace Grain {
                 m_fill_color.alpha());
         cairo_rectangle((::cairo_t*)_m_cairo_cr, rect.m_x, rect.m_y, rect.m_width, rect.m_height);
         cairo_fill((::cairo_t*)_m_cairo_cr);
+    }
+
+
+    void CairoContext::strokeRect(double x, double y, double width, double height) noexcept {
+        if (width > 0 && height > 0) {
+            cairo_set_source_rgba(
+                    (::cairo_t*)_m_cairo_cr,
+                    m_stroke_color.red(),
+                    m_stroke_color.green(),
+                    m_stroke_color.blue(),
+                    m_stroke_color.alpha());
+            cairo_rectangle((::cairo_t*)_m_cairo_cr, x, y, width, height);
+            cairo_stroke((::cairo_t*)_m_cairo_cr);
+        }
     }
 }
