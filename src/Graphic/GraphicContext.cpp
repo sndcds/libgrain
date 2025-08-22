@@ -33,10 +33,6 @@
 #include "Signal/Audio.hpp"
 #include "DSP/Freq.hpp"
 #include "GUI/Components/Component.hpp"
-// #include "Icon.hpp"  TODO !!!!!
-// #include "GrPDFWriter.hpp"  TODO !!!!!
-
-#include <cairo/cairo.h>
 
 
 namespace Grain {
@@ -44,24 +40,21 @@ namespace Grain {
     void _macosView_setContextByComponent(GraphicContext* gc, Component* component);
 
 
+    GraphicContext::GraphicContext() noexcept {
+        _init();
+    }
+
+
     GraphicContext::GraphicContext(Component* component) noexcept {
+        _init();
         #if defined(__APPLE__) && defined(__MACH__)
             _macosView_setContextByComponent(this, component);
         #endif
     }
 
 
-    GraphicContext::GraphicContext(Image* image) noexcept {
-        _init();
-        _setImage(image);
-    }
-
-
     GraphicContext::GraphicContext(PDFWriter* pdf_writer) noexcept {
-
         /* TODO: !!!!!
-        _init();
-
         if (pdf_writer != nullptr) {
 
             setCGContext(pdf_writer->m_cg_context);
@@ -91,30 +84,24 @@ namespace Grain {
         m_stroke_color.black();
     }
 
+
     void GraphicContext::_freeResources() noexcept {
         #if defined(__APPLE__) && defined(__MACH__)
             CGColorSpaceRelease(m_cg_color_space);
             m_cg_color_space = nullptr;
         #endif
-        if (_m_cairo_cr) {
-            cairo_destroy((::cairo_t*)_m_cairo_cr);
-            _m_cairo_cr = nullptr;
-        }
-        if (_m_cairo_surface) {
-            cairo_surface_destroy((::cairo_surface_t*)_m_cairo_surface);
-            _m_cairo_surface = nullptr;
-        }
+    }
 
+    void GraphicContext::_freeImage() noexcept {
         GRAIN_RELEASE(m_image);
         m_image = nullptr;
     }
 
-    void GraphicContext::_setImage(Image* image) noexcept {
-        _freeResources();
-
+    void GraphicContext::setImage(Image* image) noexcept {
         if (!image) {
             return;
         }
+        _freeImage();
 
         GRAIN_RETAIN(image);
         m_image = image;

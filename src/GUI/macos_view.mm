@@ -106,7 +106,6 @@ namespace Grain {
     }
 
     void _macosView_setContextByComponent(GraphicContext* gc, Component* component) {
-        gc->_init();
         gc->macos_setCGContextByComponent([[NSGraphicsContext currentContext] CGContext], component);
     }
 }

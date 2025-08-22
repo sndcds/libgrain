@@ -127,15 +127,18 @@ namespace Grain {
         void* _m_cairo_cr = nullptr;        ///< Cairo cairo_t*
 
     public:
+        explicit GraphicContext() noexcept;
         explicit GraphicContext(Component* component) noexcept;
-        explicit GraphicContext(Image* image) noexcept;
         explicit GraphicContext(PDFWriter* pdf_writer) noexcept;
         ~GraphicContext() noexcept;
 
         void _init() noexcept;
-        void _freeResources() noexcept;
 
-        virtual void _setImage(Image* image) noexcept;
+        void _freeResources() noexcept;
+        void _freeImage() noexcept;
+
+        virtual void setImage(Image* image) noexcept;
+
         #if defined(__APPLE__) && defined(__MACH__)
             void _macos_setImage(Image* image) noexcept;
         #endif

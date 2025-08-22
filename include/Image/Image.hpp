@@ -334,10 +334,11 @@ namespace Grain {
         void flipHorizontal() noexcept;
         void flipVertical() noexcept;
 
-
         void normalize() noexcept;
         void clampFloat() noexcept;
         void linearToGamma() noexcept;
+
+        void unpremultiplyRGBA() noexcept;
 
         ErrorCode applyMatrix(const Mat3f& matrix) noexcept;
         ErrorCode applyFilter() noexcept;

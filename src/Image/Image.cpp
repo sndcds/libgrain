@@ -1476,7 +1476,8 @@ namespace Grain {
                 throw ErrorCode::UnsupportedColorModel;
             }
 
-            GraphicContext gc(this);
+            GraphicContext gc;
+            gc.setImage(image);
             beginDraw();
 
             gc.setStrokeRGB({ 1, 0, 0 });
@@ -1583,6 +1584,30 @@ namespace Grain {
         for (int32_t i = 0; i < totalComponentCount(); i++) {
             *p = Color::linear_to_gamma(*p);
             p++;
+        }
+    }
+
+
+    void Image::unpremultiplyRGBA() noexcept {
+        if (hasAlpha()) {
+            float pixel[4];
+            ImageAccess ia(this, pixel);
+
+            while (ia.stepY()) {
+                while (ia.stepX()) {
+                    ia.read();
+                    if (pixel[3] > 0.0f) {
+                        float f = 1.0f / pixel[3];
+                        pixel[0] *= f;
+                        pixel[1] *= f;
+                        pixel[2] *= f;
+                    }
+                    else {
+                        pixel[0] = pixel[1] = pixel[2] = 0.0f;
+                    }
+                    ia.write();
+                }
+            }
         }
     }
 

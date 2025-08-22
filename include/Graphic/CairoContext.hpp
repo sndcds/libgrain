@@ -20,10 +20,20 @@ namespace Grain {
     class CairoContext : public GraphicContext {
 
     public:
-        explicit CairoContext(Image* image) noexcept;
+        // explicit CairoContext(Component* component) = default;
+        explicit CairoContext() noexcept;
+        // explicit CairoContext(PDFWriter* pdfWriter) = default;
 
-        void _setImage(Image* image) noexcept override;
+        ~CairoContext() noexcept;
 
+        void log(Log& l) const noexcept;
+
+
+        void _freeCairoResources() noexcept;
+
+        void setImage(Image* image) noexcept override;
+
+        void setFillRGB(const RGB& rgb) noexcept override;
         void setFillRGBAndAlpha(const RGB& rgb, float alpha) noexcept override;
         void fillRect(const Rectd& rect) noexcept override;
 
