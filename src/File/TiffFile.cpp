@@ -403,7 +403,6 @@ namespace Grain {
         int64_t data_offset = HeaderSize + IFDEntryCountSize + m_entry_preparations.size() * IFDEntrySize + NextIFDPosSize;
 
         // Write entries
-        int32_t index = 0;
         for (auto& ep : m_entry_preparations) {
             ep.m_pos_in_file = pos();
             if (ep.m_temp_file_pos >= 0) {
@@ -411,7 +410,6 @@ namespace Grain {
             }
 
             writeEntry(ep);
-            index++;
         }
 
         // Next IFD position
@@ -657,22 +655,19 @@ namespace Grain {
             log << "data_size: " << data_size << log.endl;
             log << "offset: " << offset << log.endl;
 
+            /* Not validating or consuming out-of-line data here
             if (data_size > 4) {
                 savePos();
-
                 setPos(offset);
                 if ((TiffType)type == TiffType::Double) {
-                    for (int32_t i = 0; i < count; i++) {
-                        double value = readValue<double>();
-                    }
+                    skip(count * sizeof(double));
                 }
                 else if ((TiffType)type == TiffType::Ascii) {
-                    char buffer[1000];
-                    readStr(std::min(count, 1000U), buffer);
+                    skip(count);
                 }
-
                 restorePos();
             }
+            */
 
             if (tag == TiffTag::GeoDirectory) {
                 m_geo_directory_pos = offset;

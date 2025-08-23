@@ -400,14 +400,12 @@ namespace Grain {
 
 
     const BezierValueCurvePoint* BezierValueCurve::pointAtIndex(int32_t index) const noexcept {
-
-        return index >= 0 && index < m_points.size() ? &m_points[index] : nullptr;
+        return index >= 0 && index < static_cast<int32_t>(m_points.size()) ? &m_points[index] : nullptr;
     }
 
 
     BezierValueCurvePoint* BezierValueCurve::mutPointAtIndex(int32_t index) noexcept {
-
-        return index >= 0 && index < m_points.size() ? &m_points[index] : nullptr;
+        return index >= 0 && index < static_cast<int32_t>(m_points.size()) ? &m_points[index] : nullptr;
     }
 
 

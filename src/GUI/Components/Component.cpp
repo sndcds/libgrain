@@ -40,7 +40,7 @@ namespace Grain {
     #endif
 
 
-    Component::Component(const Rectd& rect, int32_t tag) noexcept : m_rect(rect), m_tag(tag) {
+    Component::Component(const Rectd& rect, int32_t tag) noexcept : m_tag(tag), m_rect(rect) {
         #if defined(__APPLE__) && defined(__MACH__)
             _macosView_initForUI(this, rect);
         #endif

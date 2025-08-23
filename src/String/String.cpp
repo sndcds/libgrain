@@ -60,12 +60,12 @@ namespace Grain {
 
 
     void Utf8SingleByteDelimiterStates::setByChar(char c) {
-
         if ((c & 0x80) == 0x0) {
             // Only if c is a valid 7 bit ASCII character
-            m_flags[c] |= kFlagDelimiter;
+            uint8_t uc = static_cast<uint8_t>(c);
+            m_flags[uc] |= kFlagDelimiter;
             if (String::charIsWhiteSpace(c)) {
-                m_flags[c] |= kFlagWhiteSpace;
+                m_flags[uc] |= kFlagWhiteSpace;
             }
         }
     }
@@ -4578,7 +4578,7 @@ String String::fileDirPath() const noexcept {
         m_pos++;
         m_index++;
 
-        if (m_pos >= m_size) {
+        if (m_pos >= static_cast<int32_t>(m_size)) {
             m_pos = 0;
         }
 
@@ -4635,7 +4635,7 @@ String String::fileDirPath() const noexcept {
 
         static const char* _default = "!?";
 
-        if (index >= m_size || index < 0) {
+        if (index >= static_cast<int32_t>(m_size) || index < 0) {
             return _default;
         }
 

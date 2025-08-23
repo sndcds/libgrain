@@ -116,7 +116,7 @@ namespace Grain {
         int32_t undefinedValuesCount() const noexcept { return m_undefined_values_count; }
 
         bool matchesSize(int32_t width, int32_t height) const noexcept {
-            return m_width == width && m_height == height;
+            return width == static_cast<int32_t>(m_width) && height == static_cast<int32_t>(m_height);
         }
 
 

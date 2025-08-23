@@ -212,14 +212,11 @@ namespace Grain {
 
 
     void NetworkInterfaceList::log(Log& l) const {
-
         l.header(className());
         l << "network interfaces: " << size() << Log::endl;
         l++;
-        int32_t index  = 0;
         for (auto& interface : *this) {
             interface->log(l);
-            index++;
         }
         l--;
         l--;
@@ -424,7 +421,6 @@ namespace Grain {
             return -1;
         }
 
-        task_basic_info_t basic_info;
         thread_array_t thread_list;
         mach_msg_type_number_t thread_count;
 
@@ -432,9 +428,8 @@ namespace Grain {
         mach_msg_type_number_t thread_info_count;
 
         thread_basic_info_t basic_info_th;
-        uint32_t stat_thread = 0; // Mach threads
 
-        basic_info = (task_basic_info_t)tinfo;
+        // auto basic_info = (task_basic_info_t)tinfo; // Unused
 
         // get threads in the task
         kr = task_threads(mach_task_self(), &thread_list, &thread_count);
@@ -442,9 +437,12 @@ namespace Grain {
             return -1;
         }
 
+        /* Unused
+        uint32_t stat_thread = 0; // Mach threads, unused
         if (thread_count > 0) {
             stat_thread += thread_count;
         }
+         */
 
         long tot_sec = 0;
         long tot_usec = 0;

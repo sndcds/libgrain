@@ -508,8 +508,7 @@ namespace Grain {
         }
 
         friend std::ostream& operator << (std::ostream& os, const StringRing& o) {
-            os << "StringRing size: " << o.m_size << std::endl;
-            for (int32_t i = 0; i < o.m_size; i++) {
+            for (int32_t i = 0; i < static_cast<int32_t>(o.m_size); i++) {
                 std::cout << i << ": " << o.read(i) << std::endl;
             }
             return os;

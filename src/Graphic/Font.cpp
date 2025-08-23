@@ -333,57 +333,6 @@ namespace Grain {
 #endif
 
 
-    int32_t Font::advancesForText(const String& text, int32_t max_length, Vec2d* out_advances) noexcept {
-        return advancesForText(text.utf8(), max_length, out_advances);
-    }
-
-
-#if defined(__APPLE__) && defined(__MACH__)
-    int32_t Font::advancesForText(const char* text, int32_t max_length, Vec2d* out_advances) noexcept {
-        int32_t result = -1;
-
-        if (text && out_advances && max_length > 0) {
-
-            int32_t char_count = 0;
-
-            // Create a CFStringRef from a UTF-8 encoded C-string
-            CFStringRef cf_string = CFStringCreateWithCString(nullptr, text, kCFStringEncodingUTF8);
-            if (cf_string != nullptr) {
-                // Get the character count
-                char_count = static_cast<int32_t>(CFStringGetLength(cf_string));
-                CFRelease(cf_string);
-            }
-
-            if (char_count > max_length) {
-                return -1;
-            }
-
-            UniChar chars[char_count];
-            CGGlyph glyphs[char_count];
-            CGSize advances[char_count];
-            CTFontRef ct_font = this->ctFont();
-
-            CTFontGetGlyphsForCharacters(ct_font, chars, glyphs, char_count);
-            CTFontGetAdvancesForGlyphs(ct_font, kCTFontOrientationDefault, glyphs, advances, char_count);
-
-            for (int32_t i = 0; i < char_count; i++) {
-                out_advances[i].m_x = static_cast<double>(advances[i].width);
-                out_advances[i].m_y = static_cast<double>(advances[i].height);
-            }
-
-            result = char_count;
-        }
-
-        return result;
-    }
-#else
-    int32_t Font::advancesForText(const char* text, int32_t max_length, Vec2d* out_advances) noexcept {
-        // TODO: Implement linux version
-        return 0;
-    }
-#endif
-
-
     FontAttributes* Font::buildAttributes(const RGB& color, float alpha) const noexcept {
 
         return new (std::nothrow) FontAttributes(this, color, alpha);

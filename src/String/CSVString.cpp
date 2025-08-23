@@ -211,11 +211,9 @@ namespace Grain {
 
 
     bool CSVLineParser::nextStr(int64_t max_length, char *out_str) noexcept {
-
         char *str;
-
         if (nextStr(&str)) {
-            if (strlen(str) >= max_length) {
+            if (static_cast<int64_t>(strlen(str)) >= max_length) {
                 return false;
             }
             strcpy(out_str, str);

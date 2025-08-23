@@ -94,14 +94,14 @@ namespace Grain {
 
     void CVF2::pushValue(int64_t value) {
 
-        if (m_curr_value_index >= m_width) {
+        if (m_curr_value_index >= static_cast<int32_t>(m_width)) {
             throw Error::specific(kErrFatal);
         }
 
         m_row_values[m_curr_value_index] = value;
         m_curr_value_index++;
 
-        if (m_curr_value_index >= m_width) {
+        if (m_curr_value_index >= static_cast<int32_t>(m_width)) {
             _startRow();
             _encodeRow(m_row_values);
         }
@@ -119,7 +119,8 @@ namespace Grain {
             Type::fillStridedArray<int64_t>(m_data, 0, 1, n, n, kUndefinedValue);
         }
 
-        if (x < 0 || x >= m_width || y < 0 || y >= m_height) {
+        if (x < 0 || x >= static_cast<int32_t>(m_width) ||
+            y < 0 || y >= static_cast<int32_t>(m_height)) {
             throw ErrorCode::BadArgs;
         }
 
@@ -172,7 +173,7 @@ namespace Grain {
 
         m_curr_row_index++;
 
-        if (m_curr_row_index == m_height) {
+        if (m_curr_row_index == static_cast<int32_t>(m_height)) {
             throw Error::specific(kErrFatal);
         }
 
@@ -188,7 +189,7 @@ namespace Grain {
 
     void CVF2::_pushNibble(uint8_t nibble) {
 
-        if (m_curr_byte_index >= m_byte_buffer_size) {
+        if (m_curr_byte_index >= static_cast<int32_t>(m_byte_buffer_size)) {
             throw Error::specific(kErrFatal);
         }
 
@@ -273,7 +274,7 @@ namespace Grain {
         m_curr_byte_index = 0;
         m_nibble_count = 0;
 
-        for (int32_t i = 0; i < m_width; i++) {
+        for (int32_t i = 0; i < static_cast<int32_t>(m_width); i++) {
             int64_t value = values[i];
             bool range_flag = false;
             int64_t prev_min = min;
@@ -304,7 +305,7 @@ namespace Grain {
                 m_data_undef_n++;
             }
 
-            bool stop = i == (m_width - 1);
+            bool stop = i == (static_cast<int32_t>(m_width) - 1);
 
             if (range_flag) {
                 _bufferValues(values, seq_count, seq_sum, seq_length, prev_min);
@@ -335,7 +336,7 @@ namespace Grain {
         m_file->writeValue<uint16_t>(m_curr_row_digits);
         m_file->writeValue<uint32_t>(seq_count);
 
-        for (int32_t i = 0; i < seq_count; i++) {
+        for (int32_t i = 0; i < static_cast<int32_t>(seq_count); i++) {
             if (i > 0) {
                 // First offset is allways 0, therefor it is skipped
                 m_file->writeValue<uint32_t>(m_seq_offsets[i]);
@@ -347,10 +348,10 @@ namespace Grain {
 
 
         // When the last row was encoded, save row index table and update the file header
-        if (m_curr_row_index == m_height - 1) {
+        if (m_curr_row_index == static_cast<int32_t>(m_height) - 1) {
             int64_t row_offsets_pos = m_file->pos();
 
-            for (int32_t i = 0; i < m_height; i++) {
+            for (int32_t i = 0; i < static_cast<int32_t>(m_height); i++) {
                 m_file->writeValue<uint32_t>(static_cast<uint32_t>(m_row_offsets[i]));
             }
 
@@ -372,7 +373,7 @@ namespace Grain {
 
         seq_count = 1;
 
-        for (int32_t i = 0; i < m_width; i++) {
+        for (int32_t i = 0; i < static_cast<int32_t>(m_width); i++) {
 
             int64_t value = values[i];
             bool range_flag = false;
@@ -390,7 +391,7 @@ namespace Grain {
                 range_flag = range > max_diff;
             }
 
-            bool stop = i == (m_width - 1);
+            bool stop = i == (static_cast<int32_t>(m_width) - 1);
 
             if (range_flag) {
                 nibble_count += seq_length * digits;

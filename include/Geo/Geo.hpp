@@ -158,7 +158,7 @@ namespace Grain {
         static double sphericalLawOfCosinesDistance(double lon1, double lat1, double lon2, double lat2, double radius) noexcept;
 
 
-        static const bool sridInfo(SRIDIndex index, GeoSRIDInfo& out_info) noexcept {
+        static bool sridInfo(SRIDIndex index, GeoSRIDInfo& out_info) noexcept {
             if (index >= SRIDIndex::First && index <= SRIDIndex::Last) {
                 out_info = g_srid_info[static_cast<int32_t>(index)];
                 return true;

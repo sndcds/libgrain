@@ -99,7 +99,7 @@ namespace Grain {
      *        being updated atomically or under proper synchronization.
      */
     void ThreadPool::waitForCompletion(int32_t task_count) noexcept {
-        while (m_completed_count < task_count) {
+        while (task_count > static_cast<int32_t>(m_completed_count)) {
             std::this_thread::sleep_for(std::chrono::milliseconds(m_completion_sleep_ms));
         }
     }

@@ -29,6 +29,7 @@ namespace Grain {
 
         void _init(const Rectd &rect) noexcept;
 
+        virtual View* addView() noexcept { return addView(Rectd(0, 0, 100, 100)); }
         virtual View* addView(const Rectd& rect) noexcept;
         Component* addComponent(Component* component, AddFlags flags) noexcept;
         void removeComponent(Component* component) noexcept;

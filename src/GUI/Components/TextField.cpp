@@ -85,9 +85,9 @@ namespace Grain {
 
         m_content_rect = contentRect();
         double padding_left = style->paddingLeft();
-        double padding_top = style->paddingTop();
+        // double padding_top = style->paddingTop();
         double padding_right = style->paddingRight();
-        double padding_bottom = style->paddingBottom();
+        // double padding_bottom = style->paddingBottom();
 
         auto view_color = style->viewColor();
         auto text_color = style->textColor();
@@ -108,29 +108,18 @@ namespace Grain {
 
         int32_t text_length = textLength();
 
+        if (isPasswordMode()) {
+            // TODO: Implement passwort rendering with circles
+        }
+
         if (text_length > 0) {
             gc.setTextMatrix(1, 0, 0, -1, 0, 0);
             float content_width = m_content_rect.width();
-            RGBA fg_selected_color = style->textSelectionColor();
+            // RGBA fg_selected_color = style->textSelectionColor();
 
             CGColorRef cg_text_color1 = text_color.createCGColor();
             CGColorRef cg_text_color2 = selection_color.createCGColor();
-            CFStringRef cf_str = nullptr;
-
-            if (isPasswordMode()) {
-                char buffer[text_length * 3 + 1]; // TODO: !!!!!
-                for (int32_t i = 0; i < text_length; i++) {
-                    buffer[i * 3] = 0xE2;
-                    buffer[i * 3 + 1] = 0x97;
-                    buffer[i * 3 + 2] = 0x8F;
-                }
-
-                buffer[text_length * 3] = 0;
-                cf_str = CFStringCreateWithCString(NULL, buffer, kCFStringEncodingUTF8);
-            }
-            else {
-                cf_str = CFStringCreateWithCString(NULL, m_text->utf8(), kCFStringEncodingUTF8);
-            }
+            CFStringRef cf_str = CFStringCreateWithCString(NULL, m_text->utf8(), kCFStringEncodingUTF8);
 
             CFMutableAttributedStringRef cf_attr_str = CFAttributedStringCreateMutable(kCFAllocatorDefault, 0);
             CFAttributedStringReplaceString(cf_attr_str, CFRangeMake(0, 0), cf_str);

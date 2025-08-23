@@ -554,7 +554,6 @@ namespace Grain {
 
 
     void GraphicPath::split(double start, double end, GraphicPathSplitParam &out_split_param) {
-
         m_must_update = true;    // TODO: !!!!
         _update();
 
@@ -568,8 +567,6 @@ namespace Grain {
         out_split_param.m_start = start;
         out_split_param.m_end = end;
 
-        // printf("*** start = %f, end = %f\n", start, end);
-
         int32_t n  = pointCount();
         double a = start * m_length;
         double b = end * m_length;
@@ -581,13 +578,9 @@ namespace Grain {
         int32_t si2 = -1;
 
         for (int32_t point_index = 0; point_index < m_points.size(); point_index++) {
-
             auto point = m_points.elementPtrAtIndex(point_index);
 
             if (point_index > 0) {
-
-                // printf("*** pointIndex = %d, bezier segment length = %f\n", pointIndex, point->mBezierSegmentLength);
-
                 pos2 += point->m_bezier_segment_length;
 
                 if (si1 < 0) {
@@ -616,8 +609,6 @@ namespace Grain {
 
                 pos1 = pos2;
             }
-
-            point_index++;
         }
 
         if (si1 < 0) {

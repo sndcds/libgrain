@@ -112,7 +112,7 @@ namespace Grain {
         void setViewLimits(int32_t index, int32_t min, int32_t max) noexcept;
         void setViewSize(int32_t index, int32_t size) noexcept;
 
-        View* addView() noexcept;
+        View* addView() noexcept override;
         // void removeView(View* view) noexcept override; TODO: !!!!!
 
         void initLayout() noexcept;

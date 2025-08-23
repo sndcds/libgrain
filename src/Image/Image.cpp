@@ -1362,7 +1362,7 @@ namespace Grain {
                 auto p = (uint8_t*)_m_pixel_data;
                 p += component_offset;
                 auto v = static_cast<uint8_t>(alpha * std::numeric_limits<uint8_t>::max());
-                for (int32_t i = 0; i < _m_pixel_count; i++) {
+                for (uint32_t i = 0; i < _m_pixel_count; i++) {
                     *p = v;
                     p += component_step;
                 }
@@ -1371,7 +1371,7 @@ namespace Grain {
                 auto p = (uint16_t*)_m_pixel_data;
                 p += component_offset;
                 auto v = static_cast<uint16_t>(alpha * std::numeric_limits<uint16_t>::max());
-                for (int32_t i = 0; i < _m_pixel_count; i++) {
+                for (uint32_t i = 0; i < _m_pixel_count; i++) {
                     *p = v;
                     p += component_step;
                 }
@@ -1379,7 +1379,7 @@ namespace Grain {
             else if (m_pixel_type == PixelType::Float) {
                 auto p = (float*)_m_pixel_data;
                 p += component_offset;
-                for (int32_t i = 0; i < _m_pixel_count; i++) {
+                for (uint32_t i = 0; i < _m_pixel_count; i++) {
                     *p = alpha;
                     p += component_step;
                 }
@@ -1689,58 +1689,8 @@ namespace Grain {
 
 
     ErrorCode Image::convolution(int32_t channel, const Dimensioni& kernel_size, const float *kernel_data, Image& out_image) noexcept {
-
-        auto result = ErrorCode::None;
-
-        try {
-            if (m_pixel_type != PixelType::Float) { Error::throwSpecific(0); }
-            if (!out_image.sameFormat(this)) { Error::throwSpecific(1); }
-            if (!out_image.sameSize(this)) { Error::throwSpecific(2); };
-            if (!kernel_data) { Error::throwSpecific(3); }
-            if (kernel_size.m_width < 1 || kernel_size.m_height < 1) { Error::throwSpecific(4); }
-            if (!(kernel_size.m_width & 0x1)) { Error::throwSpecific(5); }
-            if (!(kernel_size.m_height & 0x1)) { Error::throwSpecific(6); }
-
-            int32_t kw = kernel_size.m_width;
-            int32_t kh = kernel_size.m_height;
-            int32_t xo = (kw - 1) / 2;
-            int32_t yo = (kh - 1) / 2;
-
-            float* src_pixel_ptr = (float*)pixelDataPtr();
-            float *dst_pixel_ptr = (float*)out_image.pixelDataPtr();
-
-            // TODO: !!!!!
-            float* sp[kernel_size.m_height];  // Source pointers TODO: Refactor!
-
-            int32_t slo = 0;  // Source line offset
-            for (int32_t y = yo; y < m_height - yo; y++) {
-                float* dp = &dst_pixel_ptr[y * m_width + xo];  // Destination pointer
-                int32_t cslo = slo;  // Current source line offest
-                for (int32_t i = 0; i < kernel_size.m_height; i++) {
-                    sp[i] = &src_pixel_ptr[cslo];
-                    cslo += m_width;
-                }
-
-                for (int32_t x = xo; x < m_width - xo; x++) {
-                    float v = 0.0f;
-                    const float *k = kernel_data;
-                    for (int32_t ky = 0; ky < kh; ky++) {
-                        for (int32_t kx = 0; kx < kw; kx++) {
-                            v += sp[ky][kx] * *k++;
-                        }
-                        sp[ky]++;
-                    }
-                    *dp++ = v;
-                }
-
-                slo += m_width;
-            }
-        }
-        catch (ErrorCode err) {
-            result = err;
-        }
-
-        return result;
+        // TODO: Implement
+        return ErrorCode::Unknown;
     }
 
 
@@ -3103,22 +3053,12 @@ namespace Grain {
             }
         }
 
-        int black_level = lr.imgdata.color.black;
-        std::cout << "black_level: " << black_level << '\n';
-        int white_level = lr.imgdata.color.maximum;
-        std::cout << "white_level: " << white_level << '\n';
-
-        int linear_max[4];
+        image->m_raw_white_level = lr.imgdata.color.maximum;
+        image->m_raw_black_level = lr.imgdata.color.black;
         for (int i = 0; i < 4; ++i) {
-            std::cout << "linear_max[" << i << "]: " << lr.imgdata.rawdata.color.linear_max[i] << std::endl;
+            image->m_raw_linear_max[i] = lr.imgdata.rawdata.color.linear_max[i];
+            image->m_raw_linear_black[i] = lr.imgdata.color.cblack[i];
         }
-
-        // Black level(s)
-        for (int i = 0; i < 4; ++i) {
-            std::cout << "Black level [" << i << "]: "
-                      << lr.imgdata.color.cblack[i] << '\n';
-        }
-
 
         image->m_png_fallback_pixel_type = Image::PixelType::UInt16;
 
@@ -3145,7 +3085,6 @@ namespace Grain {
         int width = lr.imgdata.sizes.raw_width;
         int height = lr.imgdata.sizes.raw_height;
         int pitch = width;
-        float scale = 1.0f / static_cast<float>(white_level);
 
         std::cout << "raw_width: " << width << std::endl;
         std::cout << "raw_height: " << height << std::endl;
@@ -3169,29 +3108,27 @@ namespace Grain {
 
         int32_t cfa[2][2]{};
 
-        int32_t cfa_pattern = kCFAPatternUnknown;
+        image->m_raw_cfa_pattern = kCFAPatternUnknown;
         switch (cfa_pattern_code) {
             case grbg:
                 cfa[0][0] = 1; cfa[0][1] = 0; cfa[1][0] = 2; cfa[1][1] = 1;
-                cfa_pattern = kCFAPatternGRBG;
+                image->m_raw_cfa_pattern = kCFAPatternGRBG;
                 break;
             case rggb:
             case rgbg: // Lumix S5 returns this, which must be interpreted as 'RGGB'!
                 cfa[0][0] = 0; cfa[0][1] = 1; cfa[1][0] = 1; cfa[1][1] = 2;
-                cfa_pattern = kCFAPatternRGGB;
+                image->m_raw_cfa_pattern = kCFAPatternRGGB;
                 break;
             case gbrg:
                 cfa[0][0] = 1; cfa[0][1] = 2; cfa[1][0] = 0; cfa[1][1] = 1;
-                cfa_pattern = kCFAPatternGBRG;
+                image->m_raw_cfa_pattern = kCFAPatternGBRG;
                 break;
             case bggr:
                 cfa[0][0] = 2; cfa[0][1] = 1; cfa[1][0] = 1; cfa[1][1] = 0;
-                cfa_pattern = kCFAPatternBGGR;
+                image->m_raw_cfa_pattern = kCFAPatternBGGR;
                 break;
         }
 
-
-        auto d = (float *)image->pixelDataPtr();
 
         pitch = static_cast<int>(lr.imgdata.sizes.raw_pitch / sizeof(uint16_t));
 
@@ -3237,22 +3174,6 @@ namespace Grain {
             }
         }
 
-        std::cout << "\n... min: \n";
-        for (int32_t y = 0; y < 2; y++) {
-            for (int32_t x = 0; x < 2; x++) {
-                int32_t color = cfa[y % 2][x % 2];
-                std::cout << min[y][x] << " | ";
-            }
-        }
-
-        std::cout << "\n... max: \n";
-        for (int32_t y = 0; y < 2; y++) {
-            for (int32_t x = 0; x < 2; x++) {
-                int32_t color = cfa[y % 2][x % 2];
-                std::cout << max[y][x] << " | ";
-            }
-        }
-
         return image;
     }
 
@@ -3284,7 +3205,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // Lumina uint8_t to Lumina uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint16_t>(s[0]) << 8;
                                 s += s_step;
                                 d += d_step;
@@ -3293,7 +3214,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // Lumina uint8_t to Lumina float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<float>(s[0]) / std::numeric_limits<uint8_t>::max();
                                 s += s_step;
                                 d += d_step;
@@ -3305,7 +3226,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // Lumina uint16_t to Lumina uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint8_t>(s[0] >> 8);
                                 s += s_step;
                                 d += d_step;
@@ -3314,7 +3235,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // Lumina uint16_t to Lumina uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = s[0];
                                 s += s_step;
                                 d += d_step;
@@ -3323,7 +3244,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // Lumina uint16_t to Lumina float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<float>(s[0]) / std::numeric_limits<uint16_t>::max();
                                 s += s_step;
                                 d += d_step;
@@ -3335,7 +3256,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // Lumina float to Lumina uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint8_t>(s[0] * std::numeric_limits<uint8_t>::max());
                                 s += s_step;
                                 d += d_step;
@@ -3344,7 +3265,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // Lumina float to Lumina uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint16_t>(s[0] * std::numeric_limits<uint16_t>::max());
                                 s += s_step;
                                 d += d_step;
@@ -3363,7 +3284,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // Lumina uint8_t to LuminaAlpha uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = s[0];
                                 d[1] = std::numeric_limits<uint8_t>::max();
                                 s += s_step;
@@ -3373,7 +3294,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // Lumina uint8_t to LuminaAlpha uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint16_t>(s[0]) << 8;
                                 d[1] = std::numeric_limits<uint16_t>::max();
                                 s += s_step;
@@ -3383,7 +3304,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // Lumina uint8_t to LuminaAlpha float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<float>(s[0]) / std::numeric_limits<uint8_t>::max();
                                 d[1] = 1.0f;
                                 s += s_step;
@@ -3396,7 +3317,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // Lumina uint16_t to LuminaAlpha uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint8_t>(s[0] >> 8);
                                 d[1] = std::numeric_limits<uint8_t>::max();
                                 s += s_step;
@@ -3406,7 +3327,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // Lumina uint16_t to LuminaAlpha uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = s[0];
                                 d[1] = std::numeric_limits<uint16_t>::max();
                                 s += s_step;
@@ -3416,7 +3337,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // Lumina uint16_t to LuminaAlpha float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<float>(s[0]) / std::numeric_limits<uint16_t>::max();
                                 d[1] = 1.0f;
                                 s += s_step;
@@ -3429,7 +3350,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // Lumina float to LuminaAlpha uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint8_t>(s[0] * std::numeric_limits<uint8_t>::max());
                                 d[1] = std::numeric_limits<uint8_t>::max();
                                 s += s_step;
@@ -3439,7 +3360,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // Lumina float to LuminaAlpha uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint16_t>(s[0] * std::numeric_limits<uint16_t>::max());
                                 d[1] = std::numeric_limits<uint16_t>::max();
                                 s += s_step;
@@ -3449,7 +3370,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // Lumina float to LuminaAlpha float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = s[0];
                                 d[1] = 1.0f;
                                 s += s_step;
@@ -3465,7 +3386,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // Lumina uint8_t to RGB uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = d[1] = d[2] = s[0];
                                 s += s_step;
                                 d += d_step;
@@ -3474,7 +3395,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // Lumina uint8_t to RGB uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = d[1] = d[2] = static_cast<uint16_t>(s[0]) << 8;
                                 s += s_step;
                                 d += d_step;
@@ -3483,7 +3404,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // Lumina uint8_t to RGB float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = d[1] = d[2] = static_cast<float>(s[0]) / std::numeric_limits<uint8_t>::max();
                                 s += s_step;
                                 d += d_step;
@@ -3495,7 +3416,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // Lumina uint16_t to RGB uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = d[1] = d[2] = static_cast<uint8_t>(s[0] >> 8);
                                 s += s_step;
                                 d += d_step;
@@ -3504,7 +3425,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // Lumina uint16_t to RGB uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = d[1] = d[2] = s[0];
                                 s += s_step;
                                 d += d_step;
@@ -3513,7 +3434,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // Lumina uint16_t to RGB float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = d[1] = d[2] = static_cast<float>(s[0]) / std::numeric_limits<uint16_t>::max();
                                 s += s_step;
                                 d += d_step;
@@ -3525,7 +3446,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // Lumina float to RGB uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = d[1] = d[2] = static_cast<uint8_t>(s[0] * std::numeric_limits<uint8_t>::max());
                                 s += s_step;
                                 d += d_step;
@@ -3534,7 +3455,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // Lumina float to RGB uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = d[1] = d[2] = static_cast<uint16_t>(s[0] * std::numeric_limits<uint16_t>::max());
                                 s += s_step;
                                 d += d_step;
@@ -3543,7 +3464,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // Lumina float to RGB float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = d[1] = d[2] = s[0];
                                 s += s_step;
                                 d += d_step;
@@ -3558,7 +3479,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // Lumina uint8_t to RGBA uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = d[1] = d[2] = s[0];
                                 d[3] = std::numeric_limits<uint8_t>::max();
                                 s += s_step;
@@ -3568,7 +3489,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // Lumina uint8_t to RGBA uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = d[1] = d[2] = static_cast<uint16_t>(s[0]) << 8;
                                 d[3] = std::numeric_limits<uint16_t>::max();
                                 s += s_step;
@@ -3578,7 +3499,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // Lumina uint8_t to RGBA float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = d[1] = d[2] = static_cast<float>(s[0]) / std::numeric_limits<uint8_t>::max();
                                 d[3] = 1.0f;
                                 s += s_step;
@@ -3591,7 +3512,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // Lumina uint16_t to RGBA uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = d[1] = d[2] = static_cast<uint8_t>(s[0] >> 8);
                                 d[3] = std::numeric_limits<uint8_t>::max();
                                 s += s_step;
@@ -3601,7 +3522,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // Lumina uint16_t to RGBA uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = d[1] = d[2] = s[0];
                                 d[3] = std::numeric_limits<uint16_t>::max();
                                 s += s_step;
@@ -3611,7 +3532,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // Lumina uint16_t to RGBA float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = d[1] = d[2] = static_cast<float>(s[0]) / std::numeric_limits<uint16_t>::max();
                                 d[3] = 1.0f;
                                 s += s_step;
@@ -3624,7 +3545,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // Lumina float to RGBA uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = d[1] = d[2] = static_cast<uint8_t>(s[0] * std::numeric_limits<uint8_t>::max());
                                 d[3] = std::numeric_limits<uint8_t>::max();
                                 s += s_step;
@@ -3634,7 +3555,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // Lumina float to RGBA uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = d[1] = d[2] = static_cast<uint16_t>(s[0] * std::numeric_limits<uint16_t>::max());
                                 d[3] = std::numeric_limits<uint16_t>::max();
                                 s += s_step;
@@ -3644,7 +3565,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // Lumina float to RGBA float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = d[1] = d[2] = s[0];
                                 d[3] = 1.0f;
                                 s += s_step;
@@ -3663,7 +3584,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // LuminaAlpha uint8_t to Lumina uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = s[0];
                                 s += s_step;
                                 d += d_step;
@@ -3672,7 +3593,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // LuminaAlpha uint8_t to Lumina uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint16_t>(s[0]) << 8;
                                 s += s_step;
                                 d += d_step;
@@ -3681,7 +3602,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // LuminaAlpha uint8_t to Lumina float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<float>(s[0]) / std::numeric_limits<uint8_t>::max();
                                 s += s_step;
                                 d += d_step;
@@ -3693,7 +3614,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // LuminaAlpha uint16_t to Lumina uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint8_t>(s[0] >> 8);
                                 s += s_step;
                                 d += d_step;
@@ -3702,7 +3623,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // LuminaAlpha uint16_t to Lumina uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = s[0];
                                 s += s_step;
                                 d += d_step;
@@ -3711,7 +3632,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // LuminaAlpha uint16_t to Lumina float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<float>(s[0]) / std::numeric_limits<uint16_t>::max();
                                 s += s_step;
                                 d += d_step;
@@ -3723,7 +3644,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // LuminaAlpha float to Lumina uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint8_t>(s[0] * std::numeric_limits<uint8_t>::max());
                                 s += s_step;
                                 d += d_step;
@@ -3732,7 +3653,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // LuminaAlpha float to Lumina uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint16_t>(s[0] * std::numeric_limits<uint16_t>::max());
                                 s += s_step;
                                 d += d_step;
@@ -3741,7 +3662,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // LuminaAlpha float to Lumina float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = s[0];
                                 s += s_step;
                                 d += d_step;
@@ -3760,7 +3681,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // LuminaAlpha uint8_t to LuminaAlpha uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint16_t>(s[0]) << 8;
                                 d[1] = static_cast<uint16_t>(s[1]) << 8;
                                 s += s_step;
@@ -3770,7 +3691,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // LuminaAlpha uint8_t to LuminaAlpha float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<float>(s[0]) / std::numeric_limits<uint8_t>::max();
                                 d[1] = static_cast<float>(s[1]) / std::numeric_limits<uint8_t>::max();
                                 s += s_step;
@@ -3783,7 +3704,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // LuminaAlpha uint16_t to LuminaAlpha uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint8_t>(s[0] >> 8);
                                 d[1] = static_cast<uint8_t>(s[1] >> 8);
                                 s += s_step;
@@ -3797,7 +3718,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // LuminaAlpha uint16_t to LuminaAlpha float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<float>(s[0]) / std::numeric_limits<uint16_t>::max();
                                 d[1] = static_cast<float>(s[1]) / std::numeric_limits<uint16_t>::max();
                                 s += s_step;
@@ -3810,7 +3731,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // LuminaAlpha float to LuminaAlpha uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint8_t>(s[0] * std::numeric_limits<uint8_t>::max());
                                 d[1] = static_cast<uint8_t>(s[1] * std::numeric_limits<uint8_t>::max());
                                 s += s_step;
@@ -3820,7 +3741,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // LuminaAlpha float to LuminaAlpha uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint16_t>(s[0] * std::numeric_limits<uint16_t>::max());
                                 d[1] = static_cast<uint16_t>(s[1] * std::numeric_limits<uint16_t>::max());
                                 s += s_step;
@@ -3840,7 +3761,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // LuminaAlpha uint8_t to RGB uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = d[1] = d[2] = s[0];
                                 s += s_step;
                                 d += d_step;
@@ -3849,7 +3770,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // LuminaAlpha uint8_t to RGB uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = d[1] = d[2] = static_cast<uint16_t>(s[0]) << 8;
                                 s += s_step;
                                 d += d_step;
@@ -3858,7 +3779,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // LuminaAlpha uint8_t to RGB float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = d[1] = d[2] = static_cast<float>(s[0]) / std::numeric_limits<uint8_t>::max();
                                 s += s_step;
                                 d += d_step;
@@ -3870,7 +3791,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // LuminaAlpha uint16_t to RGB uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = d[1] = d[2] = static_cast<uint8_t>(s[0] >> 8);
                                 s += s_step;
                                 d += d_step;
@@ -3879,7 +3800,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // LuminaAlpha uint16_t to RGB uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = d[1] = d[2] = s[0];
                                 s += s_step;
                                 d += d_step;
@@ -3888,7 +3809,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // LuminaAlpha uint16_t to RGB float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = d[1] = d[2] = static_cast<float>(s[0]) / std::numeric_limits<uint16_t>::max();
                                 s += s_step;
                                 d += d_step;
@@ -3900,7 +3821,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // LuminaAlpha float to RGB uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = d[1] = d[2] = static_cast<uint8_t>(s[0] * std::numeric_limits<uint8_t>::max());
                                 s += s_step;
                                 d += d_step;
@@ -3909,7 +3830,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // LuminaAlpha float to RGB uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = d[1] = d[2] = static_cast<uint16_t>(s[0] * std::numeric_limits<uint16_t>::max());
                                 s += s_step;
                                 d += d_step;
@@ -3918,7 +3839,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // LuminaAlpha float to RGB float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = d[1] = d[2] = s[0];
                                 s += s_step;
                                 d += d_step;
@@ -3933,7 +3854,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // LuminaAlpha uint8_t to RGBA uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = d[1] = d[2] = s[0];
                                 d[3] = s[1];
                                 s += s_step;
@@ -3943,7 +3864,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // LuminaAlpha uint8_t to RGBA uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = d[1] = d[2] = static_cast<uint16_t>(s[0]) << 8;
                                 d[3] = static_cast<uint16_t>(s[1]) << 8;
                                 s += s_step;
@@ -3953,7 +3874,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // LuminaAlpha uint8_t to RGBA float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = d[1] = d[2] = static_cast<float>(s[0]) / std::numeric_limits<uint8_t>::max();
                                 d[3] = d[2] = static_cast<float>(s[1]) / std::numeric_limits<uint8_t>::max();
                                 s += s_step;
@@ -3966,7 +3887,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // LuminaAlpha uint16_t to RGBA uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = d[1] = d[2] = static_cast<uint8_t>(s[0] >> 8);
                                 d[3] = static_cast<uint8_t>(s[1] >> 8);;
                                 s += s_step;
@@ -3976,7 +3897,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // LuminaAlpha uint16_t to RGBA uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = d[1] = d[2] = s[0];
                                 d[3] = s[1];
                                 s += s_step;
@@ -3986,7 +3907,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // LuminaAlpha uint16_t to RGBA float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = d[1] = d[2] = static_cast<float>(s[0]) / std::numeric_limits<uint16_t>::max();
                                 d[3] = static_cast<float>(s[1]) / std::numeric_limits<uint16_t>::max();
                                 s += s_step;
@@ -3999,7 +3920,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // LuminaAlpha float to RGBA uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = d[1] = d[2] = static_cast<uint8_t>(s[0] * std::numeric_limits<uint8_t>::max());
                                 d[3] = static_cast<uint8_t>(s[1] * std::numeric_limits<uint8_t>::max());
                                 s += s_step;
@@ -4009,7 +3930,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // LuminaAlpha float to RGBA uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = d[1] = d[2] = static_cast<uint16_t>(s[0] * std::numeric_limits<uint16_t>::max());
                                 d[3] = static_cast<uint16_t>(s[1] * std::numeric_limits<uint16_t>::max());
                                 s += s_step;
@@ -4019,7 +3940,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // LuminaAlpha float to RGBA float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = d[1] = d[2] = s[0];
                                 d[3] = s[1];
                                 s += s_step;
@@ -4038,7 +3959,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // RGB uint8_t to Lumina uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint8_t>(RGB::u8_to_lumina_709(s[0], s[1], s[2]) * std::numeric_limits<uint8_t>::max());
                                 s += s_step;
                                 d += d_step;
@@ -4047,7 +3968,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // RGB uint8_t to Lumina uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint16_t>(RGB::u8_to_lumina_709(s[0], s[1], s[2]) * std::numeric_limits<uint16_t>::max());
                                 s += s_step;
                                 d += d_step;
@@ -4056,7 +3977,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // RGB uint8_t to Lumina float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = RGB::u8_to_lumina_709(s[0], s[1], s[2]);
                                 s += s_step;
                                 d += d_step;
@@ -4068,7 +3989,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // RGB uint16_t to Lumina uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint8_t>(RGB::u16_to_lumina_709(s[0], s[1], s[2]) * std::numeric_limits<uint8_t>::max());
                                 s += s_step;
                                 d += d_step;
@@ -4077,7 +3998,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // RGB uint16_t to Lumina uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint16_t>(RGB::u16_to_lumina_709(s[0], s[1], s[2]) * std::numeric_limits<uint16_t>::max());
                                 s += s_step;
                                 d += d_step;
@@ -4086,7 +4007,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // RGB uint16_t to Lumina float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = RGB::float_to_lumina_709(s[0], s[1], s[2]);
                                 s += s_step;
                                 d += d_step;
@@ -4098,7 +4019,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // RGB float to Lumina uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint8_t>(RGB::float_to_lumina_709(s[0], s[1], s[2]) * std::numeric_limits<uint8_t>::max());
                                 s += s_step;
                                 d += d_step;
@@ -4107,7 +4028,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // RGB float to Lumina uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint16_t>(RGB::float_to_lumina_709(s[0], s[1], s[2]) * std::numeric_limits<uint16_t>::max());
                                 s += s_step;
                                 d += d_step;
@@ -4116,7 +4037,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // RGB float to Lumina float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = RGB::float_to_lumina_709(s[0], s[1], s[2]);
                                 s += s_step;
                                 d += d_step;
@@ -4131,7 +4052,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // RGB uint8_t to LuminaAlpha uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint8_t>(RGB::u8_to_lumina_709(s[0], s[1], s[2]) * std::numeric_limits<uint8_t>::max());
                                 d[1] = std::numeric_limits<uint8_t>::max();
                                 s += s_step;
@@ -4141,7 +4062,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // RGB uint8_t to LuminaAlpha uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint16_t>(RGB::u8_to_lumina_709(s[0], s[1], s[2]) * std::numeric_limits<uint16_t>::max());
                                 d[1] = std::numeric_limits<uint16_t>::max();
                                 s += s_step;
@@ -4151,7 +4072,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // RGB uint8_t to LuminaAlpha float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = RGB::u8_to_lumina_709(s[0], s[1], s[2]);
                                 d[1] = 1.0f;
                                 s += s_step;
@@ -4164,7 +4085,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // RGB uint16_t to LuminaAlpha uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint8_t>(RGB::u16_to_lumina_709(s[0], s[1], s[2]) * std::numeric_limits<uint8_t>::max());
                                 d[1] = std::numeric_limits<uint8_t>::max();
                                 s += s_step;
@@ -4174,7 +4095,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // RGB uint16_t to LuminaAlpha uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint16_t>(RGB::u16_to_lumina_709(s[0], s[1], s[2]) * std::numeric_limits<uint16_t>::max());
                                 d[1] = std::numeric_limits<uint16_t>::max();
                                 s += s_step;
@@ -4184,7 +4105,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // RGB uint16_t to LuminaAlpha float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = RGB::u16_to_lumina_709(s[0], s[1], s[2]);
                                 d[1] = 1.0f;
                                 s += s_step;
@@ -4197,7 +4118,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // RGB float to LuminaAlpha uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint8_t>(RGB::float_to_lumina_709(s[0], s[1], s[2]) * std::numeric_limits<uint8_t>::max());
                                 d[1] = std::numeric_limits<uint8_t>::max();
                                 s += s_step;
@@ -4207,7 +4128,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // RGB float to LuminaAlpha uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint16_t>(RGB::float_to_lumina_709(s[0], s[1], s[2]) * std::numeric_limits<uint16_t>::max());
                                 d[1] = std::numeric_limits<uint16_t>::max();
                                 s += s_step;
@@ -4217,7 +4138,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // RGB float to LuminaAlpha float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = RGB::float_to_lumina_709(s[0], s[1], s[2]);
                                 d[1] = 1.0f;
                                 s += s_step;
@@ -4237,7 +4158,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // RGB uint8_t to RGB uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint16_t>(s[0]) << 8;
                                 d[1] = static_cast<uint16_t>(s[1]) << 8;
                                 d[2] = static_cast<uint16_t>(s[2]) << 8;
@@ -4248,7 +4169,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // RGB uint8_t to RGB float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<float>(s[0]) / std::numeric_limits<uint8_t>::max();
                                 d[1] = static_cast<float>(s[1]) / std::numeric_limits<uint8_t>::max();
                                 d[2] = static_cast<float>(s[2]) / std::numeric_limits<uint8_t>::max();
@@ -4262,7 +4183,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // RGB uint16_t to RGB uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint8_t>(s[0] >> 8);
                                 d[1] = static_cast<uint8_t>(s[1] >> 8);
                                 d[2] = static_cast<uint8_t>(s[2] >> 8);
@@ -4277,7 +4198,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // RGB uint16_t to RGB float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<float>(s[0]) / std::numeric_limits<uint16_t>::max();
                                 d[1] = static_cast<float>(s[1]) / std::numeric_limits<uint16_t>::max();
                                 d[2] = static_cast<float>(s[2]) / std::numeric_limits<uint16_t>::max();
@@ -4291,7 +4212,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // RGB float to RGB uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint8_t>(s[0] * std::numeric_limits<uint8_t>::max());
                                 d[1] = static_cast<uint8_t>(s[1] * std::numeric_limits<uint8_t>::max());
                                 d[2] = static_cast<uint8_t>(s[2] * std::numeric_limits<uint8_t>::max());
@@ -4302,7 +4223,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // RGB float to RGB uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint16_t>(s[0] * std::numeric_limits<uint16_t>::max());
                                 d[1] = static_cast<uint16_t>(s[1] * std::numeric_limits<uint16_t>::max());
                                 d[2] = static_cast<uint16_t>(s[2] * std::numeric_limits<uint16_t>::max());
@@ -4323,7 +4244,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // RGB uint8_t to RGBA uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = s[0];
                                 d[1] = s[1];
                                 d[2] = s[2];
@@ -4335,7 +4256,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // RGB uint8_t to RGBA uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint16_t>(s[0]) << 8;
                                 d[1] = static_cast<uint16_t>(s[1]) << 8;
                                 d[2] = static_cast<uint16_t>(s[2]) << 8;
@@ -4347,7 +4268,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // RGB uint8_t to RGBA float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<float>(s[0]) / std::numeric_limits<uint8_t>::max();
                                 d[1] = static_cast<float>(s[1]) / std::numeric_limits<uint8_t>::max();
                                 d[2] = static_cast<float>(s[2]) / std::numeric_limits<uint8_t>::max();
@@ -4362,7 +4283,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // RGB uint16_t to RGBA uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint8_t>(s[0] >> 8);
                                 d[1] = static_cast<uint8_t>(s[1] >> 8);
                                 d[2] = static_cast<uint8_t>(s[2] >> 8);
@@ -4374,7 +4295,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // RGB uint16_t to RGBA uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = s[0];
                                 d[1] = s[1];
                                 d[2] = s[2];
@@ -4386,7 +4307,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // RGB uint16_t to RGBA float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<float>(s[0]) / std::numeric_limits<uint16_t>::max();
                                 d[1] = static_cast<float>(s[1]) / std::numeric_limits<uint16_t>::max();
                                 d[2] = static_cast<float>(s[2]) / std::numeric_limits<uint16_t>::max();
@@ -4401,7 +4322,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // RGB float to RGBA uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint8_t>(s[0] * std::numeric_limits<uint8_t>::max());
                                 d[1] = static_cast<uint8_t>(s[1] * std::numeric_limits<uint8_t>::max());
                                 d[2] = static_cast<uint8_t>(s[2] * std::numeric_limits<uint8_t>::max());
@@ -4413,7 +4334,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // RGB float to RGBA uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint16_t>(s[0] * std::numeric_limits<uint16_t>::max());
                                 d[1] = static_cast<uint16_t>(s[1] * std::numeric_limits<uint16_t>::max());
                                 d[2] = static_cast<uint16_t>(s[2] * std::numeric_limits<uint16_t>::max());
@@ -4425,7 +4346,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // RGB float to RGBA float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = s[0];
                                 d[1] = s[1];
                                 d[2] = s[2];
@@ -4446,7 +4367,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // RGBA uint8_t to Lumina uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint8_t>(RGB::u8_to_lumina_709(s[0], s[1], s[2]) * std::numeric_limits<uint8_t>::max());
                                 s += s_step;
                                 d += d_step;
@@ -4455,7 +4376,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // RGBA uint8_t to Lumina uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint16_t>(RGB::u8_to_lumina_709(s[0], s[1], s[2]) * std::numeric_limits<uint16_t>::max());
                                 s += s_step;
                                 d += d_step;
@@ -4464,7 +4385,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // RGBA uint8_t to Lumina float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = RGB::u8_to_lumina_709(s[0], s[1], s[2]);
                                 s += s_step;
                                 d += d_step;
@@ -4476,7 +4397,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // RGBA uint16_t to Lumina uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint8_t>(RGB::u16_to_lumina_709(s[0], s[1], s[2]) * std::numeric_limits<uint8_t>::max());
                                 s += s_step;
                                 d += d_step;
@@ -4485,7 +4406,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // RGBA uint16_t to Lumina uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint16_t>(RGB::u16_to_lumina_709(s[0], s[1], s[2]) * std::numeric_limits<uint16_t>::max());
                                 s += s_step;
                                 d += d_step;
@@ -4494,7 +4415,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // RGBA uint16_t to Lumina float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = RGB::u16_to_lumina_709(s[0], s[1], s[2]);
                                 s += s_step;
                                 d += d_step;
@@ -4506,7 +4427,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // RGBA float to Lumina uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint8_t>(RGB::float_to_lumina_709(s[0], s[1], s[2]) * std::numeric_limits<uint8_t>::max());
                                 s += s_step;
                                 d += d_step;
@@ -4515,7 +4436,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // RGBA float to Lumina uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint16_t>(RGB::float_to_lumina_709(s[0], s[1], s[2]) * std::numeric_limits<uint16_t>::max());
                                 s += s_step;
                                 d += d_step;
@@ -4524,7 +4445,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // RGBA float to Lumina float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = RGB::float_to_lumina_709(s[0], s[1], s[2]);
                                 s += s_step;
                                 d += d_step;
@@ -4539,7 +4460,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // RGBA uint8_t to LuminaAlpha uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint8_t>(RGB::u8_to_lumina_709(s[0], s[1], s[2]) * std::numeric_limits<uint8_t>::max());
                                 d[1] = std::numeric_limits<uint8_t>::max();
                                 s += s_step;
@@ -4549,7 +4470,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // RGBA uint8_t to LuminaAlpha uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint16_t>(RGB::u8_to_lumina_709(s[0], s[1], s[2]) * std::numeric_limits<uint16_t>::max());
                                 d[1] = std::numeric_limits<uint16_t>::max();
                                 s += s_step;
@@ -4559,7 +4480,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // RGBA uint8_t to LuminaAlpha float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = RGB::u8_to_lumina_709(s[0], s[1], s[2]);
                                 d[1] = 1.0f;
                                 s += s_step;
@@ -4572,7 +4493,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // RGBA uint16_t to LuminaAlpha uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint8_t>(RGB::u16_to_lumina_709(s[0], s[1], s[2]) * std::numeric_limits<uint8_t>::max());
                                 d[1] = std::numeric_limits<uint8_t>::max();
                                 s += s_step;
@@ -4582,7 +4503,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // RGBA uint16_t to LuminaAlpha uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint16_t>(RGB::u16_to_lumina_709(s[0], s[1], s[2]) * std::numeric_limits<uint16_t>::max());
                                 d[1] = std::numeric_limits<uint16_t>::max();
                                 s += s_step;
@@ -4592,7 +4513,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // RGBA uint16_t to LuminaAlpha float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = RGB::u16_to_lumina_709(s[0], s[1], s[2]);
                                 d[1] = 1.0f;
                                 s += s_step;
@@ -4605,7 +4526,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // RGBA float to LuminaAlpha uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint8_t>(RGB::float_to_lumina_709(s[0], s[1], s[2]) * std::numeric_limits<uint8_t>::max());
                                 d[1] = std::numeric_limits<uint8_t>::max();
                                 s += s_step;
@@ -4615,7 +4536,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // RGBA float to LuminaAlpha uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint16_t>(RGB::float_to_lumina_709(s[0], s[1], s[2]) * std::numeric_limits<uint16_t>::max());
                                 d[1] = std::numeric_limits<uint16_t>::max();
                                 s += s_step;
@@ -4625,7 +4546,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // RGBA float to LuminaAlpha float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = RGB::float_to_lumina_709(s[0], s[1], s[2]);
                                 d[1] = 1.0f;
                                 s += s_step;
@@ -4641,7 +4562,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // RGBA uint8_t to RGB uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = s[0];
                                 d[1] = s[1];
                                 d[2] = s[2];
@@ -4652,7 +4573,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // RGBA uint8_t to RGB uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint16_t>(s[0]) << 8;
                                 d[1] = static_cast<uint16_t>(s[1]) << 8;
                                 d[2] = static_cast<uint16_t>(s[2]) << 8;
@@ -4663,7 +4584,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // RGBA uint8_t to RGB float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<float>(s[0]) / std::numeric_limits<uint8_t>::max();
                                 d[1] = static_cast<float>(s[1]) / std::numeric_limits<uint8_t>::max();
                                 d[2] = static_cast<float>(s[2]) / std::numeric_limits<uint8_t>::max();
@@ -4677,7 +4598,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // RGBA uint16_t to RGB uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint8_t>(s[0] >> 8);
                                 d[1] = static_cast<uint8_t>(s[1] >> 8);
                                 d[2] = static_cast<uint8_t>(s[2] >> 8);
@@ -4688,7 +4609,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // RGBA uint16_t to RGB uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = s[0];
                                 d[1] = s[1];
                                 d[2] = s[2];
@@ -4699,7 +4620,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // RGBA uint16_t to RGB float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<float>(s[0]) / std::numeric_limits<uint16_t>::max();
                                 d[1] = static_cast<float>(s[1]) / std::numeric_limits<uint16_t>::max();
                                 d[2] = static_cast<float>(s[2]) / std::numeric_limits<uint16_t>::max();
@@ -4713,7 +4634,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // RGBA float to RGB uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint8_t>(s[0] * std::numeric_limits<uint8_t>::max());
                                 d[1] = static_cast<uint8_t>(s[1] * std::numeric_limits<uint8_t>::max());
                                 d[2] = static_cast<uint8_t>(s[2] * std::numeric_limits<uint8_t>::max());
@@ -4724,7 +4645,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // RGBA float to RGB uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint16_t>(s[0] * std::numeric_limits<uint16_t>::max());
                                 d[1] = static_cast<uint16_t>(s[1] * std::numeric_limits<uint16_t>::max());
                                 d[2] = static_cast<uint16_t>(s[2] * std::numeric_limits<uint16_t>::max());
@@ -4735,7 +4656,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // RGBA float to RGB float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = s[0];
                                 d[1] = s[1];
                                 d[2] = s[2];
@@ -4756,7 +4677,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // RGBA uint8_t to RGBA uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint16_t>(s[0]) << 8;
                                 d[1] = static_cast<uint16_t>(s[1]) << 8;
                                 d[2] = static_cast<uint16_t>(s[2]) << 8;
@@ -4768,7 +4689,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // RGBA uint8_t to RGBA float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<float>(s[0]) / std::numeric_limits<uint8_t>::max();
                                 d[1] = static_cast<float>(s[1]) / std::numeric_limits<uint8_t>::max();
                                 d[2] = static_cast<float>(s[2]) / std::numeric_limits<uint8_t>::max();
@@ -4783,7 +4704,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // RGBA uint16_t to RGBA uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint8_t>(s[0] >> 8);
                                 d[1] = static_cast<uint8_t>(s[1] >> 8);
                                 d[2] = static_cast<uint8_t>(s[2] >> 8);
@@ -4799,7 +4720,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::Float) {
                             // RGBA uint16_t to RGBA float
                             auto d = (float *)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<float>(s[0]) / std::numeric_limits<uint16_t>::max();
                                 d[1] = static_cast<float>(s[1]) / std::numeric_limits<uint16_t>::max();
                                 d[2] = static_cast<float>(s[2]) / std::numeric_limits<uint16_t>::max();
@@ -4814,7 +4735,7 @@ namespace Grain {
                         if (d_data_type == PixelType::UInt8) {
                             // RGBA float to RGBA uint8_t
                             auto d = (uint8_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint8_t>(s[0] * std::numeric_limits<uint8_t>::max());
                                 d[1] = static_cast<uint8_t>(s[1] * std::numeric_limits<uint8_t>::max());
                                 d[2] = static_cast<uint8_t>(s[2] * std::numeric_limits<uint8_t>::max());
@@ -4826,7 +4747,7 @@ namespace Grain {
                         else if (d_data_type == PixelType::UInt16) {
                             // RGBA float to RGBA uint16_t
                             auto d = (uint16_t*)image->_m_pixel_data;
-                            for (int32_t i = 0; i < _m_pixel_count; i++) {
+                            for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = static_cast<uint16_t>(s[0] * std::numeric_limits<uint16_t>::max());
                                 d[1] = static_cast<uint16_t>(s[1] * std::numeric_limits<uint16_t>::max());
                                 d[2] = static_cast<uint16_t>(s[2] * std::numeric_limits<uint16_t>::max());

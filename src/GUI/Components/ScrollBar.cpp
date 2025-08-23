@@ -94,19 +94,15 @@ namespace Grain {
         m_track_rect.inset(style->scrollBarPadding());
         m_handle_rect = m_track_rect;
 
-        double radius = 0.0f;
-
         if (m_vertical) {
             double min_size = m_track_rect.m_width;
             m_handle_rect.m_height = std::clamp<double>(m_track_rect.m_height * m_visible_fraction, min_size, m_track_rect.m_height);
             m_handle_rect.m_y = m_track_rect.m_y + (m_track_rect.m_height - m_handle_rect.m_height) * m_scroll_position;
-            radius = m_track_rect.m_width / 2.0f;
         }
         else {
             double min_size = m_track_rect.m_height;
             m_handle_rect.m_width = std::clamp<double>(m_handle_rect.m_width * m_visible_fraction, min_size, m_track_rect.m_width);
             m_handle_rect.m_x = m_track_rect.m_x + (m_track_rect.m_width - m_handle_rect.m_width) * m_scroll_position;
-            radius = m_handle_rect.m_height / 2.0f;
         }
 
         RGB handle_color = style->scrollBarColor();

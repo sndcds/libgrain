@@ -872,16 +872,20 @@ namespace Grain {
 
 #if defined(__APPLE__) && defined(__MACH__)
     CGGradientRef Gradient::macos_cgGradient(GraphicContext& gc) noexcept {
+        constexpr int32_t kMaxColorStops = 512;
+
+        int32_t cg_color_count = macos_cgColorCount();
+        if (cg_color_count > kMaxColorStops) {
+            return nullptr;
+        }
 
         LevelCurve level_curve;
 
         sortStops();
 
-        int32_t cg_color_count = macos_cgColorCount();
-
-        // TODO: !!! dynamic memory allocation, if cg_color_count exceeds a specific value!
-        CGFloat cg_gradient_locations[cg_color_count + 10];
-        CGFloat cg_gradient_colors[cg_color_count + 10][4];
+        // 10 extra stops
+        CGFloat cg_gradient_locations[kMaxColorStops + 10];
+        CGFloat cg_gradient_colors[kMaxColorStops + 10][4];
         int32_t cg_spot_index = 0;
 
         auto l_stop = stopPtrAtIndex(0);
@@ -1341,13 +1345,9 @@ namespace Grain {
 
 #if defined(__APPLE__) && defined(__MACH__)
     void GradientFunction::_standardFunc_gradient(void* info_ptr, const CGFloat* in, CGFloat* out) {
-
         CGFloat t = in[0];  // Gradient position (0.0 to 1.0)
-
         auto info = (GradientFunction*)info_ptr;
         auto gradient = (Gradient*)info->m_info_ptr;
-
-        auto vars = info->_m_vars;
 
         RGBA color;
         gradient->lookupColor(t, color);

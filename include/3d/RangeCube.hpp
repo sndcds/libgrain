@@ -313,7 +313,14 @@ namespace Grain {
 
     public:
         RangeCubeFix() noexcept {}
-        RangeCubeFix(Fix min_x, Fix max_x, Fix min_y, Fix max_y, Fix min_z, Fix max_z) noexcept : m_min_x(min_x), m_min_y(min_y), m_min_z(min_z), m_max_x(max_x), m_max_y(max_y), m_max_z(max_z) {}
+        RangeCubeFix(Fix min_x, Fix max_x, Fix min_y, Fix max_y, Fix min_z, Fix max_z) noexcept :
+                m_min_x(min_x),
+                m_max_x(max_x),
+                m_min_y(min_y),
+                m_max_y(max_y),
+                m_min_z(min_z),
+                m_max_z(max_z) {
+        }
 
         virtual const char* className() const noexcept { return "RangeCubeFix"; }
 

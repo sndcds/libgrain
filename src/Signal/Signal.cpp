@@ -2074,7 +2074,7 @@ namespace Grain {
         }
 
         // Destination (this) must be 1, 2 or 4 channel
-        #warning "Signal::mixByAudioPos() must be implemented"
+        #pragma message("Signal::mixByAudioPos() must be implemented")
         /*
 
         GrAudioLocationSystem aps;
@@ -2916,7 +2916,7 @@ namespace Grain {
             clearChannel(channel, 0, 2 * block_size);
 
             int64_t ri = 2;
-            int64_t wi = -2;
+            // int64_t wi = -2; // Unused
             int64_t ri_end = length / block_size;
             std::cout << "ri_end: " << ri_end << '\n';
 
@@ -2963,7 +2963,7 @@ namespace Grain {
                 clearChannel(channel, ri * block_size, block_size);
 
                 ri += 1;
-                wi += 1;
+                // wi += 1; Unused
             }
         }
         catch (const Exception& e) {
@@ -3019,18 +3019,17 @@ namespace Grain {
 
             /// m_result_buffer->clear();
 
-            int64_t sample_step = sampleStep();
             int64_t start_index = 0;
             int64_t end_index = fft_resolution - 1;
-            int64_t write_index = 0;
+            // int64_t write_index = 0; // Unused
             int32_t loop_index = 0;
 
             while (start_index <= last_sample_index) {
                 if (loop_index >= 2) {
-                    int64_t end_write_index = std::clamp<int64_t>(write_index + fft_half_resolution - 1, write_index, last_sample_index);
-                    int64_t read_length = end_write_index - write_index + 1;
+                    // int64_t end_write_index = std::clamp<int64_t>(write_index + fft_half_resolution - 1, write_index, last_sample_index); // Unused
+                    // int64_t read_length = end_write_index - write_index + 1; // Unused
                     /// m_result_buffer->read(read_length, sample_step, reinterpret_cast<float*>(mutDataPtr(channel, write_index)));
-                    write_index += fft_half_resolution;
+                    // write_index += fft_half_resolution; // Unused
                 }
 
                 int64_t n = end_index > last_sample_index ? fft_resolution - (end_index - last_sample_index) : fft_resolution;
@@ -3064,9 +3063,7 @@ namespace Grain {
                 if (n < fft_resolution) {
                     Type::clearArray<float>(&m_block_data[n], fft_resolution - n);
                 }
-*/
-                ErrorCode err;
-/*
+
                 // Time domain → Frequency domain
                 err = m_fft->fft(m_block_data, m_partials);
                 if (err != ErrorCode::None) {
@@ -3102,7 +3099,7 @@ namespace Grain {
                 */
             }
 
-            int64_t readLength = last_sample_index - write_index + 1;
+            // int64_t readLength = last_sample_index - write_index + 1;
             // m_result_buffer->read(readLength, sample_step, reinterpret_cast<float*>(mutDataPtr(channel, write_index)));
         }
         catch (const Exception& e) {
@@ -3179,7 +3176,6 @@ namespace Grain {
         float *signal_samples = fft_fir->signalSamplesPtr();
         float *convolved_samples = fft_fir->convolvedSamplesPtr();
 
-        int32_t loop_index = 0;
         while (f_rest > 0) {
             b_signal->readSamplesAsFloatWithZeroPadding(b_channel, f_offs, filter_width, filter_samples);
             fft_fir->setFilter();
@@ -3205,8 +3201,6 @@ namespace Grain {
 
             f_offs += filter_width;
             f_rest -= filter_width;
-
-            loop_index++;
         }
 
         delete fft_fir;

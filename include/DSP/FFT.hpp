@@ -139,8 +139,13 @@ namespace Grain {
         float* m_filter_samples = nullptr;
         float* m_signal_samples = nullptr;
         float* m_convolved_samples = nullptr;
+        float* m_filter_padded = nullptr;
+        float* m_signal_padded = nullptr;
+        float* m_filter_result = nullptr;
+        float* m_signal_real = nullptr;
+        float* m_signal_imag = nullptr;
 
-        #if defined(__APPLE__) && defined(__MACH__)
+#if defined(__APPLE__) && defined(__MACH__)
             FFTSetup m_fft_setup;
             DSPSplitComplex m_filter_split_complex;
         #endif
@@ -196,7 +201,7 @@ namespace Grain {
 
         // Index of the next item in the buffer to be used. Equivalently, the number
         // of samples that have been seen so far modulo DFT_Length
-        size_t _m_x_index = 0;
+        int32_t _m_x_index = 0;
 
         double* _m_x;        ///< Time domain samples are stored in this circular buffer
 

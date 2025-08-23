@@ -470,7 +470,6 @@ namespace Grain {
 
     void Toml::_tppParserError(const toml::parse_error& err) {
         const auto& region = err.source();
-        const auto& start = region.begin;
         m_line = region.begin.line;
         m_column = region.begin.column;
 

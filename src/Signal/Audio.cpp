@@ -26,7 +26,7 @@ namespace Grain {
         { "Piano", 21, 108 },           // A0 - C8
         { "Guitar", 40, 88 },           // E2 - 88 E6
         { "Bass Guitar", 28, 67 },      //  E1 - G4
-        { "Violin", 55 - 103 },         // G3 - G7
+        { "Violin", 55, 103 },         // G3 - G7
         { "Viola", 48, 88 },            // C3 - E6
         { "Cello", 36, 76 },            // (C2) - 76 (E6)
         { "Double Bass", 28, 67 },      // (E1) - 67 (G4)

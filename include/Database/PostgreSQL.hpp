@@ -149,8 +149,8 @@ namespace Grain {
         ErrorCode query(const String& sql, const PSQLParamList& param_list) noexcept;
         void clear() noexcept;
 
-        const int32_t fieldCount() const noexcept {  return _m_field_n; }
-        const int32_t rowCount() const noexcept {  return _m_tuple_n; }
+        int32_t fieldCount() const noexcept {  return _m_field_n; }
+        int32_t rowCount() const noexcept {  return _m_tuple_n; }
         const char* fieldName(int32_t column_index) const noexcept;
         const char* fieldValue(int32_t row_index, int32_t column_index) const noexcept;
         int32_t rowsAffected() const noexcept { return m_rows_affected; }
@@ -243,6 +243,7 @@ namespace Grain {
         }
 
         static bool numericToString(uint8_t* data, String& out_string) {
+            constexpr int32_t kMaxDigits = 256;
             char buffer[5]{};
             const int16_t* ptr = (int16_t*)data;
 
@@ -250,12 +251,16 @@ namespace Grain {
 
             // Read metadata
             int16_t n_digits = ntoh16(*ptr++);   // Number of digits
+            if (n_digits > kMaxDigits) {
+                return false;
+            }
+
             int16_t weight = ntoh16(*ptr++);     // Position of decimal point
             int16_t sign = ntoh16(*ptr++);       // Sign: 0 = positive, 1 = negative, 2 = NaN
             int16_t dscale = ntoh16(*ptr++);     // Decimal scale
 
             // Read digit array
-            int16_t digits[n_digits];
+            int16_t digits[kMaxDigits];
             for (int32_t i = 0; i < n_digits; ++i) {
                 digits[i] = ntoh16(*ptr++);
             }

@@ -309,7 +309,7 @@ namespace Grain {
                     { "Long8", 16 },
                     { "SLong8", 17 },
                     { "IFD8", 18 },
-                    { nullptr }, // Sentinel item (end of list)
+                    { nullptr, -1 }, // Sentinel item (end of list)
             };
             static const char* unknown = "Unknown TIFF type";
             return KeyIntPair::lookupKey(static_cast<int32_t>(type), items, unknown);
@@ -402,7 +402,7 @@ namespace Grain {
                     { "GeoDoubleParams", 34736 },
                     { "GeoAsciiParams", 34737 },
                     { "GDAL_NoData", 42113 },
-                    { nullptr } // Sentinel item (end of list)
+                    { nullptr, 0 } // Sentinel item (end of list)
             };
             static const char* unknown = "Unknown TIFF tag";
             return KeyIntPair::lookupKey(static_cast<int32_t>(tag), items, unknown);
@@ -456,7 +456,7 @@ namespace Grain {
                     { "VerticalDatumGeoKey", 4098 },
                     { "VerticalUnitsGeoKey", 4099 },
                     { "CoordinateEpochGeoKey", 5120 },
-                    { nullptr } // Sentinel item (end of list)
+                    { nullptr, 0 } // Sentinel item (end of list)
             };
             static const char* unknown = "Unknown GeoTIFF key";
             return KeyIntPair::lookupKey(static_cast<int32_t>(key), items, unknown);

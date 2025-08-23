@@ -179,7 +179,7 @@ namespace Grain {
         m_pre_slash_value_n = 0;
 
         bool delimiter_flag = false;
-        bool space_flag = false;
+        // bool space_flag = false; // Unused
         bool comma_flag = false;
         bool slash_flag = false;
         int32_t value_length = 0;
@@ -225,7 +225,7 @@ namespace Grain {
                 value_length++;
                 delimiter_flag = false;
                 comma_flag = false;
-                space_flag = false;
+                // space_flag = false; // Unused
                 slash_flag = false;
             }
 
@@ -429,7 +429,7 @@ namespace Grain {
 
             bool has_dot = false;
             ptr++;
-            for (int32_t i = 0; ; i++) {
+            for (;;) {
                 if (*ptr == '.') {
                     if (has_dot) {
                         throw ErrorCode::CSSNumberParseError;
@@ -542,10 +542,10 @@ namespace Grain {
 
         auto ptr = str;
         bool comma_flag = false;
-        bool slash_flag = false;
-        int32_t slash_n = 0;                    // Number of slashes.
-        int32_t pre_slash_content_n = 0;        // Number of content/value before the first slash.
-        int32_t content_n = 0;                  // Number of content/value parts.
+        // bool slash_flag = false; // Unused
+        // int32_t slash_n = 0; // Number of slashes, unused
+        int32_t pre_slash_content_n = 0; // Number of content/value before the first slash
+        int32_t content_n = 0; // Number of content/value parts
         int32_t curr_content_length = 0;
         int32_t prev_content_length = 0;
         while (*ptr != '\0') {
@@ -572,11 +572,11 @@ namespace Grain {
                 }
                 else {
                     if (*ptr == '/') {
-                        slash_n++;
+                        // slash_n++; // Unused
                         if (pre_slash_content_n == 0) {
                             pre_slash_content_n = content_n;
                         }
-                        slash_flag = true;
+                        // slash_flag = true; // Unused
                     }
 
                     if (curr_content_length > 0) {

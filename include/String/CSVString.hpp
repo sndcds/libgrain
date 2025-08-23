@@ -84,8 +84,6 @@ namespace Grain {
         char m_delimiter = ',';
         char m_quote = '"';
 
-        bool m_field_mode = false;          ///< true if parser recognized start of field content
-        bool m_quoted_mode = false;         ///< true, if the field started with a char == `m_quote`
         bool m_line_finished = false;
         bool m_line_contains_info = false;  ///< Line contains information (none black characters)
 

@@ -2684,9 +2684,10 @@ NSString *file = [NSString stringWithUTF8String:file_path.utf8()];
         try {
             for (const auto& entry : fs::directory_iterator(path.utf8())) {
                 bool used = false;
-                if (entry.is_regular_file() && entry.file_size() >= min_size && entry.file_size() <= max_size) {
-
+                int64_t file_size = entry.file_size();
+                if (entry.is_regular_file() && file_size >= min_size && file_size <= max_size) {
                     strncpy(file_name, entry.path().filename().string().c_str(), 512);
+
                     if (file_name[0] != '.') {
                         // Ignore invisible files
                         if (ext_list.isEmpty()) {

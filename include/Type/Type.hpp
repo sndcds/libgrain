@@ -384,7 +384,7 @@ namespace Grain {
 
             if (valid_count <= 0) return 0;
 
-            int64_t skipped = count - valid_count;
+            // int64_t skipped = count - valid_count; // This variable is unused
             dst += dst_offset;
             src += src_offset;
 

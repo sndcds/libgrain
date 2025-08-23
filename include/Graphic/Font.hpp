@@ -136,9 +136,6 @@ namespace Grain {
 #endif
         [[nodiscard]] int32_t charIndexAtX(const char* str, double x, double &in_out_delta, double& out_cursor_x) const noexcept;
 
-        [[nodiscard]] int32_t advancesForText(const char* text, int32_t max_length, Vec2d* out_advances) noexcept;
-        [[nodiscard]] int32_t advancesForText(const String& text, int32_t max_length, Vec2d* out_advances) noexcept;
-
         [[nodiscard]] FontAttributes* buildAttributes(const RGB& color, float alpha = 1.0f) const noexcept;
 
         /* TODO: macOS ...

@@ -103,14 +103,14 @@ namespace Grain {
             CVF2File cvf2_file(m_file_path);
             cvf2_file.startRead();
 
-            for (int32_t y = 0; y < cvf2_file.height(); y++) {
+            for (int32_t y = 0; y < static_cast<int32_t>(cvf2_file.height()); y++) {
                 cvf2_file.readRow(y);
                 int64_t* src = cvf2_file.m_row_values;
                 float* dst = m_value_grid->mutPtrAtXY(m_x_offset, y + m_y_offset);
                 if (src == nullptr || dst == nullptr) {
                     throw ErrorCode::Fatal;
                 }
-                for (int32_t x = 0; x < cvf2_file.width(); x++) {
+                for (int32_t x = 0; x < static_cast<int32_t>(cvf2_file.width()); x++) {
                     *dst++ = src[x];
                 }
             }
@@ -339,7 +339,8 @@ namespace Grain {
                 m_scan_total_undefined_values_n += file->undefinedValuesCount();
             }
 
-            if (file->width() != m_tile_width || file->height() != m_tile_height) {
+            if (m_tile_width != static_cast<int32_t>(file->width()) ||
+                m_tile_height != static_cast<int32_t>(file->height())) {
                 m_scan_wrong_dimension_files_n++;
             }
 
@@ -525,14 +526,15 @@ namespace Grain {
                     tile->m_error_flags.setFlag(0);
                 }
 
-                if (tile->m_width > m_tile_width || tile->m_height > m_tile_height) {
+                if (static_cast<int32_t>(tile->m_width) > m_tile_width ||
+                    static_cast<int32_t>(tile->m_height) > m_tile_height) {
                     tile->m_valid = false;
                     tile->m_last_err_code = Error::specific(kErrTileSizeOutOfRange);
                     tile->m_error_flags.setFlag(1);
                 }
 
-                if (tile->m_x_offset + tile->m_width > m_tile_width ||
-                    tile->m_y_offset + tile->m_height > m_tile_height) {
+                if (tile->m_x_offset + static_cast<int32_t>(tile->m_width) > m_tile_width ||
+                    tile->m_y_offset + static_cast<int32_t>(tile->m_height) > m_tile_height) {
                     tile->m_valid = false;
                     tile->m_last_err_code = Error::specific(kErrTileOffsetOutOfRange);
                     tile->m_error_flags.setFlag(2);
@@ -672,13 +674,14 @@ namespace Grain {
                 auto ts = Timestamp::currentMillis();
                 timestamp_t max_delta = std::numeric_limits<int64_t>::min();
 
-                bool free_slot_flag = false;  // Will be true, if a free slot was found
+                // bool free_slot_flag = false;  // Will be true, if a free slot was found, unused
+
                 int32_t slot_index = -1;  // Will become the slot index to use
                 for (int32_t i = 0; i < m_file_slot_capacity; i++) {
                     auto slot = &m_file_slots[i];
                     if (slot->m_tile_index < 0) {  // This is a free slot
                         slot_index = i;
-                        free_slot_flag = true;
+                        // free_slot_flag = true; // Unused
                         break;
                     }
                     else {
@@ -752,7 +755,6 @@ namespace Grain {
                 throw ErrorCode::FileDirNotFound;
             }
 
-            int32_t n = 0;
             for (const auto tile : m_tiles) {
 
                 if (tile->isValid()) {
@@ -768,8 +770,6 @@ namespace Grain {
 
                     tile->freeValueGrid();
                 }
-
-                n++;
             }
         }
         catch (ErrorCode err) {
@@ -807,8 +807,8 @@ namespace Grain {
             raw_file->setEndianBySignature(buffer);
 
             // Version
-            uint16_t main_version = raw_file->readValue<uint16_t>();
-            uint16_t sub_version = raw_file->readValue<uint16_t>();
+            // uint16_t main_version = raw_file->readValue<uint16_t>(); // Unused
+            // uint16_t sub_version = raw_file->readValue<uint16_t>(); // Unused
 
             // Data type
             uint16_t data_type = raw_file->readValue<uint16_t>();
@@ -826,12 +826,13 @@ namespace Grain {
                 throw ErrorCode::UnsupportedDimension;
             }
 
-            if (image_width != image->width() || image_height != image->height()) {
+            if (static_cast<int32_t>(image_width) != image->width() ||
+                static_cast<int32_t>(image_height) != image->height()) {
                 throw ErrorCode::UnsupportedDimension;
             }
 
-            int32_t tile_x_index = raw_file->readValue<int32_t>();
-            int32_t tile_y_index = raw_file->readValue<int32_t>();
+            // int32_t tile_x_index = raw_file->readValue<int32_t>(); // Unused
+            // int32_t tile_y_index = raw_file->readValue<int32_t>(); // Unused
 
             // Geo information
             String tile_crs;

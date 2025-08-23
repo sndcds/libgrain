@@ -281,7 +281,6 @@ namespace Grain {
      *  @brief Constructor for converting a LMS color to an RGB color.
      */
     RGB::RGB(const LMS& lms) noexcept {
-        RGB rgb;
         m_data[0] =  4.0767416621f * lms.m_data[0] - 3.3077115913f * lms.m_data[1] + 0.2309699292f * lms.m_data[2];
         m_data[1] = -1.2684380046f * lms.m_data[0] + 2.6097574011f * lms.m_data[1] - 0.3413193965f * lms.m_data[2];
         m_data[2] = -0.0041960863f * lms.m_data[0] - 0.7034186147f * lms.m_data[1] + 1.7076147010f * lms.m_data[2];

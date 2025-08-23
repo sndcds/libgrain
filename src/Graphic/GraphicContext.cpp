@@ -371,14 +371,14 @@ namespace Grain {
         if (path != nullptr && path->pointCount() > 1) {
 
             GraphicPathPoint* prev_point = nullptr;
-            GraphicPathPoint* first_point = nullptr;
+            // GraphicPathPoint* first_point = nullptr; // Unused
 
             for (int32_t point_index = 0; point_index < path->pointCount(); point_index++) {
 
                 auto point = path->pointPtrAtIndex(point_index);
 
                 if (point_index == 0) {
-                    first_point = point;
+                    // first_point = point; // Unused
                     moveTo(point->m_anchor);
                 }
                 else {
@@ -1968,6 +1968,7 @@ drawIcon(icon, icon->getCenteredRect(rect), icon_color, icon_alpha);
 
 #if defined(__APPLE__) && defined(__MACH__)
     double GraphicContext::drawTextLineByLine(const char* text, const Rectd& bounds_rect, const Rectd& rect, double line_gap, const Font* font, const RGB& color, float alpha) const noexcept {
+        constexpr int32_t kMaxLines = 1024;
         // TODO: Refine!
         CGColorRef cg_text_color = color.createCGColor(1.0f);
 
@@ -1993,27 +1994,28 @@ drawIcon(icon, icon->getCenteredRect(rect), icon_color, icon_alpha);
         CTFrameRef frame = CTFramesetterCreateFrame(framesetter, CFRangeMake(0, 0), path, NULL);
 
         CFArrayRef lines = CTFrameGetLines(frame);
-        CFIndex lineCount = CFArrayGetCount(lines);
+        CFIndex line_count = CFArrayGetCount(lines);
+        CGSize suggestedSize{};
 
-        CGSize suggestedSize = CTFramesetterSuggestFrameSizeWithConstraints(framesetter, CFRangeMake(0, 0), NULL, cg_rect.size, NULL);
-        suggestedSize.height += (lineCount - 1) * line_gap;
+        if (line_count <= kMaxLines) { // TODO: Implement dynamic allocation if line_count gets to big
+            suggestedSize = CTFramesetterSuggestFrameSizeWithConstraints(framesetter, CFRangeMake(0, 0), NULL, cg_rect.size, NULL);
+            suggestedSize.height += (line_count - 1) * line_gap;
 
-        if (rect.overlaps(bounds_rect)) {
+            if (rect.overlaps(bounds_rect)) {
+                CGContextSetTextMatrix(m_cg_context, CGAffineTransformIdentity);
+                CGContextTranslateCTM(m_cg_context, 0, CGRectGetHeight(cg_rect));
+                CGContextScaleCTM(m_cg_context, 1.0, -1.0);
 
-            CGContextSetTextMatrix(m_cg_context, CGAffineTransformIdentity);
-            CGContextTranslateCTM(m_cg_context, 0, CGRectGetHeight(cg_rect));
-            CGContextScaleCTM(m_cg_context, 1.0, -1.0);
+                CGPoint lineOrigins[kMaxLines];
+                CTFrameGetLineOrigins(frame, CFRangeMake(0, 0), lineOrigins);
 
+                for (CFIndex i = 0; i < line_count; i++) {
+                    CTLineRef line = (CTLineRef)CFArrayGetValueAtIndex(lines, i);
+                    CGPoint lineOrigin = lineOrigins[i];
 
-            CGPoint lineOrigins[lineCount];
-            CTFrameGetLineOrigins(frame, CFRangeMake(0, 0), lineOrigins);
-
-            for (CFIndex i = 0; i < lineCount; i++) {
-                CTLineRef line = (CTLineRef)CFArrayGetValueAtIndex(lines, i);
-                CGPoint lineOrigin = lineOrigins[i];
-
-                CGContextSetTextPosition(m_cg_context, lineOrigin.x, lineOrigin.y - rect.m_y - i * line_gap);
-                CTLineDraw(line, m_cg_context);
+                    CGContextSetTextPosition(m_cg_context, lineOrigin.x, lineOrigin.y - rect.m_y - i * line_gap);
+                    CTLineDraw(line, m_cg_context);
+                }
             }
         }
 

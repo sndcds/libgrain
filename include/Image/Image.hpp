@@ -143,6 +143,12 @@ namespace Grain {
         bool m_use_min_max_in_typed_tiff = false;
         Ranged m_value_range = { 0.0, 1.0 };
 
+        int32_t m_raw_cfa_pattern = kCFAPatternUnknown;
+        int32_t m_raw_white_level = -1;
+        int32_t m_raw_black_level = -1;
+        int32_t m_raw_linear_max[4]{};
+        int32_t m_raw_linear_black[4]{};
+
         cairo_surface_t* _m_cairo_surface = nullptr;
 
         #if defined(__APPLE__) && defined(__MACH__)

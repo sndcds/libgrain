@@ -52,7 +52,6 @@ namespace Grain {
             NSColorSpaceModel ns_color_space_model = [ns_color_space colorSpaceModel];
 
             Color::Model src_color_model;
-            Image::PixelType src_pixel_type = Image::PixelType::Undefined;
 
             switch (ns_color_space_model) {
                 case NSColorSpaceModelGray:
@@ -78,49 +77,42 @@ namespace Grain {
                     break;
 
                 default:
-                    return nullptr;
+                    throw Error::specific(3);
             }
 
 
             switch (ns_bits_per_sample) {
                 case 8:
-                    src_pixel_type = Image::PixelType::UInt8;
                     break;
 
                 case 16:
-                    src_pixel_type = Image::PixelType::UInt16;
                     break;
 
                 case 32:
-                    if (ns_bitmap_format & NSBitmapFormatFloatingPointSamples)
-                        src_pixel_type = Image::PixelType::Float;
-                    else {
-                        return nullptr;
+                    if (!(ns_bitmap_format & NSBitmapFormatFloatingPointSamples)) {
+                        throw Error::specific(4);
                     }
                     break;
 
                 default:
-                    return nullptr;
+                    throw Error::specific(5);
             }
-
-            std::cout << "alloc image\n";
 
             image = new (std::nothrow) Image(src_color_model, static_cast<uint32_t>(ns_width), static_cast<uint32_t>(ns_height), pixel_type);
             if (!image) {
-                throw Error::specific(4);
+                throw Error::specific(6);
             }
-
-            std::cout << "copy image data\n";
 
             // Copy pixel data from NSImage to image
             ImageAccess src_image_access;
             _setImageAccessToNSBitmapImageRep(src_image_access, ns_bitmap_rep);
             image->copyImageData(src_image_access);
-
-            std::cout << "copy image data done!\n";
         }
         catch (ErrorCode err) {
-            return nullptr;
+            if (image) {
+                delete image;
+                image = nullptr;
+            }
         }
 
         // Cleanup
@@ -149,7 +141,7 @@ namespace Grain {
 
         NSInteger ns_bits_per_pixel = [bitmap_rep bitsPerPixel];
         NSInteger ns_bits_per_sample = [bitmap_rep bitsPerSample];
-        NSInteger ns_number_of_planes = [bitmap_rep numberOfPlanes];
+        // NSInteger ns_number_of_planes = [bitmap_rep numberOfPlanes]; // Unused
 
         // TODO: ns_number_of_planes != is an error!
 

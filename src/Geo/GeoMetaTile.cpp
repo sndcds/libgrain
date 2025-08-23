@@ -77,14 +77,14 @@ namespace Grain {
                         File tile_file(file_path);
                         tile_file.startRead();
                         tile_file_size = static_cast<int32_t>(tile_file.size());
-                        if (tile_file_size > tile_max_size) {
+                        if (tile_file_size > static_cast<int32_t>(tile_max_size)) {
                             tile_max_size = tile_file_size;
                         }
                         tile_file.close();
                     }
                     meta_file.writeValue<int32_t>(tile_offs);
                     meta_file.writeValue<int32_t>(tile_file_size);
-                    if (tile_file_size > tile_max_size) {
+                    if (tile_file_size > static_cast<int32_t>(tile_max_size)) {
                         tile_max_size = tile_file_size;
                     }
                     tile_offs += tile_file_size;
@@ -236,7 +236,7 @@ namespace Grain {
                             if (pass == 0) {
                                 meta_file.writeValue<int32_t>(tile_offs);
                                 meta_file.writeValue<int32_t>(tile_img_file_size);
-                                if (tile_img_file_size > tile_img_max_size) {
+                                if (tile_img_file_size > static_cast<int32_t>(tile_img_max_size)) {
                                     tile_img_max_size = tile_img_file_size;
                                 }
                                 tile_offs += tile_img_file_size;

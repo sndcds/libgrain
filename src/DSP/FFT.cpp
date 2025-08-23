@@ -245,10 +245,16 @@ namespace Grain {
         m_filter_samples = (float*)std::malloc(sizeof(float) * m_filter_length);
         m_signal_samples = (float*)std::malloc(sizeof(float) * m_signal_length);
         m_convolved_samples = (float*)std::malloc(sizeof(float) * m_signal_length);
+        m_filter_padded = (float*)std::malloc(sizeof(float) * m_fft_length);
+        m_signal_padded = (float*)std::malloc(sizeof(float) * m_fft_length);
+        m_filter_result = (float*)std::malloc(sizeof(float) * m_fft_length);
+        m_signal_real = (float*)std::malloc(sizeof(float) * m_fft_half_length);
+        m_signal_imag = (float*)std::malloc(sizeof(float) * m_fft_half_length);
+
+        // TODO: Check all buffers againt nullptr
 
         #if defined(__APPLE__) && defined(__MACH__)
             m_fft_setup = FFT::_macos_fftSetup(std::log2(static_cast<float>(m_fft_length)));
-
             m_filter_real = (float*)std::malloc(sizeof(float) * m_fft_length);
             m_filter_imag = &m_filter_real[m_fft_half_length];
             m_filter_split_complex.realp = m_filter_real;
@@ -262,18 +268,21 @@ namespace Grain {
         std::free(m_filter_samples);
         std::free(m_signal_samples);
         std::free(m_convolved_samples);
+        std::free(m_filter_padded);
+        std::free(m_signal_padded);
+        std::free(m_filter_result);
+        std::free(m_signal_real);
+        std::free(m_signal_imag);
     }
 
 
 #if defined(__APPLE__) && defined(__MACH__)
     void FFT_FIR::setFilter() noexcept {
-        float filter_padded[m_fft_length] __attribute__ ((aligned));
-
         float zero = 0;
-        vDSP_vfill(&zero, filter_padded, 1, m_fft_length);
-        cblas_scopy(m_filter_length, m_filter_samples, 1, filter_padded, 1);
+        vDSP_vfill(&zero, m_filter_padded, 1, m_fft_length);
+        cblas_scopy(m_filter_length, m_filter_samples, 1, m_filter_padded, 1);
 
-        vDSP_ctoz((DSPComplex*)filter_padded, 2, &m_filter_split_complex, 1, m_fft_half_length);
+        vDSP_ctoz((DSPComplex*)m_filter_padded, 2, &m_filter_split_complex, 1, m_fft_half_length);
         vDSP_fft_zrip(m_fft_setup, &m_filter_split_complex, 1, std::log2f(m_fft_length), FFT_FORWARD);
     }
 #else
@@ -286,21 +295,15 @@ namespace Grain {
 #if defined(__APPLE__) && defined(__MACH__)
     void FFT_FIR::filter() noexcept {
 
-        // Temporary buffers
-        float signal_padded[m_fft_length] __attribute__ ((aligned));
-        float result[m_fft_length] __attribute__ ((aligned));
-
         float zero = 0;
-        vDSP_vfill(&zero, signal_padded, 1, m_fft_length);
-        cblas_scopy(m_signal_length, m_signal_samples, 1, signal_padded, 1);
+        vDSP_vfill(&zero, m_signal_padded, 1, m_fft_length);
+        cblas_scopy(m_signal_length, m_signal_samples, 1, m_signal_padded, 1);
 
         DSPSplitComplex signal_split_complex;
-        float signal_real[m_fft_half_length] __attribute__ ((aligned));
-        float signal_imag[m_fft_half_length] __attribute__ ((aligned));
-        signal_split_complex.realp = signal_real;
-        signal_split_complex.imagp = signal_imag;
+        signal_split_complex.realp = m_signal_real;
+        signal_split_complex.imagp = m_signal_imag;
 
-        vDSP_ctoz((DSPComplex*)signal_padded, 2, &signal_split_complex, 1, m_fft_half_length);
+        vDSP_ctoz((DSPComplex*)m_signal_padded, 2, &signal_split_complex, 1, m_fft_half_length);
         vDSP_fft_zrip(m_fft_setup, &signal_split_complex, 1, std::log2f(m_fft_length), FFT_FORWARD);
 
         // This gets a bit strange. The vDSP FFT stores the real value at nyquist in the
@@ -333,7 +336,7 @@ namespace Grain {
         vDSP_vsmul(signal_split_complex.imagp, 1, &scale, signal_split_complex.imagp, 1, m_fft_half_length);
 
         // And convert split-complex format to real-valued
-        vDSP_ztoc(&signal_split_complex, 1, (DSPComplex*)result, 2, m_fft_half_length);
+        vDSP_ztoc(&signal_split_complex, 1, (DSPComplex*)m_filter_result, 2, m_fft_half_length);
 
         /* TODO: !!!!!
         // Now we have to scale our result by 1 / (4 * fft_length)
@@ -343,7 +346,7 @@ namespace Grain {
          */
 
         // write the final result to the output. use BLAS copy instead of loop
-        cblas_scopy(m_signal_length, result, 1, m_convolved_samples, 1);
+        cblas_scopy(m_signal_length, m_filter_result, 1, m_convolved_samples, 1);
     }
 #else
     void FFT_FIR::filter() noexcept {
@@ -366,7 +369,7 @@ namespace Grain {
         const double N = m_dft_length;
 
         // Compute the twiddle factors, and zero the x and S arrays
-        for (size_t k = 0; k < m_dft_length; k++) {
+        for (int32_t k = 0; k < m_dft_length; k++) {
             double factor = std::numbers::pi * 2 * k / N;
             _m_twiddle[k] = std::exp(j * factor);
             _m_s[k] = 0;
@@ -411,13 +414,13 @@ namespace Grain {
         // Update the DFT
         const double r = _m_damping_factor;
         const double r_to_n = std::pow(r, static_cast<double>(m_dft_length));
-        for (size_t k = 0; k < m_dft_length; k++) {
+        for (int32_t k = 0; k < m_dft_length; k++) {
             _m_s[k] = _m_twiddle[k] * (r * _m_s[k] - r_to_n * old_x + new_x);
         }
 
         // Apply the Hanning window
         _m_dft[0] = 0.5 * _m_s[0] - 0.25 * (_m_s[m_dft_length - 1] + _m_s[1]);
-        for (size_t k = 1; k < (m_dft_length - 1); k++) {
+        for (int32_t k = 1; k < (m_dft_length - 1); k++) {
             _m_dft[k] = 0.5 * _m_s[k] - 0.25 * (_m_s[k - 1] + _m_s[k + 1]);
         }
 

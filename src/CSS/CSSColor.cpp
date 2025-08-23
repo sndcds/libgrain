@@ -167,7 +167,7 @@ namespace Grain {
             { "yellow", 0xFFFF00FFu },
             { "yellowgreen", 0x9ACD32FFu },
 
-            { nullptr } // Sentinel item (end of list).
+            { nullptr, 0x0 } // Sentinel item (end of list).
     };
 
     const CSSColorFunctionInfo CSSColor::_g_color_function_infos[]  = {
@@ -184,7 +184,7 @@ namespace Grain {
             { "oklch(", 6, CSSColorFunction::OKLCh, 3, true },
             { "oklab(", 6, CSSColorFunction::OKLab, 3, true },
 
-            { nullptr } // Sentinel item (end of list).
+            { nullptr, 0, CSSColorFunction::Undefined, 0, false } // Sentinel item (end of list).
     };
 
 
@@ -439,27 +439,27 @@ namespace Grain {
             }
 
             case CSSColorFunction::HWB:
-                #warning "case CSSColorFunction::HWB must be implemented"
+                #pragma message("case CSSColorFunction::HWB must be implemented")
                 return false;
                 break;
 
             case CSSColorFunction::CMYK:
-                #warning "case CSSColorFunction::CMYK must be implemented"
+                #pragma message("case CSSColorFunction::CMYK must be implemented")
                 return false;
                 break;
 
             case CSSColorFunction::Lab:
-                #warning "case CSSColorFunction::Lab must be implemented"
+                #pragma message("case CSSColorFunction::Lab must be implemented")
                 return false;
                 break;
 
             case CSSColorFunction::Lch:
-                #warning "case CSSColorFunction::Lch must be implemented"
+                #pragma message("case CSSColorFunction::Lch must be implemented")
                 return false;
                 break;
 
             case CSSColorFunction::Color:
-                #warning "case CSSColorFunction::Color must be implemented"
+                #pragma message("case CSSColorFunction::Color must be implemented")
                 return false;
                 break;
 

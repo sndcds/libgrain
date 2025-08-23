@@ -604,7 +604,7 @@ namespace Grain {
 
             image = Image::createLuminaAlphaFloat(m_width, m_height);
 
-            int32_t undefined_value_count = 0;
+            // int32_t undefined_value_count = 0; // Unused
 
             if (image != nullptr) {
                 image->setSampleValueRange(m_min_value, m_max_value);
@@ -622,7 +622,7 @@ namespace Grain {
                         if (v == undefined_value) {
                             pixel[0] = static_cast<float>(m_min_value);
                             pixel[1] = 0.0f;
-                            undefined_value_count++;
+                            // undefined_value_count++; // Unused
                         }
                         else {
                             pixel[0] = static_cast<float>(v);

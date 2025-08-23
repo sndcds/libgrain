@@ -56,7 +56,7 @@ namespace Grain {
             }
 
             auto dst = static_cast<int64_t*>(m_cache_data);
-            for (int32_t y = 0; y < m_height; y++) {
+            for (int32_t y = 0; y < static_cast<int32_t>(m_height); y++) {
                 readRow(y);
                 for (uint32_t x = 0; x < m_width; x++) {
                     *dst++ = m_row_values[x];
@@ -129,11 +129,11 @@ namespace Grain {
                 4294967294L
         };
 
-        if (pos.m_x < 0 || pos.m_x >= m_width) {
+        if (pos.m_x < 0 || pos.m_x >= static_cast<int32_t>(m_width)) {
             return CVF2::kUndefinedValue;
         }
 
-        if (pos.m_y < 0 || pos.m_y >= m_height) {
+        if (pos.m_y < 0 || pos.m_y >= static_cast<int32_t>(m_height)) {
             return CVF2::kUndefinedValue;
         }
 
@@ -153,8 +153,8 @@ namespace Grain {
         setPos(row_offset);
         auto digits = readValue<uint16_t>();
         auto seq_count = readValue<uint32_t>();
-        uint32_t seq_index = 0;
-        uint32_t seq_offset = 0;
+        // uint32_t seq_index = 0; // Unused variable
+        // uint32_t seq_offset = 0; // Unused variable
         int64_t seq_min = 0;
 
         uint32_t offset = 0;
@@ -163,9 +163,9 @@ namespace Grain {
                 offset = readValue<uint32_t>();
             }
             auto min = readValue<int64_t>();
-            if (pos.m_x >= offset) {
-                seq_index = i;
-                seq_offset = offset;
+            if (pos.m_x >= static_cast<int32_t>(offset)) {
+                // seq_index = i;
+                // seq_offset = offset;
                 seq_min = min;
             }
         }
@@ -191,7 +191,7 @@ namespace Grain {
             }
         }
 
-        if (diff > max_diffs[digits]) {
+        if (static_cast<int64_t>(diff) > max_diffs[digits]) {
             return CVF2::kUndefinedValue;
         }
         else {
@@ -213,7 +213,7 @@ namespace Grain {
                 4294967294L
         };
 
-        if (y < 0 || y >= m_height) {
+        if (y < 0 || y >= static_cast<int32_t>(m_height)) {
             Exception::throwSpecific(kErrYOutOfRange);
         }
 
@@ -239,7 +239,7 @@ namespace Grain {
         std::cout << "CVF2File::readRow digits: " << digits << std::endl;
         std::cout << "CVF2File::readRow seq_count: " << seq_count << std::endl;
 
-        if (seq_count > m_row_seq_length) {
+        if (static_cast<int32_t>(seq_count) > m_row_seq_length) {
             if (m_row_seq != nullptr) {
                 std::free(m_row_seq);
                 m_row_seq = nullptr;
@@ -274,7 +274,7 @@ namespace Grain {
         bool second_nibble_flag = false;
 
         uint8_t byte = 0x0;
-        for (int32_t x = 0; x < m_width; x++) {
+        for (int32_t x = 0; x < static_cast<int32_t>(m_width); x++) {
             seq_cd--;
 
             uint64_t diff = 0;
@@ -291,7 +291,7 @@ namespace Grain {
                 }
             }
 
-            if (diff > max_diffs[digits]) {
+            if (static_cast<int64_t>(diff) > max_diffs[digits]) {
                 m_row_values[x] = CVF2::kUndefinedValue;
             }
             else {
@@ -333,7 +333,7 @@ namespace Grain {
             int64_t xyz_last_x = static_cast<int64_t>(round(range.maxX().asDouble()));
             int64_t xyz_last_y = static_cast<int64_t>(round(range.maxY().asDouble()));
 
-            int32_t xyz_line_count = 0;
+            // int32_t xyz_line_count = 0; // Unused
             String xyz_line;
             Vec3Fix xyz_coord;
             Fix z_value;
@@ -357,7 +357,7 @@ namespace Grain {
                         Exception::throwSpecific(kErrValueNotAsOriginal);
                     }
 
-                    xyz_line_count++;
+                    // xyz_line_count++; // Unused
                 }
             }
         }
@@ -401,7 +401,7 @@ namespace Grain {
 
             auto image = *out_image_ptr;
             if (image != nullptr) {
-                if (image->width() != m_width || image->height() != m_height) {
+                if (image->width() != static_cast<int32_t>(m_width) || image->height() != static_cast<int32_t>(m_height)) {
                     delete image;
                     image = *out_image_ptr = nullptr;
                 }
@@ -490,13 +490,14 @@ namespace Grain {
                 *out_value_grid_ptr = value_grid;
             }
 
-            if (value_grid->width() < m_width || value_grid->height() < m_height) {
+            if (value_grid->width() < static_cast<int32_t>(m_width) ||
+                value_grid->height() < static_cast<int32_t>(m_height)) {
                 throw ErrorCode::UnsupportedDimension;
             }
 
-            for (int32_t y = 0; y < m_height; y++) {
+            for (int32_t y = 0; y < static_cast<int32_t>(m_height); y++) {
                 readRow(y);
-                for (int32_t x = 0; x < m_width; x++) {
+                for (int32_t x = 0; x < static_cast<int32_t>(m_width); x++) {
                     auto value = m_row_values[x];
                     if (value == CVF2::kUndefinedValue) {
                         value_grid->setValueAtXY(x, y, std::numeric_limits<int64_t>::min());
@@ -578,8 +579,6 @@ namespace Grain {
         try {
             // Build list of all XYZFile file names
             StringList file_name_list;
-            int32_t ignored_files_count;
-            int32_t file_count = File::fileNameList(src_dir_path, "cvf", 1, Type::gigabytesToBytes(10), &ignored_files_count, file_name_list);
 
             int32_t index = 0;
             for (auto file_name : file_name_list) {

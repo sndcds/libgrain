@@ -169,9 +169,19 @@ add_library(libgrain STATIC
 )
 
 # Add the warning flag for GCC/Clang
-if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    target_compile_options(libgrain PRIVATE -Wmultichar)
-endif()
+# if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+#     target_compile_options(libgrain PRIVATE -Wmultichar)
+# endif()
+
+
+target_compile_options(libgrain PRIVATE
+    -Wall
+    -Wextra
+    -Wvla
+    -Werror
+    -Wmultichar
+    -Wno-error=unused-parameter  # exclude this warning from being an error
+)
 
 
 if (APPLE)
