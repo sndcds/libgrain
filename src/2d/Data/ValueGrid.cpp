@@ -250,7 +250,7 @@ namespace Grain {
 
         try {
 
-            file = new(std::nothrow) File(file_path);
+            file = new (std::nothrow) File(file_path);
             if (file == nullptr) {
                 throw ErrorCode::ClassInstantiationFailed;
             }
@@ -332,7 +332,7 @@ namespace Grain {
 
         try {
 
-            file = new(std::nothrow) File(file_path);
+            file = new (std::nothrow) File(file_path);
             if (file == nullptr) {
                 throw ErrorCode::ClassInstantiationFailed;
             }
@@ -507,7 +507,7 @@ namespace Grain {
 
         try {
 
-            cvf2 = new(std::nothrow) CVF2(m_width, m_height, length_unit, min_digits, max_digits);
+            cvf2 = new (std::nothrow) CVF2(m_width, m_height, length_unit, min_digits, max_digits);
             if (cvf2 == nullptr) {
                 throw ErrorCode::ClassInstantiationFailed;
             }

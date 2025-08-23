@@ -283,7 +283,7 @@ namespace Grain {
         }
 
         if (!(*signal_ptr)) {
-            *signal_ptr = new(std::nothrow) Signal(channel_count, sample_rate, sample_count, data_type, weights_mode);
+            *signal_ptr = new (std::nothrow) Signal(channel_count, sample_rate, sample_count, data_type, weights_mode);
             if (!(*signal_ptr)) {
                 return ErrorCode::ClassInstantiationFailed;
             }
@@ -352,7 +352,7 @@ namespace Grain {
      *
      *  This method creates a new `Signal` instance that contains a copy of the
      *  samples starting at the specified `offset` and spanning `length` samples.
-     *  If the offset and length are invalid (e.g., out of bounds), the function
+     *  If the offset and length are invalid (e.g., println of bounds), the function
      *  returns `nullptr`.
      *
      *  The new signal will inherit the original signal's channel count, sample
@@ -378,7 +378,7 @@ namespace Grain {
         }
 
         // Create a signal with same sample rate, data type ...
-        auto signal = new(std::nothrow) Signal(m_channel_count, m_sample_rate, length, m_data_type, weights_mode);
+        auto signal = new (std::nothrow) Signal(m_channel_count, m_sample_rate, length, m_data_type, weights_mode);
         if (signal != nullptr) {
             signal->copySamples(this, length, offset, 0);
         }
@@ -401,7 +401,7 @@ namespace Grain {
      */
     Signal* Signal::createSignalWithSameSetting() const noexcept {
 
-        auto signal = new(std::nothrow) Signal(m_channel_count, m_sample_rate, m_sample_count, m_data_type, m_weights_mode);
+        auto signal = new (std::nothrow) Signal(m_channel_count, m_sample_rate, m_sample_count, m_data_type, m_weights_mode);
         return signal;
     }
 
@@ -1151,7 +1151,7 @@ namespace Grain {
      *
      *  @return The interpolated floating-point sample value.
      *
-     *  @note This method is `noexcept` and safe against out-of-bounds access.
+     *  @note This method is `noexcept` and safe against println-of-bounds access.
      *        Missing samples are treated as 0.0.
      */
     float Signal::readFloatLerp(int32_t channel, const HiResValue& sample_pos) const noexcept {
@@ -1766,7 +1766,7 @@ namespace Grain {
                 if (data_type == DataType::Int8) {
                     auto d = reinterpret_cast<int8_t*>(out_samples);
                     while (i--) {
-                        *d++ = (int8_t)(*s * 0x7F);
+                        *d++ = static_cast<int8_t>(*s * 0x7F);
                         s += s_step;
                     }
                 }
@@ -2596,7 +2596,7 @@ namespace Grain {
                 int64_t sample_count = static_cast<double>(m_sample_count) / m_sample_rate * sample_rate;
                 if (sample_count > 1) {
 
-                    Signal* signal = new(std::nothrow) Signal(m_channel_count, sample_rate, sample_count, DataType::Float, sample_rate < m_sample_rate);
+                    Signal* signal = new (std::nothrow) Signal(m_channel_count, sample_rate, sample_count, DataType::Float, sample_rate < m_sample_rate);
                     if (signal == nullptr) {
                         throw ErrorCode::MemCantAllocate;
                     }
@@ -2803,14 +2803,14 @@ namespace Grain {
 
         int32_t fft_log_n = FFT::logNFromResolution(fft_length);
         if (fft_log_n < 1) {
-            Exception::throwStandard(ErrorCode::BadArgs, "FFT length must be greater than 1");
+            Exception::throwMessage(ErrorCode::BadArgs, "FFT length must be greater than 1");
         }
 
         // Check if we need a new FFT instance
         if (m_fft == nullptr) {
-            m_fft = new(std::nothrow) FFT(fft_log_n);
+            m_fft = new (std::nothrow) FFT(fft_log_n);
             if (m_fft == nullptr) {
-                Exception::throwStandard(ErrorCode::Fatal, "Failed to allocate FFT instance");
+                Exception::throwMessage(ErrorCode::Fatal, "Failed to allocate FFT instance");
             }
         }
 
@@ -2818,16 +2818,16 @@ namespace Grain {
         int64_t mem_size = fft_length * 3;
         m_computation_mem = static_cast<float*>(malloc(sizeof(float) * mem_size));
         if (m_computation_mem == nullptr) {
-            Exception::throwStandard(ErrorCode::MemCantAllocate, "Failed to allocate memory for FFT");
+            Exception::throwMessage(ErrorCode::MemCantAllocate, "Failed to allocate memory for FFT");
         }
 
         m_fft_buffer[0] = m_computation_mem;
         m_fft_buffer[1] = &m_computation_mem[fft_length];
         m_window_buffer = &m_computation_mem[2 * fft_length];
 
-        m_partials = new(std::nothrow) Partials(fft_length / 2);
+        m_partials = new (std::nothrow) Partials(fft_length / 2);
         if (m_partials == nullptr) {
-            Exception::throwStandard(ErrorCode::ClassInstantiationFailed, "Failed to instantiate Partials object for FFT");
+            Exception::throwMessage(ErrorCode::ClassInstantiationFailed, "Failed to instantiate Partials object for FFT");
         }
 
         DSP::hanningWindowPeriodic(fft_length / 2, &m_window_buffer[fft_length / 4]);
@@ -2866,14 +2866,14 @@ namespace Grain {
             }
 
             if (partials == nullptr) {
-                Exception::throwStandard(ErrorCode::BadArgs, "Partials is null");
+                Exception::throwMessage(ErrorCode::BadArgs, "Partials is null");
             }
 
             int32_t fft_half_width = partials->resolution();
             int32_t fft_width = fft_half_width * 2;
             int32_t fft_log_n = FFT::logNFromResolution(fft_width);
             if (fft_log_n < 1) {
-                Exception::throwStandard(ErrorCode::BadArgs, "Partials resolution must be a power of two.");
+                Exception::throwMessage(ErrorCode::BadArgs, "Partials resolution must be a power of two.");
             }
 
             checkProcessTypeChannelIndex(DataType::Float, channel, 0);
@@ -2902,7 +2902,7 @@ namespace Grain {
             // 1. Init ringbuffer
             RingBuffer<float> ringbuffer(ringbuffer_capacity);
             if (!ringbuffer.isUsable()) {
-                Exception::throwStandard(ErrorCode::ClassInstantiationFailed, "RingBuffer instantiation failed.");
+                Exception::throwMessage(ErrorCode::ClassInstantiationFailed, "RingBuffer instantiation failed.");
             }
 
             // 2. Write first two blocks to ringbuffer
@@ -2991,19 +2991,19 @@ namespace Grain {
             int64_t last_sample_index = length - 1;
 
             if (partials == nullptr) {
-                Exception::throwStandard(ErrorCode::BadArgs, "Partials is null");
+                Exception::throwMessage(ErrorCode::BadArgs, "Partials is null");
             }
 
             if (!hasData()) {
-                Exception::throwStandard(ErrorCode::NoData, "No data");
+                Exception::throwMessage(ErrorCode::NoData, "No data");
             }
 
             if (!hasChannelAndData(channel)) {
-                Exception::throwStandard(ErrorCode::BadArgs, "Invalid channel");
+                Exception::throwMessage(ErrorCode::BadArgs, "Invalid channel");
             }
 
             if (m_data_type != DataType::Float) {
-                Exception::throwStandard(ErrorCode::UnsupportedDataType, "Data type is not supported, must be 32 bit float");
+                Exception::throwMessage(ErrorCode::UnsupportedDataType, "Data type is not supported, must be 32 bit float");
             }
 
             int32_t fft_half_resolution = partials->resolution();
@@ -3011,7 +3011,7 @@ namespace Grain {
             int32_t fft_log_n = FFT::logNFromResolution(fft_resolution);
 
             if (fft_log_n < 1) {
-                Exception::throwStandard(ErrorCode::BadArgs, "Invalid FFT resolution");
+                Exception::throwMessage(ErrorCode::BadArgs, "Invalid FFT resolution");
             }
 
 
@@ -3070,7 +3070,7 @@ namespace Grain {
                 // Time domain → Frequency domain
                 err = m_fft->fft(m_block_data, m_partials);
                 if (err != ErrorCode::None) {
-                    Exception::throwStandard(ErrorCode::ComputationFailed, "FFT error");
+                    Exception::throwMessage(ErrorCode::ComputationFailed, "FFT error");
                 }
 
                 // Modify Partials
@@ -3079,7 +3079,7 @@ namespace Grain {
                 // Frequency domain → Time domain
                 err = m_fft->ifft(m_partials, m_block_data);
                 if (err != ErrorCode::None) {
-                    Exception::throwStandard(ErrorCode::ComputationFailed, "FFT error");
+                    Exception::throwMessage(ErrorCode::ComputationFailed, "FFT error");
                 }
 
 
@@ -3163,7 +3163,7 @@ namespace Grain {
         int64_t f_offs = 0;
         int64_t f_rest = b_length;
 
-        FFT_FIR* fft_fir = new(std::nothrow) FFT_FIR(FFT::kLogNResolution16384);
+        FFT_FIR* fft_fir = new (std::nothrow) FFT_FIR(FFT::kLogNResolution16384);
         if (fft_fir == nullptr) {
             return ErrorCode::Fatal;
         }
@@ -3400,7 +3400,7 @@ namespace Grain {
         Signal* signal = nullptr;
 
         try {
-            file = new(std::nothrow) SignalFile(file_path);
+            file = new (std::nothrow) SignalFile(file_path);
             if (file == nullptr) {
                 throw ErrorCode::ClassInstantiationFailed;
             }
@@ -3410,7 +3410,7 @@ namespace Grain {
 
             if (file->signalSampleCount() > 0) {
 
-                signal = new(std::nothrow) Signal(file->signalChannelCount(), file->signalSampleRate(), file->signalSampleCount(), data_type);
+                signal = new (std::nothrow) Signal(file->signalChannelCount(), file->signalSampleRate(), file->signalSampleCount(), data_type);
                 if (!signal) {
                     throw ErrorCode::ClassInstantiationFailed;
                 }
@@ -3558,7 +3558,7 @@ namespace Grain {
 
     SignalRegion *Signal::addRegion(const String &name, int32_t channel, int64_t left, int64_t right) noexcept {
 
-        SignalRegion *region = new(std::nothrow) SignalRegion(this, name, channel, left, right);
+        SignalRegion *region = new (std::nothrow) SignalRegion(this, name, channel, left, right);
         if (region == nullptr) {
             return nullptr;
         }
@@ -3827,7 +3827,7 @@ namespace Grain {
 
         int32_t channel_count = mono ? 1 : m_signal->channelCount();
 
-        Signal* extracted_signal = new(std::nothrow) Signal(channel_count, m_signal->sampleRate(), length(), data_type, false);
+        Signal* extracted_signal = new (std::nothrow) Signal(channel_count, m_signal->sampleRate(), length(), data_type, false);
         if (extracted_signal == nullptr) {
             return nullptr;
         }

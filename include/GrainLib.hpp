@@ -117,6 +117,7 @@
 #include "Math/Vec3Fix.hpp"
 
 #include "Scripting/Lua.hpp"
+#include "Scripting/Toml.hpp"
 
 #include "Signal/Signal.hpp"
 #include "Signal/Audio.hpp"

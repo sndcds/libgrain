@@ -121,7 +121,7 @@ namespace Grain {
 
         Log l;
 
-        auto param_count = (int32_t)param_list.size();
+        auto param_count = static_cast<int32_t>(param_list.size());
         int32_t index = 0;
         for (auto param : param_list) {
             param_types[index] = (Oid)param->m_type;
@@ -233,7 +233,7 @@ namespace Grain {
 
 
     PSQLConnection* PSQLConnections::addConnection() noexcept {
-        auto connection = new(std::nothrow) PSQLConnection();
+        auto connection = new (std::nothrow) PSQLConnection();
         if (connection) {
             m_connections.push(connection);
         }

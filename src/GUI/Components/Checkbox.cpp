@@ -59,7 +59,7 @@ namespace Grain {
 
 
     Checkbox* Checkbox::add(View* view, const Rectd& rect, const char* text, int32_t radio_group, int32_t radio_value, int32_t tag) {
-        auto check_box = (Checkbox*)Component::addComponentToView(new(std::nothrow) Checkbox(rect, text, tag), view, AddFlags::kNone);
+        auto check_box = (Checkbox*)Component::addComponentToView(new (std::nothrow) Checkbox(rect, text, tag), view, AddFlags::kNone);
 
         if (check_box) {
             check_box->setRadioGroup(radio_group);

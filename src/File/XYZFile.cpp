@@ -148,7 +148,7 @@ namespace Grain {
         try {
             // Transformation
             if (src_srid != 0 && dst_srid != 0) {
-                proj = new(std::nothrow) GeoProj();
+                proj = new (std::nothrow) GeoProj();
                 if (proj == nullptr) {
                     throw ErrorCode::ClassInstantiationFailed;
                 }
@@ -163,7 +163,7 @@ namespace Grain {
             }
 
             // First pass, scan
-            xyz_file1 = new(std::nothrow) XYZFile(file_path);
+            xyz_file1 = new (std::nothrow) XYZFile(file_path);
             if (xyz_file1 == nullptr) {
                 throw ErrorCode::ClassInstantiationFailed;
             }
@@ -188,7 +188,7 @@ namespace Grain {
             }
 
             // Second pass, process
-            xyz_file2 = new(std::nothrow) XYZFile(file_path);
+            xyz_file2 = new (std::nothrow) XYZFile(file_path);
             if (xyz_file2 == nullptr) {
                 throw ErrorCode::ClassInstantiationFailed;
             }
@@ -301,7 +301,7 @@ namespace Grain {
                 throw Error::specific(kErrPresisionOutOfRange);
             }
 
-            xyz_file = new(std::nothrow) XYZFile(xyz_file_path);
+            xyz_file = new (std::nothrow) XYZFile(xyz_file_path);
             if (!xyz_file) {
                 throw Error::specific(kErrXYZFileInstantiationFailed);
             }
@@ -323,7 +323,7 @@ namespace Grain {
                 throw ErrorCode::UnsupportedDimension;
             }
 
-            cvf2 = new(std::nothrow) CVF2(static_cast<int32_t>(xyz_width), static_cast<int32_t>(xyz_height), unit, min_digits, max_digits);
+            cvf2 = new (std::nothrow) CVF2(static_cast<int32_t>(xyz_width), static_cast<int32_t>(xyz_height), unit, min_digits, max_digits);
             if (cvf2 == nullptr) {
                 throw ErrorCode::ClassInstantiationFailed;
             }

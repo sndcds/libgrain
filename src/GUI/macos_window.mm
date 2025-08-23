@@ -66,7 +66,7 @@ namespace Grain {
 
         // Root View
         Rectd bounds_rect = window->boundsRect();
-        auto view = new(std::nothrow) View(bounds_rect);
+        auto view = new (std::nothrow) View(bounds_rect);
 
         if (view != nullptr) {
             window->_setRootView(view);

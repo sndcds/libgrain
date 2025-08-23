@@ -52,10 +52,10 @@ namespace Grain {
         updateScreenInfos();
 
         // Fonts
-        m_ui_font = new(std::nothrow) Font(16);
-        m_small_ui_font = new(std::nothrow) Font(12);
-        m_title_ui_font = new(std::nothrow) Font(22);
-        m_mono_font = new(std::nothrow) Font("SF Mono", 11); // TODO: Fallback!
+        m_ui_font = new (std::nothrow) Font(16);
+        m_small_ui_font = new (std::nothrow) Font(12);
+        m_title_ui_font = new (std::nothrow) Font(22);
+        m_mono_font = new (std::nothrow) Font("SF Mono", 11); // TODO: Fallback!
 
         g_instance->_initGUIStyle();
     }
@@ -115,7 +115,7 @@ namespace Grain {
 
 
     Window* App::addWindow(const char* title, const Rectd& rect, Window::Style window_style, Screen* screen) noexcept {
-        auto window = new(std::nothrow) Window(title, rect, window_style, screen);
+        auto window = new (std::nothrow) Window(title, rect, window_style, screen);
 
         try {
             if (!window) {

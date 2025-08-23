@@ -184,7 +184,7 @@ namespace Grain {
         File* file = nullptr;
 
         try {
-            file = new(std::nothrow) File(file_path);
+            file = new (std::nothrow) File(file_path);
             if (file != nullptr) {
                 file->start(flags);
             }
@@ -2071,7 +2071,7 @@ namespace Grain {
      */
     File* File::createFile(const String& file_path) {
 
-        auto file = new(std::nothrow) File(file_path);
+        auto file = new (std::nothrow) File(file_path);
         if (!file) {
             Exception::throwStandard(ErrorCode::FileInstantiationFailed);
         }

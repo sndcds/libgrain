@@ -22,17 +22,16 @@
 
 namespace Grain {
 
-
     class TomlTable;
     class TomlArray;
 
 
-/**
- *  @brief Represents a position in a TOML file.
- *
- *  This structure stores the line and column number corresponding to a node's
- *  location within a TOML file. It is useful for error reporting and debugging.
- */
+    /**
+     *  @brief Represents a position in a TOML file.
+     *
+     *  This structure stores the line and column number corresponding to a node's
+     *  location within a TOML file. It is useful for error reporting and debugging.
+     */
     struct TomlPos {
         int32_t m_line;
         int32_t m_column;
@@ -109,7 +108,7 @@ namespace Grain {
                     "Boolean", "Date", "Time", "DateTime"
             };
             auto t = type();
-            return t >= Type::None && t < Type::Count ? names[(int32_t)t] : names[0];
+            return t >= Type::None && t < Type::Count ? names[static_cast<int32_t>(t)] : names[0];
         }
 
         [[nodiscard]] TomlPos position() {
@@ -219,7 +218,7 @@ namespace Grain {
         friend class TomlTableItem;
 
     protected:
-        const toml::table *_m_tpp_table_ptr = nullptr;    ///< Pointer to toml++ table
+        const toml::table* _m_tpp_table_ptr = nullptr;    ///< Pointer to toml++ table
 
     public:
         TomlTable() {
@@ -230,7 +229,7 @@ namespace Grain {
             _m_tpp_table_ptr = tpp_table;
         }
 
-        void _setTppTablePtr(const toml::table *ttp_table_ptr) { _m_tpp_table_ptr = ttp_table_ptr; }
+        void _setTppTablePtr(const toml::table* ttp_table_ptr) { _m_tpp_table_ptr = ttp_table_ptr; }
 
         TomlTableIterator begin() const {
             return TomlTableIterator(
@@ -261,10 +260,9 @@ namespace Grain {
             }
             auto item = _m_tpp_table_ptr->find(name);
             if (item == _m_tpp_table_ptr->end()) {
-
                 String message;
-                message.setFormatted(202)
-                throw Exception(ErrorCode::TomlExpectedTableItem, "Expected table item with name \"%s\"");
+                message.setFormatted(1024, "Expected table item with name \"%s\"", name);
+                throw Exception(ErrorCode::TomlExpectedTableItem, message.utf8());
             }
             return item;
         }
@@ -320,7 +318,7 @@ namespace Grain {
                 return table;
             }
             else {
-                throw Exception(ErrorCode::TomlExpectedTable, local_exc_code, "Expected a TOML table but found something else");
+                throw Exception(ErrorCode::TomlExpectedTable, "Expected a TOML table but found something else");
             }
         }
     };
@@ -365,11 +363,11 @@ namespace Grain {
         friend class Toml;
 
     protected:
-        const toml::array *_m_tpp_array_ptr = nullptr;    ///< Pointer to toml++ array
+        const toml::array* _m_tpp_array_ptr = nullptr;    ///< Pointer to toml++ array
 
     public:
         TomlArray() {}
-        TomlArray(const toml::array *tpp_array) {
+        TomlArray(const toml::array* tpp_array) {
             _m_tpp_array_ptr = tpp_array;
         }
 
@@ -425,6 +423,11 @@ namespace Grain {
         int32_t m_included_files_count = 0; ///< Number of includes in TOML file ([[include]])
         int64_t m_included_files_total_size = 0;  ///< Number of bytes in all included files
 
+        ErrorCode m_last_err_code = ErrorCode::None;
+        String m_last_err_message;      ///< Last error message
+        int32_t m_line = -1;            ///< Line where error begins
+        int32_t m_column = -1;          ///< Column where error begins
+
     public:
         Toml();
         ~Toml();
@@ -432,6 +435,14 @@ namespace Grain {
         void parseFile(const String& file_path, Option options = Option::None);
         void parse(const char* str);
 
+        ErrorCode lastErrorCode() const noexcept { return m_last_err_code; }
+        int32_t lastErrorLine() const noexcept { return m_line; }
+        int32_t lastErrorColumn() const noexcept { return m_column; }
+        const char* lastErrorMessage() const noexcept { return m_last_err_message.utf8(); }
+
+        void _tppParserError(const toml::parse_error& err);
+
+        void logError(Log& l);
 
         toml::parse_result _ttpParseResult() { return _m_tpp_parse_result; }
 
@@ -448,28 +459,18 @@ namespace Grain {
             }
         }
 
-        static void throwParserError(const char *str) {
-            throw Exception::formatted(ErrorCode::TomlParseError, 0, "Toml parser exception: %s", str != nullptr ? str : "");
-        }
-
-        static void throwParserErrorFileLine(const char *file, int32_t line) {
-            throw Exception::formatted(ErrorCode::TomlParseError, 0, "Toml parser exception in file: %s, line: %d", file, line);
-        }
-
-        [[noreturn]]
-        void throwTomlParseError(std::ostringstream* oss, const toml::source_region& region) {
-            if (!oss) {
-                throw std::runtime_error("throwTomlParseError(): oss pointer is null");
+        void throwIfNull(void* ptr, ErrorCode err) {
+            if (ptr == nullptr) {
+                throw err;
             }
-
-            *oss << " (at line " << region.begin.line
-                 << ", column " << region.begin.column << ")";
-
-            // Assuming you have your own Exception class (customize below):
-            throw Exception(ErrorCode::TomlParseError, 0, oss->str().c_str());
         }
 
-        ErrorCode toJson(String &out_string);
+        void throwTomlParseError(const toml::source_region& region);
+
+        static void throwParserError(const char* str);
+        static void throwParserErrorFileLine(const char* file, int32_t line);
+
+        ErrorCode toJson(String& out_string);
     };
 
 

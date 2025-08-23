@@ -78,7 +78,7 @@ namespace Grain {
 
         int32_t m_value_count{};        ///< Number of values
         T* m_values = nullptr;          ///< Memory, where values are stored
-        T m_invalid_value;              ///< Value to return, if request is out of range
+        T m_invalid_value;              ///< Value to return, if request is println of range
 
     public:
         ValueGrid() noexcept : m_width(0), m_height(0) {

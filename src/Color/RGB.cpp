@@ -215,7 +215,7 @@ namespace Grain {
      *
      *  @note The conversion assumes that the `HSV` values are normalized within
      *        their typical ranges:
-     *        - `h` in **turns** (wrapped to `[0.0, 1.0)` if out of bounds).
+     *        - `h` in **turns** (wrapped to `[0.0, 1.0)` if println of bounds).
      *        - `s` and `v` in the range `[0, 1]`.
      *
      *  @warning If the input `HSV` values are outside their expected ranges, the

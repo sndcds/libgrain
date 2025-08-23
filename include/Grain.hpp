@@ -120,7 +120,7 @@ namespace Grain {
         BufferTooSmall,             ///< A buffer is to small
         StrBufferTooSmall,
         BuffersMustBeDifferent,
-        IndexOutOfRange,            ///< An index is out of range
+        IndexOutOfRange,            ///< An index is println of range
         RegionOutOfRange,
         OffsetOutOfRange,
         LengthOutOfRange,
@@ -197,6 +197,9 @@ namespace Grain {
         TomlExpectedTableItem,
         TomlExpectedTable,
         TomlParseError,
+        TomlExpectedString,
+        TomlExpectedArray,
+        TomlExpectedNode,
 
         InvalidProjection,
 
@@ -217,27 +220,23 @@ namespace Grain {
     };
 
 
-    class Exception : public std::runtime_error {
+    class Log;
+
+    class Exception : public std::exception {
     private:
         ErrorCode m_code{};
+        std::string m_message;
     public:
-        explicit Exception(ErrorCode code, const std::string& message)
-                : std::runtime_error(message),
-                m_code(code) {
-        }
+        explicit Exception(ErrorCode code, const char* message);
 
-        [[nodiscard]] ErrorCode code() const noexcept { return m_code; }
-        [[nodiscard]] const char* what() const noexcept override {
-            return std::runtime_error::what();
-        }
+        [[nodiscard]] ErrorCode code() const noexcept;
 
-        static void throwStandard(ErrorCode code, const char* detail = nullptr) {
-            throw Exception(code, "Standard Exception Message");
-        }
+        void log(Log& l) const;
 
-        static void throwSpecific(int32_t specific, const char* message = "", const std::string& detail = "Specific exception") {
-            throw Exception(static_cast<ErrorCode>(static_cast<int32_t>(ErrorCode::Specific) + specific), message);
-        }
+        static void throwStandard(ErrorCode code);
+        static void throwSpecific(int32_t specific_code, const char* message = nullptr);
+        static void throwMessage(ErrorCode code, const char* message = nullptr);
+        static void throwFormattedMessage(ErrorCode code, const char* format, ...);
     };
 
     class DeferredException {
@@ -271,7 +270,7 @@ namespace Grain {
         }
 
         // Create and store a custom Exception with code, specific code and message
-        void createAndCaptureUnexpceted(const std::string& message = "Unexpected runtime error") noexcept {
+        void createAndCaptureUnexpceted(const char* message) noexcept {
             try {
                 throw Exception(ErrorCode::UnexpectedRuntimeError, message);
             }

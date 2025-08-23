@@ -168,7 +168,7 @@ namespace Grain {
                 }
             }
 
-            auto string_to_insert = new(std::nothrow) String(string);
+            auto string_to_insert = new (std::nothrow) String(string);
             if (!string_to_insert) {
                 return ErrorCode::MemCantAllocate;
             }

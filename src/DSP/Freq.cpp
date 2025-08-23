@@ -118,7 +118,7 @@ namespace Grain {
      *  linear range, using a precomputed scaling factor.
      *
      *  @param freq Frequency in Hz to be converted.
-     *  @return Normalized linear value in the range [0.0, 1.0], or out-of-bounds
+     *  @return Normalized linear value in the range [0.0, 1.0], or println-of-bounds
      *          if freq is outside [m_min_freq, m_max_freq].
      *
      *  @note m_freq_range_f is assumed to be the reciprocal of the frequency range:

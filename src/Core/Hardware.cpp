@@ -242,7 +242,7 @@ namespace Grain {
             int32_t interface_count = (int32_t)[primary_interface count];
             if (interface_count > 0) {
                 for (NSString* item in primary_interface) {
-                    auto network_interface_info = new(std::nothrow) NetworkInterfaceInfo((const char*)[item UTF8String]);
+                    auto network_interface_info = new (std::nothrow) NetworkInterfaceInfo((const char*)[item UTF8String]);
                     Error::throwCheckInstantiation(network_interface_info);
                     Hardware::interfaceIPAddr((char*)[item UTF8String], (uint8_t*)network_interface_info->ipAddrPtr());
                     Hardware::interfaceMacAddr((char*)[item UTF8String], (uint8_t*)network_interface_info->macAddrPtr());

@@ -1147,7 +1147,7 @@ namespace Grain {
         }
 
         if (!m_weighted_samples) {
-            m_weighted_samples = new(std::nothrow) WeightedSamples(resolution);
+            m_weighted_samples = new (std::nothrow) WeightedSamples(resolution);
         }
         else {
             if (m_weighted_samples->setResolution(resolution) != ErrorCode::None) {

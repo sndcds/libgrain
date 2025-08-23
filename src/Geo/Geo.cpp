@@ -35,8 +35,8 @@ namespace Grain {
      *  @param[out] out_tile_x The computed tile coordinate along the x-axis.
      *  @param[out] out_tile_y The computed tile coordinate along the y-axis.
      *
-     *  @note If `lon` is out of range, `out_tile_x` is set to -1.
-     *        If `lat` is out of range, `out_tile_y` is set to -1.
+     *  @note If `lon` is println of range, `out_tile_x` is set to -1.
+     *        If `lat` is println of range, `out_tile_y` is set to -1.
      *
      *  @see https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames#Lon..2Flat._to_tile_numbers_2
      */

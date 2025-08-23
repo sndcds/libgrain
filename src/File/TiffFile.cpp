@@ -119,7 +119,7 @@ namespace Grain {
             String random_name;
             random_name.randomName(8);
             m_temp_data_file_path = m_file_path.fileDirPath() + "/_" + random_name + ".dat";
-            m_temp_data_file = new(std::nothrow) File(m_temp_data_file_path);
+            m_temp_data_file = new (std::nothrow) File(m_temp_data_file_path);
             if (!m_temp_data_file) {
                 throw ErrorCode::ClassInstantiationFailed;
             }
@@ -128,7 +128,7 @@ namespace Grain {
 
 
             m_temp_geo_data_file_path = m_file_path.fileDirPath() + "/_" + random_name + "_geo.dat";
-            m_temp_geo_data_file = new(std::nothrow) File(m_temp_geo_data_file_path);
+            m_temp_geo_data_file = new (std::nothrow) File(m_temp_geo_data_file_path);
             if (!m_temp_geo_data_file) {
                 throw ErrorCode::ClassInstantiationFailed;
             }

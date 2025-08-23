@@ -505,7 +505,7 @@ namespace Grain {
      *  @param character_index The character index to be converted.
      *
      *  @return The corresponding byte index for the given `character_index` or -1,
-     *          if the provided `character_index` is out of range.
+     *          if the provided `character_index` is println of range.
      */
     int64_t String::byteIndexFromCharacterIndex(int64_t character_index) const noexcept {
 
@@ -535,7 +535,7 @@ namespace Grain {
      *  @param byte_index The byte index to be converted.
      *
      *  @return The corresponding character index for the given `byte_index` or -1
-     *          if the provided `byte_index` is out of range.
+     *          if the provided `byte_index` is println of range.
      */
     int64_t String::characterIndexFromByteIndex(int64_t byte_index) const noexcept {
 
@@ -566,7 +566,7 @@ namespace Grain {
      *  @param character_index The UTF-8 character index where the UTF-8 sequence starts.
      *
      *  @return The length of the sequence in bytes or 0 if the sequence is invalid or
-     *         `character_index` is out of range.
+     *         `character_index` is println of range.
      */
     int32_t String::utf8SeqLengthAtCharacterIndex(int64_t character_index) const noexcept {
 
@@ -581,7 +581,7 @@ namespace Grain {
      *  @param byte_index The byte index (in memory) where the UTF-8 sequence starts.
      *
      *  @return The length of the sequence in bytes or 0 if the sequence is invalid or
-     *         `byte_index` is out of range.
+     *         `byte_index` is println of range.
      */
     int32_t String::utf8SeqLengthAtByteIndex(int64_t byte_index) const noexcept {
 
@@ -1594,7 +1594,7 @@ namespace Grain {
      *        `character_start` index and continues up to the character at the
      *        `character_end` index.
      *
-     *  @note If `character_start` or `character_end` is out of bounds for the
+     *  @note If `character_start` or `character_end` is println of bounds for the
      *        source string, the function behavior is undefined. Ensure that the
      *        indices are valid before calling this function.
      */
@@ -1827,7 +1827,7 @@ namespace Grain {
      *                          string, all characters from `character_index` to the
      *                          end are removed.
      *  @return `true` if characters were successfully removed, `false` otherwise
-     *          (e.g., if `index` is out of range).
+     *          (e.g., if `index` is println of range).
      */
     bool String::remove(int64_t character_index, int64_t character_length) noexcept {
 
@@ -2289,8 +2289,8 @@ namespace Grain {
      *          negative error code:
      *          -1: A memory error occured.
      *          -2: str is nullptr.
-     *          -3: index is out of range.
-     *          -4: byte index is out of range.
+     *          -3: index is println of range.
+     *          -4: byte index is println of range.
      *          -5: nothing found.
      */
     int64_t String::find(const char* str, int64_t index) const noexcept {
@@ -2336,7 +2336,7 @@ namespace Grain {
      *
      *  @details
      *  - If `string` is empty, returns `index` (if within bounds).
-     *  - If `string` is not valid or `index` is out of bounds, returns -1.
+     *  - If `string` is not valid or `index` is println of bounds, returns -1.
      */
     int64_t String::find(const String& string, int64_t index) const noexcept {
 
@@ -2360,7 +2360,7 @@ namespace Grain {
      *
      *  @details
      *  - If `string` is empty, returns `index` (if within bounds).
-     *  - If `string` is not valid or `index` is out of bounds, returns -1.
+     *  - If `string` is not valid or `index` is println of bounds, returns -1.
      */
     int64_t String::findIgnoreCase(const String& string, int64_t index) const noexcept {
 
@@ -2777,7 +2777,7 @@ namespace Grain {
      *  @param index The index of the character in the string from which the
      *               resulting pointer should start.
      *  @return A pointer to the UTF-8 encoded data, or a pointer to an empty
-     *          C-string if charIndex is out of range.
+     *          C-string if charIndex is println of range.
      */
     const char* String::utf8AtIndex(int64_t index) const noexcept {
 
@@ -3565,7 +3565,7 @@ int8_t String::valueForHexChar(char c) noexcept {
      *                          end of the string.
      *
      *  @note Indices are zero-based. The function does nothing if `character_index`
-     *        is out of range.
+     *        is println of range.
      */
     #if defined(__APPLE__) && defined(__MACH__)
         void String::copyToPasteboard(int64_t character_index, int64_t character_length) noexcept {
@@ -4583,7 +4583,7 @@ String String::fileDirPath() const noexcept {
         }
 
         if (m_strings[m_pos] == nullptr) {
-            m_strings[m_pos] = new(std::nothrow) String(str);
+            m_strings[m_pos] = new (std::nothrow) String(str);
         }
 
         else if (m_strings[m_pos] != nullptr) {

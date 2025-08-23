@@ -156,6 +156,7 @@ add_library(libgrain STATIC
         src/Type/FixProperty.cpp
 
         src/Scripting/Lua.cpp
+        src/Scripting/Toml.cpp
 
         src/Signal/Signal.cpp
         src/Signal/Audio.cpp

@@ -181,19 +181,19 @@ namespace Grain {
 
 
         [[nodiscard]] static Image* createLuminaFloat(int32_t width, int32_t height) noexcept {
-            return new(std::nothrow) Image(Color::Model::Lumina, width, height, PixelType::Float);
+            return new (std::nothrow) Image(Color::Model::Lumina, width, height, PixelType::Float);
         }
 
         [[nodiscard]] static Image* createLuminaAlphaFloat(int32_t width, int32_t height) noexcept {
-            return new(std::nothrow) Image(Color::Model::LuminaAlpha, width, height, PixelType::Float);
+            return new (std::nothrow) Image(Color::Model::LuminaAlpha, width, height, PixelType::Float);
         }
 
         [[nodiscard]] static Image* createRGBFloat(int32_t width, int32_t height) noexcept {
-            return new(std::nothrow) Image(Color::Model::RGB, width, height, PixelType::Float);
+            return new (std::nothrow) Image(Color::Model::RGB, width, height, PixelType::Float);
         }
 
         [[nodiscard]] static Image* createRGBAFloat(int32_t width, int32_t height) noexcept {
-            return new(std::nothrow) Image(Color::Model::RGBA, width, height, PixelType::Float);
+            return new (std::nothrow) Image(Color::Model::RGBA, width, height, PixelType::Float);
         }
 
 

@@ -36,7 +36,7 @@ namespace Grain {
 
 
     TextField* TextField::add(View* view, const Rectd& rect, const char* text, int32_t tag) {
-        auto textfield = (TextField*)Component::addComponentToView((Component*)new(std::nothrow) TextField(rect), view, AddFlags::kNone);
+        auto textfield = (TextField*)Component::addComponentToView((Component*)new (std::nothrow) TextField(rect), view, AddFlags::kNone);
 
         if (textfield) {
             textfield->setText(text);
@@ -51,7 +51,7 @@ namespace Grain {
         TextField* textfield = nullptr;
 
         if (view) {
-            textfield = new(std::nothrow) TextField(rect);
+            textfield = new (std::nothrow) TextField(rect);
 
             if (textfield) {
                 textfield->setTag(tag);
@@ -800,7 +800,7 @@ namespace Grain {
                 removeSelection();
             }
 
-            result = (int32_t)m_text->pasteFromPasteboard(m_cursor_index);
+            result = static_cast<int32_t>(m_text->pasteFromPasteboard(m_cursor_index));
             m_cursor_index += result;
 
             needsDisplay();

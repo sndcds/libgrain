@@ -29,7 +29,7 @@ namespace Grain {
 
 
     Button* Button::add(View* view, const Rectd& rect, const char* text, int32_t tag) {
-        return (Button*)Component::addComponentToView(new(std::nothrow) Button(rect, text, tag), view, AddFlags::kNone);
+        return (Button*)Component::addComponentToView(new (std::nothrow) Button(rect, text, tag), view, AddFlags::kNone);
     }
 
 

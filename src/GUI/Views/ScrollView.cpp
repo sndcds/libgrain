@@ -33,7 +33,7 @@ namespace Grain {
 
 
     ScrollView* ScrollView::add(View* view, const Rectd& rect) {
-        return (ScrollView*)Component::addComponentToView((Component*)new(std::nothrow) ScrollView(rect), view, AddFlags::kWantsLayer);
+        return (ScrollView*)Component::addComponentToView((Component*)new (std::nothrow) ScrollView(rect), view, AddFlags::kWantsLayer);
     }
 
 
@@ -41,13 +41,13 @@ namespace Grain {
         m_type = ComponentType::ScrollView;
         m_scroll_wheel_speed = App::scrollWheelSpeed();
 
-        setScrollAreaView(new(std::nothrow) ScrollAreaView());
+        setScrollAreaView(new (std::nothrow) ScrollAreaView());
 
-        m_horizontal_scroll_bar = (ScrollBar*)addComponent(new(std::nothrow) ScrollBar(Rectd(), false), AddFlags::kNone);
+        m_horizontal_scroll_bar = (ScrollBar*)addComponent(new (std::nothrow) ScrollBar(Rectd(), false), AddFlags::kNone);
         m_horizontal_scroll_bar->setReceiverComponent(this);
         m_horizontal_scroll_bar->setVisibility(false);
 
-        m_vertical_scroll_bar = (ScrollBar*)addComponent(new(std::nothrow) ScrollBar(Rectd(), true), AddFlags::kNone);
+        m_vertical_scroll_bar = (ScrollBar*)addComponent(new (std::nothrow) ScrollBar(Rectd(), true), AddFlags::kNone);
         m_vertical_scroll_bar->setReceiverComponent(this);
         m_vertical_scroll_bar->setVisibility(false);
 

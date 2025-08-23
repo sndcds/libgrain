@@ -46,7 +46,7 @@ namespace Grain {
     bool StringList::pushStr(const char* str) noexcept {
 
         if (str) {
-            auto s = new(std::nothrow) String(str);
+            auto s = new (std::nothrow) String(str);
             if (s) {
                 bool result = List::push(s);
                 return result;
@@ -83,7 +83,7 @@ namespace Grain {
     bool StringList::pushString(const String* string) noexcept {
 
         if (string) {
-            auto s = new(std::nothrow) String(*string);
+            auto s = new (std::nothrow) String(*string);
             if (s) {
                 bool result = List::push(s);
                 return result;

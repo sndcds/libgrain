@@ -192,7 +192,7 @@ namespace Grain {
     RGBLUT1 const *RGBLUT1::_initKelvinLUT() noexcept {
 
         int32_t resolution = 128;
-        auto lut = new(std::nothrow) RGBLUT1(resolution);
+        auto lut = new (std::nothrow) RGBLUT1(resolution);
         if (lut != nullptr) {
             for (int32_t i = 0; i < resolution; i++) {
                 RGB rgb;

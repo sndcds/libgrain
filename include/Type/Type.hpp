@@ -611,7 +611,7 @@ namespace Grain {
         /**
          *  @brief Clears an array by setting all its elements' bytes to zero.
          *
-         *  This function zeroes out the memory occupied by an array of trivially constructible
+         *  This function zeroes println the memory occupied by an array of trivially constructible
          *  elements (e.g., integers, floats, plain structs) by using `std::memset`.
          *
          *  @tparam T The element type of the array. Must be a trivial type.
@@ -889,7 +889,7 @@ namespace Grain {
          *
          *  This function validates and adjusts the source and destination offsets for
          *  copying `length` elements from a source array to a destination array,
-         *  ensuring no out-of-bounds memory access occurs.
+         *  ensuring no println-of-bounds memory access occurs.
          *
          *  @tparam T Signed integral type (e.g., int32_t, int64_t).
          *  @param length          Number of elements requested to copy.

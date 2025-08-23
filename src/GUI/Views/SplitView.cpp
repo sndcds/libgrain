@@ -28,7 +28,7 @@ namespace Grain {
 
 
     SplitView* SplitView::add(View* view, const Rectd& rect, int32_t tag) {
-        return (SplitView*)Component::addComponentToView((Component*)new(std::nothrow) SplitView(rect, tag), view, AddFlags::kWantsLayer);
+        return (SplitView*)Component::addComponentToView((Component*)new (std::nothrow) SplitView(rect, tag), view, AddFlags::kWantsLayer);
     }
 
 
@@ -50,10 +50,10 @@ namespace Grain {
         Rectd split_rect;
 
         if (m_vertical) {
-            split_rect.set(0, (int32_t)(divider_size / 2) - 0.5f, bounds_rect.m_width, 1);
+            split_rect.set(0, static_cast<int32_t>(divider_size / 2) - 0.5f, bounds_rect.m_width, 1);
         }
         else {
-            split_rect.set((int32_t)(divider_size / 2) - 0.5f, 0, 1, bounds_rect.m_height);
+            split_rect.set(static_cast<int32_t>(divider_size / 2) - 0.5f, 0, 1, bounds_rect.m_height);
         }
 
         int32_t n = viewCount();
@@ -216,7 +216,7 @@ namespace Grain {
     void SplitView::handleMouseDrag(const Event& event) noexcept {
         if (m_divider_index >= 0 && m_divider_index < m_view_count) {
             double new_mouse_pos = isVertical() ? event.mouseY() : event.mouseX();
-            int32_t delta = (int32_t)std::round(new_mouse_pos - m_prev_mouse_pos);
+            int32_t delta = static_cast<int32_t>(std::round(new_mouse_pos - m_prev_mouse_pos));
             delta = std::clamp<int32_t>(delta, m_divider_delta_min, m_divider_delta_max);
 
             m_item_a->m_size = m_item_a_size + delta;
@@ -269,7 +269,7 @@ namespace Grain {
             total_size += isVertical() ? m_items[i].m_view->height() : m_items[i].m_view->width();
         }
 
-        return (int32_t)total_size;
+        return static_cast<int32_t>(total_size);
     }
 
 
@@ -436,7 +436,7 @@ namespace Grain {
             auto item = itemAtIndex(i);
 
             item->m_real_pos = p / available_size;
-            item->m_real_size = (double)item->m_size/ available_size;
+            item->m_real_size = static_cast<double>(item->m_size) / available_size;
             item->m_view->needsDisplay();
 
             p += item->m_size;

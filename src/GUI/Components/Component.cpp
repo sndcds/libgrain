@@ -130,7 +130,7 @@ namespace Grain {
         }
 
         if (m_text == nullptr) {
-            m_text = new(std::nothrow) String();
+            m_text = new (std::nothrow) String();
         }
 
         if (m_text != nullptr) {

@@ -75,7 +75,7 @@ namespace Grain {
             int32_t curr_pixel_count = 0;
 
             for (int32_t i = 0; i < screen_count; i++) {
-                auto screen = new(std::nothrow) Screen();
+                auto screen = new (std::nothrow) Screen();
                 app->m_screens.push(screen);
                 if (screen) {
                     NSScreen* ns_screen = [ns_screens objectAtIndex:(NSUInteger) i];

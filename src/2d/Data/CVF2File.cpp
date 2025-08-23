@@ -317,7 +317,7 @@ namespace Grain {
         XYZFile* xyz_file = nullptr;
 
         try {
-            xyz_file = new(std::nothrow) XYZFile(xyz_file_path);
+            xyz_file = new (std::nothrow) XYZFile(xyz_file_path);
             if (xyz_file == nullptr) {
                 Exception::throwStandard(ErrorCode::FileNotFound);
             }
@@ -483,7 +483,7 @@ namespace Grain {
             auto value_grid = *out_value_grid_ptr;
 
             if (value_grid == nullptr) {
-                value_grid = new(std::nothrow) ValueGridl(m_width, m_height);
+                value_grid = new (std::nothrow) ValueGridl(m_width, m_height);
                 if (!value_grid) {
                     throw ErrorCode::MemCantAllocate;
                 }

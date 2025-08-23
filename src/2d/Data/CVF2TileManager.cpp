@@ -64,7 +64,7 @@ namespace Grain {
         }
 
         // Attempt to allocate a new ValueGrid with the required dimensions
-        m_value_grid = new(std::nothrow) ValueGridf(w, h);
+        m_value_grid = new (std::nothrow) ValueGridf(w, h);
         if (m_value_grid == nullptr) {
             return ErrorCode::MemCantAllocate;
         }
@@ -248,7 +248,7 @@ namespace Grain {
 
             // Build list of all CVF2 files, which exists in the directory "cvf2"
 
-            file_list = new(std::nothrow) StringList();
+            file_list = new (std::nothrow) StringList();
             if (file_list == nullptr) { throw ErrorCode::ClassInstantiationFailed; }
 
             m_scan_files_n = File::fileNameList(m_dir_path, "cvf", m_min_cvf2_file_size, m_max_cvf2_file_size, &m_scan_files_ignored_n, *file_list);
@@ -300,7 +300,7 @@ namespace Grain {
 
         String file_path = dir_path + "/" + file_name;
 
-        auto file = new(std::nothrow) CVF2File(file_path);
+        auto file = new (std::nothrow) CVF2File(file_path);
         if (!file) { throw ErrorCode::ClassInstantiationFailed; }
 
         file->startRead();
@@ -391,7 +391,7 @@ namespace Grain {
             int32_t tile_index = 0;
             for (int32_t y = 0; y < m_y_tile_count; y++) {
                 for (int32_t x = 0; x < m_x_tile_count; x++) {
-                    auto tile = new(std::nothrow) CVF2Tile(tile_index);
+                    auto tile = new (std::nothrow) CVF2Tile(tile_index);
                     if (!tile) { throw Error::specific(kErrTileTileInstantiationFailed); }
                     m_tiles.push(tile);
                     tile->m_x_index = x;
@@ -410,7 +410,7 @@ namespace Grain {
             }
 
             // Build tiles
-            file_list = new(std::nothrow) StringList();
+            file_list = new (std::nothrow) StringList();
             if (file_list == nullptr) {
                 throw ErrorCode::ClassInstantiationFailed;
             }
@@ -446,7 +446,7 @@ namespace Grain {
     void CVF2TileManager::_startFile(const String& dir_path, const String& file_name) {
         String file_path = dir_path + "/" + file_name;
 
-        auto file = new(std::nothrow) CVF2File(file_path);
+        auto file = new (std::nothrow) CVF2File(file_path);
         if (!file) { throw ErrorCode::ClassInstantiationFailed; }
 
         file->startRead();
@@ -600,7 +600,7 @@ namespace Grain {
      *
      *  @param pos The position (in the coordinate system of the tile manager) for which to find the corresponding tile.
      *  @param[out] out_tile_xy_index The x and y indices of the tile in the 2D tile map.
-     *  @return The absolute tile index, or -1 if the position is out of bounds.
+     *  @return The absolute tile index, or -1 if the position is println of bounds.
      */
     int64_t CVF2TileManager::tileIndexAtTileManagerPos(const Vec2d& pos, Vec2i& out_tile_xy_index) noexcept {
 
@@ -625,7 +625,7 @@ namespace Grain {
      *
      *  @param lonlat The lon/lat position for which to find the corresponding tile in SRID 4326.
      *  @param[out] out_tile_xy_index The x and y indices of the tile in the 2D tile map.
-     *  @return The absolute tile index, or -1 if the position is out of bounds.
+     *  @return The absolute tile index, or -1 if the position is println of bounds.
      */
     int64_t CVF2TileManager::tileIndexAtLonlat(const Vec2d& lonlat, Vec2i& out_tile_xy_index) noexcept {
 
@@ -710,7 +710,7 @@ namespace Grain {
                         m_cvf2_file_close_n++;
                     }
 
-                    slot->m_file = new(std::nothrow) CVF2File(tile->m_file_path);
+                    slot->m_file = new (std::nothrow) CVF2File(tile->m_file_path);
 
                     if (slot->m_file != nullptr) {
                         slot->m_file->startRead();
@@ -791,7 +791,7 @@ namespace Grain {
                 throw ErrorCode::NullData;
             }
 
-            raw_file = new(std::nothrow) File(raw_file_path);
+            raw_file = new (std::nothrow) File(raw_file_path);
             if (raw_file == nullptr) {
                 throw ErrorCode::ClassInstantiationFailed;
             }
@@ -1270,7 +1270,7 @@ namespace Grain {
             GeoMetaTileRange mtr(dst_zoom, bbox);
             if (!mtr.valid()) { throw Error::specific(kErrMetaTileRangeFailed); }
 
-            value_grid = new(std::nothrow) ValueGridl(meta_tile_size, meta_tile_size);
+            value_grid = new (std::nothrow) ValueGridl(meta_tile_size, meta_tile_size);
             if (!value_grid) { throw ErrorCode::ClassInstantiationFailed; }
 
             value_grid->setInvalidValue(value_grid->minValueForType());

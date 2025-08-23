@@ -389,7 +389,7 @@ namespace Grain {
             return nullptr;
         }
         else {
-            return &_m_pixel_data_ptr[(int64_t)x * (int64_t)_m_pixel_data_step + (int64_t)y * (int64_t)_m_row_data_step];
+            return &_m_pixel_data_ptr[static_cast<int64_t>(x) * static_cast<int64_t>(_m_pixel_data_step) + static_cast<int64_t>(y) * static_cast<int64_t>(_m_row_data_step)];
         }
     }
 
@@ -544,7 +544,7 @@ namespace Grain {
 
 
     void ImageAccess::_updatePtr() {
-        _m_curr_ptr = &_m_pixel_data_ptr[(int64_t)m_x * (int64_t)_m_pixel_data_step + (int64_t)m_y * (int64_t)_m_row_data_step];
+        _m_curr_ptr = &_m_pixel_data_ptr[static_cast<int64_t>(m_x) * static_cast<int64_t>(_m_pixel_data_step) + static_cast<int64_t>(m_y) * static_cast<int64_t>(_m_row_data_step)];
     }
 
 
@@ -558,12 +558,12 @@ namespace Grain {
 
 
     void ImageAccess::_transfer_r1_u16_to_u8() {
-        *_m_value_ptr_u8 = (uint8_t)(*((uint16_t*)_m_curr_ptr) >> 8);
+        *_m_value_ptr_u8 = static_cast<uint8_t>(*((uint16_t*)_m_curr_ptr) >> 8);
     }
 
 
     void ImageAccess::_transfer_r1_r32_to_u8() {
-        *_m_value_ptr_u8 = (uint8_t)(*((float*)_m_curr_ptr) * std::numeric_limits<uint8_t>::max());
+        *_m_value_ptr_u8 = static_cast<uint8_t>(*((float*)_m_curr_ptr) * std::numeric_limits<uint8_t>::max());
     }
 
 
@@ -578,16 +578,16 @@ namespace Grain {
     void ImageAccess::_transfer_r2_u16_to_u8() {
         auto s = reinterpret_cast<uint16_t*>(_m_curr_ptr);
         uint8_t* d = _m_value_ptr_u8;
-        *d++ = (uint8_t)(*s >> 8);
-        *d = (uint8_t)(s[1] >> 8);
+        *d++ = static_cast<uint8_t>(*s >> 8);
+        *d = static_cast<uint8_t>(s[1] >> 8);
     }
 
 
     void ImageAccess::_transfer_r2_r32_to_u8() {
         auto s = reinterpret_cast<float*>(_m_curr_ptr);
         uint8_t* d = _m_value_ptr_u8;
-        *d++ = (uint8_t)(*s * std::numeric_limits<uint8_t>::max());
-        *d = (uint8_t)(s[1] * std::numeric_limits<uint8_t>::max());
+        *d++ = static_cast<uint8_t>(*s * std::numeric_limits<uint8_t>::max());
+        *d = static_cast<uint8_t>(s[1] * std::numeric_limits<uint8_t>::max());
     }
 
 
@@ -603,18 +603,18 @@ namespace Grain {
     void ImageAccess::_transfer_r3_u16_to_u8() {
         auto s = reinterpret_cast<uint16_t*>(_m_curr_ptr);
         uint8_t* d = _m_value_ptr_u8;
-        *d++ = (uint8_t)(*s >> 8);
-        *d++ = (uint8_t)(s[1] >> 8);
-        *d = (uint8_t)(s[2] >> 8);
+        *d++ = static_cast<uint8_t>(*s >> 8);
+        *d++ = static_cast<uint8_t>(s[1] >> 8);
+        *d = static_cast<uint8_t>(s[2] >> 8);
     }
 
 
     void ImageAccess::_transfer_r3_r32_to_u8() {
         auto s = reinterpret_cast<float*>(_m_curr_ptr);
         uint8_t* d = _m_value_ptr_u8;
-        *d++ = (uint8_t)(*s * std::numeric_limits<uint8_t>::max());
-        *d++ = (uint8_t)(s[1] * std::numeric_limits<uint8_t>::max());
-        *d = (uint8_t)(s[2] * std::numeric_limits<uint8_t>::max());
+        *d++ = static_cast<uint8_t>(*s * std::numeric_limits<uint8_t>::max());
+        *d++ = static_cast<uint8_t>(s[1] * std::numeric_limits<uint8_t>::max());
+        *d = static_cast<uint8_t>(s[2] * std::numeric_limits<uint8_t>::max());
     }
 
 
@@ -630,18 +630,18 @@ namespace Grain {
     void ImageAccess::_transfer_r4_u16_to_u8() {
         auto s = reinterpret_cast<uint16_t*>(_m_curr_ptr);
         uint8_t* d = _m_value_ptr_u8;
-        *d++ = (uint8_t)(*s >> 8);
-        *d++ = (uint8_t)(s[1] >> 8);
-        *d = (uint8_t)(s[2] >> 8);
+        *d++ = static_cast<uint8_t>(*s >> 8);
+        *d++ = static_cast<uint8_t>(s[1] >> 8);
+        *d = static_cast<uint8_t>(s[2] >> 8);
     }
 
 
     void ImageAccess::_transfer_r4_r32_to_u8() {
         auto s = reinterpret_cast<float*>(_m_curr_ptr);
         uint8_t* d = _m_value_ptr_u8;
-        *d++ = (uint8_t)(*s * std::numeric_limits<uint8_t>::max());
-        *d++ = (uint8_t)(s[1] * std::numeric_limits<uint8_t>::max());
-        *d = (uint8_t)(s[2] * std::numeric_limits<uint8_t>::max());
+        *d++ = static_cast<uint8_t>(*s * std::numeric_limits<uint8_t>::max());
+        *d++ = static_cast<uint8_t>(s[1] * std::numeric_limits<uint8_t>::max());
+        *d = static_cast<uint8_t>(s[2] * std::numeric_limits<uint8_t>::max());
     }
 
 
@@ -747,7 +747,7 @@ namespace Grain {
 
 
     void ImageAccess::_transfer_w1_u8_to_u16() {
-        *((uint16_t*)_m_curr_ptr) = ((uint16_t)*_m_value_ptr_u8) << 8;
+        *((uint16_t*)_m_curr_ptr) = (static_cast<uint16_t>(*_m_value_ptr_u8)) << 8;
     }
 
 
@@ -767,8 +767,8 @@ namespace Grain {
     void ImageAccess::_transfer_w2_u8_to_u16() {
         uint8_t* s = _m_value_ptr_u8;
         auto d = reinterpret_cast<uint16_t*>(_m_curr_ptr);
-        *d = (uint16_t)(*s++) << 8;
-        d[1] = (uint16_t)(*s) << 8;
+        *d = static_cast<uint16_t>(*s++) << 8;
+        d[1] = static_cast<uint16_t>(*s) << 8;
     }
 
 
@@ -792,9 +792,9 @@ namespace Grain {
     void ImageAccess::_transfer_w3_u8_to_u16() {
         uint8_t* s = _m_value_ptr_u8;
         auto d = reinterpret_cast<uint16_t*>(_m_curr_ptr);
-        *d = (uint16_t)(*s++) << 8;
-        d[1] = (uint16_t)(*s++) << 8;
-        d[2] = (uint16_t)(*s) << 8;
+        *d = static_cast<uint16_t>(*s++) << 8;
+        d[1] = static_cast<uint16_t>(*s++) << 8;
+        d[2] = static_cast<uint16_t>(*s) << 8;
     }
 
 
@@ -820,10 +820,10 @@ namespace Grain {
     void ImageAccess::_transfer_w4_u8_to_u16() {
         uint8_t* s = _m_value_ptr_u8;
         auto d = reinterpret_cast<uint16_t*>(_m_curr_ptr);
-        *d = (uint16_t)(*s++) << 8;
-        d[1] = (uint16_t)(*s++) << 8;
-        d[2] = (uint16_t)(*s++) << 8;
-        d[3] = (uint16_t)(*s) << 8;
+        *d = static_cast<uint16_t>(*s++) << 8;
+        d[1] = static_cast<uint16_t>(*s++) << 8;
+        d[2] = static_cast<uint16_t>(*s++) << 8;
+        d[3] = static_cast<uint16_t>(*s) << 8;
     }
 
 
@@ -838,12 +838,12 @@ namespace Grain {
 
 
     void ImageAccess::_transfer_w1_r32_to_u8() {
-        *((uint8_t*)_m_curr_ptr) = (uint8_t)(*_m_value_ptr_float * std::numeric_limits<uint8_t>::max());
+        *((uint8_t*)_m_curr_ptr) = static_cast<uint8_t>(*_m_value_ptr_float * std::numeric_limits<uint8_t>::max());
     }
 
 
     void ImageAccess::_transfer_w1_r32_to_u16() {
-        *((uint16_t*)_m_curr_ptr) = (uint16_t)(*_m_value_ptr_float * std::numeric_limits<uint16_t>::max());
+        *((uint16_t*)_m_curr_ptr) = static_cast<uint16_t>(*_m_value_ptr_float * std::numeric_limits<uint16_t>::max());
     }
 
 
@@ -855,16 +855,16 @@ namespace Grain {
     void ImageAccess::_transfer_w2_r32_to_u8() {
         float* s = _m_value_ptr_float;
         auto d = reinterpret_cast<uint8_t*>(_m_curr_ptr);
-        *d = (uint8_t)(*s++ * std::numeric_limits<uint8_t>::max());
-        d[1] = (uint8_t)(*s * std::numeric_limits<uint8_t>::max());
+        *d = static_cast<uint8_t>(*s++ * std::numeric_limits<uint8_t>::max());
+        d[1] = static_cast<uint8_t>(*s * std::numeric_limits<uint8_t>::max());
     }
 
 
     void ImageAccess::_transfer_w2_r32_to_u16() {
         float* s = _m_value_ptr_float;
         auto d = reinterpret_cast<uint16_t*>(_m_curr_ptr);
-        *d = (uint16_t)(*s++ * std::numeric_limits<uint16_t>::max());
-        d[1] = (uint16_t)(*s * std::numeric_limits<uint16_t>::max());
+        *d = static_cast<uint16_t>(*s++ * std::numeric_limits<uint16_t>::max());
+        d[1] = static_cast<uint16_t>(*s * std::numeric_limits<uint16_t>::max());
     }
 
 
@@ -879,18 +879,18 @@ namespace Grain {
     void ImageAccess::_transfer_w3_r32_to_u8() {
         float* s = _m_value_ptr_float;
         auto d = reinterpret_cast<uint8_t*>(_m_curr_ptr);
-        *d = (uint8_t)(*s++ * std::numeric_limits<uint8_t>::max());
-        d[1] = (uint8_t)(*s++ * std::numeric_limits<uint8_t>::max());
-        d[2] = (uint8_t)(*s * std::numeric_limits<uint8_t>::max());
+        *d = static_cast<uint8_t>(*s++ * std::numeric_limits<uint8_t>::max());
+        d[1] = static_cast<uint8_t>(*s++ * std::numeric_limits<uint8_t>::max());
+        d[2] = static_cast<uint8_t>(*s * std::numeric_limits<uint8_t>::max());
     }
 
 
     void ImageAccess::_transfer_w3_r32_to_u16() {
         float* s = _m_value_ptr_float;
         auto d = reinterpret_cast<uint16_t*>(_m_curr_ptr);
-        *d = (uint16_t)(*s++ * std::numeric_limits<uint16_t>::max());
-        d[1] = (uint16_t)(*s++ * std::numeric_limits<uint16_t>::max());
-        d[2] = (uint16_t)(*s * std::numeric_limits<uint16_t>::max());
+        *d = static_cast<uint16_t>(*s++ * std::numeric_limits<uint16_t>::max());
+        d[1] = static_cast<uint16_t>(*s++ * std::numeric_limits<uint16_t>::max());
+        d[2] = static_cast<uint16_t>(*s * std::numeric_limits<uint16_t>::max());
     }
 
 
@@ -906,20 +906,20 @@ namespace Grain {
     void ImageAccess::_transfer_w4_r32_to_u8() {
         float* s = _m_value_ptr_float;
         auto d = reinterpret_cast<uint8_t*>(_m_curr_ptr);
-        *d = (uint8_t)(*s++ * std::numeric_limits<uint8_t>::max());
-        d[1] = (uint8_t)(*s++ * std::numeric_limits<uint8_t>::max());
-        d[2] = (uint8_t)(*s++ * std::numeric_limits<uint8_t>::max());
-        d[3] = (uint8_t)(*s * std::numeric_limits<uint8_t>::max());
+        *d = static_cast<uint8_t>(*s++ * std::numeric_limits<uint8_t>::max());
+        d[1] = static_cast<uint8_t>(*s++ * std::numeric_limits<uint8_t>::max());
+        d[2] = static_cast<uint8_t>(*s++ * std::numeric_limits<uint8_t>::max());
+        d[3] = static_cast<uint8_t>(*s * std::numeric_limits<uint8_t>::max());
     }
 
 
     void ImageAccess::_transfer_w4_r32_to_u16() {
         float* s = _m_value_ptr_float;
         auto d = reinterpret_cast<uint16_t*>(_m_curr_ptr);
-        *d = (uint16_t)(*s++ * std::numeric_limits<uint16_t>::max());
-        d[1] = (uint16_t)(*s++ * std::numeric_limits<uint16_t>::max());
-        d[2] = (uint16_t)(*s++ * std::numeric_limits<uint16_t>::max());
-        d[3] = (uint16_t)(*s * std::numeric_limits<uint16_t>::max());
+        *d = static_cast<uint16_t>(*s++ * std::numeric_limits<uint16_t>::max());
+        d[1] = static_cast<uint16_t>(*s++ * std::numeric_limits<uint16_t>::max());
+        d[2] = static_cast<uint16_t>(*s++ * std::numeric_limits<uint16_t>::max());
+        d[3] = static_cast<uint16_t>(*s * std::numeric_limits<uint16_t>::max());
     }
 
 
@@ -1434,10 +1434,10 @@ namespace Grain {
 
         Vec3d p; // Position as x, y, z
         while (ia.stepY()) {
-            p.m_y = 2.0 * (double)ia.y() / (m_height - 1.0) - 1.0;
+            p.m_y = 2.0 * static_cast<double>(ia.y()) / (m_height - 1.0) - 1.0;
 
             while (ia.stepX()) {
-                p.m_x = 2.0 * (double)ia.x() / (m_width - 1.0) - 1.0;
+                p.m_x = 2.0 * static_cast<int32_t>(ia.x()) / (m_width - 1.0) - 1.0;
                 Vec3d l = p.posToLoc();  // Location as angle, distance, elevation
                 color_ramp.lookupRing(l.m_x / 360.0f, pixel); // m_x = angle
 
@@ -1772,7 +1772,7 @@ namespace Grain {
         auto intersection = image_rect.intersection(region);
 
         if (intersection.usable()) {
-            region_image = new(std::nothrow) Image(this, intersection.width(), intersection.height());
+            region_image = new (std::nothrow) Image(this, intersection.width(), intersection.height());
             if (region_image) {
                 float pixel[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
                 ImageAccess ia_src(this, pixel);
@@ -1818,8 +1818,8 @@ namespace Grain {
 
         float x_ratio = (float)src_width / dst_width;
         float y_ratio = (float)src_height / dst_height;
-        int32_t x_block_size = (int32_t)x_ratio;
-        int32_t y_block_size = (int32_t)y_ratio;
+        int32_t x_block_size = static_cast<int32_t>(x_ratio);
+        int32_t y_block_size = static_cast<int32_t>(y_ratio);
         int32_t x_rest = src_width % x_block_size;
         int32_t y_rest = src_height % y_block_size;
 
@@ -1832,7 +1832,7 @@ namespace Grain {
             return Error::specific(0);
         }
 
-        auto temp_image = new(std::nothrow) Image(dst_image, x_block_count, y_block_count);
+        auto temp_image = new (std::nothrow) Image(dst_image, x_block_count, y_block_count);
         if (!temp_image) {
             return ErrorCode::MemCantAllocate;
         }
@@ -2209,7 +2209,7 @@ namespace Grain {
 
                 int32_t n = totalComponentCount();
                 while (n--) {
-                    *d++ = (uint16_t)*s++ << 8;
+                    *d++ = static_cast<uint16_t>*s++ << 8;
                 }
             }
         }
@@ -2221,7 +2221,7 @@ namespace Grain {
 
                 int32_t n = totalComponentCount();
                 while (n--) {
-                    *d++ = (uint16_t)(*s++ >> 8);
+                    *d++ = static_cast<uint16_t>(*s++ >> 8);
                 }
             }
         }
@@ -2232,7 +2232,7 @@ namespace Grain {
                 uint16_t* d = (uint16_t*)([bitmap_rep bitmapData]);
                 int32_t n = totalComponentCount();
                 while (n--) {
-                    *d++ = (uint16_t)(std::clamp<float>(*s, 0.0f, 1.0f) * std::numeric_limits<uint16_t>::max());
+                    *d++ = static_cast<uint16_t>(std::clamp<float>(*s, 0.0f, 1.0f) * std::numeric_limits<uint16_t>::max());
                     s++;
                 }
             }
@@ -2240,7 +2240,7 @@ namespace Grain {
                 uint8_t* d = (uint8_t*)([bitmap_rep bitmapData]);
                 int32_t n = totalComponentCount();
                 while (n--) {
-                    *d++ = (uint8_t)(std::clamp<float>(*s, 0.0f, 1.0f) * std::numeric_limits<uint8_t>::max());
+                    *d++ = static_cast<uint8_t>(std::clamp<float>(*s, 0.0f, 1.0f) * std::numeric_limits<uint8_t>::max());
                     s++;
                 }
             }
@@ -2885,7 +2885,7 @@ namespace Grain {
                 throw ErrorCode::NoData;
             }
 
-            ValueGrid = new(std::nothrow) ValueGrid((int32_t)img_width, (int32_t)img_height, length_unit, min_digits, max_digits);
+            ValueGrid = new (std::nothrow) ValueGrid((int32_t)img_width, (int32_t)img_height, length_unit, min_digits, max_digits);
             if (!ValueGrid) {
                 throw ErrorCode::ClassInstantiationFailed;
             }
@@ -2970,7 +2970,7 @@ namespace Grain {
         };
 
         if (isKnownFileType(file_type)) {
-            return known_extensions[(int32_t)file_type];
+            return known_extensions[static_cast<int32_t>(file_type)];
         }
         else {
             return unknown_extension;
@@ -3055,7 +3055,7 @@ namespace Grain {
         // RawProcessor.dcraw_process();
 
         if (data_type == PixelType::UInt16) {
-            image = new(std::nothrow) Image(Color::Model::Lumina, lr.imgdata.sizes.width, lr.imgdata.sizes.height, Image::PixelType::UInt16);
+            image = new (std::nothrow) Image(Color::Model::Lumina, lr.imgdata.sizes.width, lr.imgdata.sizes.height, Image::PixelType::UInt16);
 
             if (image) {
                 auto s = (uint16_t*)lr.imgdata.rawdata.raw_image;
@@ -3073,7 +3073,7 @@ namespace Grain {
             return image;
         }
 
-        image = new(std::nothrow) Image(Color::Model::Lumina, lr.imgdata.sizes.width, lr.imgdata.sizes.height, Image::PixelType::Float);
+        image = new (std::nothrow) Image(Color::Model::Lumina, lr.imgdata.sizes.width, lr.imgdata.sizes.height, Image::PixelType::Float);
 
 
         // Camera to XYZFile matrix

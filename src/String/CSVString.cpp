@@ -326,7 +326,7 @@ namespace Grain {
         File *file = nullptr;
 
         try {
-            file = new(std::nothrow) File(m_file_path);
+            file = new (std::nothrow) File(m_file_path);
             if (!file) { throw ErrorCode::ClassInstantiationFailed; }
 
             file->startRead();
@@ -365,7 +365,7 @@ namespace Grain {
 
                             if (check_header_flag) {
                                 if (!m_header_labels) {
-                                    m_header_labels = new(std::nothrow) StringList();
+                                    m_header_labels = new (std::nothrow) StringList();
                                     Error::throwCheckInstantiation(m_header_labels);
                                 }
                                 if (!m_header_labels->pushString(csv_line_parser.currFieldString())) {

@@ -51,7 +51,7 @@ namespace Grain {
 
 
     View* View::addView(const Rectd& rect) noexcept {
-        View* view = new(std::nothrow) View(rect);
+        View* view = new (std::nothrow) View(rect);
         addComponent(view, AddFlags::kWantsLayer);
         return view;
     }

@@ -394,19 +394,19 @@ namespace Grain {
         }
 
         static bool _lua_toBool(lua_State* l, int32_t index) {
-            return (bool)lua_toboolean(l, index);
+            return static_cast<bool>(lua_toboolean(l, index));
         }
 
         static int32_t _lua_toInt32(lua_State* l, int32_t index) {
-            return (int32_t)lua_tointeger(l, index);
+            return static_cast<int32_t>(lua_tointeger(l, index));
         }
 
         static float _lua_toFloat(lua_State* l, int32_t index) {
-            return (float)lua_tonumber(l, index);
+            return static_cast<float>(lua_tonumber(l, index));
         }
 
         static double _lua_toDouble(lua_State* l, int32_t index) {
-            return (double)lua_tonumber(l, index);
+            return static_cast<double>(lua_tonumber(l, index));
         }
 
         static const char* _lua_toStr(lua_State* l, int32_t index) {

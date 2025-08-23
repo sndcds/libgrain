@@ -105,7 +105,7 @@ namespace Grain {
         }
 
         friend std::ostream& operator << (std::ostream& os, const Component& o) {
-            os << (int32_t)o.m_type << std::endl; // TODO: Implement!
+            os << static_cast<int32_t>(o.m_type) << std::endl; // TODO: Implement!
             return os;
         }
 

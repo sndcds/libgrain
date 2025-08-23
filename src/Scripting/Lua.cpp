@@ -418,7 +418,7 @@ namespace Grain {
     int Lua::_funcRandomChoice(lua_State* l) {
 
         if (lua_istable(l, 1)) {
-            int32_t len = (int32_t)lua_rawlen(l, 1);
+            int32_t len = static_cast<int32_t>(lua_rawlen(l, 1));
             if (len == 0) {
                 return luaL_error(l, "Array is empty");
             }
@@ -439,7 +439,7 @@ namespace Grain {
             return luaL_error(l, "Expected an array");
         }
 
-        int32_t len = (int32_t)lua_rawlen(l, 1);
+        int32_t len = static_cast<int32_t>(lua_rawlen(l, 1));
         if (len <= 1) {
             return 0;  // Nothing to shuffle
         }

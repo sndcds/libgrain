@@ -197,7 +197,7 @@ namespace Grain {
                 }
         };
 
-        auto gradient = new(std::nothrow) Gradient();
+        auto gradient = new (std::nothrow) Gradient();
         if (gradient != nullptr) {
             if (palette >= Preset::First && palette <= Preset::Last) {
                 auto p_index = static_cast<int32_t>(palette);
@@ -1087,7 +1087,7 @@ namespace Grain {
         if (m_lut_must_update) {
             sortStops();
             if (m_lut == nullptr) {
-                m_lut = new(std::nothrow) RGBLUT1(m_lut_resolution);
+                m_lut = new (std::nothrow) RGBLUT1(m_lut_resolution);
                 if (m_lut == nullptr) {
                     return false;
                 }

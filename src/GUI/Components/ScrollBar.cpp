@@ -34,7 +34,7 @@ namespace Grain {
     ScrollBar *ScrollBar::add(View *view, const Rectd &rect, bool vertical) {
         ScrollBar *scroll_bar = nullptr;
         if (view) {
-            scroll_bar = new(std::nothrow) ScrollBar(rect, vertical);
+            scroll_bar = new (std::nothrow) ScrollBar(rect, vertical);
             if (scroll_bar) {
                 view->addComponent(scroll_bar, AddFlags::kNone);
             }

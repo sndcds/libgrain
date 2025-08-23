@@ -332,34 +332,28 @@ namespace Grain {
 
         void checkProcessTypeChannelIndex(DataType data_type, int32_t channel, int64_t index) const {
             if (!hasData()) {
-                Exception::throwStandard(ErrorCode::NoData, "Signal has no data to process.");
+                Exception::throwMessage(ErrorCode::NoData, "Signal has no data to process.");
             }
             if (!hasChannel(channel)) {
-                String message;
-                message.setFormatted(
-                        1024,
+                Exception::throwFormattedMessage(
+                        ErrorCode::BadArgs,
                         "Signal has %d channels, but no channel at index %d.",
                         m_channel_count,
                         channel);
-                Exception::throwStandard(ErrorCode::BadArgs, message.utf8());
             }
             if (m_data_type != data_type) {
-                String message;
-                message.setFormatted(
-                        1024,
+                Exception::throwFormattedMessage(
+                        ErrorCode::UnsupportedDataType,
                         "Unsupported data type: %s. This function requires type %s.",
                         TypeInfo::name(data_type),
                         TypeInfo::name(m_data_type));
-                Exception::throwStandard(ErrorCode::UnsupportedDataType, message.utf8());
             }
             if (index < 0 || index >= m_last_sample_index) {
-                String message;
-                message.setFormatted(
-                        1024,
+                Exception::throwFormattedMessage(
+                        ErrorCode::IndexOutOfRange,
                         "Signal has %" PRId64 " samples, but does not contain a sample at index %" PRId64 ".",
                         m_sample_count,
                         index);
-                Exception::throwStandard(ErrorCode::IndexOutOfRange, message.utf8());
             }
         }
 

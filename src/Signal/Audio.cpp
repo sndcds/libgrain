@@ -49,7 +49,7 @@ namespace Grain {
         {
             // Compute `g_amplitude_from_levellut`
             int32_t resolution = 1024;
-            g_amplitude_from_level_lut = new(std::nothrow) LUT1(resolution);
+            g_amplitude_from_level_lut = new (std::nothrow) LUT1(resolution);
             if (g_amplitude_from_level_lut) {
                 for (int32_t lut_index = 0; lut_index < resolution; lut_index++) {
                     g_amplitude_from_level_lut->setValueAtIndex(lut_index, Audio::amplitudeFromLevel(static_cast<float>(lut_index) / (resolution - 1)));
@@ -60,7 +60,7 @@ namespace Grain {
         {
             // Compute `g_release_lut`
             int32_t resolution = 4096;
-            g_release_lut = new(std::nothrow) LUT1(resolution);
+            g_release_lut = new (std::nothrow) LUT1(resolution);
             auto f = static_cast<float>(Signal::releaseCoef(1, 0, Audio::g_envelope_min_level, resolution, 1));
             float v = 1.0f;
             for (int32_t lut_index = 0; lut_index < resolution; lut_index++) {
@@ -82,7 +82,7 @@ namespace Grain {
         {
             // Compute `g_release_duration_lut`
             int32_t resolution = 4096;
-            g_release_duration_lut = new(std::nothrow) LUT1(resolution);
+            g_release_duration_lut = new (std::nothrow) LUT1(resolution);
 
             auto f = static_cast<float>(Signal::releaseCoef(1, 0, Audio::g_envelope_min_level, 44100));
             float v = 1.0f;

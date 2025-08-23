@@ -53,7 +53,7 @@ namespace Grain {
             throw Error::specific(kErrFileAllreadyOpened);
         }
 
-        m_file = new(std::nothrow) File(file_path);
+        m_file = new (std::nothrow) File(file_path);
         if (m_file == nullptr) {
             throw ErrorCode::FileCantCreate;
         }

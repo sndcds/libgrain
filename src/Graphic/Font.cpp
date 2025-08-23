@@ -386,7 +386,7 @@ namespace Grain {
 
     FontAttributes* Font::buildAttributes(const RGB& color, float alpha) const noexcept {
 
-        return new(std::nothrow) FontAttributes(this, color, alpha);
+        return new (std::nothrow) FontAttributes(this, color, alpha);
     }
 
 

@@ -105,7 +105,7 @@ namespace Grain {
 
             std::cout << "alloc image\n";
 
-            image = new(std::nothrow) Image(src_color_model, static_cast<uint32_t>(ns_width), static_cast<uint32_t>(ns_height), pixel_type);
+            image = new (std::nothrow) Image(src_color_model, static_cast<uint32_t>(ns_width), static_cast<uint32_t>(ns_height), pixel_type);
             if (!image) {
                 throw Error::specific(4);
             }
