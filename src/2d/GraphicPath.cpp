@@ -27,6 +27,7 @@ namespace Grain {
     GraphicPath::~GraphicPath() noexcept {
     }
 
+
     void GraphicPath::_init(int32_t point_capacity) noexcept {
 
         m_points.reserve(std::max(point_capacity, 5));

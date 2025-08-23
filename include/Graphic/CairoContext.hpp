@@ -6,7 +6,7 @@
 //
 //  This file is part of GrainLib, see <https://grain.one>.
 //
-//  LastChecked: 15.08.2025
+//  LastChecked: 22.08.2025
 //
 
 #ifndef GrainCairoContext_hpp

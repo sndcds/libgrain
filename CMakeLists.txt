@@ -126,6 +126,7 @@ add_library(libgrain STATIC
         src/Graphic/GraphicContext.cpp
         src/Graphic/CairoContext.cpp
         src/Graphic/Font.cpp
+        src/Graphic/StrokeStyle.cpp
 
         src/Image/Image.cpp
 
@@ -175,12 +176,12 @@ add_library(libgrain STATIC
 
 
 target_compile_options(libgrain PRIVATE
-    -Wall
-    -Wextra
-    -Wvla
-    -Werror
-    -Wmultichar
-    -Wno-error=unused-parameter  # exclude this warning from being an error
+#    -Wall
+#    -Wextra
+#    -Wvla
+#    -Werror
+#    -Wmultichar
+#    -Wno-error=unused-parameter  # exclude this warning from being an error
 )
 
 

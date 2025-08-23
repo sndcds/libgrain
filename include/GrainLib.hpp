@@ -88,6 +88,7 @@
 #include "Graphic/GraphicContext.hpp"
 #include "Graphic/CairoContext.hpp"
 #include "Graphic/Font.hpp"
+#include "Graphic/StrokeStyle.hpp"
 
 #include "GUI/Screen.hpp"
 #include "GUI/Window.hpp"
