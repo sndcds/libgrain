@@ -24,6 +24,7 @@
  */
 
 #include "Grain.hpp"
+#include "Core/Log.hpp"
 #include "Type/Type.hpp"
 #include "File/File.hpp"
 #include "Math/Vec2.hpp"
@@ -102,6 +103,22 @@ namespace Grain {
         }
         catch (...) {
         }
+    }
+
+
+    void File::log(Log& l) {
+        l << className() << l.endl;
+        l << "m_file_path : " << m_file_path << l.endl;
+        l << "m_file_size: " << m_file_size << l.endl;
+        l << "m_big_endian: " << m_big_endian << l.endl;
+        l << "m_read_flag: " << l.boolValue(m_read_flag) << l.endl;
+        l << "m_write_flag: " << l.boolValue(m_write_flag) << l.endl;
+        l << "m_append_flag: " << l.boolValue(m_append_flag) << l.endl;
+        l << "m_binary_flag: " << l.boolValue(m_binary_flag) << l.endl;
+        l << "m_file_exists: " << l.boolValue(m_file_exists) << l.endl;
+        l << "m_can_overwrite: " << l.boolValue(m_can_overwrite) << l.endl;
+        l << "m_last_err_code: " << (int32_t)m_last_err_code << l.endl;
+        l << "m_last_err_message: " << m_last_err_message << l.endl;
     }
 
 

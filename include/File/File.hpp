@@ -6,7 +6,7 @@
 //
 //  This file is part of GrainLib, see <https://grain.one>.
 //
-//  LastChecked: 13.07.2025
+//  LastChecked: 28.08.2025
 //
 
 #ifndef GrainFile_hpp
@@ -24,15 +24,12 @@
 
 namespace Grain {
 
-
     enum class FileActionType {
         Directory = 1,
         File = 2
     };
 
-
     typedef bool (*FileAction)(String& path, FileActionType type, void* action_ref);
-
 
     class File;
     class Flags;
@@ -83,19 +80,25 @@ namespace Grain {
      *  @brief File base class.
      *
      *  `File` is a utility class that represents a file capable of read and write operations.
-     *  It supports reading and writing basic data types such as integers and floating-point numbers, taking care of their endianness. Additionally, it provides convenient utility methods for various file-related operations.
+     *  It supports reading and writing basic data types such as integers and floating-point
+     *  numbers, taking care of their endianness. Additionally, it provides convenient utility
+     *  methods for various file-related operations.
      *
-     *  Supported operations include opening and closing files, seeking to specific positions, and managing file pointers. The class abstracts the complexities of working with file I/O, allowing developers to focus on their application logic.
+     *  Supported operations include opening and closing files, seeking to specific positions,
+     *  and managing file pointers. The class abstracts the complexities of working with file I/O,
+     *  allowing developers to focus on their application logic.
      *
-     *  Working with files should always be done within a try-catch block, as most functions throw exceptions of type ErrorCode when something goes wrong.
+     *  Working with files should always be done within a try-catch block, as most functions throws
+     *  exceptions of type Èxception` when something goes wrong.
      *
-     *  @note The term "endianness" refers to the byte order of multi-byte data types, ensuring compatibility between different architectures.
+     *  @note The term "endianness" refers to the byte order of multi-byte data types, ensuring
+     *        compatibility between different architectures.
      */
     class File : public Object {
 
     public:
         enum {
-            kWriteBufferSize = 10000,  // TODO: Check this. Should it be implemented dynamic?
+            kWriteBufferSize = 10000,  // TODO: Check this, should evt. be implemented with a dynamic allocated buffer
             kFileActionMaxRecursionDeoth = std::numeric_limits<int32_t>::max()
         };
 
@@ -125,7 +128,7 @@ namespace Grain {
         explicit File(const String& file_path);
         ~File() override;
 
-        const char* className() const noexcept override { return "File"; }
+        [[nodiscard]] const char* className() const noexcept override { return "File"; }
 
         friend std::ostream& operator << (std::ostream& os, const File* o) {
             o == nullptr ? os << "File nullptr" : os << *o;
@@ -133,26 +136,10 @@ namespace Grain {
         }
 
         friend std::ostream& operator << (std::ostream& os, const File& o) {
-            return os << "file" << std::endl; // TODO: !!!!!
+            return os << "File" << std::endl; // TODO: !!!!!
         }
 
-        /* TODO: !!!!!
-        void log(std::ostream& os, int32_t indent = 0, const char* label = nullptr) const {
-            Log log(os, indent);
-            log.header(label);
-            log << "m_file_path : " << m_file_path << log.endl;
-            log << "m_file_size: " << m_file_size << log.endl;
-            log << "m_big_endian: " << m_big_endian << log.endl;
-            log << "m_read_flag: " << log.boolValue(m_read_flag) << log.endl;
-            log << "m_write_flag: " << log.boolValue(m_write_flag) << log.endl;
-            log << "m_append_flag: " << log.boolValue(m_append_flag) << log.endl;
-            log << "m_binary_flag: " << log.boolValue(m_binary_flag) << log.endl;
-            log << "m_file_exists: " << log.boolValue(m_file_exists) << log.endl;
-            log << "m_can_overwrite: " << log.boolValue(m_can_overwrite) << log.endl;
-            log << "m_last_err_code: " << m_last_err_code << log.endl;
-            log << "m_last_err_message: " << m_last_err_message << log.endl;
-        }
-         */
+        void log(Log& l);
 
         virtual void start(int32_t flags);
         virtual void startRead() { return start(kRead | kBinary); }
@@ -166,14 +153,14 @@ namespace Grain {
         virtual void startReadWrite() { return start(kRead | kWrite | kBinary); }
         virtual void startReadWriteOverwrite() { return start(kRead | kWrite | kBinary | kOverwrite); }
 
-        static File* file(const String& file_path, int32_t flags) noexcept;
+        [[nodiscard]] static File* file(const String& file_path, int32_t flags) noexcept;
 
         int64_t _updateFileSize() noexcept;
 
-        int32_t currLineIndex() const noexcept { return m_curr_line_index; }
+        [[nodiscard]] int32_t currLineIndex() const noexcept { return m_curr_line_index; }
 
-        bool isBigEndian() const noexcept { return m_big_endian; }
-        bool isLittleEndian() const noexcept { return !m_big_endian; }
+        [[nodiscard]] bool isBigEndian() const noexcept { return m_big_endian; }
+        [[nodiscard]] bool isLittleEndian() const noexcept { return !m_big_endian; }
 
         void setLittleEndian() noexcept { m_big_endian = false; }
         void setBigEndian(bool bigEndian = true) noexcept { m_big_endian = bigEndian; }
@@ -183,9 +170,9 @@ namespace Grain {
          * @param buffer
          * @return
          */
-        bool isBigEndianSignature(const char* buffer) const {
+        [[nodiscard]] bool isBigEndianSignature(const char* buffer) const {
             if (!buffer) {
-                throw ErrorCode::NullData;
+                Exception::throwStandard(ErrorCode::NullData);
             }
             if (buffer[0] == 'I' && buffer[1] == 'I') {
                 return false;
@@ -194,13 +181,14 @@ namespace Grain {
                 return true;
             }
             else {
-                throw ErrorCode::UnsupportedEndianess;
+                Exception::throwStandard(ErrorCode::UnsupportedEndianess);
             }
+            return false;
         }
 
         void setEndianBySignature(const char* buffer) {
             if (!buffer) {
-                throw ErrorCode::NullData;
+                Exception::throwStandard(ErrorCode::NullData);
             }
             if (buffer[0] == 'I' && buffer[1] == 'I') {
                 m_big_endian = false;
@@ -209,22 +197,21 @@ namespace Grain {
                 m_big_endian = true;
             }
             else {
-                throw ErrorCode::UnsupportedEndianess;
+                Exception::throwStandard(ErrorCode::UnsupportedEndianess);
             }
         }
 
         void checkSignature(const char* buffer, int32_t length, const char* signature) {
             if (std::strncmp(buffer, signature, length) != 0) {
-                throw ErrorCode::UnsupportedFileFormat;
+                Exception::throwStandard(ErrorCode::UnsupportedFileFormat);
             }
         }
 
-
-        bool canRead() const noexcept {
+        [[nodiscard]] bool canRead() const noexcept {
             return m_read_flag && m_file_stream && m_file_size > 0;
         }
 
-        bool canWrite() const noexcept {
+        [[nodiscard]] bool canWrite() const noexcept {
             if (m_write_flag && m_file_stream) {
                 return !m_file_exists || m_can_overwrite;
             }
@@ -235,14 +222,14 @@ namespace Grain {
 
         static void checkBeforeReading(File* file) {
             if (!file) {
-                throw ErrorCode::NullData;
+                Exception::throwStandard(ErrorCode::NullData);
             }
             file->checkBeforeReading();
         }
 
         static void checkBeforeWriting(File* file) {
             if (!file) {
-                throw ErrorCode::NullData;
+                Exception::throwStandard(ErrorCode::NullData);
             }
             file->checkBeforeWriting();
         }
@@ -251,11 +238,11 @@ namespace Grain {
         void checkBeforeReading() const;
         void checkBeforeWriting() const;
 
-        String filePath() { return m_file_path; }
-        String dirPath() { return m_file_path.fileDirPath(); }
-        int64_t size() const { return m_file_size; }
-        bool isPosAtEnd() { return pos() >= m_file_size; }
-        int64_t bytesLeft() { return m_file_size - pos() - 1; }
+        [[nodiscard]] String filePath() { return m_file_path; }
+        [[nodiscard]] String dirPath() { return m_file_path.fileDirPath(); }
+        [[nodiscard]] int64_t size() const { return m_file_size; }
+        [[nodiscard]] bool isPosAtEnd() { return pos() >= m_file_size; }
+        [[nodiscard]] int64_t bytesLeft() { return m_file_size - pos() - 1; }
 
         void flush() { m_file_stream.flush(); }
 
@@ -274,7 +261,7 @@ namespace Grain {
 
         std::fstream* stream() { return &m_file_stream; }
 
-        int64_t pos();
+        [[nodiscard]] int64_t pos();
 
         void rewind() {
             m_file_stream.clear();
@@ -291,9 +278,9 @@ namespace Grain {
         bool skipUntilLineWithText(const String& text);
 
 
-        bool mustSwap() const noexcept;
-        bool lastUtf8SymbolIsWhiteSpace() noexcept;
-        bool compareLastUtf8Symbol(const char* symbol) noexcept;
+        [[nodiscard]] bool mustSwap() const noexcept;
+        [[nodiscard]] bool lastUtf8SymbolIsWhiteSpace() noexcept;
+        [[nodiscard]] bool compareLastUtf8Symbol(const char* symbol) noexcept;
 
         int32_t indent() const noexcept { return m_indent; }
         void setIndent(int32_t value) noexcept {
@@ -307,7 +294,7 @@ namespace Grain {
 
         bool read(int64_t size, uint8_t* out_data);
 
-        int64_t countLines();
+        [[nodiscard]] int64_t countLines();
         bool readLine(int64_t size, String& out_line);
         bool readLine(String& out_line) {
             return readLine(std::numeric_limits<int32_t>::max(), out_line);  // Maximum circa 2 GB
@@ -325,22 +312,20 @@ namespace Grain {
         char readChar();
         void readStr(int32_t max_length, char* out_str);
         int32_t readUtf8Symbol(char* out_data = nullptr);
-        fourcc_t readFourCC();
+        [[nodiscard]] fourcc_t readFourCC();
 
         void readToString(String& out_string);
         void readToString(int64_t size, String& out_string);
 
         template <typename U>
-        U readValue();
-
+        [[nodiscard]] U readValue();
 
         void readFix(Fix& fix);
 
-        double readFixPoint8_8();       // Used in QuickTime files
-        double readFixPoint16_16();
-        double readFixPointU16_16();
-        double readFixPoint2_30() ;
-
+        [[nodiscard]] double readFixPoint8_8();       // Used in QuickTime files
+        [[nodiscard]] double readFixPoint16_16();
+        [[nodiscard]] double readFixPointU16_16();
+        [[nodiscard]] double readFixPoint2_30() ;
 
         template <typename U>
         void readArray(int64_t length, U* out_array);
@@ -348,7 +333,7 @@ namespace Grain {
         // void readQTMovieMat3(Mat3& out_matrix); TODO: !!!!
         bool readQTMovieAtomType(uint64_t* out_atom_size, fourcc_t* out_atom_type);
 
-        uint32_t readTIFFValue(uint16_t field_type);
+        [[nodiscard]] uint32_t readTIFFValue(uint16_t field_type);
 
         static ErrorCode readToBuffer(const String& file_path, int64_t buffer_size, uint8_t* out_buffer);
 
@@ -365,7 +350,7 @@ namespace Grain {
         void writeChar(char c) {
             m_file_stream.write(&c, 1);
             if (m_file_stream.fail()) {
-                throw ErrorCode::FileCantWrite;
+                Exception::throwStandard(ErrorCode::FileCantWrite);
             }
         }
 
@@ -517,16 +502,16 @@ namespace Grain {
         void writeCurrentDateTime();
 
 
-        bool hasTiffSignature();
-        bool hasDNGSignature();
-        bool hasAIFFSignature();
-        bool hasAIFCSignature();
-        bool hasWAVESignature();
-        bool hasQuickTimeSignature();
-        bool hasMPEG4Signature();
-        bool hasMXFSignature();
-        bool hasMP3Signature();
-        bool hasMIDISignature();
+        [[nodiscard]] bool hasTiffSignature();
+        [[nodiscard]] bool hasDNGSignature();
+        [[nodiscard]] bool hasAIFFSignature();
+        [[nodiscard]] bool hasAIFCSignature();
+        [[nodiscard]] bool hasWAVESignature();
+        [[nodiscard]] bool hasQuickTimeSignature();
+        [[nodiscard]] bool hasMPEG4Signature();
+        [[nodiscard]] bool hasMXFSignature();
+        [[nodiscard]] bool hasMP3Signature();
+        [[nodiscard]] bool hasMIDISignature();
 
         bool readTomlKeyValue(String& out_key, String& out_value);
 
@@ -542,22 +527,22 @@ namespace Grain {
 
         ErrorCode readFile(BaseObject* receiver) noexcept;
 
-        static File* createFile(const String& file_path);
+        [[nodiscard]] static File* createFile(const String& file_path);
 
-        static bool fileExists(const char* file_path);
-        static bool fileExists(const String& file_path);
-        static bool fileExists(const String& dir_path, const String& file_name);
-        static File::Signature fileSignature(const String& file_path);
+        [[nodiscard]] static bool fileExists(const char* file_path);
+        [[nodiscard]] static bool fileExists(const String& file_path);
+        [[nodiscard]] static bool fileExists(const String& dir_path, const String& file_name);
+        [[nodiscard]] static File::Signature fileSignature(const String& file_path);
 
-        static bool isDir(const String& path) noexcept;
-        static bool containsDir(const String& path, const String& dir_name) noexcept;
+        [[nodiscard]] static bool isDir(const String& path) noexcept;
+        [[nodiscard]] static bool containsDir(const String& path, const String& dir_name) noexcept;
         static bool makeDirs(const String& path) noexcept;
 
         static int32_t dirNameList(const String& path, StringList& out_list) noexcept;
         static int32_t fileNameList(const String& path, StringList& out_list) noexcept;
         static int32_t fileNameList(const String& path, const String& extensions, int64_t min_size, int64_t max_size, int32_t* out_ignored, StringList& out_list) noexcept;
-        static int32_t countDir(const String& path) noexcept;
-        static int32_t countFiles(const String& path) noexcept;
+        [[nodiscard]] static int32_t countDir(const String& path) noexcept;
+        [[nodiscard]] static int32_t countFiles(const String& path) noexcept;
 
 
         static ErrorCode fileEntryByPath(const String& file_path, FileEntry& out_file_entry) noexcept;
@@ -588,10 +573,10 @@ namespace Grain {
 
         static int32_t execFileAction(const String& dir_path, FileAction action, void* action_ref = nullptr, int32_t max_depth = kFileActionMaxRecursionDeoth, int32_t curr_depth = 0);
 
-        #if defined(__APPLE__) && defined(__MACH__)
-            static CFDataRef macos_cfDataRefFromFile(const String& file_path);
-            static ErrorCode macos_writeCFPlistXML(const String& file_path, const CFPropertyListRef plist) noexcept;
-        #endif
+#if defined(__APPLE__) && defined(__MACH__)
+        static CFDataRef macos_cfDataRefFromFile(const String& file_path);
+        static ErrorCode macos_writeCFPlistXML(const String& file_path, const CFPropertyListRef plist) noexcept;
+#endif
 
     protected:
         String m_file_path;                 ///< File path as a string

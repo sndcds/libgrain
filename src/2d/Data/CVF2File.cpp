@@ -224,20 +224,12 @@ namespace Grain {
             }
         }
 
-        std::cout << "CVF2File::readRow m_row_offsets_pos: " << m_row_offsets_pos << std::endl;
-        std::cout << "CVF2File::readRow y: " << y << std::endl;
-        std::cout << "CVF2File::readRow pos: " << (m_row_offsets_pos + y * 4) << std::endl;
-        std::cout << "CVF2File::readRow file size(): " << size() << std::endl;
-
         setPos(m_row_offsets_pos + y * 4);
         auto row_offset = readValue<uint32_t>();
-        std::cout << "CVF2File::readRow row_offset: " << row_offset << std::endl;
 
         setPos(row_offset);
         auto digits = readValue<uint16_t>();
         auto seq_count = readValue<uint32_t>();
-        std::cout << "CVF2File::readRow digits: " << digits << std::endl;
-        std::cout << "CVF2File::readRow seq_count: " << seq_count << std::endl;
 
         if (static_cast<int32_t>(seq_count) > m_row_seq_length) {
             if (m_row_seq) {
@@ -361,8 +353,8 @@ namespace Grain {
                 }
             }
         }
-        catch (ErrorCode err) {
-            result = err;
+        catch (const Exception& e) {
+            result = e.code();
         }
         catch (...) {
             result = ErrorCode::Fatal;
@@ -462,8 +454,8 @@ namespace Grain {
                 y += y_step;
             }
         }
-        catch (ErrorCode err) {
-            result = err;
+        catch (const Exception& e) {
+            result = e.code();
         }
         catch (...) {
             result = ErrorCode::Unknown;
@@ -477,22 +469,30 @@ namespace Grain {
         auto result = ErrorCode::None;
 
         try {
-            if (!out_value_grid_ptr) { throw ErrorCode::NullData; }
-            if (m_width < 1 || m_height < 1) { throw ErrorCode::UnsupportedDimension; }
+            if (!out_value_grid_ptr) {
+                Exception::throwStandard(ErrorCode::NullData);
+            }
+
+            if (m_width < 1 || m_height < 1) {
+                Exception::throwStandard(ErrorCode::UnsupportedDimension);
+            }
+
+            if (!out_value_grid_ptr) {
+                Exception::throwStandard(ErrorCode::NullPointer);
+            }
 
             auto value_grid = *out_value_grid_ptr;
-
             if (!value_grid) {
                 value_grid = new (std::nothrow) ValueGridl(m_width, m_height);
                 if (!value_grid) {
-                    throw ErrorCode::MemCantAllocate;
+                    Exception::throwStandard(ErrorCode::MemCantAllocate);
                 }
                 *out_value_grid_ptr = value_grid;
             }
 
             if (value_grid->width() < static_cast<int32_t>(m_width) ||
                 value_grid->height() < static_cast<int32_t>(m_height)) {
-                throw ErrorCode::UnsupportedDimension;
+                Exception::throwStandard(ErrorCode::UnsupportedDimension);
             }
 
             for (int32_t y = 0; y < static_cast<int32_t>(m_height); y++) {
@@ -508,8 +508,8 @@ namespace Grain {
                 }
             }
         }
-        catch (ErrorCode err) {
-            result = err;
+        catch (const Exception& e) {
+            result = e.code();
         }
         catch (...) {
             result = ErrorCode::Unknown;
@@ -526,8 +526,8 @@ namespace Grain {
             Log l(os);
             cvf2_file.log(l);
         }
-        catch (ErrorCode err) {
-            std::cout << "CVF2File::logCVF2File err: " << (int)err << ", file_path: " << cvf2_file_path << std::endl;
+        catch (const Exception& e) {
+            std::cerr << "CVF2File::logCVF2File() err: " << (int32_t)e.code() << ", file_path: " << cvf2_file_path << std::endl;
         }
     }
 
@@ -538,14 +538,14 @@ namespace Grain {
         try {
             CVF2File cvf2_file(cvf2_file_path);
             cvf2_file.startRead();
+
             auto err = cvf2_file.buildImage(ImageScaleMode::Auto, 0, 1, &image, false);
-            if (err != ErrorCode::None) {
-                throw err;
-            }
+            Exception::throwStandard(err);
+
             image->writePng(image_file_path, 1.0f, true);
         }
-        catch (ErrorCode err) {
-            std::cout << "CVF2File::cvf2ToImage err: " << (int)err << ", cvf2_file_path: " << cvf2_file_path << ", image_file_path: " << image_file_path << std::endl;
+        catch (const Exception& e) {
+            std::cerr << "CVF2File::cvf2ToImage() err: " << (int32_t)e.code() << ", cvf2_file_path: " << cvf2_file_path << ", image_file_path: " << image_file_path << std::endl;
         }
         delete image;
     }
@@ -580,25 +580,21 @@ namespace Grain {
             // Build list of all XYZFile file names
             StringList file_name_list;
 
-            int32_t index = 0;
             for (auto file_name : file_name_list) {
-                std::cout << index << ": " << file_name << std::endl;
                 String cvf2_file_path = src_dir_path + "/" + *file_name;
                 CVF2File cvf2_file(cvf2_file_path);
                 cvf2_file.startRead();
-                cvf2_file.buildImage(scale_mode, min_level, max_level, &image, false);
-                auto file_base_name = file_name->fileBaseNameWithoutExtension();
 
-                String image_file_path = dst_dir_path + "/" + file_base_name + '.';
+                cvf2_file.buildImage(scale_mode, min_level, max_level, &image, false);
                 if (image) {
+                    auto file_base_name = file_name->fileBaseNameWithoutExtension();
+                    String image_file_path = dst_dir_path + "/" + file_base_name + '.';
                     image->writeImage(image_file_path, type, 1.0f, true);
                 }
-
-                index++;
             }
         }
-        catch (ErrorCode err) {
-            std::cerr << "CVF2MapRenderer::cvf2ToImageBatch() err ..." << (int)err << std::endl;
+        catch (const Exception& e) {
+            std::cerr << "CVF2MapRenderer::cvf2ToImageBatch() err ..." << (int32_t)e.code() << std::endl;
         }
 
         delete image;

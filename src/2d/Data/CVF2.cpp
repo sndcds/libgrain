@@ -50,12 +50,12 @@ namespace Grain {
 
     void CVF2::openFileToWrite(const String& file_path) {
         if (m_file) {
-            throw Error::specific(kErrFileAllreadyOpened);
+            Exception::throwSpecific(kErrFileAllreadyOpened);
         }
 
         m_file = new (std::nothrow) File(file_path);
         if (!m_file) {
-            throw ErrorCode::FileCantCreate;
+            Exception::throwStandard(ErrorCode::FileCantCreate);
         }
 
         m_file_data_saved = false;
@@ -93,9 +93,8 @@ namespace Grain {
 
 
     void CVF2::pushValue(int64_t value) {
-
         if (m_curr_value_index >= static_cast<int32_t>(m_width)) {
-            throw Error::specific(kErrFatal);
+            Exception::throwSpecific(kErrFatal);
         }
 
         m_row_values[m_curr_value_index] = value;
@@ -109,19 +108,18 @@ namespace Grain {
 
 
     void CVF2::pushValueToData(int32_t x, int32_t y, int64_t value) {
-
         if (!m_data) {
             auto n = (size_t)m_width * m_height;
             m_data = static_cast<int64_t*>(malloc(sizeof(int64_t) * n));
             if (!m_data) {
-                throw ErrorCode::MemCantAllocate;
+                Exception::throwStandard(ErrorCode::MemCantAllocate);
             }
             Type::fillStridedArray<int64_t>(m_data, 0, 1, n, n, kUndefinedValue);
         }
 
         if (x < 0 || x >= static_cast<int32_t>(m_width) ||
             y < 0 || y >= static_cast<int32_t>(m_height)) {
-            throw ErrorCode::BadArgs;
+            Exception::throwStandard(ErrorCode::BadArgs);
         }
 
         m_data[(size_t)y * m_width + x] = value;
@@ -129,7 +127,6 @@ namespace Grain {
 
 
     void CVF2::encodeData() {
-
         uint32_t w = m_width;
         uint32_t h = m_height;
         int64_t* src = m_data;
@@ -142,7 +139,6 @@ namespace Grain {
 
 
     void CVF2::finish() {
-
         // Update information in header
         m_file->setPos(m_file_pos_undef_values_counter);
         m_file->writeValue<int32_t>(m_data_undef_n);
@@ -151,14 +147,10 @@ namespace Grain {
         m_file->writeValue<int64_t>(m_min_value);
         m_file->writeValue<int64_t>(m_max_value);
 
-        std::cout << ">>>>>>> m_data_def_n: " << m_data_def_n << std::endl;
-        std::cout << ">>>>>>> m_data_undef_n: " << m_data_undef_n << std::endl;
-        std::cout << ">>>>>>> m_data_sum: " << m_data_sum << std::endl;
-
         if (m_data_def_n > 0) {
             m_mean_value = m_data_sum / m_data_def_n;
         }
-        std::cout << ">>>>>>> m_mean_value: " << m_mean_value << std::endl;
+
         m_file->writeFix(m_mean_value);
 
         m_file->close();
@@ -166,15 +158,14 @@ namespace Grain {
 
 
     void CVF2::_startRow() {
-
         if (!m_row_values || !m_row_offsets) {
-            throw Error::specific(kErrFatal);
+            Exception::throwSpecific(kErrFatal);
         }
 
         m_curr_row_index++;
 
         if (m_curr_row_index == static_cast<int32_t>(m_height)) {
-            throw Error::specific(kErrFatal);
+            Exception::throwSpecific(kErrFatal);
         }
 
         m_curr_value_index = 0;
@@ -188,9 +179,8 @@ namespace Grain {
 
 
     void CVF2::_pushNibble(uint8_t nibble) {
-
         if (m_curr_byte_index >= static_cast<int32_t>(m_byte_buffer_size)) {
-            throw Error::specific(kErrFatal);
+            Exception::throwSpecific(kErrFatal);
         }
 
         if (m_high_nibble_flag) {
@@ -208,7 +198,6 @@ namespace Grain {
 
 
     void CVF2::_bufferValues(const int64_t* values, uint32_t seq_index, uint32_t seq_offset, uint32_t seq_length, int64_t min_value) {
-
         m_seq_offsets[seq_index] = seq_offset;
         m_seq_mins[seq_index] = min_value;
 
@@ -223,7 +212,7 @@ namespace Grain {
             }
 
             if (value > m_curr_row_max_diff + 1) {
-                throw ErrorCode::Fatal;
+                Exception::throwStandard(ErrorCode::Fatal);
             }
 
             for (int32_t j = 0; j < m_curr_row_digits; j++) {
@@ -236,7 +225,6 @@ namespace Grain {
 
 
     void CVF2::_encodeRow(const int64_t* values) {
-
         // Pass 1, find best compression for row data
         int64_t byte_count = std::numeric_limits<int64_t>::max();
         m_curr_row_digits = 0;
@@ -257,7 +245,7 @@ namespace Grain {
         }
 
         if (m_curr_row_digits == 0) {
-            throw Error::specific(kErrUnknownDigits);
+            Exception::throwSpecific(kErrUnknownDigits);
         }
 
         m_curr_row_max_diff = _maxDiff(m_curr_row_digits);
@@ -363,7 +351,11 @@ namespace Grain {
     }
 
 
-    bool CVF2::_encoderRowPrediction(const int64_t* values, int32_t digits, int32_t& seq_count, int64_t& byte_count) {
+    bool CVF2::_encoderRowPrediction(
+            const int64_t* values,
+            int32_t digits,
+            int32_t& seq_count,
+            int64_t& byte_count) {
 
         int64_t min = std::numeric_limits<int64_t>::max();
         int64_t max = std::numeric_limits<int64_t>::min();
