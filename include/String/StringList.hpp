@@ -77,30 +77,7 @@ namespace Grain {
             return os << "StringList size: " << o.size() << std::endl;
         }
 
-        /* TODO: !!!!!
-        virtual void log(Log& l) override {
-            l.header(className());
-            l << "m_size: " << m_size << Log::endl;
-            l << "m_capacity: " << m_capacity << Log::endl;
-            l++;
-            int64_t index = 0;
-            for (auto string : *this) {
-                if (index > 10) {
-                    l << "..." << Log::endl;
-                    break;
-                }
-                l << index << ": " << string << Log::endl;
-                index++;
-            }
-
-            if (index < m_size) {
-                l << (m_size - 1) << ": " << last() << Log::endl;
-            }
-
-            l--;
-            l--;
-        }
-         */
+        void log(Log& l);
 
         void clear() noexcept override {
             for (auto string : *this) {
@@ -148,7 +125,7 @@ namespace Grain {
 
                 return ErrorCode::None;
             }
-    }
+        }
 
         /**
          *  @brief Inserts a String at a specific index in the list.

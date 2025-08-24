@@ -10,8 +10,11 @@
 //
 
 #include "String/String.hpp"
+#include "String/StringList.hpp"
+#include "String/CSVString.hpp"
 #include "Math/Random.hpp"
 #include "Time/Timestamp.hpp"
+#include "Type/Data.hpp"
 
 #include <libgen.h>
 #include <uuid/uuid.h>
@@ -19,43 +22,43 @@
 
 
 #if defined(__APPLE__) && defined(__MACH__)
-    #include <CoreFoundation/CoreFoundation.h>
+#include <CoreFoundation/CoreFoundation.h>
 #endif
 
 
 namespace Grain {
 
-    #if defined(__APPLE__) && defined(__MACH__)
-        void _macosApp_copyToPasteboard(String* string, int64_t character_index, int64_t character_length);
-        int32_t _macosApp_pasteFromPasteboard(String* string, int64_t character_index);
-    #endif
+#if defined(__APPLE__) && defined(__MACH__)
+    void _macosApp_copyToPasteboard(String* string, int64_t character_index, int64_t character_length);
+    int32_t _macosApp_pasteFromPasteboard(String* string, int64_t character_index);
+#endif
 
     const char* String::g_empty_data = "";
     const String String::g_empty_string;
     const char String::g_hex_chars[16] = {
-        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
+            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
     };
 
     const char* String::g_ascii_8859_1[128] = {  // ASCII 8859-1 Latin-1
-        " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ",
-        " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ",
-        " ", "¡", "¢", "£", "¤", "¥", "¦", "§", "¨", "©", "ª", "«", "¬", "­", "®", "¯",
-        "°", "±", "²", "³", "´", "µ", "¶", "·", "¸", "¹", "º", "»", "¼", "½", "¾", "¿",
-        "À", "Á", "Â", "Ã", "Ä", "Å", "Æ", "Ç", "È", "É", "Ê", "Ë", "Ì", "Í", "Î", "Ï",
-        "Ð", "Ñ", "Ò", "Ó", "Ô", "Õ", "Ö", "×", "Ø", "Ù", "Ú", "Û", "Ü", "Ý", "Þ", "ß",
-        "à", "á", "â", "ã", "ä", "å", "æ", "ç", "è", "é", "ê", "ë", "ì", "í", "î", "ï",
-        "ð", "ñ", "ò", "ó", "ô", "õ", "ö", "÷", "ø", "ù", "ú", "û", "ü", "ý", "þ", "ÿ"
+            " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ",
+            " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ",
+            " ", "¡", "¢", "£", "¤", "¥", "¦", "§", "¨", "©", "ª", "«", "¬", "­", "®", "¯",
+            "°", "±", "²", "³", "´", "µ", "¶", "·", "¸", "¹", "º", "»", "¼", "½", "¾", "¿",
+            "À", "Á", "Â", "Ã", "Ä", "Å", "Æ", "Ç", "È", "É", "Ê", "Ë", "Ì", "Í", "Î", "Ï",
+            "Ð", "Ñ", "Ò", "Ó", "Ô", "Õ", "Ö", "×", "Ø", "Ù", "Ú", "Û", "Ü", "Ý", "Þ", "ß",
+            "à", "á", "â", "ã", "ä", "å", "æ", "ç", "è", "é", "ê", "ë", "ì", "í", "î", "ï",
+            "ð", "ñ", "ò", "ó", "ô", "õ", "ö", "÷", "ø", "ù", "ú", "û", "ü", "ý", "þ", "ÿ"
     };
 
     const char* String::g_ascii_windows1252[128] = {
-        "€",  "", "‚", "ƒ", "„", "…", "†", "‡", "ˆ", "‰", "Š", "‹", "Œ",  "", "Ž",  "",
-        "", "‘", "’", "“", "”", "•", "–", "—", "˜", "™", "š", "›", "œ",  "", "ž", "Ÿ",
-        " ", "¡", "¢", "£", "¤", "¥", "¦", "§", "¨", "©", "ª", "«", "¬",  "­", "®", "¯",
-        "°", "±", "²", "³", "´", "µ", "¶", "·", "¸", "¹", "º", "»", "¼", "½", "¾", "¿",
-        "À", "Á", "Â", "Ã", "Ä", "Å", "Æ", "Ç", "È", "É", "Ê", "Ë", "Ì", "Í", "Î", "Ï",
-        "Ð", "Ñ", "Ò", "Ó", "Ô", "Õ", "Ö", "×", "Ø", "Ù", "Ú", "Û", "Ü", "Ý", "Þ", "ß",
-        "à", "á", "â", "ã", "ä", "å", "æ", "ç", "è", "é", "ê", "ë", "ì", "í", "î", "ï",
-        "ð", "ñ", "ò", "ó", "ô", "õ", "ö", "÷", "ø", "ù", "ú", "û", "ü", "ý", "þ", "ÿ"
+            "€",  "", "‚", "ƒ", "„", "…", "†", "‡", "ˆ", "‰", "Š", "‹", "Œ",  "", "Ž",  "",
+            "", "‘", "’", "“", "”", "•", "–", "—", "˜", "™", "š", "›", "œ",  "", "ž", "Ÿ",
+            " ", "¡", "¢", "£", "¤", "¥", "¦", "§", "¨", "©", "ª", "«", "¬",  "­", "®", "¯",
+            "°", "±", "²", "³", "´", "µ", "¶", "·", "¸", "¹", "º", "»", "¼", "½", "¾", "¿",
+            "À", "Á", "Â", "Ã", "Ä", "Å", "Æ", "Ç", "È", "É", "Ê", "Ë", "Ì", "Í", "Î", "Ï",
+            "Ð", "Ñ", "Ò", "Ó", "Ô", "Õ", "Ö", "×", "Ø", "Ù", "Ú", "Û", "Ü", "Ý", "Þ", "ß",
+            "à", "á", "â", "ã", "ä", "å", "æ", "ç", "è", "é", "ê", "ë", "ì", "í", "î", "ï",
+            "ð", "ñ", "ò", "ó", "ô", "õ", "ö", "÷", "ø", "ù", "ú", "û", "ü", "ý", "þ", "ÿ"
     };
 
 
@@ -72,7 +75,6 @@ namespace Grain {
 
 
     void Utf8SingleByteDelimiterStates::setByCharsInStr(const char* str) {
-
         if (str) {
             const char* c = str;
             while (*c != String::EOS) {
@@ -84,7 +86,6 @@ namespace Grain {
 
 
     uint8_t Utf8SingleByteDelimiterStates::check(char c) {
-
         if ((c & 0x80) == 0x0) {
             // Only if c is a valid 7 bit ASCII character
             return m_flags[static_cast<uint8_t>(c)];
@@ -99,7 +100,6 @@ namespace Grain {
      *  @brief Constructs an empty String with a capacity of `kDefaultByteCapacity` bytes.
      */
     String::String() noexcept {
-
         checkCapacity(kDefaultByteCapacity);
     }
 
@@ -108,7 +108,6 @@ namespace Grain {
      *  @brief Constructs an empty String with a specific capacity.
      */
     String::String(int64_t capacity) noexcept {
-
         capacity = std::max(capacity, int64_t(16));
         checkCapacity(capacity);
     }
@@ -120,7 +119,6 @@ namespace Grain {
      *  @param str A pointer to a C-string. A nullptr results in an empty string with the default capacity.
      */
     String::String(const char* str) noexcept {
-
         if (!str) {
             checkCapacity(kDefaultByteCapacity);
         }
@@ -137,10 +135,9 @@ namespace Grain {
      *
      *  @param str A pointer to a C-string.
      *  @param max_byte_length Limits the length of the resulting string. If the length
-     *  of the input string exceeds max_length, it will be truncated.
+     *                         of the input string exceeds max_length, it will be truncated.
      */
     String::String(const char* str, int64_t max_byte_length) noexcept {
-
         if (!str) {
             checkCapacity(kDefaultByteCapacity);
         }
@@ -157,7 +154,6 @@ namespace Grain {
      *  @param string A reference to the string which should be copied. The original string is not modified.
      */
     String::String(const String& string) noexcept {
-
         checkCapacity(string.length(), 32);
         append(string.utf8());
     }
@@ -169,10 +165,12 @@ namespace Grain {
      *  @param string A pointer to the string which should be copied. The original string is not modified.
      */
     String::String(const String* string) noexcept {
-
         if (string) {
             checkCapacity(string->length(), 32);
             append(string->utf8());
+        }
+        else {
+            clear();
         }
     }
 
@@ -185,49 +183,34 @@ namespace Grain {
      *  @param character_length The character length of the substring.
      */
     String::String(const String& string, int64_t character_index, int64_t character_length) noexcept {
-
         string.subString(character_index, character_index + character_length - 1, *this);
     }
 
 
     String::~String() noexcept {
-
         std::free(m_data);
     }
 
 
-    const char* String::className() const noexcept {
-
-        return "String";
-    }
-
-
     std::ostream& operator << (std::ostream& os, const String* o) {
-
-        o == nullptr ? os << "String nullptr" : os << *o;
-        return os;
+        return o == nullptr ? os << "String nullptr" : os << *o;
     }
 
 
     std::ostream& operator << (std::ostream& os, const String& o) {
-
-        os << o.utf8();
-        return os;
+        return os << o.utf8();
     }
 
 
     const String& String::emptyString() noexcept {
-
         return g_empty_string;
     }
 
 
     void String::_init() noexcept {
-
         if (m_data) {
             free(m_data);
         }
-
         m_data = nullptr;
         m_byte_length = 0;
         m_character_length = 0;
@@ -237,14 +220,23 @@ namespace Grain {
     }
 
 
+    String& String::operator = (char c) { this->setChar(c); return *this; }
+    String& String::operator = (const char* str) { this->set(str); return *this; }
     String& String::operator = (const String& other) { this->set(other); return *this; }
     String& String::operator = (const String* other) { this->set(other); return *this; }
-    String& String::operator = (const char* str) { this->set(str); return *this; }
-    String& String::operator = (char c) { this->setChar(c); return *this; }
-
-    #if defined(__APPLE__) && defined(__MACH__)
-        String& String::operator = (const CFStringRef cf_string) { this->set(cf_string); return *this; }
-    #endif
+    String& String::operator = (int8_t value) { this->clear(); this->appendInt64(value); return *this; }
+    String& String::operator = (int16_t value) { this->clear(); this->appendInt64(value); return *this; }
+    String& String::operator = (int32_t value) { this->clear(); this->appendInt64(value); return *this; }
+    String& String::operator = (int64_t value) { this->clear(); this->appendInt64(value); return *this; }
+    String& String::operator = (uint8_t value) { this->clear(); this->appendUInt64(value); return *this; }
+    String& String::operator = (uint16_t value) { this->clear(); this->appendUInt64(value); return *this; }
+    String& String::operator = (uint32_t value) { this->clear(); this->appendUInt64(value); return *this; }
+    String& String::operator = (uint64_t value) { this->clear(); this->appendUInt64(value); return *this; }
+    String& String::operator = (double value) { this->clear(); this->appendDouble(value); return *this; }
+    String& String::operator = (Fix value) { this->clear(); this->appendFix(value); return *this; }
+#if defined(__APPLE__) && defined(__MACH__)
+    String& String::operator = (const CFStringRef cf_string) { this->set(cf_string); return *this; }
+#endif
 
     String& String::operator += (char c) { this->appendChar(c); return *this; }
     String& String::operator += (const char* str) { this->append(str); return *this; }
@@ -280,25 +272,21 @@ namespace Grain {
 
 
     int64_t String::length() const noexcept {
-
         return m_character_length;
     }
 
 
     int64_t String::byteLength() const noexcept {
-
         return m_byte_length;
     }
 
 
     char* String::mutDataPtr() noexcept {
-
         return m_data;
     }
 
 
     const char* String::utf8() const noexcept {
-
         return m_data ? m_data : String::g_empty_data;
     }
 
@@ -312,7 +300,6 @@ namespace Grain {
      *  @return `true` if the string contains valid UTF-8 encoding, `false` otherwise.
      */
     bool String::isValidUtf8(int64_t* out_byte_index) const noexcept {
-
         if (!m_data) {
             return false;
         }
@@ -341,13 +328,11 @@ namespace Grain {
 
 
     bool String::isEmpty() const noexcept {
-
         return m_character_length < 1;
     }
 
 
     bool String::isNotEmpty() const noexcept {
-
         return m_character_length > 0;
     }
 
@@ -358,7 +343,6 @@ namespace Grain {
      *  @return `true` if all chars are 7 bit ASCII.
      */
     bool String::isAscii() const noexcept {
-
         if (m_data && m_byte_length > 0) {
             int64_t n = m_byte_length;
             auto p = (uint8_t*)m_data;
@@ -387,7 +371,6 @@ namespace Grain {
      *  @return `true` if the string is alphanumeric, false otherwise.
      */
     bool String::isAlphaNumeric() const noexcept {
-
         if (!m_data || m_data[0] == String::EOS) {
             // Empty string is not considered alphanumeric
             return false;
@@ -413,7 +396,6 @@ namespace Grain {
      *  @return `true` if string represents a valid natural or real number.
      */
     bool String::isValidNumber() const noexcept {
-
         if (!m_data || m_data[0] == String::EOS) {
             // Empty string is not a valid number
             return false;
@@ -468,8 +450,11 @@ namespace Grain {
      *  @return `true`, if string starts and ends with double quotes.
      */
     bool String::isQuoted() const noexcept {
-
-        return m_data != nullptr && m_byte_length > 1 && m_data[0] == '"' && m_data[m_byte_length - 1] == '"';
+        return
+            m_data &&
+            m_byte_length > 1 &&
+            m_data[0] == '"' &&
+            m_data[m_byte_length - 1] == '"';
     }
 
 
@@ -481,8 +466,7 @@ namespace Grain {
      *  @return `true` if index is within a valid range.
      */
     bool String::isCharacterIndexInRange(int64_t char_index) const noexcept {
-
-        return m_data != nullptr && char_index >= 0 && char_index < m_character_length;
+        return m_data && char_index >= 0 && char_index < m_character_length;
     }
 
 
@@ -494,8 +478,7 @@ namespace Grain {
      *  @return `true` if `byte_index` is within a valid range.
      */
     bool String::isByteIndexInRange(int64_t byte_index) const noexcept {
-
-        return m_data != nullptr && byte_index >= 0 && byte_index < m_byte_length;
+        return m_data && byte_index >= 0 && byte_index < m_byte_length;
     }
 
 
@@ -508,7 +491,6 @@ namespace Grain {
      *          if the provided `character_index` is println of range.
      */
     int64_t String::byteIndexFromCharacterIndex(int64_t character_index) const noexcept {
-
         if (!isCharacterIndexInRange(character_index)) {
             return -1;
         }
@@ -538,7 +520,6 @@ namespace Grain {
      *          if the provided `byte_index` is println of range.
      */
     int64_t String::characterIndexFromByteIndex(int64_t byte_index) const noexcept {
-
         if (!m_data || byte_index >= m_byte_length) {
             return -1;
         }
@@ -569,7 +550,6 @@ namespace Grain {
      *         `character_index` is println of range.
      */
     int32_t String::utf8SeqLengthAtCharacterIndex(int64_t character_index) const noexcept {
-
         auto byte_index = byteIndexFromCharacterIndex(character_index);
         return utf8SeqLengthAtByteIndex(byte_index);
     }
@@ -584,7 +564,6 @@ namespace Grain {
      *         `byte_index` is println of range.
      */
     int32_t String::utf8SeqLengthAtByteIndex(int64_t byte_index) const noexcept {
-
         return isByteIndexInRange(byte_index) ? utf8SeqLengthByStartByte(m_data[byte_index]) : 0;
     }
 
@@ -597,7 +576,6 @@ namespace Grain {
      *  @return The length in bytes or 0 if `start_byte` doesn´t represents a UTF-8 start byte.
      */
     int32_t String::utf8SeqLengthByStartByte(uint8_t start_byte) noexcept {
-
         if (start_byte < 0x80) {
             return 1;  // ASCII character (single byte)
         }
@@ -628,7 +606,6 @@ namespace Grain {
      *          if `str` is a null pointer or contains invalid UTF-8 encoding.
      */
     int64_t String::utf8Length(const char* str) noexcept {
-
         if (!str) {
             return -1;
         }
@@ -659,10 +636,9 @@ namespace Grain {
      *  @return The Unicode value.
      */
     uint32_t String::unicodeFromUtf8(const char* str) noexcept {
-
         uint32_t unicode = 0;
 
-        if (str != nullptr && str[0] != String::EOS) {
+        if (str && str[0] != String::EOS) {
             uint8_t byte = str[0];
 
             if (byte < 0x80) {
@@ -703,7 +679,6 @@ namespace Grain {
      *  underscore, and Latin-1 Supplement and Latin Extended-A/B ranges.
      */
     bool String::unicodeIsWordCharacter(uint32_t unicode) noexcept {
-
         // Check if the character is a letter or digit
         if ((unicode >= 0x0041 && unicode <= 0x005A) || // A-Z
             (unicode >= 0x0061 && unicode <= 0x007A) || // a-z
@@ -743,7 +718,6 @@ namespace Grain {
      *        as well as General Punctuation and CJK Symbols and Punctuation ranges.
      */
     bool String::isUnicodeDelimiter(uint32_t unicode) noexcept {
-
         // Check if the character is a space or punctuation
         if (unicode == 0x0020 ||  // Space
             unicode == 0x0009 ||  // Horizontal Tab
@@ -776,7 +750,6 @@ namespace Grain {
 
 
     uint32_t String::unicodeAtIndex(int64_t index) const noexcept {
-
         return String::unicodeFromUtf8(utf8AtIndex(index));
     }
 
@@ -789,19 +762,16 @@ namespace Grain {
      *  @return `true` if character represents a white space character.
      */
     bool String::isSpaceAtIndex(int64_t index) const noexcept {
-
         return utf8IsWhiteSpace(utf8AtIndex(index));
     }
 
 
     bool String::isWordCharacterAtIndex(int64_t index) const noexcept {
-
         return unicodeIsWordCharacter(unicodeAtIndex(index));
     }
 
 
     bool String::isDelimiterAtIndex(int64_t index) const noexcept {
-
         return unicodeIsWordCharacter(unicodeAtIndex(index));
     }
 
@@ -818,9 +788,10 @@ namespace Grain {
      *  @return `true`, if the provided character index and character length values
      *          could be clamped to represent a valid part of the string.
      */
-    bool String::clampCharacterRange(int64_t& character_index, int64_t& character_length) const noexcept {
-
-        if (m_data != nullptr) {
+    bool String::clampCharacterRange(
+            int64_t& character_index,
+            int64_t& character_length) const noexcept {
+        if (m_data) {
             if (character_index < m_character_length && character_length > 0) {
                 if (character_index < 0) {
                     character_length += character_index;
@@ -852,10 +823,13 @@ namespace Grain {
      *
      *  @return `true` on success.
      */
-    bool String::byteRangeFromCharacterRange(int64_t character_index, int64_t character_length, int64_t& out_byte_index, int64_t& out_byte_length) const noexcept {
-
+    bool String::byteRangeFromCharacterRange(
+            int64_t character_index,
+            int64_t character_length,
+            int64_t& out_byte_index,
+            int64_t& out_byte_length) const noexcept {
         if (clampCharacterRange(character_index, character_length)) {
-       out_byte_index = byteIndexFromCharacterIndex(character_index);
+        out_byte_index = byteIndexFromCharacterIndex(character_index);
 
             int64_t last_index = character_index + character_length - 1;
             int64_t last_byte_index = byteIndexFromCharacterIndex(last_index);
@@ -877,7 +851,6 @@ namespace Grain {
      *  @return Number of whitespaces or a negative error code.
      */
     int64_t String::whiteSpaceHead() const noexcept {
-
         if (!m_data) {
             return -1;  // Return error code
         }
@@ -924,7 +897,7 @@ namespace Grain {
      */
     int64_t String::whiteSpaceTail() const noexcept {
 
-// TODO: Should be optimized by looking for white spaces from the tail side.
+        // TODO: Can be optimized by looking for white spaces from the tail side
 
         if (!m_data) {
             return -1;  // Return error code
@@ -972,9 +945,8 @@ namespace Grain {
      *  @note The memory will notbe changed.
      */
     void String::clear() noexcept {
-
         m_byte_length = m_character_length = 0;
-        if (m_data != nullptr) {
+        if (m_data) {
             m_data[0] = 0;
         }
     }
@@ -989,7 +961,6 @@ namespace Grain {
      *  @return `true` if whitespace characters were removed, `false` otherwise.
      */
     bool String::trim(TrimMode trim_mode) noexcept {
-
         if (!m_data) {
             return false;
         }
@@ -1034,7 +1005,6 @@ namespace Grain {
      *  @return `true` if the method succeeded.
      */
     bool String::setChar(char c) noexcept {
-
         clear();
         return appendChar(c);
     }
@@ -1049,7 +1019,6 @@ namespace Grain {
      *  @note If str is a nullptr, the string will be empty.
      */
     bool String::set(const char* str) noexcept {
-
         clear();
         return append(str);
     }
@@ -1063,25 +1032,24 @@ namespace Grain {
      *
      *  @note If `cf_string` is a nullptr, the string will be empty.
      */
-    #if defined(__APPLE__) && defined(__MACH__)
-        bool String::set(CFStringRef cf_string) noexcept {
+#if defined(__APPLE__) && defined(__MACH__)
+    bool String::set(CFStringRef cf_string) noexcept {
+        bool result = false;
 
-            bool result = false;
+        if (cf_string) {
+            CFIndex length = CFStringGetLength(cf_string);
+            CFIndex max_size = CFStringGetMaximumSizeForEncoding(length, kCFStringEncodingUTF8) + 1;
 
-            if (cf_string != nullptr) {
-                CFIndex length = CFStringGetLength(cf_string);
-                CFIndex max_size = CFStringGetMaximumSizeForEncoding(length, kCFStringEncodingUTF8) + 1;
+            checkCapacity(max_size);
 
-                checkCapacity(max_size);
-
-                if (CFStringGetCString(cf_string, m_data, max_size, kCFStringEncodingUTF8)) {
-                    result = true;
-                }
+            if (CFStringGetCString(cf_string, m_data, max_size, kCFStringEncodingUTF8)) {
+                result = true;
             }
-
-            return result;
         }
-    #endif
+
+        return result;
+    }
+#endif
 
 
     /**
@@ -1095,7 +1063,6 @@ namespace Grain {
      *  @note Parameters `character_index` and `character_length` will be internally clamped to a useful range.
      */
     bool String::set(const String& string, int64_t character_index, int64_t character_length) noexcept {
-
         if (&string != this) {
             if (string.subString(character_index, character_index + character_length - 1, *this) == character_length) {
                 return true;
@@ -1113,7 +1080,6 @@ namespace Grain {
      *  @return `true` if the method succeeded.
      */
     bool String::set(const String& string) noexcept {
-
         clear();
         return append(string);
     }
@@ -1126,8 +1092,7 @@ namespace Grain {
      *  @return `true` if the method succeeded.
      */
     bool String::set(const String* string) noexcept {
-
-        if (string != nullptr) {
+        if (string) {
             clear();
             return true;
         }
@@ -1147,7 +1112,6 @@ namespace Grain {
      *  @return `true` if the method succeeded.
      */
     bool String::setByStr(const char* str, int64_t start, int64_t end) noexcept {
-
         if (start < 0 || end < start) {
             clear();
             return false;
@@ -1165,8 +1129,7 @@ namespace Grain {
      *  @return `true` if the method succeeded.
      */
     bool String::setByStr(const char* str) noexcept {
-
-        if (str != nullptr) {
+        if (str) {
             return setByStr(str, strlen(str));
         }
         else {
@@ -1183,7 +1146,6 @@ namespace Grain {
      *  @return `true` if the method succeeded.
      */
     bool String::setByStr(const char* str, int64_t length) noexcept {
-
         if (!str || length < 1) {
             clear();
             return true;
@@ -1235,7 +1197,6 @@ namespace Grain {
      *          - `-4`: `open_c` occurs after `close_c` (mismatched framing).
      */
     int64_t String::setByFramedContent(const char* str, char open_c, char close_c) noexcept {
-
         if (open_c == String::EOS || close_c == String::EOS) {
             return -1;  // Unsupported surrounding character(s)
         }
@@ -1268,14 +1229,9 @@ namespace Grain {
      *  @return `true` if the method succeeded.
      */
     bool String::setByData(const Data* data, int32_t length) noexcept {
-        /* TODO: !!!!!
-        if (data != nullptr) {
+        if (data) {
             return setByStr((char*)data->data(), length);
         }
-        else {
-            return false;
-        }
-         */
         return false;
     }
 
@@ -1289,7 +1245,6 @@ namespace Grain {
      *        that results in a human readable text.
      */
     void String::setElapsedTimeText(timestamp_t t) noexcept {
-
         int64_t milliseconds = t % 1000; t /= 1000;
         int64_t seconds = t % 60; t /= 60;
         int64_t minutes = t % 60; t /= 60;
@@ -1408,7 +1363,6 @@ namespace Grain {
      *  @return `true` on success.
      */
     bool String::appendBoolTrueFalse(bool v) noexcept {
-
         return v ? append("true") : append("false");
     }
 
@@ -1420,7 +1374,6 @@ namespace Grain {
      *  @return `true` on success.
      */
     bool String::appendBoolYesNo(bool v) noexcept {
-
         return v ? append("yes") : append("no");
     }
 
@@ -1434,7 +1387,6 @@ namespace Grain {
      *  @note Only 7-bit ASCII characters can be appended.
      */
     bool String::appendChar(char c) noexcept {
-
         if (c <= 0) {
             // Not a 7 bit Ascii code
             return false;
@@ -1462,7 +1414,6 @@ namespace Grain {
      *  @note Only 7-bit ASCII characters can be appended.
      */
     bool String::appendChars(char c, int64_t n) noexcept {
-
         if (c <= 0) {
             // Not a 7 bit Ascii code
             return false;
@@ -1495,8 +1446,7 @@ namespace Grain {
      *  @return `true` if the method succeeded, `false` otherwise.
      */
     bool String::append(const char* str) noexcept {
-
-        if (str != nullptr) {
+        if (str) {
             auto byte_length = static_cast<int64_t>(strlen(str));
             auto character_length = utf8Length(str);
 
@@ -1524,8 +1474,7 @@ namespace Grain {
      *  @return `true` if the method succeeded, `false` otherwise.
      */
     bool String::append(const char* str, int64_t max_byte_length) noexcept {
-
-        if (str != nullptr) {
+        if (str) {
             int64_t byte_length = strlen(str);
             if (byte_length > max_byte_length) {
                 byte_length = max_byte_length;
@@ -1553,7 +1502,6 @@ namespace Grain {
      *  @return `true` if the method succeeded, `false` otherwise.
      */
     bool String::append(const String& string) noexcept {
-
         return append(string.utf8());
     }
 
@@ -1565,8 +1513,7 @@ namespace Grain {
      *  @return `true` if the method succeeded, `false` otherwise.
      */
     bool String::append(const String* string) noexcept {
-
-        if (string != nullptr) {
+        if (string) {
             return append(string->utf8());
         }
         else {
@@ -1599,7 +1546,6 @@ namespace Grain {
      *        indices are valid before calling this function.
      */
     bool String::append(const String& string, int64_t character_start, int64_t character_end) noexcept {
-
         int64_t s = string.byteIndexFromCharacterIndex(character_start);
         int64_t e = string.byteIndexFromCharacterIndex(character_end);
 
@@ -1620,7 +1566,6 @@ namespace Grain {
      *  @return The length of the UTF-8 sequence or 0, if nothing could be appended.
      */
     int32_t String::appendCharacter(const String& string, int64_t character_index) noexcept {
-
         int32_t seq_length = 0;
 
         int64_t byte_index = string.byteIndexFromCharacterIndex(character_index);
@@ -1689,7 +1634,6 @@ namespace Grain {
      *  @return `true` if the value was successfully appended, `false` otherwise.
      */
     bool String::appendDouble(double value, int32_t precision) noexcept {
-
         static const char* format[] = {
                 "%.0f", "%.1f", "%.2f", "%.3f", "%.4f", "%.5f", "%.6f", "%.7f", "%.8f", "%.9f",
         };
@@ -1714,7 +1658,6 @@ namespace Grain {
      *  @return `true` if the value was successfully appended, `false` otherwise.
      */
     bool String::appendFix(const Fix& value, int32_t precision) noexcept {
-
         char buffer[Fix::kMaxStrLength];
         value.toStr(buffer, Fix::kMaxStrLength, precision);
         return append(buffer);
@@ -1733,7 +1676,6 @@ namespace Grain {
      *  @return `true` if the insertion was successful, `false` otherwise.
      */
     bool String::insertAtCharacterIndex(const char* str, int64_t character_index) noexcept {
-
         if (!String::isValidUtf8() || !str) {
             return false;
         }
@@ -1804,7 +1746,6 @@ namespace Grain {
      *  @return `true` if the insertion was successful, `false` otherwise.
      */
     bool String::insert(const String& string, int64_t character_index) noexcept {
-
         if (&string != this) {
             return insertAtCharacterIndex(string.utf8(), character_index);
         }
@@ -1830,7 +1771,6 @@ namespace Grain {
      *          (e.g., if `index` is println of range).
      */
     bool String::remove(int64_t character_index, int64_t character_length) noexcept {
-
         if (clampCharacterRange(character_index, character_length)) {
             int64_t byte_index, byte_length;
 
@@ -1858,7 +1798,6 @@ namespace Grain {
      *  @note The string is modified in place. The indices are zero-based.
      */
     bool String::truncate(int64_t character_index) noexcept {
-
         return remove(character_index, length() - character_index);
     }
 
@@ -1876,7 +1815,6 @@ namespace Grain {
      *  @note The string is modified in place. The indices are zero-based.
      */
     bool String::truncateStart(int64_t length) noexcept {
-
         return remove(0, length);
     }
 
@@ -1891,8 +1829,7 @@ namespace Grain {
      *  @return `true` if the character was successfully replaced, `false` otherwise.
      */
     bool String::replaceChar(int64_t character_index, const char* c) noexcept {
-
-        if (isCharacterIndexInRange(character_index) && c != nullptr) {
+        if (isCharacterIndexInRange(character_index) && c) {
             if (String::utf8Length(c) != 1) {
                 return false;
             }
@@ -1936,7 +1873,6 @@ namespace Grain {
      *  @return `true` if the character was successfully replaced, `false` otherwise.
      */
     bool String::replaceChar(int64_t character_index, const String& src_string, int64_t src_character_index) noexcept {
-
         if (src_string.isCharacterIndexInRange(src_character_index)) {
             auto src_byte_index = src_string.byteIndexFromCharacterIndex(src_character_index);
             int64_t seq_length = src_string.utf8SeqLengthAtByteIndex(src_byte_index);
@@ -1963,7 +1899,6 @@ namespace Grain {
      *  @return The number of successful replacements.
      */
     int64_t String::replace(const String& search_string, const String& replacement_string) noexcept {
-
         return replace(search_string.utf8(), replacement_string.utf8());
     }
 
@@ -1977,10 +1912,9 @@ namespace Grain {
      *  @return The number of successful replacements.
      */
     int64_t String::replace(const char* search_str, const char* replacement_str) noexcept {
-
         int64_t n = 0;
 
-        if (search_str != nullptr && replacement_str != nullptr) {
+        if (search_str && replacement_str) {
             int64_t search_str_length = utf8Length(search_str);
             int64_t replacement_str_length = utf8Length(replacement_str);
 
@@ -2016,7 +1950,6 @@ namespace Grain {
      *  standard decimal notation (e.g., "12300000000").
      */
     ErrorCode String::removeScientificNotation() noexcept {
-
         if (!isValidNumber()) {
             return ErrorCode::InvalidNumber;
         }
@@ -2139,7 +2072,6 @@ namespace Grain {
      *  @brief Removes surrounding double quotes from the string if present.
      */
     void String::removeStringDoubleQuotes() noexcept {
-
         if (isQuoted()) {
             remove(m_byte_length - 1, 1);
             remove(0, 1);
@@ -2154,7 +2086,6 @@ namespace Grain {
      *  @return ErrorCode indicating success or failure.
      */
     ErrorCode String::randomName(int64_t length) noexcept {
-
         if (length < 1) {
             return ErrorCode::BadArgs;
         }
@@ -2175,7 +2106,6 @@ namespace Grain {
      *  @return ErrorCode indicating success or failure.
      */
     ErrorCode String::randomName(const char* mask, const char* path) noexcept {
-
         int64_t length = randomNameLength(mask, path);
 
         if (length < 1) {
@@ -2218,10 +2148,10 @@ namespace Grain {
      *  @return `true` if data could be read; otherwise, `false`.
      */
     ErrorCode String::readFromFile(const String& file_path) noexcept {
-
         auto result = ErrorCode::None;
 
-        /* TODO: !!!!!
+        #pragma message("String::readFromFile() must be implemented")
+        /*
         try {
             File file(file_path);
             file.startReadAscii();
@@ -2245,7 +2175,6 @@ namespace Grain {
      *          negative error code.
      */
     int64_t String::findAsciiChar(char c, int64_t index) const noexcept {
-
         // TODO: Test!!!
 
         if (index < 0 || index >= m_character_length) {
@@ -2294,7 +2223,6 @@ namespace Grain {
      *          -5: nothing found.
      */
     int64_t String::find(const char* str, int64_t index) const noexcept {
-
         if (!m_data) {
             return kFindResult_MemError;
         }
@@ -2339,7 +2267,6 @@ namespace Grain {
      *  - If `string` is not valid or `index` is println of bounds, returns -1.
      */
     int64_t String::find(const String& string, int64_t index) const noexcept {
-
         if (&string != this) {
             return find(string.utf8(), index);
         }
@@ -2363,7 +2290,6 @@ namespace Grain {
      *  - If `string` is not valid or `index` is println of bounds, returns -1.
      */
     int64_t String::findIgnoreCase(const String& string, int64_t index) const noexcept {
-
         if (!string.isValidUtf8()) {
             return -1;
         }
@@ -2395,7 +2321,6 @@ namespace Grain {
     }
 
     int64_t String::findOneCharOf(const char* char_set, int64_t index) const noexcept {
-
         String string(char_set);
         return findOneCharOf(string, index);
     }
@@ -2416,7 +2341,6 @@ namespace Grain {
      *  @note The search is performed using UTF-8 encoded characters.
      */
     int64_t String::findOneCharOf(const String& char_set, int64_t index) const noexcept {
-
         char buffer[kUtf8SeqBufferSize];
 
         for (int64_t i = 0; i < length(); i++) {
@@ -2439,7 +2363,6 @@ namespace Grain {
      *  @return Number of occurrences.
      */
     int64_t String::count(const char* str, int64_t index) const noexcept {
-
         int64_t n = 0;
 
         while (true) {
@@ -2465,7 +2388,6 @@ namespace Grain {
      *  @return Number of occurrences.
      */
     int64_t String::count(const String& string, int64_t index) const noexcept {
-
         if (&string != this) {
             return count(string.utf8(), index);
         }
@@ -2483,7 +2405,6 @@ namespace Grain {
      *  @return `true` if characters match; `false` otherwise.
      */
     bool String::compareAsciiAtIndex(char c, int64_t index) const noexcept {
-
         char c_in_string;
         if (isAsciiAtIndex(index, c_in_string)) {
             return c_in_string == c;
@@ -2502,8 +2423,7 @@ namespace Grain {
      *          null input.
      */
     int32_t String::compare(const char* str) const noexcept {
-
-        if (str != nullptr && m_data != nullptr) {
+        if (str && m_data) {
             return strcmp(m_data, str);
         }
         else {
@@ -2520,7 +2440,6 @@ namespace Grain {
      *          to C-string compare.
      */
     int32_t String::compare(const String& string) const noexcept {
-
         return compare(string.utf8());
     }
 
@@ -2554,16 +2473,17 @@ namespace Grain {
      *      offsets, the comparison is truncated to the shorter length.
      *    - The comparison is case-sensitive.
      */
-    int32_t String::compareAscii(const String& string, uint32_t offs, uint32_t offs_other, int32_t length) const noexcept {
-
-        if (m_data != nullptr &&
-            string.m_data != nullptr &&
+    int32_t String::compareAscii(
+            const String& string,
+            uint32_t offs,
+            uint32_t offs_other,
+            int32_t length) const noexcept {
+        if (m_data &&
+            string.m_data &&
             offs <= byteLength() &&
             offs_other <= string.byteLength()) {
-
             const char* ptr = &m_data[offs];
             const char* ptr_other = &string.m_data[offs_other];
-
             return strcmp(ptr, ptr_other);
         }
         else {
@@ -2579,8 +2499,7 @@ namespace Grain {
      *          greater; -1 on null input.
      */
     int32_t String::compareIgnoreCase(const char* str) const noexcept {
-
-        if (str != nullptr && m_data != nullptr) {
+        if (str && m_data) {
             return strcasecmp(m_data, str);
         }
         else {
@@ -2595,7 +2514,6 @@ namespace Grain {
      *  @return 0 if equal (case-insensitive), negative if less, positive if greater.
      */
     int32_t String::compareIgnoreCase(const String& string) const noexcept {
-
         return compareIgnoreCase(string.utf8());
     }
 
@@ -2615,15 +2533,16 @@ namespace Grain {
      *
      *  @return Number of parts that could be extracted.
      */
-    int64_t String::csvSplit(char delimiter, char quote, String::TrimMode trim_mode, StringList& out_list) const noexcept {
-
+    int64_t String::csvSplit(
+            char delimiter,
+            char quote,
+            String::TrimMode trim_mode,
+            StringList& out_list) const noexcept {
         int64_t result_n = 0;
-
         if (delimiter == 0) {
             return -1;
         }
 
-        /* TODO: !!!!!
         CSVLineParser csv_line_parser(utf8());
         csv_line_parser.setDelimiter(delimiter);
         csv_line_parser.setQuote(quote);
@@ -2631,10 +2550,11 @@ namespace Grain {
         while (csv_line_parser.next()) {
             String string = csv_line_parser.currFieldStrPtr();
             string.trim(trim_mode);
-            out_list.pushString(string);
+            if (!out_list.pushString(string)) {
+                return -2;
+            }
             result_n++;
         }
-         */
 
         return result_n;
     }
@@ -2648,7 +2568,6 @@ namespace Grain {
      *  @return Length of the substring, or -1 on failure.
      */
     int64_t String::subString(int64_t start, String& out_string) const noexcept {
-
         return subString(start, m_character_length - 1, out_string);
     }
 
@@ -2662,7 +2581,6 @@ namespace Grain {
      *  @return Length of the substring, or -1 on failure.
      */
     int64_t String::subString(int64_t start, int64_t end, String& out_string) const noexcept {
-
         if (start < 0 || start >= m_character_length || end < start) {
             return -1;
         }
@@ -2688,9 +2606,7 @@ namespace Grain {
      *  @return Length of the trimmed substring, or -1 on failure.
      */
     int64_t String::trimmedSubString(int64_t start, int64_t end, String& out_string) const noexcept {
-
         int64_t result = subString(start, end, out_string);
-
         if (result > 1) {
             out_string.trim();
         }
@@ -2707,9 +2623,7 @@ namespace Grain {
      *  @return Length of the trimmed substring, or -1 on failure.
      */
     int64_t String::trimmedSubString(int64_t start, String& out_string) const noexcept {
-
         int64_t result = subString(start, out_string);
-
         if (result > 1) {
             out_string.trim();
         }
@@ -2726,7 +2640,6 @@ namespace Grain {
      *  @return `true` if successful and the character is ASCII; `false` otherwise.
      */
     bool String::isAsciiAtIndex(int64_t index, char& out_char) const noexcept {
-
         if (isCharacterIndexInRange(index)) {
             int64_t symbol_index = byteIndexFromCharacterIndex(index);
 
@@ -2749,7 +2662,6 @@ namespace Grain {
      *  @return ASCII character at index, or 0 if invalid or non-ASCII.
      */
     char String::asciiAtIndex(int64_t index) const noexcept {
-
         char c;
         if (isAsciiAtIndex(index, c)) {
             return c;
@@ -2766,8 +2678,7 @@ namespace Grain {
      * @return First character, or 0 if the string is empty or null.
      */
     char String::firstAsciiChar() const noexcept {
-
-        return m_data != nullptr && m_byte_length > 0 ? m_data[0] : 0;
+        return m_data && m_byte_length > 0 ? m_data[0] : 0;
     }
 
 
@@ -2780,8 +2691,7 @@ namespace Grain {
      *          C-string if charIndex is println of range.
      */
     const char* String::utf8AtIndex(int64_t index) const noexcept {
-
-        if (m_data != nullptr) {
+        if (m_data) {
             int64_t symbol_index = byteIndexFromCharacterIndex(index);
 
             if (symbol_index < 0) {
@@ -2811,8 +2721,7 @@ namespace Grain {
      *          is insufficient.
      */
     bool String::utf8SubStr(int64_t index, int64_t length, int64_t max_byte_capacity, char* out_buffer) const noexcept {
-
-        if (m_data != nullptr && out_buffer != nullptr) {
+        if (m_data && out_buffer) {
             int64_t symbol_index, symbol_length;
 
             if (byteRangeFromCharacterRange(index, length, symbol_index, symbol_length)) {
@@ -2838,10 +2747,9 @@ namespace Grain {
      *  @return The length of the UTF-8 sequence in bytes.
      */
     int32_t String::utf8CodeAtByteIndex(int64_t byte_index, char* out_buffer) const noexcept {
-
         int32_t seq_length = 0;
 
-        if (m_data != nullptr && out_buffer != nullptr) {
+        if (m_data && out_buffer) {
             if (isByteIndexInRange(byte_index)) {
                 seq_length = utf8SeqLengthAtByteIndex(byte_index);
 
@@ -2866,8 +2774,7 @@ namespace Grain {
      *  @return `true`, if data represents a soft line break character.
      */
     bool String::utf8IsSoftLineBreak(const char* utf8_data) noexcept {
-
-        return (utf8_data != nullptr &&
+        return (utf8_data &&
                 static_cast<uint8_t>(utf8_data[0]) == 0xe2 &&
                 static_cast<uint8_t>(utf8_data[1]) == 0x80 &&
                 static_cast<uint8_t>(utf8_data[2]) == 0xa8);
@@ -2882,7 +2789,6 @@ namespace Grain {
      *  @return true, if data represents a white space character.
      */
     bool String::utf8IsWhiteSpace(const char* utf8_data) noexcept {
-
         if (!utf8_data) {
             return false;
         }
@@ -2952,7 +2858,6 @@ namespace Grain {
      *  @return `true`, if char represents a white space character.
      */
     bool String::charIsWhiteSpace(char c) noexcept {
-
         return (c == 0x09 || c == 0x0a || c == 0x0b || c == 0x0c || c == 0x0d || c == 0x20);
     }
 
@@ -2964,7 +2869,6 @@ namespace Grain {
      *  @return true if the char represents a hex digit; false otherwise.
      */
     bool String::charIsHexLetter(char c) noexcept {
-
         if ((c >= '0' && c <= '9') ||
             (c >= 'a' && c <= 'f') ||
             (c >= 'A' && c <= 'F')) {
@@ -2992,8 +2896,7 @@ namespace Grain {
      *  @note The function is case-insensitive and handles both uppercase and
      *        lowercase hexadecimal letters ('a'-'f' and 'A'-'F').
      */
-int8_t String::valueForHexChar(char c) noexcept {
-
+    int8_t String::valueForHexChar(char c) noexcept {
         if (c >= '0' && c <= '9') {
             return c - '0';
         }
@@ -3035,7 +2938,6 @@ int8_t String::valueForHexChar(char c) noexcept {
      *  @endcode
      */
     bool String::isValidHexString(const char* str) noexcept {
-
         if (!str || *str == String::EOS) {
             return false;
         }
@@ -3072,7 +2974,6 @@ int8_t String::valueForHexChar(char c) noexcept {
      *          is null.
      */
     const char* String::firstNonWhiteSpaceCharPtr(const char* str) noexcept {
-
         if (!str) {
             return nullptr;
         }
@@ -3089,7 +2990,6 @@ int8_t String::valueForHexChar(char c) noexcept {
      *  @brief Function to check if a character is Base64 valid.
      */
     bool String::isBase64(char c) noexcept {
-
         return (c >= 'A' && c <= 'Z') ||
                (c >= 'a' && c <= 'z') ||
                (c >= '0' && c <= '9') ||
@@ -3107,7 +3007,6 @@ int8_t String::valueForHexChar(char c) noexcept {
      *  @note Only one character is recognized.
      */
     int32_t String::utf8SeqLength(const uint8_t* c) noexcept {
-
         if (!c) {
             return -2;
         }
@@ -3151,7 +3050,6 @@ int8_t String::valueForHexChar(char c) noexcept {
      *  @return `true` if the string is a valid UTF-8 sequence, `false` otherwise.
      */
     bool String::isValidUtf8(const uint8_t* str) noexcept {
-
         if (!str) {
             return false;
         }
@@ -3181,8 +3079,7 @@ int8_t String::valueForHexChar(char c) noexcept {
      *                    zero-padding.
      */
     void String::fillBuffer(int64_t length, char* out_buffer) const noexcept {
-
-        if (out_buffer != nullptr) {
+        if (out_buffer) {
             int64_t n = std::min(m_byte_length, length);
 
             for (int64_t i = 0; i < n; i++) {
@@ -3195,41 +3092,38 @@ int8_t String::valueForHexChar(char c) noexcept {
         }
     }
 
-    #if defined(__APPLE__) && defined(__MACH__)
-        CFStringRef String::createCFStringRef() const noexcept {
-
-            return CFStringCreateWithCString(kCFAllocatorDefault, utf8(), kCFStringEncodingUTF8);
-        }
-    #endif
-
-
-    #if defined(__APPLE__) && defined(__MACH__)
-        CFURLRef String::createCFURLRef() const noexcept {
-
-            return createCFURLRef(utf8());
-        }
-    #endif
+#if defined(__APPLE__) && defined(__MACH__)
+    CFStringRef String::createCFStringRef() const noexcept {
+        return CFStringCreateWithCString(kCFAllocatorDefault, utf8(), kCFStringEncodingUTF8);
+    }
+#endif
 
 
-    #if defined(__APPLE__) && defined(__MACH__)
-        CFURLRef String::createCFURLRef(const char* path) noexcept {
+#if defined(__APPLE__) && defined(__MACH__)
+    CFURLRef String::createCFURLRef() const noexcept {
+        return createCFURLRef(utf8());
+    }
+#endif
 
-            if (path != nullptr) {
-                CFStringRef cf_path = CFStringCreateWithCString(kCFAllocatorDefault, path, kCFStringEncodingUTF8);
-                if (cf_path != nullptr) {
-                    CFURLRef cf_url = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, cf_path, kCFURLPOSIXPathStyle, false);
-                    CFRelease(cf_path);
-                    return cf_url;
-                }
+
+#if defined(__APPLE__) && defined(__MACH__)
+    CFURLRef String::createCFURLRef(const char* path) noexcept {
+        if (path) {
+            CFStringRef cf_path = CFStringCreateWithCString(kCFAllocatorDefault, path, kCFStringEncodingUTF8);
+            if (cf_path) {
+                CFURLRef cf_url = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, cf_path, kCFURLPOSIXPathStyle, false);
+                CFRelease(cf_path);
+                return cf_url;
             }
-
-            return nullptr;
         }
-    #endif
+
+        return nullptr;
+    }
+#endif
 
 
     bool String::asBool() const noexcept {
-        return m_data != nullptr && static_cast<bool>(0 != atoi(m_data));
+        return m_data && static_cast<bool>(0 != atoi(m_data));
     }
 
 
@@ -3281,7 +3175,6 @@ int8_t String::valueForHexChar(char c) noexcept {
      *          bad input.
      */
     int32_t String::splitFast(char delimiter, int32_t max_parts, int32_t part_len, char* out_parts) const noexcept {
-
         if (max_parts < 1 || part_len < 2 || !out_parts) {
             return -1;
         }
@@ -3340,7 +3233,6 @@ int8_t String::valueForHexChar(char c) noexcept {
      *          of errors.
      */
     double String::shannonEntropy(bool bits_mode) const noexcept {
-
         double entropy = 0.0;
 
         struct CodePoint {
@@ -3350,41 +3242,38 @@ int8_t String::valueForHexChar(char c) noexcept {
 
         List<CodePoint> code_points;
 
-        try {
-            int64_t cn = length();
-            for (int64_t ci = 0; ci < cn; ci++) {
-                auto unicode = unicodeAtIndex(ci);
-                bool exists = false;
-                for (auto& cp : code_points) {
-                    if (cp.unicode == unicode) {
-                        cp.n++;
-                        exists = true;
-                        break;
-                    }
-                }
-                if (!exists) {
-                    CodePoint cp = { unicode, 1 };
-                    code_points.push(cp);
-                }
-            }
-
-            // Compute entropy
-            entropy = 0.0;
-            double total = 0.0;
-            if (bits_mode) {
-                total = length();
-            }
-            else {
-                total = code_points.size();
-            }
-
+        int64_t cn = length();
+        for (int64_t ci = 0; ci < cn; ci++) {
+            auto unicode = unicodeAtIndex(ci);
+            bool exists = false;
             for (auto& cp : code_points) {
-                double p = cp.n / total;
-                entropy -= p * log2(p);
+                if (cp.unicode == unicode) {
+                    cp.n++;
+                    exists = true;
+                    break;
+                }
+            }
+            if (!exists) {
+                CodePoint cp = { unicode, 1 };
+                if (!code_points.push(cp)) {
+                    return std::numeric_limits<double>::quiet_NaN();
+                }
             }
         }
-        catch (ErrorCode err) {
-            entropy = 0.0;
+
+        // Compute entropy
+        entropy = 0.0;
+        double total = 0.0;
+        if (bits_mode) {
+            total = length();
+        }
+        else {
+            total = code_points.size();
+        }
+
+        for (auto& cp : code_points) {
+            double p = cp.n / total;
+            entropy -= p * log2(p);
         }
 
         return entropy;
@@ -3395,7 +3284,6 @@ int8_t String::valueForHexChar(char c) noexcept {
      *  @brief Integer to argument.
      */
     int64_t String::itoa(int64_t value, char* buffer, int32_t radix) noexcept {
-
         if (!buffer) {
             return 0;
         }
@@ -3442,25 +3330,21 @@ int8_t String::valueForHexChar(char c) noexcept {
 
 
     inline bool String::isAlpha(char c) {
-
         return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
     }
 
 
     inline bool String::isDigit(char c) {
-
         return (c >= '0' && c <= '9');
     }
 
 
     inline bool String::isExponentChar(char c) {
-
         return (c == 'e' || c == 'E');
     }
 
 
     inline bool String::isSignChar(char c) {
-
         return (c == '+' || c == '-');
     }
 
@@ -3487,9 +3371,14 @@ int8_t String::valueForHexChar(char c) noexcept {
      *                        the end index is exclusive.
      *  @return `true` if a word is found, otherwise `false`.
      */
-    bool String::selectWord(int32_t cursor_index, const StringList* word_characters, const StringList* custom_delimiters, Rangei &out_range) noexcept {
+    bool String::selectWord(
+            int32_t cursor_index,
+            const StringList* word_characters,
+            const StringList* custom_delimiters,
+            Rangei &out_range) noexcept {
 
         int32_t start_index = cursor_index;
+
         while (start_index >= 0) {
             auto unicode = unicodeAtIndex(start_index);
 
@@ -3506,7 +3395,7 @@ int8_t String::valueForHexChar(char c) noexcept {
             if (s.utf8IsWhiteSpace(s.utf8())) {
                 break;
             }
-            if (custom_delimiters != nullptr) {
+            if (custom_delimiters) {
                 if (custom_delimiters->contains(s)) {
                     break;
                 }
@@ -3533,7 +3422,7 @@ int8_t String::valueForHexChar(char c) noexcept {
             if (s.utf8IsWhiteSpace(s.utf8())) {
                 break;
             }
-            if (custom_delimiters != nullptr) {
+            if (custom_delimiters) {
                 if (custom_delimiters->contains(s)) {
                     break;
                 }
@@ -3567,17 +3456,17 @@ int8_t String::valueForHexChar(char c) noexcept {
      *  @note Indices are zero-based. The function does nothing if `character_index`
      *        is println of range.
      */
-    #if defined(__APPLE__) && defined(__MACH__)
-        void String::copyToPasteboard(int64_t character_index, int64_t character_length) noexcept {
-            if (m_data) {
-                _macosApp_copyToPasteboard(this, character_index, character_length);
-            }
+#if defined(__APPLE__) && defined(__MACH__)
+    void String::copyToPasteboard(int64_t character_index, int64_t character_length) noexcept {
+        if (m_data) {
+            _macosApp_copyToPasteboard(this, character_index, character_length);
         }
-    #else
-        void String::copyToPasteboard(int64_t character_index, int64_t character_length) noexcept {
-            #warning "String::copyToPasteboard() must be implemented for Linux"
-        }
-    #endif
+    }
+#else
+    void String::copyToPasteboard(int64_t character_index, int64_t character_length) noexcept {
+        #warning "String::copyToPasteboard() must be implemented for Linux"
+    }
+#endif
 
 
     /**
@@ -3591,27 +3480,26 @@ int8_t String::valueForHexChar(char c) noexcept {
      *
      *  @return The number of characters inserted from the pasteboard.
      */
-    #if defined(__APPLE__) && defined(__MACH__)
-        int64_t String::pasteFromPasteboard(int64_t character_index) noexcept {
-            if (m_data != nullptr) {
-                return _macosApp_pasteFromPasteboard(this, character_index);
-            }
-            return 0;
+#if defined(__APPLE__) && defined(__MACH__)
+    int64_t String::pasteFromPasteboard(int64_t character_index) noexcept {
+        if (m_data) {
+            return _macosApp_pasteFromPasteboard(this, character_index);
         }
-    #else
-        int64_t String::pasteFromPasteboard(int64_t character_index) noexcept {
-            #warning "String::pasteFromPasteboard() must be implemented for Linux"
-            // TODO: Implement
-            return 0;
-        }
-    #endif
+        return 0;
+    }
+#else
+    int64_t String::pasteFromPasteboard(int64_t character_index) noexcept {
+        #warning "String::pasteFromPasteboard() must be implemented for Linux"
+        // TODO: Implement
+        return 0;
+    }
+#endif
 
 
     /**
      *  @brief Check memory capacity.
      */
     bool String::checkCapacity(int64_t needed) noexcept {
-
         if (!m_data || m_byte_capacity < 0) {
             int64_t new_capacity = needed + m_extra_grow_bytes;
             m_data = (char*)calloc(new_capacity + 1, 1);
@@ -3640,9 +3528,7 @@ int8_t String::valueForHexChar(char c) noexcept {
 
 
     bool String::checkCapacity(int64_t needed, int64_t min) noexcept {
-
         int64_t capacity = needed;
-
         if (capacity < min) {
             capacity = min;
         }
@@ -3652,8 +3538,7 @@ int8_t String::valueForHexChar(char c) noexcept {
 
 
     void String::_updateInternalLengthInfo() noexcept {
-
-        if (m_data != nullptr) {
+        if (m_data) {
             m_byte_length = static_cast<int64_t>(strlen(m_data));
             m_character_length = utf8Length(m_data);
         }
@@ -3664,7 +3549,6 @@ int8_t String::valueForHexChar(char c) noexcept {
      *  @brief Check memory capacity.
      */
     bool String::_checkExtraCapacity(int64_t needed) noexcept {
-
         return checkCapacity(m_byte_length + needed);
     }
 
@@ -3673,7 +3557,6 @@ int8_t String::valueForHexChar(char c) noexcept {
      *  @brief Remove from data.
      */
     void String::_removeData(int64_t byte_index, int64_t byte_length, int64_t character_length) noexcept {
-
         if (byte_length > 0 && character_length >= 0) {
             char* d = &m_data[byte_index];
             char* s = &m_data[byte_index + byte_length];
@@ -3702,10 +3585,8 @@ int8_t String::valueForHexChar(char c) noexcept {
      *          extension is found.
      */
     String String::fileExtension() const noexcept {
-
         const char* ext = strrchr(utf8(), '.');
-
-        if (ext != nullptr) {
+        if (ext) {
             return String(&ext[1]);
         }
         else {
@@ -3720,14 +3601,13 @@ int8_t String::valueForHexChar(char c) noexcept {
      *  @return The file base name with its extension.
      */
     String String::fileBaseName() const noexcept {
-
         char buffer[1024];
         buffer[0] = String::EOS;
         std::strncpy(buffer, utf8(), 1024 - 1);
 
         char* base_name = basename(buffer);
 
-        if (base_name != nullptr) {
+        if (base_name) {
             return String(base_name);
         }
         else {
@@ -3742,17 +3622,16 @@ int8_t String::valueForHexChar(char c) noexcept {
      *  @return The file base name without its extension.
      */
     String String::fileBaseNameWithoutExtension() const noexcept {
-
         char buffer[1024];
         std::strncpy(buffer, utf8(), 1024 - 1);
 
         char* base_name = basename(buffer);
 
-        if (base_name != nullptr) {
+        if (base_name) {
 
             // Find the last dot (.) in the base name
             char* dot = strrchr(base_name, '.');
-            if (dot != nullptr) {
+            if (dot) {
                 *dot = 0;
             }
 
@@ -3764,21 +3643,20 @@ int8_t String::valueForHexChar(char c) noexcept {
     }
 
 
-/**
- *  @brief Get the path to the parent directory from a given file path.
- *
- *  This function extracts and returns the path to the parent directory from the
- *  provided file path.
- *
- *  @return The extracted directory path as a String.
- */
-String String::fileDirPath() const noexcept {
-
+    /**
+     *  @brief Get the path to the parent directory from a given file path.
+     *
+     *  This function extracts and returns the path to the parent directory from the
+     *  provided file path.
+     *
+     *  @return The extracted directory path as a String.
+     */
+    String String::fileDirPath() const noexcept {
         char buffer[2048];
         std::strncpy(buffer, utf8(), 2048 - 1);
         char* dir_name = dirname(buffer);
 
-        if (dir_name != nullptr) {
+        if (dir_name) {
             return String(dir_name);
         }
         else {
@@ -3793,13 +3671,13 @@ String String::fileDirPath() const noexcept {
      *  @return The file path with the new extension.
      */
     String String::filePathWithChangedExtension(const String& extension) const noexcept {
-
         return fileDirPath() + "/" + fileBaseNameWithoutExtension() + "." + extension;
     }
 
 
-    void String::buildFilePathAtDirWithRandomName(const String& file_path, int32_t file_name_length) noexcept {
-
+    void String::buildFilePathAtDirWithRandomName(
+            const String& file_path,
+            int32_t file_name_length) noexcept {
         String name;
         name.randomName(file_name_length);
         *this = file_path.fileDirPath() + "/" + name + "." + file_path.fileExtension();
@@ -3810,10 +3688,10 @@ String String::fileDirPath() const noexcept {
      *  @brief Load text into string from a file.
      */
     ErrorCode String::loadText(const String& file_path) noexcept {
-
         auto result = ErrorCode::None;
 
-        /* TODO: !!!!!
+#pragma message("String::loadText() must be implemented")
+        /*
         try {
             File file(file_path);
             file.startReadAscii();
@@ -3835,9 +3713,8 @@ String String::fileDirPath() const noexcept {
      *  @brief Save string content to a file.
      */
     ErrorCode String::saveText(const String& file_path) const noexcept {
-
         auto result = ErrorCode::None;
-
+#pragma message("String::saveText() must be implemented")
         /* TODO: !!!!!
         try {
             File file(file_path);
@@ -3869,8 +3746,7 @@ String String::fileDirPath() const noexcept {
      *  @return `true` if the strings are equal or both `nullptr`, `false` otherwise.
      */
     bool String::strSame(const char* str_a, const char* str_b) noexcept {
-
-        if (str_a == nullptr && str_b == nullptr) {
+        if (!str_a && !str_b) {
             return true;
         }
         else if (!str_a || !str_b) {
@@ -3886,7 +3762,6 @@ String String::fileDirPath() const noexcept {
      *  @brief Check if a 16 bit unicode value represents a decimal digit.
      */
     bool String::unicharIsNumeric(uint16_t c) noexcept {
-
         static const uint16_t table[12] = {
             '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '.'
         };
@@ -3905,20 +3780,17 @@ String String::fileDirPath() const noexcept {
      *  @brief Get the length of a UTF-8 string in terms of the number of
      *         characters, not bytes.
      *
+     *  For a multi-byte UTF-8 character, the bytes that are part of the
+     *  character (continuation bytes) have the highest two bits set to 10
+     *  (i.e., they are in the range 0x80 to 0xBF).
+     *  Therefore, it checks if the current byte does not have 0xC0 as the
+     *  highest two bits. If this condition is true, it means the byte is the
+     *  start of a new UTF-8 character (not a continuation byte).
+     *
      *  @param str Pointer to a null terminated C-string.
      *  @return Count of UTF-8 characters in the string.
      */
     int64_t String::strUtf8Length(const char* str) noexcept {
-
-        /*
-         *  For a multi-byte UTF-8 character, the bytes that are part of the
-         *  character (continuation bytes) have the highest two bits set to 10
-         *  (i.e., they are in the range 0x80 to 0xBF).
-         *  Therefore, it checks if the current byte does not have 0xC0 as the
-         *  highest two bits. If this condition is true, it means the byte is the
-         *  start of a new UTF-8 character (not a continuation byte).
-         */
-
         int64_t n = 0;
         auto p = str;
         while (*p) {
@@ -3937,7 +3809,6 @@ String String::fileDirPath() const noexcept {
      *  @brief Checks if a C-string has a specific ending.
      */
     bool String::strEndsWith(const char* str, const char* ending, bool case_sensitive) noexcept {
-
         // Find the length of both strings
         size_t str_length = strlen(str);
         size_t end_length = strlen(str);
@@ -3960,13 +3831,12 @@ String String::fileDirPath() const noexcept {
      *  @brief Formats a double value to a C-string.
      */
     void String::strFromDouble(double value, int32_t fractional_digits, int32_t max_out_size, char* out_str) noexcept {
-
         static const char* format_str[] = {
             "%lld", "%.1f", "%.2f", "%.3f", "%.4f", "%.5f", "%.6f", "%.7f",
             "%.8f", "%.9f", "%.10f", "%.11f", "%.12f", "%.13f", "%.14f"
         };
 
-        if (out_str != nullptr) {
+        if (out_str) {
             if (fractional_digits < 0) {
                 fractional_digits = 0;
             }
@@ -4008,8 +3878,7 @@ String String::fileDirPath() const noexcept {
      *  @return true if the string could be generated, else false.
      */
     bool String::strHexFromData(const uint8_t* data, size_t length, char* out_str) noexcept {
-
-        if (data == nullptr || length < 1 || out_str == nullptr) {
+        if (!data || length < 1 || !out_str) {
             return false;
         }
         else {
@@ -4042,11 +3911,10 @@ String String::fileDirPath() const noexcept {
      *  @return length of the resulting string.
      */
     int64_t String::strHexFromType(void* ptr, int32_t byte_count, bool prefixed, char* out_str) noexcept {
-
         static const char* hex = "0123456789abcdef";
         int64_t length = 0;
 
-        if (ptr != nullptr && byte_count > 0 && out_str != nullptr) {
+        if (ptr && byte_count > 0 && out_str) {
             auto _ptr = (uint8_t*)ptr;
             char* d = out_str;
 
@@ -4095,13 +3963,11 @@ String String::fileDirPath() const noexcept {
 
 
     void String::strHexFromFloat(float value, bool prefixed, char* out_str) noexcept {
-
         strHexFromType((char*)&value, 4, prefixed, out_str);
     }
 
 
     void String::strHexFromDouble(double value, bool prefixed, char* out_str) noexcept {
-
         strHexFromType((char*)&value, 8, prefixed, out_str);
     }
 
@@ -4109,10 +3975,9 @@ String String::fileDirPath() const noexcept {
      *  @brief Build float from a C-string.
      */
     bool String::strToFloat(const char* str, float& out_value) noexcept {
-
         bool result = false;
 
-        if (str != nullptr) {
+        if (str) {
 
             if (str[0] == '0' &&  str[1] == 'x') {  // Hexadicimal
                 int64_t length = static_cast<int64_t>(strlen(str)) - 2;
@@ -4166,10 +4031,9 @@ String String::fileDirPath() const noexcept {
      *  @brief Build double from a C-string.
      */
     bool String::strToDouble(const char* str, double& out_value) noexcept {
-
         bool result = false;
 
-        if (str != nullptr) {
+        if (str) {
             if (str[0] == '0' &&  str[1] == 'x') {  // Hexadicimal
                 int64_t length = static_cast<int64_t>(strlen(str)) - 2;
                 auto p =  reinterpret_cast<uint64_t*>(&out_value);
@@ -4245,8 +4109,7 @@ String String::fileDirPath() const noexcept {
      *  @return Number of bytes or a negative error code.
      */
     int32_t String::strHexToUInt8Array(const char* str, int32_t max_length, uint8_t* out_array) noexcept {
-
-        if (str == nullptr || out_array == nullptr) {
+        if (!str || !out_array) {
             return 0;
         }
 
@@ -4307,11 +4170,10 @@ String String::fileDirPath() const noexcept {
      *  @return The index of the first occurence or -1, if nothing has been found.
      */
     int32_t String::indexForStrInArray(const char* str, const char** str_array) noexcept {
-
-        if (str != nullptr && str_array != nullptr) {
+        if (str && str_array) {
             int32_t index = 0;
 
-            while (str_array[index] != nullptr) {
+            while (str_array[index]) {
                 if (strcmp(str, str_array[index]) == 0) {
                     return index;
                 }
@@ -4327,8 +4189,7 @@ String String::fileDirPath() const noexcept {
      *  @brief Format a C-string representing time.
      */
     char* String::timeStrFromSeconds(int64_t seconds, int32_t max_out_size, char* out_str) noexcept {
-
-        if (out_str != nullptr) {
+        if (out_str) {
             auto minutes = static_cast<int64_t>(seconds / 60);
             seconds = seconds - minutes * 60;
             auto hours = static_cast<int64_t>(minutes / 60);
@@ -4348,8 +4209,7 @@ String String::fileDirPath() const noexcept {
      *  @brief Format a C-string representing FPS (frames per second).
      */
     void String::fpsStr(double_t fps, int32_t max_out_size, char* out_str) noexcept {
-
-        if (out_str != nullptr) {
+        if (out_str) {
             std::snprintf(out_str, max_out_size, "%.3f", fps);
 
             if (strstr(out_str, ".")) {
@@ -4374,7 +4234,6 @@ String String::fileDirPath() const noexcept {
      *  @brief Get a random character for building up random names.
      */
     char String::randomNameChar() noexcept {
-
         const int32_t n = 10 + 26 + 26;
         static const char char_array[n] = {
             '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
@@ -4392,8 +4251,7 @@ String String::fileDirPath() const noexcept {
      *  @brief Build a random name.
      */
     ErrorCode String::randomName(int64_t length, char* out_str) noexcept {
-
-        if (out_str == nullptr) {
+        if (!out_str) {
             return ErrorCode::NullData;
         }
 
@@ -4423,8 +4281,7 @@ String String::fileDirPath() const noexcept {
      *          terminating '\0' character.
      */
     int64_t String::randomNameLength(const char* mask, const char* path) noexcept {
-
-        if (mask == nullptr) {
+        if (!mask) {
             return 0;
         }
 
@@ -4433,7 +4290,7 @@ String String::fileDirPath() const noexcept {
             return 0;
         }
 
-        if (path != nullptr) {
+        if (path) {
             n += strlen(path);
             n += 1;  // One slash
         }
@@ -4456,8 +4313,7 @@ String String::fileDirPath() const noexcept {
      *          code.
      */
     ErrorCode String::randomName(const char* mask, const char* path, int64_t max_out_size, char* out_str) noexcept {
-
-        if (mask == nullptr || out_str == nullptr) {
+        if (!mask || !out_str) {
             return ErrorCode::NullData;
         }
 
@@ -4476,7 +4332,7 @@ String String::fileDirPath() const noexcept {
         }
 
         char* d = out_str;
-        if (path != nullptr) {
+        if (path) {
             strcpy(d, path);
             d += strlen(path);
             *d++ = '/';
@@ -4493,10 +4349,9 @@ String String::fileDirPath() const noexcept {
 
 
     int32_t String::replaceChar(char* str, char search_c, char replacement_c) noexcept {
-
         int32_t n = 0;
 
-        if (str != nullptr) {
+        if (str) {
             while (*str != String::EOS) {
                 if (*str == search_c) {
                     *str = replacement_c;
@@ -4511,7 +4366,6 @@ String String::fileDirPath() const noexcept {
 
 
     const char* String::charSetName(CharSet char_set) noexcept {
-
         static const char* _names[] = {
             "UTF8",
             "ASCII 7 Bit",
@@ -4530,11 +4384,11 @@ String String::fileDirPath() const noexcept {
 
 
     const char** String::extendedAsciiTable(CharSet char_set) noexcept {
-
         switch (char_set) {
-            case CharSet::ASCII_8859_1_Latin1: return g_ascii_8859_1;
-            case CharSet::ASCII_Windows1252: return g_ascii_windows1252;
-
+            case CharSet::ASCII_8859_1_Latin1:
+                return g_ascii_8859_1;
+            case CharSet::ASCII_Windows1252:
+                return g_ascii_windows1252;
             default:
                 return nullptr;
         }
@@ -4543,7 +4397,6 @@ String String::fileDirPath() const noexcept {
 
 
     int32_t String::extendedAsciiToUTF8(uint8_t ascii_code, CharSet char_set, char* out_utf8_code) noexcept {
-
         if (ascii_code < 128) {
             out_utf8_code[0] = ascii_code;
             out_utf8_code[1] = String::EOS;
@@ -4551,7 +4404,7 @@ String String::fileDirPath() const noexcept {
         }
 
         const char** table = extendedAsciiTable(char_set);
-        if (out_utf8_code == nullptr || table == nullptr || char_set < CharSet::First || char_set > CharSet::Last) {
+        if (!out_utf8_code || !table || char_set < CharSet::First || char_set > CharSet::Last) {
             return 0;
         }
 
@@ -4568,13 +4421,11 @@ String String::fileDirPath() const noexcept {
 
 
     void StringRing::write(const String& string) noexcept {
-
         write(string.utf8());
     }
 
 
     void StringRing::write(const char* str) noexcept {
-
         m_pos++;
         m_index++;
 
@@ -4582,18 +4433,17 @@ String String::fileDirPath() const noexcept {
             m_pos = 0;
         }
 
-        if (m_strings[m_pos] == nullptr) {
+        if (!m_strings[m_pos]) {
             m_strings[m_pos] = new (std::nothrow) String(str);
         }
 
-        else if (m_strings[m_pos] != nullptr) {
+        else if (m_strings[m_pos]) {
             *m_strings[m_pos] = str;
         }
     }
 
 
     void StringRing::writeFormatted(const char* format, ...) noexcept {
-
         constexpr std::size_t max_buffer_size = 2056;
 
         char buffer[max_buffer_size];
@@ -4609,7 +4459,6 @@ String String::fileDirPath() const noexcept {
 
 
     void StringRing::writeError(const char* format, ...) noexcept {
-
         constexpr std::size_t max_buffer_size = 2056;
         char buffer[max_buffer_size];
 
@@ -4632,7 +4481,6 @@ String String::fileDirPath() const noexcept {
 
 
     const char* StringRing::read(int32_t index) const noexcept {
-
         static const char* _default = "!?";
 
         if (index >= static_cast<int32_t>(m_size) || index < 0) {
@@ -4645,7 +4493,7 @@ String String::fileDirPath() const noexcept {
             read_index += static_cast<int32_t>(m_size);
         }
 
-        if (m_strings[read_index] != nullptr) {
+        if (m_strings[read_index]) {
             return m_strings[read_index]->utf8();
         }
         else {
@@ -4654,4 +4502,4 @@ String String::fileDirPath() const noexcept {
     }
 
 
-}  // End of namespace Grain
+} // End of namespace Grain

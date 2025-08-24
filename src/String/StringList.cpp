@@ -8,13 +8,35 @@
 //
 
 #include "String/StringList.hpp"
+#include "Core/Log.hpp"
 
 
 namespace Grain {
 
+    void StringList::log(Log& l) {
+        l << className() << l.endl;
+        l++;
+        l << "m_size: " << m_size << l.endl;
+        l << "m_capacity: " << m_capacity << l.endl;
+        l++;
+        int64_t index = 0;
+        for (auto string : *this) {
+            if (index > 10) {
+                l << "..." << l.endl;
+                break;
+            }
+            l << index << ": " << string << l.endl;
+            index++;
+        }
+        if (index < m_size) {
+            l << (m_size - 1) << ": " << last() << l.endl;
+        }
+        l--;
+        l--;
+    }
+
 
     bool StringList::contains(const String& string) const noexcept {
-
         for (auto s : *this) {
             if (s) {
                 if (s->compare(string) == 0) {
@@ -22,15 +44,12 @@ namespace Grain {
                 }
             }
         }
-
         return false;
     }
 
 
     int32_t StringList::countOccurrences(const String& string) const noexcept {
-
         int32_t result = 0;
-
         for (auto s : *this) {
             if (s) {
                 if (s->compare(string) == 0) {
@@ -38,13 +57,11 @@ namespace Grain {
                 }
             }
         }
-
         return result;
     }
 
 
     bool StringList::pushStr(const char* str) noexcept {
-
         if (str) {
             auto s = new (std::nothrow) String(str);
             if (s) {
@@ -52,8 +69,8 @@ namespace Grain {
                 return result;
             }
         }
-
-        return false;    }
+        return false;
+    }
 
 
     /**
@@ -66,7 +83,6 @@ namespace Grain {
      *  @return true if the operation succeeds, false otherwise.
      */
     bool StringList::pushString(const String& string) noexcept {
-
         return pushString(&string);
     }
 
@@ -81,7 +97,6 @@ namespace Grain {
      *  @return true if the operation succeeds, false otherwise.
      */
     bool StringList::pushString(const String* string) noexcept {
-
         if (string) {
             auto s = new (std::nothrow) String(*string);
             if (s) {
@@ -89,7 +104,6 @@ namespace Grain {
                 return result;
             }
         }
-
         return false;
     }
 
@@ -105,18 +119,14 @@ namespace Grain {
      *          is already present in the list, false otherwise.
      */
     bool StringList::pushUnique(const String& string) noexcept {
-
         if (countOccurrences(string) < 1) {
             return pushString(string);
         }
-        else {
-            return false;
-        }
+        return false;
     }
 
 
     bool StringList::removeStr(const char* str) noexcept {
-
         for (int64_t i = 0; i < m_size; ++i) {
             auto s = m_data[i];
             if (s && s->compare(str) == 0) {
@@ -129,13 +139,11 @@ namespace Grain {
 
 
     bool StringList::removeString(const String& string) noexcept {
-
         return removeStr(string.utf8());
     }
 
 
     int32_t StringList::_sortAsc(const void* a, const void* b) {
-
         auto string_a = (const String**)(a);
         auto string_b = (const String**)(b);
         return (**string_a).compareIgnoreCase(**string_b);
@@ -143,7 +151,6 @@ namespace Grain {
 
 
     int32_t StringList::_sortDesc(const void* a, const void* b) {
-
         auto string_a = (const String**)(a);
         auto string_b = (const String**)(b);
         return (**string_b).compareIgnoreCase(**string_a);

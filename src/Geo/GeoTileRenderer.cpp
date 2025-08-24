@@ -1204,11 +1204,21 @@ namespace Grain {
             std::cout << "  m_render_top_left: " << m_render_top_left << std::endl;
             std::cout << "  m_render_bottom_right: " << m_render_bottom_right << std::endl;
 
+            m_render_left_string += m_render_top_left.m_x;
+            m_render_right_string += m_render_bottom_right.m_x;
+            m_render_top_string += m_render_top_left.m_y;
+            m_render_bottom_string += m_render_bottom_right.m_y;
 
-            m_render_left_string.setFormatted(100, "%.8f", m_render_top_left.m_x);
-            m_render_right_string.setFormatted(100, "%.8f", m_render_bottom_right.m_x);
-            m_render_top_string.setFormatted(100, "%.8f", m_render_top_left.m_y);
-            m_render_bottom_string.setFormatted(100, "%.8f", m_render_bottom_right.m_y);
+            // m_render_left_string.setFormatted(100, "%.8f", m_render_top_left.m_x);
+            // m_render_right_string.setFormatted(100, "%.8f", m_render_bottom_right.m_x);
+            // m_render_top_string.setFormatted(100, "%.8f", m_render_top_left.m_y);
+            // m_render_bottom_string.setFormatted(100, "%.8f", m_render_bottom_right.m_y);
+
+            std::cout << "  m_render_left_string: " << m_render_left_string << std::endl;
+            std::cout << "  m_render_right_string: " << m_render_right_string << std::endl;
+            std::cout << "  m_render_top_string: " << m_render_top_string << std::endl;
+            std::cout << "  m_render_bottom_string: " << m_render_bottom_string << std::endl;
+
 
             src_rect.m_x = m_render_top_left.m_x;
             src_rect.m_y = m_render_top_left.m_y;
@@ -1514,6 +1524,7 @@ namespace Grain {
             std::snprintf(dst_srid_str, 20, "%d", m_dst_srid);
             sql.replace("{{destination-srid}}", dst_srid_str);
 
+            std::cout << sql << std::endl;
 
             // TODO: Replace other variables?
         }

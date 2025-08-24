@@ -108,10 +108,10 @@ namespace Grain {
         String() noexcept;
         explicit String(int64_t capacity) noexcept;
         String(const char* str) noexcept;
-        String(const char* str, int64_t max_byte_length) noexcept;
+        explicit String(const char* str, int64_t max_byte_length) noexcept;
         String(const String& string) noexcept;
         explicit String(const String* string) noexcept;
-        String(const String& string, int64_t character_index, int64_t character_length) noexcept;
+        explicit String(const String& string, int64_t character_index, int64_t character_length) noexcept;
 
         #if defined(__APPLE__) && defined(__MACH__)
             explicit String(CFStringRef cf_string) { set(cf_string); }
@@ -119,7 +119,7 @@ namespace Grain {
 
         ~String() noexcept override;
 
-        [[nodiscard]] const char* className() const noexcept override;
+        [[nodiscard]] const char* className() const noexcept override { return "String"; }
 
         friend std::ostream& operator << (std::ostream& os, const String* o);
         friend std::ostream& operator << (std::ostream& os, const String& o);
@@ -130,14 +130,25 @@ namespace Grain {
 
 
         // Operators
+        String& operator = (char c);
+        String& operator = (const char* str);
         String& operator = (const String& other);
         String& operator = (const String* other);
-        String& operator = (const char* str);
-        String& operator = (char c);
+        String& operator = (int8_t value);
+        String& operator = (int16_t value);
+        String& operator = (int32_t value);
+        String& operator = (int64_t value);
+        String& operator = (uint8_t value);
+        String& operator = (uint16_t value);
+        String& operator = (uint32_t value);
+        String& operator = (uint64_t value);
+        String& operator = (double value);
+        String& operator = (Fix value);
 
         #if defined(__APPLE__) && defined(__MACH__)
             String& operator = (CFStringRef cf_string);
         #endif
+
 
         String& operator += (char c);
         String& operator += (const char* str);
