@@ -49,12 +49,12 @@ namespace Grain {
 
 
     void CVF2::openFileToWrite(const String& file_path) {
-        if (m_file != nullptr) {
+        if (m_file) {
             throw Error::specific(kErrFileAllreadyOpened);
         }
 
         m_file = new (std::nothrow) File(file_path);
-        if (m_file == nullptr) {
+        if (!m_file) {
             throw ErrorCode::FileCantCreate;
         }
 
@@ -110,10 +110,10 @@ namespace Grain {
 
     void CVF2::pushValueToData(int32_t x, int32_t y, int64_t value) {
 
-        if (m_data == nullptr) {
+        if (!m_data) {
             auto n = (size_t)m_width * m_height;
             m_data = static_cast<int64_t*>(malloc(sizeof(int64_t) * n));
-            if (m_data == nullptr) {
+            if (!m_data) {
                 throw ErrorCode::MemCantAllocate;
             }
             Type::fillStridedArray<int64_t>(m_data, 0, 1, n, n, kUndefinedValue);
@@ -167,7 +167,7 @@ namespace Grain {
 
     void CVF2::_startRow() {
 
-        if (m_row_values == nullptr || m_row_offsets == nullptr) {
+        if (!m_row_values || !m_row_offsets) {
             throw Error::specific(kErrFatal);
         }
 

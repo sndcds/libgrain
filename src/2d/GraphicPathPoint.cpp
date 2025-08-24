@@ -148,7 +148,7 @@ namespace Grain {
 
     void GraphicPathPoint::projectToQuadrilateral(const Quadrilateral& quadrilateral, const Mat3d* matrix) noexcept {
 
-        if (matrix != nullptr) {
+        if (matrix) {
             matrix->transformVec2(m_anchor);
             matrix->transformVec2(m_left);
             matrix->transformVec2(m_right);

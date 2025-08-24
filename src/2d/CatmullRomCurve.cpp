@@ -127,7 +127,7 @@ namespace Grain {
     Vec2d CatmullRomCurve::pointAtIndex(int32_t index) noexcept {
 
         auto point = m_points.elementPtrAtIndex(index);
-        if (point != nullptr) {
+        if (point) {
             return Vec2d(point->m_x, point->m_y);
         }
         else {
@@ -210,7 +210,7 @@ namespace Grain {
 
         auto p = m_points.elementPtrAtIndex(segment_index);
 
-        if (p != nullptr) {
+        if (p) {
             Vec2d p0{ p[0].m_x, p[0].m_y };
             Vec2d p1{ p[1].m_x, p[1].m_y };
             Vec2d p2{ p[2].m_x, p[2].m_y };

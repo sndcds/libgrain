@@ -49,8 +49,9 @@ add_library(libgrain STATIC
         src/2d/RectEdges.cpp
         src/2d/Dimension.cpp
         src/2d/Polygon.cpp
-        src/2d/GraphicPath.cpp
         src/2d/GraphicPathPoint.cpp
+        src/2d/GraphicPath.cpp
+        src/2d/GraphicCompoundPath.cpp
         src/2d/CatmullRomCurve.cpp
         src/2d/Superellipse.cpp
 
@@ -91,6 +92,7 @@ add_library(libgrain STATIC
         src/CSS/CSS.cpp
 
         src/Database/PostgreSQL.cpp
+        src/Database/DBaseFile.cpp
 
         src/DSP/RingBuffer.cpp
         src/DSP/WeightedSamples.cpp
@@ -108,6 +110,9 @@ add_library(libgrain STATIC
         src/Geo/Geo.cpp
         src/Geo/GeoMetaTile.cpp
         src/Geo/GeoProj.cpp
+        src/Geo/GeoShape.cpp
+        src/Geo/GeoShapeFile.cpp
+        src/Geo/WKBParser.cpp
 
         src/GUI/Screen.cpp
         src/GUI/Window.cpp

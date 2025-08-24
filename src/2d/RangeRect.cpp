@@ -11,7 +11,7 @@
 namespace Grain {
 
     // General template implementation
-    template <typename T>
+    template <ScalarType T>
         void RangeRect<T>::initForMinMaxSearch() noexcept {
         m_min_x = std::numeric_limits<T>::max();
         m_min_y = std::numeric_limits<T>::max();
@@ -51,5 +51,32 @@ namespace Grain {
         m_max_y = std::numeric_limits<double>::lowest();
     }
 
+
+    template <ScalarType T>
+    void RangeRect<T>::writeToFile(File& file) {
+        file.writeValue<T>(m_min_x);
+        file.writeValue<T>(m_min_y);
+        file.writeValue<T>(m_max_x);
+        file.writeValue<T>(m_max_y);
+    }
+
+    template void RangeRect<int32_t>::writeToFile(File&);
+    template void RangeRect<int64_t>::writeToFile(File&);
+    template void RangeRect<float>::writeToFile(File&);
+    template void RangeRect<double>::writeToFile(File&);
+
+
+    template <ScalarType T>
+    void RangeRect<T>::readFromFile(File& file) {
+        m_min_x = file.readValue<T>();
+        m_min_y = file.readValue<T>();
+        m_max_x = file.readValue<T>();
+        m_max_y = file.readValue<T>();
+    }
+
+    template void RangeRect<int32_t>::readFromFile(File&);
+    template void RangeRect<int64_t>::readFromFile(File&);
+    template void RangeRect<float>::readFromFile(File&);
+    template void RangeRect<double>::readFromFile(File&);
 
 }  // End of namespace Grain

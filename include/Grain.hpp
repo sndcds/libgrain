@@ -109,6 +109,9 @@ namespace Grain {
         InvalidNumber,
         Base64NoBase64Code,
 
+        UnknownParameter,
+        UnknownValue,
+
         StdFileSysError = 100,
         StdCppException,
 

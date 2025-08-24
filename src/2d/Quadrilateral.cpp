@@ -46,9 +46,7 @@ namespace Grain {
 
 
     bool Quadrilateral::bezierCirclePoints(Vec2d *out_points) noexcept {
-
-        if (out_points != nullptr) {
-
+        if (out_points) {
             double a = 0.0;
             double b = 0.5 - 0.551915024494 / 2;
             double c = 0.5;

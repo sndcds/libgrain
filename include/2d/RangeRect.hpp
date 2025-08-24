@@ -12,9 +12,10 @@
 #ifndef GrainRangeRect_hpp
 #define GrainRangeRect_hpp
 
-#include "Math/Vec2.hpp"
-#include "2d/Rect.hpp"
+#include "Grain.hpp"
 #include "Type/Fix.hpp"
+#include "2d/Rect.hpp"
+#include "Math/Vec2.hpp"
 #include "Math/Vec2Fix.hpp"
 #include "Math/Math.hpp"
 
@@ -250,7 +251,7 @@ namespace Grain {
     };
 
 
-    template <class T>
+    template <ScalarType T>
     class RangeRect {
     public:
         RangeRect() noexcept = default;
@@ -738,6 +739,9 @@ namespace Grain {
             result.m_max_y = a.m_max_y + t * (b.m_max_y - a.m_max_y);
             return result;
         }
+
+        void writeToFile(File& file);
+        void readFromFile(File& file);
 
     public:
         T m_min_x = 0;

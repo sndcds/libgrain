@@ -9,7 +9,6 @@
 
 #include "Math/Vec2.hpp"
 #include "String/String.hpp"
-#include "String/CSVString.hpp"
 
 
 namespace Grain {

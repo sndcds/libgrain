@@ -74,8 +74,8 @@ namespace Grain {
             }
         }
 
-        if (total_area != 0.0) {
-            out_centroid = compound_c / total_area;
+        if (total_area > std::numeric_limits<double>::epsilon()) {
+            out_centroid = compound_c * (1.0 / total_area);
         }
 
         return total_area;
@@ -103,13 +103,13 @@ namespace Grain {
     }
 
 
+/* TODO: Implement!
     void _CGPathEnumerationCallback(void *info, const CGPathElement *element) {
         if (info) {
             ((GraphicCompoundPath*)info)->_addCGPathElement(element);
         }
     }
 
-/* TODO: Implement!
     Rectd GraphicCompoundPath::buildFromText(const Font &font, const char *text) noexcept {
 
         Rectd bounds_rect;
@@ -117,12 +117,12 @@ namespace Grain {
         NSString *ns_string = nullptr;
 
         try {
-            if (text == nullptr) {
+            if (!text) {
                 throw ErrorCode::NullData;
             }
 
             ns_string = [NSString stringWithUTF8String:text]; // Autoreleased!
-            if (ns_string == nullptr) {
+            if (!ns_string) {
                 throw ErrorCode::MemCantAllocate;
             }
 
@@ -156,7 +156,7 @@ namespace Grain {
             for (int32_t i = 0; i < char_count; i++) {
 
                 CGPathRef path = CTFontCreatePathForGlyph(ct_font, glyphs[i], NULL);
-                if (path != nullptr) {
+                if (path) {
                     CGPathApply(path, this, _CGPathEnumerationCallback);
                     CGPathRelease(path);
                 }
@@ -244,7 +244,7 @@ namespace Grain {
                         Error::throwError(err);
 
                         auto *graphic_path = lastPathPtr();
-                        if (graphic_path == nullptr) {
+                        if (!graphic_path) {
                             throw ErrorCode::NullData;
                         }
 
@@ -284,7 +284,7 @@ namespace Grain {
                     Error::throwError(err);
 
                     auto *graphic_path = lastPathPtr();
-                    if (graphic_path == nullptr) {
+                    if (!graphic_path) {
                         throw ErrorCode::NullData;
                     }
 
@@ -323,7 +323,7 @@ namespace Grain {
         }
 
         auto p = lastPathPtr();
-        if (p == nullptr) {
+        if (!p) {
             return;
         }
 

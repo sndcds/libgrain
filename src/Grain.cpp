@@ -32,7 +32,9 @@ namespace Grain {
 
 
     void Exception::throwStandard(ErrorCode code) {
-        throw Exception(code, "Standard Grain Exception");
+        if (code != ErrorCode::None) {
+            throw Exception(code, "Standard Grain Exception");
+        }
     }
 
 
@@ -42,20 +44,24 @@ namespace Grain {
 
 
     void Exception::throwMessage(ErrorCode code, const char* message) {
-        throw Exception(code, message);
+        if (code != ErrorCode::None) {
+            throw Exception(code, message);
+        }
     }
 
 
     void Exception::throwFormattedMessage(ErrorCode code, const char* format, ...) {
-        va_list args;
-        va_start(args, format);
+        if (code != ErrorCode::None) {
+            va_list args;
+            va_start(args, format);
 
-        std::string buffer(2048, '\0');
-        std::vsnprintf(buffer.data(), buffer.size(), format, args);
+            std::string buffer(2048, '\0');
+            std::vsnprintf(buffer.data(), buffer.size(), format, args);
 
-        va_end(args);
+            va_end(args);
 
-        throw Exception(code, buffer.c_str());
+            throw Exception(code, buffer.c_str());
+        }
     }
 
 

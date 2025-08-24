@@ -59,7 +59,7 @@ namespace Grain {
         auto result = ErrorCode::None;
 
         try {
-            if (m_values == nullptr) {
+            if (!m_values) {
                 _initMemThrow();
             }
 
@@ -73,7 +73,7 @@ namespace Grain {
 
                 // Check all used grids
                 if (bit & mask) {
-                    if (src_grids[i] == nullptr) {
+                    if (!src_grids[i]) {
                         throw ErrorCode::NullData;
                     }
 
@@ -187,7 +187,7 @@ namespace Grain {
                 throw ErrorCode::UnsupportedDimension;
             }
 
-            if (m_values == nullptr) {
+            if (!m_values) {
                 _initMemThrow();
             }
 
@@ -251,7 +251,7 @@ namespace Grain {
         try {
 
             file = new (std::nothrow) File(file_path);
-            if (file == nullptr) {
+            if (!file) {
                 throw ErrorCode::ClassInstantiationFailed;
             }
 
@@ -333,7 +333,7 @@ namespace Grain {
         try {
 
             file = new (std::nothrow) File(file_path);
-            if (file == nullptr) {
+            if (!file) {
                 throw ErrorCode::ClassInstantiationFailed;
             }
 
@@ -508,7 +508,7 @@ namespace Grain {
         try {
 
             cvf2 = new (std::nothrow) CVF2(m_width, m_height, length_unit, min_digits, max_digits);
-            if (cvf2 == nullptr) {
+            if (!cvf2) {
                 throw ErrorCode::ClassInstantiationFailed;
             }
 
@@ -550,11 +550,11 @@ namespace Grain {
 
         Image* image = nullptr;
 
-        if (m_values != nullptr && m_width > 0 && m_height > 0) {
+        if (m_values && m_width > 0 && m_height > 0) {
 
             image = Image::createLuminaFloat(m_width, m_height);
 
-            if (image != nullptr) {
+            if (image) {
                 image->setSampleValueRange(m_min_value, m_max_value);
 
                 float pixel[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -600,13 +600,13 @@ namespace Grain {
 
         Image* image = nullptr;
 
-        if (m_values != nullptr && m_width > 0 && m_height > 0) {
+        if (m_values && m_width > 0 && m_height > 0) {
 
             image = Image::createLuminaAlphaFloat(m_width, m_height);
 
             // int32_t undefined_value_count = 0; // Unused
 
-            if (image != nullptr) {
+            if (image) {
                 image->setSampleValueRange(m_min_value, m_max_value);
 
                 float pixel[4] = { 0.0f, 0.0f, 0.0f, 0.0f };

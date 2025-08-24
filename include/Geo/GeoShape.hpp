@@ -20,8 +20,8 @@
 #include "File/File.hpp"
 #include "2d/Rect.hpp"
 #include "2d/RangeRect.hpp"
+#include "2d/GraphicCompoundPath.hpp"
 #include "Graphic/GraphicContext.hpp"
-#include "Graphic/CompoundPath.hpp"
 #include "Color/RGBA.hpp"
 
 
@@ -29,6 +29,7 @@ namespace Grain {
 
     class GeoProj;
     class GeoShapePoly;
+    class Log;
 
 
     /**
@@ -98,14 +99,14 @@ namespace Grain {
         GeoShape() noexcept;
         ~GeoShape() noexcept;
 
-        const char *className() const noexcept override { return "GeoShape"; }
+        [[nodiscard]] const char* className() const noexcept override { return "GeoShape"; }
 
-        friend std::ostream& operator << (std::ostream &os, const GeoShape *o) {
+        friend std::ostream& operator << (std::ostream& os, const GeoShape* o) {
             o == nullptr ? os << "GeoShape nullptr" : os << *o;
             return os;
         }
 
-        friend std::ostream& operator << (std::ostream &os, const GeoShape &o) {
+        friend std::ostream& operator << (std::ostream& os, const GeoShape& o) {
             os << "m_dst_crs: " << o.m_dst_crs;
             os << ", m_shape_type: " << o.shapeTypeName();
             os << ", m_point_count: " << o.m_point_count;
@@ -114,24 +115,23 @@ namespace Grain {
             return os;
         }
 
-        void log(Log &l) const { l.stream() << this; }
+        void log(Log& l) const;
 
+        [[nodiscard]] String desCrs() const noexcept { return m_dst_crs; }
 
-        String desCrs() const noexcept { return m_dst_crs; }
+        [[nodiscard]] bool isPointType() const noexcept { return m_shape_type == ShapeType::Point; }
+        [[nodiscard]] bool isPolyLine() const noexcept { return m_shape_type == ShapeType::PolyLine; }
+        [[nodiscard]] bool isPolygonType() const noexcept { return m_shape_type == ShapeType::Polygon; }
 
-        bool isPointType() const noexcept { return m_shape_type == ShapeType::Point; }
-        bool isPolyLine() const noexcept { return m_shape_type == ShapeType::PolyLine; }
-        bool isPolygonType() const noexcept { return m_shape_type == ShapeType::Polygon; }
+        [[nodiscard]] int32_t pointCount() const noexcept { return m_point_count; }
+        [[nodiscard]] int32_t partCount() const noexcept { return m_part_count; }
+        [[nodiscard]] int32_t polyCount() const noexcept { return m_poly_count; }
 
-        int32_t pointCount() const noexcept { return m_point_count; }
-        int32_t partCount() const noexcept { return m_part_count; }
-        int32_t polyCount() const noexcept { return m_poly_count; }
-
-        void setDstCrs(const String &dst_crs) noexcept {
+        void setDstCrs(const String& dst_crs) noexcept {
             m_dst_crs = dst_crs;
         }
 
-        void setSRID(const String &srid) noexcept {
+        void setSRID(const String& srid) noexcept {
             // TODO: Support other systems than EPSG
             m_dst_crs = "EPSG:";
             m_dst_crs += srid;
@@ -144,13 +144,13 @@ namespace Grain {
 
         ShapeType shapeType() const noexcept { return m_shape_type; }
 
-        Vec2d *pointPtrAtIndex(int32_t index) noexcept {
+        Vec2d* pointPtrAtIndex(int32_t index) noexcept {
             return index >= 0 && index < m_points.size() ? &m_points[index] : nullptr;
         }
 
-        GeoShapePoly *polyPtrAtIndex(int32_t index) noexcept;
+        GeoShapePoly* polyPtrAtIndex(int32_t index) noexcept;
 
-        ErrorCode initWithShapeAndProjection(const String &file_path, int32_t dst_srid) noexcept;
+        ErrorCode initWithShapeAndProjection(const String& file_path, int32_t dst_srid) noexcept;
 
 
         bool shouldDrawAsLines() const noexcept {
@@ -187,8 +187,8 @@ namespace Grain {
         }
 
         DrawMode drawMode() const noexcept { return m_draw_mode; }
-        RGBA fillColor(const RGBA &color) const noexcept { return m_fill_color; }
-        RGBA strokeColor(const RGBA &color) const noexcept { return m_stroke_color; }
+        RGBA fillColor(const RGBA& color) const noexcept { return m_fill_color; }
+        RGBA strokeColor(const RGBA& color) const noexcept { return m_stroke_color; }
         double strokeWidth() const noexcept { return m_stroke_width; }
         double pointRadius() const noexcept { return m_point_radius; }
         StrokeJoinStyle strokeJoinStyle() const noexcept { return m_stroke_join_style; }
@@ -199,18 +199,18 @@ namespace Grain {
         void setDrawModeStroke() { m_draw_mode = DrawMode::Stroke; }
         void setDrawModeFillStroke() { m_draw_mode = DrawMode::FillStroke; }
         void setDrawModeStrokeFill() { m_draw_mode = DrawMode::StrokeFill; }
-        void setFillColor(const RGB &color) noexcept { m_fill_color = RGBA(color, 1.0f); }
-        void setStrokeColor(const RGB &color) noexcept { m_stroke_color = RGBA(color, 1.0f); }
-        void setFillColor(const RGBA &color) noexcept { m_fill_color = color; }
-        void setStrokeColor(const RGBA &color) noexcept { m_stroke_color = color; }
+        void setFillColor(const RGB& color) noexcept { m_fill_color = RGBA(color, 1.0f); }
+        void setStrokeColor(const RGB& color) noexcept { m_stroke_color = RGBA(color, 1.0f); }
+        void setFillColor(const RGBA& color) noexcept { m_fill_color = color; }
+        void setStrokeColor(const RGBA& color) noexcept { m_stroke_color = color; }
         void setStrokeWidth(double width) noexcept { m_stroke_width = width; }
         void setPointRadius(double radius) noexcept { m_point_radius = radius; }
         void setStrokeJoinStyle(StrokeJoinStyle join_style) noexcept { m_stroke_join_style = join_style; }
         void setStrokeCapStyle(StrokeCapStyle cap_style) noexcept { m_stroke_cap_style = cap_style; }
 
-        const char *shapeTypeName() const { return shapeTypeName(m_shape_type); }
+        const char* shapeTypeName() const { return shapeTypeName(m_shape_type); }
 
-        static const char *shapeTypeName(ShapeType shape_type) noexcept {
+        static const char* shapeTypeName(ShapeType shape_type) noexcept {
             switch (shape_type) {
                 case ShapeType::Null: return "Null Shape";
                 case ShapeType::Point: return "Point";
@@ -244,39 +244,39 @@ namespace Grain {
 
         bool closedPathDrawing() const noexcept { return _m_closed_path_drawing; }
 
-        static void _projectFunc(GeoProj &proj, GeoShape *shape, Vec2d *p) noexcept;
+        static void _projectFunc(GeoProj& proj, GeoShape* shape, Vec2d* p) noexcept;
 
-        bool project(GeoProj &proj) noexcept;
-        bool project(GeoProj *proj) noexcept { return proj != nullptr ? project(*proj) : false; }
+        bool project(GeoProj& proj) noexcept;
+        bool project(GeoProj* proj) noexcept { return proj != nullptr ? project(*proj) : false; }
 
         RangeRectd range() const noexcept { return _m_range; }
         void clearRange() noexcept { _m_range.set(100000000.0, 100000000.0, -100000000.0, -100000000.0); }
-        bool addPointToRange(Vec2d *point) noexcept { return point ? _m_range.add(point) : false; }
-        bool addPointToRange(Vec2d &point) noexcept { return addPointToRange(&point); }
+        bool addPointToRange(Vec2d* point) noexcept { return point ? _m_range.add(point) : false; }
+        bool addPointToRange(Vec2d& point) noexcept { return addPointToRange(&point); }
 
         RangeRectd polyBbox(int32_t index) noexcept;
 
-        void buildPolyCompoundPath(GraphicContext &gc, int32_t index, const RemapRectd &remap_rect, GraphicCompoundPath &out_path) noexcept;
-        void buildPolyGCPath(GraphicContext &gc, int32_t index, const RemapRectd &remap_rect) noexcept;
+        void buildPolyCompoundPath(GraphicContext& gc, int32_t index, const RemapRectd& remap_rect, GraphicCompoundPath& out_path) noexcept;
+        void buildPolyGCPath(GraphicContext& gc, int32_t index, const RemapRectd& remap_rect) noexcept;
 
-        bool pointAtIndex(int32_t index, Vec2d &out_point) noexcept;
-        void pointAtIndex(int32_t index, const RemapRectd &remap_rect, Vec2d &out_point) noexcept;
+        bool pointAtIndex(int32_t index, Vec2d& out_point) noexcept;
+        void pointAtIndex(int32_t index, const RemapRectd& remap_rect, Vec2d& out_point) noexcept;
 
         DrawMode usedDrawMode(DrawMode draw_mode) const noexcept;
-        void applyDrawStyle(GraphicContext &gc);
+        void applyDrawStyle(GraphicContext& gc);
 
-        void drawAll(GraphicContext &gc, const RemapRectd &remap_rect, DrawMode draw_mode = DrawMode::Undefined) noexcept;
+        void drawAll(GraphicContext& gc, const RemapRectd& remap_rect, DrawMode draw_mode = DrawMode::Undefined) noexcept;
 
-        void drawPoly(GraphicContext &gc, int32_t index, const RemapRectd &remap_rect, DrawMode draw_mode = DrawMode::Undefined) noexcept;
-        void drawPolys(GraphicContext &gc, int32_t start_index, int32_t end_index, const RemapRectd &remap_rect, DrawMode draw_mode = DrawMode::Undefined) noexcept;
-        void drawPolys(GraphicContext &gc, const RemapRectd &remap_rect, DrawMode draw_mode = DrawMode::Undefined) noexcept;
+        void drawPoly(GraphicContext& gc, int32_t index, const RemapRectd& remap_rect, DrawMode draw_mode = DrawMode::Undefined) noexcept;
+        void drawPolys(GraphicContext& gc, int32_t start_index, int32_t end_index, const RemapRectd& remap_rect, DrawMode draw_mode = DrawMode::Undefined) noexcept;
+        void drawPolys(GraphicContext& gc, const RemapRectd& remap_rect, DrawMode draw_mode = DrawMode::Undefined) noexcept;
 
 
-        ErrorCode readFromShapeFile(const String &file_path, int32_t limit = -1) noexcept;
+        ErrorCode readFromShapeFile(const String& file_path, int32_t limit = -1) noexcept;
 
         // Implementation of methods for parameter handling
 
-        ErrorCode setParam(const String &name, const String &value) noexcept override;
+        ErrorCode setParam(const String& name, const String& value) noexcept override;
     };
 
 
@@ -284,7 +284,7 @@ namespace Grain {
     class GeoShapePoly {
 
     public:
-        GeoShape *m_shape = nullptr;
+        GeoShape* m_shape = nullptr;
         int32_t m_record_number;
         int32_t m_content_length;
         GeoShape::ShapeType m_shape_type;
@@ -298,10 +298,10 @@ namespace Grain {
         GeoShapePoly() {}
 
         // Copy constructor
-        GeoShapePoly(const GeoShapePoly &poly) { _copyFrom(poly); }
+        GeoShapePoly(const GeoShapePoly& poly) { _copyFrom(poly); }
 
         // Copy assignment operator
-        GeoShapePoly &operator = (const GeoShapePoly &poly) {
+        GeoShapePoly& operator = (const GeoShapePoly& poly) {
             if (this != &poly) {
                 _copyFrom(poly);
             }
@@ -309,10 +309,10 @@ namespace Grain {
         }
 
         // Move constructor
-        GeoShapePoly(GeoShapePoly &&poly) noexcept { _moveFrom(std::move(poly)); }
+        GeoShapePoly(GeoShapePoly& poly) noexcept { _moveFrom(std::move(poly)); }
 
         // Move assignment operator
-        GeoShapePoly &operator = (GeoShapePoly &&poly) noexcept {
+        GeoShapePoly& operator = (GeoShapePoly&& poly) noexcept {
             if (this != &poly) {
                 _moveFrom(std::move(poly));
             }
@@ -320,7 +320,7 @@ namespace Grain {
         }
 
         // Helper function for copy semantics
-        void _copyFrom(const GeoShapePoly &poly) {
+        void _copyFrom(const GeoShapePoly& poly) {
             m_shape = poly.m_shape;
             m_record_number = poly.m_record_number;
             m_content_length = poly.m_content_length;
@@ -333,7 +333,7 @@ namespace Grain {
         }
 
         // Helper function for move semantics
-        void _moveFrom(GeoShapePoly &&poly) {
+        void _moveFrom(GeoShapePoly&& poly) {
             m_shape = poly.m_shape;
             m_record_number = poly.m_record_number;
             m_content_length = poly.m_content_length;
@@ -359,7 +359,7 @@ namespace Grain {
             return isPartIndex(index) ? m_shape->m_parts[m_part_offset + index] : 0;
         }
 
-        bool pointAtIndex(int32_t index, Vec2d &outPoint) noexcept {
+        bool pointAtIndex(int32_t index, Vec2d& outPoint) noexcept {
             if (isPointIndex(index)) {
                 outPoint = m_shape->m_points[m_point_offset + index];
                 return true;
@@ -369,7 +369,7 @@ namespace Grain {
             }
         }
 
-        Vec2d *pointPtrAtIndex(int32_t index) noexcept {
+        Vec2d* pointPtrAtIndex(int32_t index) noexcept {
             if (isPointIndex(index)) {
                 return &m_shape->m_points[m_point_offset + index];
             }

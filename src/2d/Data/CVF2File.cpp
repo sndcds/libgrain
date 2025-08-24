@@ -31,7 +31,7 @@ namespace Grain {
 
 
     void CVF2File::freeCache() noexcept {
-        if (m_cache_data != nullptr) {
+        if (m_cache_data) {
             std::free(m_cache_data);
             m_cache_data = nullptr;
             m_cache_flag = false;
@@ -72,7 +72,7 @@ namespace Grain {
 
 
     int64_t CVF2File::valueFromCache(uint32_t x, uint32_t y) noexcept {
-        if (x >= m_width || y >= m_height || m_cache_data == nullptr) {
+        if (x >= m_width || y >= m_height || !m_cache_data) {
             return CVF2::kUndefinedValue;
         }
         else {
@@ -240,12 +240,12 @@ namespace Grain {
         std::cout << "CVF2File::readRow seq_count: " << seq_count << std::endl;
 
         if (static_cast<int32_t>(seq_count) > m_row_seq_length) {
-            if (m_row_seq != nullptr) {
+            if (m_row_seq) {
                 std::free(m_row_seq);
                 m_row_seq = nullptr;
             }
             m_row_seq = (CVF2Sequence*)std::malloc(sizeof(CVF2Sequence) * seq_count);
-            if (m_row_seq != nullptr) {
+            if (m_row_seq) {
                 m_row_seq_length = static_cast<int32_t>(seq_count);
             }
             else {
@@ -318,7 +318,7 @@ namespace Grain {
 
         try {
             xyz_file = new (std::nothrow) XYZFile(xyz_file_path);
-            if (xyz_file == nullptr) {
+            if (!xyz_file) {
                 Exception::throwStandard(ErrorCode::FileNotFound);
             }
 
@@ -400,16 +400,16 @@ namespace Grain {
             }
 
             auto image = *out_image_ptr;
-            if (image != nullptr) {
+            if (image) {
                 if (image->width() != static_cast<int32_t>(m_width) || image->height() != static_cast<int32_t>(m_height)) {
                     delete image;
                     image = *out_image_ptr = nullptr;
                 }
             }
 
-            if (image == nullptr) {
+            if (!image) {
                 image = Image::createLuminaAlphaFloat(static_cast<int32_t>(m_width), static_cast<int32_t>(m_height));
-                if (image == nullptr) {
+                if (!image) {
                     Exception::throwStandard(ErrorCode::MemCantAllocate);
                 }
                 *out_image_ptr = image;
@@ -482,7 +482,7 @@ namespace Grain {
 
             auto value_grid = *out_value_grid_ptr;
 
-            if (value_grid == nullptr) {
+            if (!value_grid) {
                 value_grid = new (std::nothrow) ValueGridl(m_width, m_height);
                 if (!value_grid) {
                     throw ErrorCode::MemCantAllocate;
@@ -590,7 +590,7 @@ namespace Grain {
                 auto file_base_name = file_name->fileBaseNameWithoutExtension();
 
                 String image_file_path = dst_dir_path + "/" + file_base_name + '.';
-                if (image != nullptr) {
+                if (image) {
                     image->writeImage(image_file_path, type, 1.0f, true);
                 }
 

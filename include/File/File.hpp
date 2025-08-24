@@ -378,6 +378,47 @@ namespace Grain {
             _writeDataType(ptr, sizeof(U));
         }
 
+        void writeInt8(const int8_t& value) {
+            _writeDataType(reinterpret_cast<const uint8_t*>(&value), sizeof(int8_t));
+        }
+
+        void writeInt16(const int16_t& value) {
+            _writeDataType(reinterpret_cast<const uint8_t*>(&value), sizeof(int16_t));
+        }
+
+        void writeInt32(const int32_t& value) {
+            _writeDataType(reinterpret_cast<const uint8_t*>(&value), sizeof(int32_t));
+        }
+
+        void writeInt64(const int64_t& value) {
+            _writeDataType(reinterpret_cast<const uint8_t*>(&value), sizeof(int64_t));
+        }
+
+        void writeUInt8(const uint8_t& value) {
+            _writeDataType(reinterpret_cast<const uint8_t*>(&value), sizeof(uint8_t));
+        }
+
+        void writeUInt16(const uint16_t& value) {
+            _writeDataType(reinterpret_cast<const uint8_t*>(&value), sizeof(uint16_t));
+        }
+
+        void writeUInt32(const uint32_t& value) {
+            _writeDataType(reinterpret_cast<const uint8_t*>(&value), sizeof(uint32_t));
+        }
+
+        void writeUInt64(const uint64_t& value) {
+            _writeDataType(reinterpret_cast<const uint8_t*>(&value), sizeof(uint64_t));
+        }
+
+        void writeFloat(const float& value) {
+            _writeDataType(reinterpret_cast<const uint8_t*>(&value), sizeof(float));
+        }
+
+        void writeDoule(const double& value) {
+            _writeDataType(reinterpret_cast<const uint8_t*>(&value), sizeof(double));
+        }
+
+
         void writeFourCC(fourcc_t value);
         void writeBool(bool value);
 

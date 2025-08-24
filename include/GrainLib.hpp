@@ -26,8 +26,9 @@
 #include "2d/RectEdges.hpp"
 #include "2d/Dimension.hpp"
 #include "2d/Polygon.hpp"
-#include "2d/GraphicPath.hpp"
 #include "2d/GraphicPathPoint.hpp"
+#include "2d/GraphicPath.hpp"
+#include "2d/GraphicCompoundPath.hpp"
 #include "2d/CatmullRomCurve.hpp"
 #include "2d/RangeRect.hpp"
 #include "2d/Superellipse.hpp"
@@ -68,6 +69,7 @@
 #include "CSS/CSS.hpp"
 
 #include "Database/PostgreSQL.hpp"
+#include "Database/DBaseFile.hpp"
 
 #include "DSP/DSP.hpp"
 #include "DSP/FFT.hpp"
@@ -84,6 +86,9 @@
 #include "Geo/Geo.hpp"
 #include "Geo/GeoMetaTile.hpp"
 #include "Geo/GeoProj.hpp"
+#include "Geo/GeoShape.hpp"
+#include "Geo/GeoShapeFile.hpp"
+#include "Geo/WKBParser.hpp"
 
 #include "Graphic/GraphicContext.hpp"
 #include "Graphic/CairoContext.hpp"

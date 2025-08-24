@@ -44,11 +44,6 @@ namespace Grain {
         explicit Vec2(const char* csv, char delimiter = ',') noexcept { setByCSV(csv, delimiter); }
         explicit Vec2(const String& csv, char delimiter = ',') noexcept { setByCSV(csv, delimiter); }
 
-        void writeToFile(File& file) const {
-            file.writeValue<T>(m_x);
-            file.writeValue<T>(m_y);
-        }
-
         [[nodiscard]] virtual const char* className() const noexcept { return "Vec2"; }
 
         friend std::ostream& operator << (std::ostream& os, const Vec2* o) {

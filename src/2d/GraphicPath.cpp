@@ -215,7 +215,7 @@ namespace Grain {
 
     bool GraphicPath::bezierFromTwoPathPoints(const GraphicPathPoint *p1, const GraphicPathPoint *p2, Bezier &out_bezier) noexcept {
 
-        if (p1 != nullptr && p2 != nullptr) {
+        if (p1 && p2) {
 
             out_bezier.m_pos[0] = p1->m_anchor;
 
@@ -263,8 +263,7 @@ namespace Grain {
 
 
     void GraphicPath::addPoint(const GraphicPathPoint *point) noexcept {
-
-        if (point != nullptr) {
+        if (point) {
             addPoint(point->m_anchor.m_x, point->m_anchor.m_y,
                      point->m_left_flag, point->m_left.m_x, point->m_left.m_y,
                      point->m_right_flag, point->m_right.m_x, point->m_right.m_y);
@@ -504,7 +503,7 @@ namespace Grain {
     void GraphicPath::translatePoint(int32_t index, double tx, double ty) noexcept {
 
         auto point = (GraphicPathPoint*)pointPtrAtIndex(index);
-        if (point != nullptr) {
+        if (point) {
             point->translate(tx, ty);
         }
     }
@@ -513,7 +512,7 @@ namespace Grain {
     void GraphicPath::rotatePoint(int32_t index, double angle) noexcept {
 
         auto point = (GraphicPathPoint*)pointPtrAtIndex(index);
-        if (point != nullptr) {
+        if (point) {
             point->rotate(angle);
         }
     }

@@ -44,7 +44,7 @@ namespace Grain {
             return Error::specific(CVF2TileManager::kErrTileIsInvalid);
         }
 
-        if (manager == nullptr) {
+        if (!manager) {
             // Requires valid Tile Manager information
             return ErrorCode::NullData;
         }
@@ -52,7 +52,7 @@ namespace Grain {
         int32_t w = manager->m_tile_width;
         int32_t h = manager->m_tile_height;
 
-        if (m_value_grid != nullptr) {
+        if (m_value_grid) {
             if (m_value_grid->width() == w && m_value_grid->height() == h) {
                 // ValueGrid has the correct size and can be reused
                 return ErrorCode::None;
@@ -65,12 +65,12 @@ namespace Grain {
 
         // Attempt to allocate a new ValueGrid with the required dimensions
         m_value_grid = new (std::nothrow) ValueGridf(w, h);
-        if (m_value_grid == nullptr) {
-            return ErrorCode::MemCantAllocate;
-        }
-        else {
+        if (m_value_grid) {
             m_value_grid->setInvalidValueDefault();
             return ErrorCode::None;
+        }
+        else {
+            return ErrorCode::MemCantAllocate;
         }
     }
 
@@ -107,7 +107,7 @@ namespace Grain {
                 cvf2_file.readRow(y);
                 int64_t* src = cvf2_file.m_row_values;
                 float* dst = m_value_grid->mutPtrAtXY(m_x_offset, y + m_y_offset);
-                if (src == nullptr || dst == nullptr) {
+                if (!src || !dst) {
                     throw ErrorCode::Fatal;
                 }
                 for (int32_t x = 0; x < static_cast<int32_t>(cvf2_file.width()); x++) {
@@ -142,7 +142,7 @@ namespace Grain {
      */
     void CVF2Tile::freeValueGrid() noexcept {
 
-        if (m_value_grid != nullptr) {
+        if (m_value_grid) {
             delete m_value_grid;
             m_value_grid = nullptr;
         }
@@ -174,9 +174,9 @@ namespace Grain {
 
     CVF2TileManager::~CVF2TileManager() {
 
-        if (m_file_slots != nullptr) {
+        if (m_file_slots) {
             for (int32_t i = 0; i < m_file_slot_capacity; i++) {
-                if (m_file_slots[i].m_file != nullptr) {
+                if (m_file_slots[i].m_file) {
                     delete m_file_slots[i].m_file;
                 }
             }
@@ -249,7 +249,9 @@ namespace Grain {
             // Build list of all CVF2 files, which exists in the directory "cvf2"
 
             file_list = new (std::nothrow) StringList();
-            if (file_list == nullptr) { throw ErrorCode::ClassInstantiationFailed; }
+            if (!file_list) {
+                throw ErrorCode::ClassInstantiationFailed;
+            }
 
             m_scan_files_n = File::fileNameList(m_dir_path, "cvf", m_min_cvf2_file_size, m_max_cvf2_file_size, &m_scan_files_ignored_n, *file_list);
             if (m_scan_files_n < 0) { throw Error::specific(kErrNoCVF2FilesInDir); }
@@ -372,7 +374,7 @@ namespace Grain {
 
             // Allocate file slots
             m_file_slots = (CVF2ManagerFileSlot*)calloc(m_file_slot_capacity, sizeof(CVF2ManagerFileSlot));
-            if (m_file_slots == nullptr) {
+            if (!m_file_slots) {
                 throw ErrorCode::MemCantAllocate;
             }
 
@@ -412,7 +414,7 @@ namespace Grain {
 
             // Build tiles
             file_list = new (std::nothrow) StringList();
-            if (file_list == nullptr) {
+            if (!file_list) {
                 throw ErrorCode::ClassInstantiationFailed;
             }
 
@@ -573,7 +575,7 @@ namespace Grain {
         std::cout << "CVF2TileManager::valueAtPos tile_xy_index: " << tile_xy_index << std::endl;
 
         auto tile = tileAtIndex(tile_index);
-        if (tile == nullptr) {
+        if (!tile) {
             return CVF2::kUndefinedValue;
         }
         std::cout << tile << std::endl;
@@ -583,7 +585,7 @@ namespace Grain {
         }
 
         auto cvf2_file = cvf2FileForTile(tile);
-        if (cvf2_file == nullptr) {
+        if (!cvf2_file) {
             return CVF2::kUndefinedValue;
         }
         std::cout << cvf2_file << std::endl;
@@ -653,7 +655,7 @@ namespace Grain {
     CVF2File* CVF2TileManager::cvf2FileForTile(CVF2Tile* tile) noexcept {
 
         try {
-            if (tile == nullptr) {
+            if (!tile) {
                 throw ErrorCode::NullData;
             }
 
@@ -697,12 +699,12 @@ namespace Grain {
 
                     // The slot to be used is found
                     auto slot = &m_file_slots[slot_index];
-                    if (slot->m_file != nullptr) {
+                    if (slot->m_file) {
                         // Current CVF2 file must be closed and deleted first
                         slot->m_file->close();
 
                         auto t = tileAtIndex(slot->m_tile_index);
-                        if (t != nullptr) {
+                        if (t) {
                             t->m_cache_cvf2_file_index = -1;
                         }
 
@@ -715,7 +717,7 @@ namespace Grain {
 
                     slot->m_file = new (std::nothrow) CVF2File(tile->m_file_path);
 
-                    if (slot->m_file != nullptr) {
+                    if (slot->m_file) {
                         slot->m_file->startRead();
                         slot->m_tile_index = tile->m_index;
                         slot->m_timestamp = Timestamp::currentMillis();
@@ -787,12 +789,12 @@ namespace Grain {
         File* raw_file = nullptr;
 
         try {
-            if (image == nullptr) {
+            if (!image) {
                 throw ErrorCode::NullData;
             }
 
             raw_file = new (std::nothrow) File(raw_file_path);
-            if (raw_file == nullptr) {
+            if (!raw_file) {
                 throw ErrorCode::ClassInstantiationFailed;
             }
 
@@ -999,7 +1001,7 @@ namespace Grain {
 
 
         try {
-            if (out_value_grid == nullptr) {
+            if (!out_value_grid) {
                 throw ErrorCode::NullData;
             }
 
@@ -1332,7 +1334,7 @@ namespace Grain {
 
                     /*
                     auto img = value_grid->buildImage();
-                    if (img != nullptr) {
+                    if (img) {
                         Geo::metaTilePathForTile(base_path, dst_zoom, tile_index, "jpg", dir_path, file_name);
                         img->normalize();
                         img->writeJpg(dir_path + "/" + file_name);
