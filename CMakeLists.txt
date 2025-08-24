@@ -106,6 +106,7 @@ add_library(libgrain STATIC
         src/File/File.cpp
         src/File/TiffFile.cpp
         src/File/XYZFile.cpp
+        src/File/PolygonsFile.cpp
 
         src/Geo/Geo.cpp
         src/Geo/GeoMetaTile.cpp

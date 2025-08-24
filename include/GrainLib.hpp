@@ -82,6 +82,8 @@
 
 #include "File/File.hpp"
 #include "File/TiffFile.hpp"
+#include "File/XYZFile.hpp"
+#include "File/PolygonsFile.hpp"
 
 #include "Geo/Geo.hpp"
 #include "Geo/GeoMetaTile.hpp"
