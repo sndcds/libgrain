@@ -114,7 +114,7 @@ namespace Grain {
         String m_identifier;        ///< Unique identifier
         String m_host;              ///< Hostname, default is 'localhost'
         int32_t m_port;             ///< TCP port, default is 5432. The full range of valid TCP ports is 1 to 65535
-        String m_db_name;            ///< Database name
+        String m_db_name;           ///< Database name
         String m_user;              ///< User name
         String m_password;          ///< Password. Default is an empty password
         String m_last_err_message;  ///< Last error message

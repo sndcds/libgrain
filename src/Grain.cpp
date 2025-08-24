@@ -33,18 +33,21 @@ namespace Grain {
 
     void Exception::throwStandard(ErrorCode code) {
         if (code != ErrorCode::None) {
+            std::cerr << "Exception code: " << (int)code << std::endl;
             throw Exception(code, "Standard Grain Exception");
         }
     }
 
 
     void Exception::throwSpecific(int32_t code, const char *message) {
+        std::cerr << "Specific Exception code: " << (int)code << ", message: " << message << std::endl;
         throw Exception(static_cast<ErrorCode>(code + static_cast<int32_t>(ErrorCode::Specific)), message);
     }
 
 
     void Exception::throwMessage(ErrorCode code, const char* message) {
         if (code != ErrorCode::None) {
+            std::cerr << "Exception code: " << (int)code << ", message: " << message << std::endl;
             throw Exception(code, message);
         }
     }
@@ -57,6 +60,7 @@ namespace Grain {
             std::string buffer(2048, '\0');
             std::vsnprintf(buffer.data(), buffer.size(), format, args);
             va_end(args);
+            std::cerr << "Exception code: " << (int)code << ", message: " << buffer.c_str() << std::endl;
             throw Exception(code, buffer.c_str());
         }
     }
@@ -69,6 +73,7 @@ namespace Grain {
             std::string buffer(2048, '\0');
             std::vsnprintf(buffer.data(), buffer.size(), format, args);
             va_end(args);
+            std::cerr << "Specific Exception code: " << code << ", message: " << buffer.c_str() << std::endl;
             throw Exception(static_cast<ErrorCode>(code + static_cast<int32_t>(ErrorCode::Specific)), buffer.c_str());
         }
     }

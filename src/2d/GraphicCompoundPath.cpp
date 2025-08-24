@@ -14,7 +14,7 @@
 #include "2d/GraphicPath.hpp"
 #include "2d/GraphicPathPoint.hpp"
 #include "String/String.hpp"
-// #include "WKBParser.hpp"
+#include "Geo/WKBParser.hpp"
 #include "Graphic/GraphicContext.hpp"
 #include "Graphic/Font.hpp"
 #include "Core/Log.hpp"
@@ -56,7 +56,7 @@ namespace Grain {
 
 
     bool GraphicCompoundPath::boundsRect(Rectd &out_bounds_rect) const noexcept {
-        #pragma message("GraphicCompoundPath::boundsRect() nust be implemented!")
+        #pragma message("GraphicCompoundPath::boundsRect() must be implemented!")
         return false;
     }
 
@@ -109,7 +109,14 @@ namespace Grain {
             ((GraphicCompoundPath*)info)->_addCGPathElement(element);
         }
     }
+*/
 
+    Rectd GraphicCompoundPath::buildFromText(const Font &font, const char *text) noexcept {
+        #pragma message("GraphicCompoundPath::buildFromText() must be implemented!")
+        return { 0, 0, 0, 0 };
+    }
+
+/*
     Rectd GraphicCompoundPath::buildFromText(const Font &font, const char *text) noexcept {
 
         Rectd bounds_rect;
@@ -202,15 +209,12 @@ namespace Grain {
     }
 
 
-/* TODO: Implement WKBParser first!
-
     Rectd GraphicCompoundPath::buildFromWKB(WKBParser &wkb_parser, RemapRectd &remap_rect) noexcept {
         Rectd result_rect;
         result_rect.zero();
 
         RangeRectd range_rect;
         range_rect.initForMinMaxSearch();
-
 
         try {
             if (wkb_parser.isPolygon() || wkb_parser.isMultiPolygon()) {
@@ -241,7 +245,7 @@ namespace Grain {
                         int32_t num_points = wkb_parser.readInt();
 
                         auto err = addEmptyPath();
-                        Error::throwError(err);
+                        Exception::throwStandard(err);
 
                         auto *graphic_path = lastPathPtr();
                         if (!graphic_path) {
@@ -281,7 +285,7 @@ namespace Grain {
                     int32_t num_points = wkb_parser.readInt();
 
                     auto err = addEmptyPath();
-                    Error::throwError(err);
+                    Exception::throwStandard(err);
 
                     auto *graphic_path = lastPathPtr();
                     if (!graphic_path) {
@@ -311,10 +315,9 @@ namespace Grain {
             result_rect.zero();
         }
 
-
         return result_rect;
     }
-*/
+
 
 /* TODO: Implement!
     void GraphicCompoundPath::_addCGPathElement(const CGPathElement *element) noexcept {

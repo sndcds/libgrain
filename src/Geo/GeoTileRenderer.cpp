@@ -170,7 +170,7 @@ namespace Grain {
                     conn->m_identifier = table.stringOr("identifier", "", kTomlErrPsqlDb);
                     conn->m_host = table.stringOr("host", "", kTomlErrPsqlDb);
                     conn->m_port = (int32_t)table.integerOr("port", 5432, kTomlErrPsqlDb);
-                    conn->m_db_name = table.stringOrThrow("db_name", kTomlErrPsqlDb);
+                    conn->m_db_name = table.stringOrThrow("db-name", kTomlErrPsqlDb);
                     conn->m_user = table.stringOrThrow("user", kTomlErrPsqlDb);
                     conn->m_password = table.stringOr("password", "", kTomlErrPsqlDb);
 

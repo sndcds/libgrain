@@ -71,7 +71,7 @@ namespace Grain {
         ~WKBParser() {
         }
 
-        const char* typeName() const noexcept {
+        [[nodiscard]] const char* typeName() const noexcept {
             static const char* names[] = { "Point", "LineString", "Polygon", "MultiPoint", "MultiLineString", "MultiPolygon" };
             static const char* undefined_name = "Undefined";
             if (m_type >= WKBType::First && m_type <= WKBType::Last) {
@@ -85,17 +85,17 @@ namespace Grain {
         void setBinaryData(const uint8_t* data, int32_t size) noexcept;
         void setTextData(const char* data, int32_t size) noexcept;
 
-        bool isPoint() const noexcept { return m_type == WKBType::Point; }
-        bool isLineString() const noexcept { return m_type == WKBType::LineString; }
-        bool isPolygon() const noexcept { return m_type == WKBType::Polygon; }
-        bool isMultiPoint() const noexcept { return m_type == WKBType::MultiPoint; }
-        bool isMultiLineString() const noexcept { return m_type == WKBType::MultiLineString; }
-        bool isMultiPolygon () const noexcept { return m_type == WKBType::MultiPolygon ; }
+        [[nodiscard]] bool isPoint() const noexcept { return m_type == WKBType::Point; }
+        [[nodiscard]] bool isLineString() const noexcept { return m_type == WKBType::LineString; }
+        [[nodiscard]] bool isPolygon() const noexcept { return m_type == WKBType::Polygon; }
+        [[nodiscard]] bool isMultiPoint() const noexcept { return m_type == WKBType::MultiPoint; }
+        [[nodiscard]] bool isMultiLineString() const noexcept { return m_type == WKBType::MultiLineString; }
+        [[nodiscard]] bool isMultiPolygon () const noexcept { return m_type == WKBType::MultiPolygon ; }
 
-        uint8_t readNibble();
-        uint8_t readByte();
-        uint32_t readInt();
-        double readDouble();
+        [[nodiscard]] uint8_t readNibble();
+        [[nodiscard]] uint8_t readByte();
+        [[nodiscard]] uint32_t readInt();
+        [[nodiscard]] double readDouble();
         void readVec2(Vec2d& out_vec);
     };
 

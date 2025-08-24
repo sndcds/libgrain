@@ -260,9 +260,10 @@ namespace Grain {
             }
             auto item = _m_tpp_table_ptr->find(name);
             if (item == _m_tpp_table_ptr->end()) {
-                String message;
-                message.setFormatted(1024, "Expected table item with name \"%s\"", name);
-                throw Exception(ErrorCode::TomlExpectedTableItem, message.utf8());
+                Exception::throwFormattedMessage(
+                        ErrorCode::TomlExpectedTableItem,
+                        "Expected table item with name \"%s\"",
+                        name);
             }
             return item;
         }

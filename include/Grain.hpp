@@ -201,7 +201,7 @@ namespace Grain {
         LuaCodeError = 1501,
 
         TomlNoName = 1700,
-        TomlExpectedTableItem,
+        TomlExpectedTableItem = 1701,
         TomlExpectedTable,
         TomlParseError,
         TomlExpectedString,

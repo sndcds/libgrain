@@ -138,7 +138,7 @@ namespace Grain {
 
 
     void GeoShape::buildPolyCompoundPath(GraphicContext& gc, int32_t index, const RemapRectd& remap_rect, GraphicCompoundPath& out_path) noexcept {
-        #pragma message("GeoShape::buildPolyCompoundPath() nust be implemented!")
+        #pragma message("GeoShape::buildPolyCompoundPath() must be implemented!")
     }
 
 
