@@ -21,11 +21,12 @@
 
 #include "Grain.hpp"
 #include "Core/Log.hpp"
+#include "Type/KeyValue.hpp"
 #include "2d/RangeRect.hpp"
 #include "2d/Dimension.hpp"
 #include "String/String.hpp"
 #include "String/StringList.hpp"
-#include "Type/KeyValue.hpp"
+#include "String/CSVData.hpp"
 #include "Geo/Geo.hpp"
 #include "Geo/GeoProj.hpp"
 #include "Geo/GeoShape.hpp"
@@ -35,7 +36,6 @@
 #include "File/PolygonsFile.hpp"
 #include "Scripting/Lua.hpp"
 #include "Scripting/Toml.hpp"
-#include "CSV/CSVData.hpp"
 #include "Database/PostgreSQL.hpp"
 
 // #include "LuaBridge.h" // TODO: !!!!!

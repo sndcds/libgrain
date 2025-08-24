@@ -46,9 +46,10 @@ add_library(libgrain STATIC
         src/2d/Circle.cpp
         src/2d/Triangle.cpp
         src/2d/Quadrilateral.cpp
+        src/2d/Polygon.cpp
+        src/2d/Border.cpp
         src/2d/RectEdges.cpp
         src/2d/Dimension.cpp
-        src/2d/Polygon.cpp
         src/2d/GraphicPathPoint.cpp
         src/2d/GraphicPath.cpp
         src/2d/GraphicCompoundPath.cpp
