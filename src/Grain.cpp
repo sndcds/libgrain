@@ -54,13 +54,22 @@ namespace Grain {
         if (code != ErrorCode::None) {
             va_list args;
             va_start(args, format);
-
             std::string buffer(2048, '\0');
             std::vsnprintf(buffer.data(), buffer.size(), format, args);
-
             va_end(args);
-
             throw Exception(code, buffer.c_str());
+        }
+    }
+
+
+    void Exception::throwSpecificFormattedMessage(uint32_t code, const char* format, ...) {
+        if (code >= 0) {
+            va_list args;
+            va_start(args, format);
+            std::string buffer(2048, '\0');
+            std::vsnprintf(buffer.data(), buffer.size(), format, args);
+            va_end(args);
+            throw Exception(static_cast<ErrorCode>(code + static_cast<int32_t>(ErrorCode::Specific)), buffer.c_str());
         }
     }
 
@@ -74,5 +83,10 @@ namespace Grain {
 
     ErrorCode Exception::code() const noexcept {
         return m_code;
+    }
+
+
+    const char* Exception::message() const noexcept {
+        return m_message.c_str();
     }
 }

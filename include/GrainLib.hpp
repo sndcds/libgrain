@@ -91,6 +91,7 @@
 #include "Geo/GeoProj.hpp"
 #include "Geo/GeoShape.hpp"
 #include "Geo/GeoShapeFile.hpp"
+#include "Geo/GeoTileRenderer.hpp"
 #include "Geo/WKBParser.hpp"
 
 #include "Graphic/GraphicContext.hpp"

@@ -197,7 +197,8 @@ namespace Grain {
         CSSWrongUnit,
         CSSValueOverflow,
 
-        LuaCodeError = 1500,
+        LuaInstantiationFailed = 1500,
+        LuaCodeError = 1501,
 
         TomlNoName = 1700,
         TomlExpectedTableItem,
@@ -233,16 +234,18 @@ namespace Grain {
         ErrorCode m_code{};
         std::string m_message;
     public:
-        explicit Exception(ErrorCode code, const char* message);
+        explicit Exception(ErrorCode code, const char *message);
 
         [[nodiscard]] ErrorCode code() const noexcept;
+        [[nodiscard]] const char* message() const noexcept;
 
-        void log(Log& l) const;
+        void log(Log &l) const;
 
         static void throwStandard(ErrorCode code);
-        static void throwSpecific(int32_t specific_code, const char* message = nullptr);
-        static void throwMessage(ErrorCode code, const char* message = nullptr);
-        static void throwFormattedMessage(ErrorCode code, const char* format, ...);
+        static void throwSpecific(int32_t specific_code, const char *message = nullptr);
+        static void throwMessage(ErrorCode code, const char *message = nullptr);
+        static void throwFormattedMessage(ErrorCode code, const char *format, ...);
+        static void throwSpecificFormattedMessage(uint32_t code, const char* format, ...);
     };
 
     class DeferredException {

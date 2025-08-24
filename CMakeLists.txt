@@ -114,6 +114,7 @@ add_library(libgrain STATIC
         src/Geo/GeoProj.cpp
         src/Geo/GeoShape.cpp
         src/Geo/GeoShapeFile.cpp
+        src/Geo/GeoTileRenderer.cpp
         src/Geo/WKBParser.cpp
 
         src/GUI/Screen.cpp

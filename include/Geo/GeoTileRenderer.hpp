@@ -23,6 +23,7 @@
 #include "Core/Log.hpp"
 #include "Type/KeyValue.hpp"
 #include "2d/RangeRect.hpp"
+#include "2d/Border.hpp"
 #include "2d/Dimension.hpp"
 #include "String/String.hpp"
 #include "String/StringList.hpp"
@@ -65,13 +66,13 @@ namespace Grain {
     };
 
 
-/**
- *  @brief Render settings.
- *
- *  Contains all settings for rendering.
- *
- *  @note This struct should only contain copyable data.
- */
+    /**
+     *  @brief Render settings.
+     *
+     *  Contains all settings for rendering.
+     *
+     *  @note This struct should only contain copyable data.
+     */
     class GeoTileRendererDrawSettings {
         friend class GeoTileRenderer;
         friend class GeoTileRendererLayer;
@@ -169,7 +170,7 @@ namespace Grain {
         String m_sql_query;                             ///< The SQL query
         String m_geometry_field;                        ///< Name of the geometry field to be used
         int32_t m_custom_field_count = 0;
-        CSVDataColumnInfo *m_custom_field_infos = nullptr;
+        CSVDataColumnInfo* m_custom_field_infos = nullptr;
 
         String m_lua_script;                            ///< Stores the Lua script code
         bool m_has_lua_script = false;                  ///< Indicates whether a Lua script is present
@@ -180,10 +181,10 @@ namespace Grain {
         GeoTileRendererDrawSettings m_draw_settings;
 
 
-        GeoProj *m_proj = nullptr;                      ///< Projection for the layer
+        GeoProj* m_proj = nullptr;                      ///< Projection for the layer
 
         // Data properties
-        PSQLPropertyList *m_data_property_list = nullptr;
+        PSQLPropertyList* m_data_property_list = nullptr;
 
         // Database specific
         int32_t m_db_srid_field_index = -1;             ///< Index of field containing the SRID number
@@ -192,8 +193,8 @@ namespace Grain {
         bool m_db_field_names_scanned = false;          ///< List with all requested db fields scanned flag
 
         // Shape specific
-        GeoShape *m_shape = nullptr;
-        PolygonsFile *m_polygons_file = nullptr;
+        GeoShape* m_shape = nullptr;
+        PolygonsFile* m_polygons_file = nullptr;
 
         // CSV specific
         int64_t m_csv_row_count{};          ///< Number of rows in CSV file
@@ -233,7 +234,7 @@ namespace Grain {
         GeoTileRendererLayer();
         virtual ~GeoTileRendererLayer();
 
-        friend std::ostream& operator << (std::ostream &os, const GeoTileRendererLayer *o) {
+        friend std::ostream& operator << (std::ostream& os, const GeoTileRendererLayer* o) {
             // TODO: Complete this!
             os << "GeoTileRendererLayer:";
             if (o != nullptr) {
@@ -360,7 +361,7 @@ namespace Grain {
 
         int32_t m_default_src_srid = 4326;          ///< Default source SRID
         int32_t m_dst_srid = 0;                     ///< Destination SRID
-        GeoProj *m_default_render_proj = nullptr;   ///< Projection from default source CRS to destination CRS
+        GeoProj* m_default_render_proj = nullptr;   ///< Projection from default source CRS to destination CRS
 
         float m_map_bg_opacity = 1.0f;              ///< The background opacity, default is 100 % opaque, can be used for transparent maps for layering different aspects
         RGB m_map_bg_color;                         ///< The background color of the map, for earth, this would be the color for water
@@ -376,13 +377,13 @@ namespace Grain {
         StringList m_color_names;
 
         PSQLConnections m_psql_connections;
-        ObjectList<GeoTileRendererLayer *> m_layers;    ///< A list with all layers to render
+        ObjectList<GeoTileRendererLayer*> m_layers;    ///< A list with all layers to render
 
         RenderMode m_render_mode = RenderMode::Undefined;
         Dimensioni m_render_image_size = { 0, 0 };
         int32_t m_render_halo_size = 64;            ///< Extra pixels around the image to allow effects like blurring, shadows, or glow to extend beyond the image boundaries without visual artifacts
-        Image *m_render_image = nullptr;
-        Image *m_render_buffers[3]{nullptr};        ///< Immediate render buffers for rendering different aspects in separate buffers, then composing them into an image
+        Image* m_render_image = nullptr;
+        Image* m_render_buffers[3]{nullptr};        ///< Immediate render buffers for rendering different aspects in separate buffers, then composing them into an image
 
         Vec2d m_render_lonlat_top_left;             ///< Top left corner as long/lat
         Vec2d m_render_lonlat_bottom_right;         ///< Bottom right corner as long/lat
@@ -414,7 +415,7 @@ namespace Grain {
 
         // Lua
 
-        Lua *m_lua = nullptr;
+        Lua* m_lua = nullptr;
 
         int32_t m_lua_err_count = 0;        ///< Number of Lua script errors occured
         String m_last_lua_err;              ///< Last error from a Lua script
@@ -449,12 +450,12 @@ namespace Grain {
         GeoTileRenderer();
         ~GeoTileRenderer();
 
-        friend std::ostream& operator << (std::ostream &os, const GeoTileRenderer *o) {
+        friend std::ostream& operator << (std::ostream& os, const GeoTileRenderer* o) {
             o == nullptr ? os << "GeoTileRenderer nullptr" : os << *o;
             return os;
         }
 
-        friend std::ostream& operator << (std::ostream &os, const GeoTileRenderer &o) {
+        friend std::ostream& operator << (std::ostream& os, const GeoTileRenderer& o) {
             Log l(os);
             l << "GeoTileRenderer:" << l.endl;
             l << "  title: " << o.m_title << l.endl;
@@ -478,22 +479,22 @@ namespace Grain {
             return os;
         }
 
-        void setLastErrMessage(const String &message) noexcept;
+        void setLastErrMessage(const String& message) noexcept;
 
-        ErrorCode readConfigFromToml(const String &file_path) noexcept;
+        ErrorCode readConfigFromToml(const String& file_path) noexcept;
         void _configLayer(const TomlArrayItem& layer_item);
 
-        bool setFileFormatByName(const String &file_format_name) noexcept;
+        bool setFileFormatByName(const String& file_format_name) noexcept;
 
-        void setWaterColor(const RGB &color) noexcept { m_map_bg_color = color; }
-        void setOutputPath(const String &output_path) noexcept { m_output_path = output_path; }
+        void setWaterColor(const RGB& color) noexcept { m_map_bg_color = color; }
+        void setOutputPath(const String& output_path) noexcept { m_output_path = output_path; }
         void setZoomLevels(int32_t min_zoom, int32_t max_zoom) noexcept;
         void setBounds(double min_lon, double max_lon, double min_lat, double max_lat) noexcept;
         void setSourceSRID(int32_t srid) noexcept { m_default_src_srid = srid; }
         void setDestinationSRID(int32_t srid) noexcept { m_dst_srid = srid; }
 
         void setRenderMode(RenderMode render_mode) noexcept { m_render_mode = render_mode; }
-        bool setRenderModeByName(const String &render_mode_name) noexcept {
+        bool setRenderModeByName(const String& render_mode_name) noexcept {
             static const KeyIntPair items[] = {
                     { "tiles", (int32_t)RenderMode::Tiles },
                     { "meta-tiles", (int32_t)RenderMode::MetaTiles },
@@ -510,40 +511,40 @@ namespace Grain {
             m_render_image_size.m_height = height;
         }
 
-        void setRenderBoundsWGS84(const Vec2d &top_left, const Vec2d &bottom_right) noexcept;
+        void setRenderBoundsWGS84(const Vec2d& top_left, const Vec2d& bottom_right) noexcept;
         ErrorCode render() noexcept;
         void _updateMeterPerPixel() noexcept;
-        void _renderLayers(GraphicContext &gc, RemapRectd &remap_rect);
+        void _renderLayers(GraphicContext& gc, RemapRectd& remap_rect);
 
         void _handleLuaError(int status, ErrorCode err);
-        void _prepareLuaScriptForLayer(GeoTileRendererLayer *layer, GeoTileRendererDrawSettings *draw_settings, int64_t element_count);
+        void _prepareLuaScriptForLayer(GeoTileRendererLayer* layer, GeoTileRendererDrawSettings* draw_settings, int64_t element_count);
 
-        void _setLuaValueByPSQLProperty(const PSQLProperty *property);
+        void _setLuaValueByPSQLProperty(const PSQLProperty* property);
 
-        PSQLConnection *_psqlConnForLayer(GeoTileRendererLayer *layer);
-        void _renderPSQLLayer(GeoTileRendererLayer *layer, GraphicContext &gc, RemapRectd &remap_rect);
+        PSQLConnection* _psqlConnForLayer(GeoTileRendererLayer* layer);
+        void _renderPSQLLayer(GeoTileRendererLayer* layer, GraphicContext& gc, RemapRectd& remap_rect);
 
-        void _renderShapeLayer(GeoTileRendererLayer *layer, GraphicContext &gc, RemapRectd &remap_rect);
+        void _renderShapeLayer(GeoTileRendererLayer* layer, GraphicContext& gc, RemapRectd& remap_rect);
 
-        void _renderPolygonLayer(GeoTileRendererLayer *layer, GraphicContext &gc, RemapRectd &remap_rect);
-        void _releasePolygonLayerResouces(GeoTileRendererLayer *layer);
+        void _renderPolygonLayer(GeoTileRendererLayer* layer, GraphicContext& gc, RemapRectd& remap_rect);
+        void _releasePolygonLayerResouces(GeoTileRendererLayer* layer);
 
-        void _renderCSVLayer(GeoTileRendererLayer *layer, GraphicContext &gc, RemapRectd &remap_rect);
-
-
-        void _setupGCDrawing(GraphicContext &gc, GeoTileRendererDrawSettings &draw_settings);
+        void _renderCSVLayer(GeoTileRendererLayer* layer, GraphicContext& gc, RemapRectd& remap_rect);
 
 
-        GeoTileRendererLayer *addLayer() noexcept;
-        void addColor(const String &name, const RGB &color) noexcept;
+        void _setupGCDrawing(GraphicContext& gc, GeoTileRendererDrawSettings& draw_settings);
+
+
+        GeoTileRendererLayer* addLayer() noexcept;
+        void addColor(const String& name, const RGB& color) noexcept;
 
 
         ErrorCode _initLua() noexcept;
         void _freeLua() noexcept;
-        static void _lua_rgbFromStack(lua_State *l, int32_t offs, RGB &out_rgb);
-        static int _lua_checkZoom(lua_State *l);
-        static int _lua_getProperty(lua_State *l);
-        static int _lua_setProperty(lua_State *l);
+        static void _lua_rgbFromStack(lua_State* l, int32_t offs, RGB& out_rgb);
+        static int _lua_checkZoom(lua_State* l);
+        static int _lua_getProperty(lua_State* l);
+        static int _lua_setProperty(lua_State* l);
 
         ErrorCode startRenderer() noexcept;
         ErrorCode renderTiles() noexcept;
@@ -578,8 +579,8 @@ namespace Grain {
 
 
 
-        static GeoTileDrawMode drawModeFromName(const char *name) noexcept {
-            static const char *names[] = {
+        static GeoTileDrawMode drawModeFromName(const char* name) noexcept {
+            static const char* names[] = {
                     "stroke",
                     "fill",
                     "fill-stroke",
@@ -597,8 +598,8 @@ namespace Grain {
             return GeoTileDrawMode::Undefined;
         }
 
-        static GeoTileDrawShape drawShapeFromName(const char *name) noexcept {
-            static const char *names[] = { "circle", "square", nullptr };
+        static GeoTileDrawShape drawShapeFromName(const char* name) noexcept {
+            static const char* names[] = { "circle", "square", nullptr };
             int32_t index = 0;
             while (names[index] != nullptr) {
                 if (strcmp(name, names[index]) == 0) {
