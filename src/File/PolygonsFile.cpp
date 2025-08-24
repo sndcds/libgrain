@@ -14,7 +14,7 @@
 
 namespace Grain {
 
-    PolygonsFile::PolygonsFile(const String &file_path) noexcept : File(file_path) {
+    PolygonsFile::PolygonsFile(const String& file_path) noexcept : File(file_path) {
     }
 
 

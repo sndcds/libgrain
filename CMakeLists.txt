@@ -149,6 +149,7 @@ add_library(libgrain STATIC
         src/String/String.cpp
         src/String/StringList.cpp
         src/String/CSVString.cpp
+        src/String/CSVData.cpp
 
         src/Time/Timestamp.cpp
         src/Time/DateTime.cpp

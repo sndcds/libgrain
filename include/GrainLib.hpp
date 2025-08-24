@@ -136,9 +136,10 @@
 #include "Signal/SignalButterworthFilter.hpp"
 #include "Signal/SignalLadderFilter.hpp"
 
-#include "String/CSVString.hpp"
 #include "String/String.hpp"
 #include "String/StringList.hpp"
+#include "String/CSVString.hpp"
+#include "String/CSVData.hpp"
 
 #include "Time/Timestamp.hpp"
 #include "Time/DateTime.hpp"

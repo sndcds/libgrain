@@ -175,8 +175,11 @@ namespace Grain {
         DatabaseNotConnected = 800,
         DatabaseNoResult = 801,
 
+        CSVIndexOutOfRange,
+        CSVValueOutOfRange,
+        CSVTypeError,
 
-        CSSInternalError = 1000,
+        CSSInternalError = 1100,
         CSSInternalMemoryError,
         CSSClosingBracketMissing,
         CSSContentMissing,

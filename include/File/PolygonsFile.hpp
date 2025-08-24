@@ -65,7 +65,7 @@ namespace Grain {
             return m_polygon_entries.elementPtrAtIndex(index);
         }
 
-        void printEntryInfo(std::ostream &os, int32_t entry_index) {
+        void printEntryInfo(std::ostream& os, int32_t entry_index) {
             auto entry = entryPtrAtIndex(entry_index);
             if (entry != nullptr) {
                 os << "file_pos: " << entry->m_file_pos;
