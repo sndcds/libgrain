@@ -218,7 +218,6 @@ namespace Grain {
 
         try {
             if (wkb_parser.isPolygon() || wkb_parser.isMultiPolygon()) {
-
                 bool multi_polygon_flag = wkb_parser.isMultiPolygon();
                 int32_t num_polygons = 1;
 
@@ -227,16 +226,17 @@ namespace Grain {
                 }
 
                 for (int polygon_index = 0; polygon_index < num_polygons; polygon_index++) {
-
                     if (multi_polygon_flag == true) {
+                        // In a multi polygon, each polygon starts with byte order and geometry type
+                        wkb_parser.skipBytes(5);
 
-                        // In a multi polygon, each polygon starts with byte order and geometry type.
-
-                        // Byte order.
-                        wkb_parser.readByte();
-
-                        // Geometry type.
-                        wkb_parser.readInt();
+                        /*
+                         *  When byte order or geometry type are needed, use this instead of
+                         *  wkb_parser.skipBytes(5) above!
+                         *
+                         *  wkb_parser.readByte(); // Byte order
+                         *  wkb_parser.readInt(); // Geometry type
+                         */
                     }
 
                     int32_t num_rings = wkb_parser.readInt();
@@ -266,7 +266,6 @@ namespace Grain {
                 finish();
             }
             else if (wkb_parser.isLineString() || wkb_parser.isMultiLineString()) {
-
                 bool multi_line_flag = wkb_parser.isMultiLineString();
                 int32_t num_lines = 1;
 
@@ -275,11 +274,17 @@ namespace Grain {
                 }
 
                 for (int line_index = 0; line_index < num_lines; ++line_index) {
-
                     if (multi_line_flag) {
-                        // Read byte order and geometry type for each LineString
-                        wkb_parser.readByte();  // Byte order
-                        wkb_parser.readInt();   // Geometry type
+                        // In a multi polygon, each polygon starts with byte order and geometry type
+                        wkb_parser.skipBytes(5);
+
+                        /*
+                         *  When byte order or geometry type are needed, use this instead of
+                         *  wkb_parser.skipBytes(5) above!
+                         *
+                         *  wkb_parser.readByte(); // Byte order
+                         *  wkb_parser.readInt(); // Geometry type
+                         */
                     }
 
                     int32_t num_points = wkb_parser.readInt();

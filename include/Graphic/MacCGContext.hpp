@@ -12,6 +12,8 @@
 #ifndef GrainMacCGContext_hpp
 #define GrainMacCGContext_hpp
 
+#if defined(__APPLE__) && defined(__MACH__)
+
 #include "Graphic/GraphicContext.hpp"
 
 
@@ -145,3 +147,5 @@ namespace Grain {
 } // End of namespace Grain
 
 #endif // GrainMacCGContext_hpp
+
+#endif // (__APPLE__) && defined(__MACH__)

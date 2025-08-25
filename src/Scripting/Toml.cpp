@@ -185,7 +185,7 @@ namespace Grain {
     }
 
 
-    double TomlTable::doubleOr(const char* name, int64_t fallback, int32_t local_exc_code) const {
+    double TomlTable::doubleOr(const char* name, double fallback, int32_t local_exc_code) const {
         return hasItem(name) ? doubleOrThrow(name, local_exc_code) : fallback;
     }
 

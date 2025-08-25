@@ -286,7 +286,7 @@ namespace Grain {
         [[nodiscard]] int64_t integerOr(const char* name, int64_t fallback, int32_t local_exc_code) const;
         [[nodiscard]] int64_t integerOrThrow(const char* name, int32_t local_exc_code) const;
 
-        [[nodiscard]] double doubleOr(const char* name, int64_t fallback, int32_t local_exc_code) const;
+        [[nodiscard]] double doubleOr(const char* name, double fallback, int32_t local_exc_code) const;
         [[nodiscard]] double doubleOrThrow(const char* name, int32_t local_exc_code) const;
 
         [[nodiscard]] int32_t doublesOrThrow(const char* name, int32_t local_exc_code, int32_t max_values, double* out_values);

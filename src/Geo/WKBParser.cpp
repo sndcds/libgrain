@@ -172,4 +172,9 @@ namespace Grain {
     }
 
 
+    void WKBParser::skipBytes(uint32_t n) {
+        m_binary_ptr += n;
+    }
+
+
 } // End of namespace Grain.

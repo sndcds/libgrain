@@ -133,7 +133,6 @@ add_library(libgrain STATIC
 
         src/Graphic/GraphicContext.cpp
         src/Graphic/CairoContext.cpp
-        src/Graphic/MacCGContext.cpp
         src/Graphic/Font.cpp
         src/Graphic/StrokeStyle.cpp
 
@@ -197,6 +196,7 @@ target_compile_options(libgrain PRIVATE
 
 if (APPLE)
     target_sources(libgrain PRIVATE
+            src/Graphic/MacCGContext.cpp
             src/App/macos_app.mm
             src/GUI/macos_window.mm
             src/GUI/macos_view.mm

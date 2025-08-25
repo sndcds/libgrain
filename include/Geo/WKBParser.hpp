@@ -97,6 +97,8 @@ namespace Grain {
         [[nodiscard]] uint32_t readInt();
         [[nodiscard]] double readDouble();
         void readVec2(Vec2d& out_vec);
+
+        void skipBytes(uint32_t n);
     };
 
 
