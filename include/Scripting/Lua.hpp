@@ -18,6 +18,8 @@
 #include "Color/RGB.hpp"
 #include "CSS/CSSColor.hpp"
 
+#include <filesystem>
+
 extern "C" {
     #include <lua.h>
     #include <lualib.h>
