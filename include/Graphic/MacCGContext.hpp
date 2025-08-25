@@ -1,29 +1,27 @@
 //
-//  CairoContext.hpp
+//  MacCGContext.hpp
 //
-//  Created by Roald Christesen on from 15.08.2025
+//  Created by Roald Christesen on from 24.08.2025
 //  Copyright (C) 2025 Roald Christesen. All rights reserved.
 //
 //  This file is part of GrainLib, see <https://grain.one>.
 //
-//  LastChecked: 22.08.2025
+//  LastChecked: 24.08.2025
 //
 
-#ifndef GrainCairoContext_hpp
-#define GrainCairoContext_hpp
+#ifndef GrainMacCGContext_hpp
+#define GrainMacCGContext_hpp
 
 #include "Graphic/GraphicContext.hpp"
-
-#include "cairo/cairo.h"
 
 
 namespace Grain {
 
-    class CairoContext : public GraphicContext {
+    class MacCGContext : public GraphicContext {
 
     protected:
-        cairo_surface_t* m_cairo_surface = nullptr;
-        cairo_t* m_cairo_cr = nullptr;
+        CGContextRef m_cg_context = nullptr;            ///< Core Graphics Context
+        CGColorSpaceRef m_cg_color_space = nullptr;     ///< Core Graphics Color Space
 
     public:
         // Re-expose base class overloads hidden by name hiding in derived class
@@ -33,27 +31,26 @@ namespace Grain {
         using GraphicContext::fillCircle;
         using GraphicContext::drawTextInRect;
 
+        MacCGContext() noexcept;
+        explicit MacCGContext(Component* component) noexcept;
+        explicit MacCGContext(PDFWriter* pdf_writer) noexcept;
 
-        explicit CairoContext() noexcept;
-        // explicit CairoContext(Component* component) = default;
-        // explicit CairoContext(PDFWriter* pdfWriter) = default;
+        virtual ~MacCGContext() noexcept;
 
-        ~CairoContext() noexcept;
-
-        [[nodiscard]] const char* className() const noexcept override { return "CairoContext"; }
-
+        [[nodiscard]] const char* className() const noexcept override { return "MacCGContext"; }
         void log(Log& l) const noexcept override;
 
 
-        void _cairoInit() noexcept;
-        void _cairoFreeResources() noexcept;
+        void _macGCInit() noexcept;
+        void _macCGFreeResources() noexcept;
 
-        [[nodiscard]] cairo_surface_t* cairoSurface() { return m_cairo_surface; }
-        [[nodiscard]] cairo_t* cairoContext() { return m_cairo_cr; }
+        [[nodiscard]] CGContextRef cgContext() const noexcept { return m_cg_context; }
+        [[nodiscard]] CGColorSpaceRef cgColorSpace() const noexcept { return m_cg_color_space; }
 
-        void _cairoSetFillColor() noexcept;
-        void _cairoSetStrokeColor() noexcept;
+        void setCGContext(CGContextRef cg_context) { m_cg_context = cg_context; }
+        void setCGColorSpace(CGColorSpaceRef cg_color_space) { m_cg_color_space = cg_color_space; }
 
+        void setCGContextByComponent(CGContextRef context, Component* component) noexcept;
 
         void setImage(Image* image) noexcept override;
 
@@ -88,11 +85,11 @@ namespace Grain {
 
         void beginPath() noexcept override;
         void moveTo(double x, double y) noexcept override;
-        // void moveTo(const Vec2d& point) noexcept override;
+        void moveTo(const Vec2d& point) noexcept override;
         void lineTo(double x, double y) noexcept override;
         void lineTo(double x, double y, bool start_flag) noexcept override;
-        // void lineTo(const Vec2d& point) noexcept override;
-        // void lineTo(const Vec2d& point, bool start_flag) noexcept override;
+        void lineTo(const Vec2d& point) noexcept override;
+        void lineTo(const Vec2d& point, bool start_flag) noexcept override;
         void curveTo(double c1x, double c1y, double c2x, double c2y, double x, double y) noexcept override;
         void curveTo(const Vec2d& control1, const Vec2d& control2, const Vec2d& point) noexcept override;
         void curveTo(double cx, double cy, double x, double y) noexcept override;
@@ -108,9 +105,12 @@ namespace Grain {
         void addRingPath(const Vec2d& center, double inner_radius, double outer_radius, double angle, double span) noexcept override;
 
         void fillRect(double x, double y, double width, double height) noexcept override;
+
         void strokeRect(double x, double y, double width, double height) noexcept override;
+
         void fillEllipse(double x, double y, double rh, double rv) noexcept override;
         void strokeEllipse(double x, double y, double rh, double rv) noexcept override;
+
         void fillCircle(double x, double y, double radius) noexcept override;
         void strokeCircle(double x, double y, double radius) noexcept override;
 
@@ -125,21 +125,23 @@ namespace Grain {
         void drawIcon(const Icon* icon, const Rectd& rect, const RGB& color, float alpha) noexcept override;
         void drawIconInCircle(const Icon* icon, const Vec2d& center, double radius, const RGB& bg_color, const RGB& icon_color, const RGB& border_color, double border_width, float bg_alpha, float border_alpha, float icon_alpha) noexcept override;
 
-        Rectd textRect(const char* text, const Font* font) noexcept override { return Rectd(); /* Implement! */ }
-        void drawText(const char* text, const Vec2d& pos, const Font* font, const RGB& color, float alpha = 1.0f) noexcept override { /* Implement! */ }
-        double drawTextLineByLine(const char* text, const Rectd& bounds_rect, const Rectd& rect, double line_gap, const Font* font, const RGB& color, float alpha = 1.0f) noexcept override { return 0.0; /* Implement! */ }
-        void addTextPath(const char* text, const Font* font) noexcept override { /* Implement! */ }
+        Rectd textRect(const char* text, const Font* font) noexcept override;
+        void drawText(const char* text, const Vec2d& pos, const Font* font, const RGB& color, float alpha = 1.0f) noexcept override;
+        double drawTextLineByLine(const char* text, const Rectd& bounds_rect, const Rectd& rect, double line_gap, const Font* font, const RGB& color, float alpha = 1.0f) noexcept override;
+        void addTextPath(const char* text, const Font* font) noexcept override;
 
-        void clipPath() noexcept override { /* Implement! */ }
-        void clipPathEvenOdd() noexcept override { /* Implement! */ }
-        Rectd clipBoundsRect() noexcept override { return Rectd(); /* Implement! */ }
-        void resetClip() noexcept override { /* Implement! */ }
+        void clipPath() noexcept override;
+        void clipPathEvenOdd() noexcept override;
+        Rectd clipBoundsRect() noexcept override;
+        void resetClip() noexcept override;
 
         void translate(double tx, double ty) noexcept override;
         void scale(double sx, double sy) noexcept override;
         void rotate(double angle) noexcept override;
         void affineTransform(const Mat3d& matrix) noexcept override;
     };
-}
 
-#endif // GrainCairoContext_hpp
+
+} // End of namespace Grain
+
+#endif // GrainMacCGContext_hpp

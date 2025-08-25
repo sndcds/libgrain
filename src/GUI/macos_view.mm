@@ -10,9 +10,8 @@
 #include "GUI/Components/Component.hpp"
 #include "GUI/Event.hpp"
 #include "2d/Rect.hpp"
-#include "String/String.hpp"
 #include "String/StringList.hpp"
-#include "Graphic/GraphicContext.hpp"
+#include "Graphic/MacCGContext.hpp"
 
 
 namespace Grain {
@@ -105,8 +104,8 @@ namespace Grain {
         [(NSView*)component->nsView() setFrameSize:NSMakeSize(width, height)];
     }
 
-    void _macosView_setContextByComponent(GraphicContext* gc, Component* component) {
-        gc->macos_setCGContextByComponent([[NSGraphicsContext currentContext] CGContext], component);
+    void _macosView_setContextByComponent(MacCGContext* gc, Component* component) {
+        gc->setCGContextByComponent([[NSGraphicsContext currentContext] CGContext], component);
     }
 }
 

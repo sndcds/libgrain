@@ -9,9 +9,12 @@
 
 #include "App/App.hpp"
 #include "GUI/Components/Button.hpp"
-#include "Graphic/GraphicContext.hpp"
 #include "GUI/Event.hpp"
-// #include "Look.hpp"
+#include "Graphic/GraphicContext.hpp"
+
+#if defined(__APPLE__) && defined(__MACH__)
+#include "Graphic/MacCGContext.hpp"
+#endif
 
 
 namespace Grain {
@@ -45,7 +48,11 @@ namespace Grain {
 
 
     void Button::draw(const Rectd& dirty_rect) noexcept {
+#if defined(__APPLE__) && defined(__MACH__)
+        MacCGContext gc(this);
+#else
         GraphicContext gc(this);
+#endif
 
         auto style = guiStyle();
         if (!style) {

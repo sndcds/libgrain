@@ -133,6 +133,7 @@ add_library(libgrain STATIC
 
         src/Graphic/GraphicContext.cpp
         src/Graphic/CairoContext.cpp
+        src/Graphic/MacCGContext.cpp
         src/Graphic/Font.cpp
         src/Graphic/StrokeStyle.cpp
 

@@ -15,7 +15,6 @@
 #include "GUI/Components/TextField.hpp"
 #include "App/App.hpp"
 #include "String/String.hpp"
-#include "Color/RGBA.hpp"
 #include "Color/Gradient.hpp"
 #include "Graphic/GraphicContext.hpp"
 #include "Graphic/Font.hpp"

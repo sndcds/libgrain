@@ -468,7 +468,7 @@ namespace Grain {
                     }
                     css_unit_info++;
                 }
-                if (!unit_flag) { throw ErrorCode::CSSUnkownUnit; }  // No unit found
+                if (!unit_flag) { throw ErrorCode::CSSUnknownUnit; }  // No unit found
             }
 
             out_value.setDouble(String::parseDoubleWithDotOrComma(value_beg_ptr), css_unit);

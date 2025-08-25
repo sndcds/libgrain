@@ -13,7 +13,7 @@
 #define GrainButton_hpp
 
 #include "Grain.hpp"
-#include "Component.hpp"
+#include "GUI/Components/Component.hpp"
 #include "GUI/Views/View.hpp"
 
 

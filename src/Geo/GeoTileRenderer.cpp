@@ -28,6 +28,8 @@
 #include "Geo/WKBParser.hpp"
 #include "App/App.hpp"
 #include "Graphic/GraphicContext.hpp"
+#include "Graphic/MacCGContext.hpp"
+#include "Graphic/CairoContext.hpp"
 #include "2d/GraphicCompoundPath.hpp"
 #include "File/File.hpp"
 #include "String/CSVString.hpp"
@@ -126,6 +128,8 @@ namespace Grain {
 
             m_render_mode_name = config_table.stringOrThrow("render-mode", kTomlErrRenderMode);
             setRenderModeByName(m_render_mode_name);
+
+            m_renderer_name = config_table.stringOr("renderer", "System", kTomlErrRenderer);
 
             if (m_render_mode == RenderMode::Image) {
                 m_output_file_name = config_table.stringOrThrow("output-file-name", kTomlErrOutputFileName);
@@ -1285,10 +1289,24 @@ namespace Grain {
 
             if (m_render_image->beginDraw()) {
                 m_render_image->clear(RGBA(m_map_bg_color, m_map_bg_opacity));
-                GraphicContext gc;
-                gc.setImage(m_render_image);
+                GraphicContext *gc = nullptr;
+                std::cout << "Renderer: " << m_renderer_name << std::endl;
+                if (m_renderer_name.compareIgnoreCase("cairo") == 0) {
+                    gc = new CairoContext();
+                    std::cout << "Renderer: Cairo" << std::endl;
+                }
+                else {
+                    gc = new MacCGContext();
+                    std::cout << "Renderer: MacCG" << std::endl;
+                }
+
+                if (!gc) {
+                    Exception::throwSpecific(kErrGraphicsContextFailed);
+                }
+
+                gc->setImage(m_render_image);
                 m_render_image->beginDraw();
-                _renderLayers(gc, remap_rect);
+                _renderLayers(*gc, remap_rect);
                 m_render_image->endDraw();
             }
         }
@@ -1392,7 +1410,11 @@ namespace Grain {
     /**
      *  @brief Prepare Lua script access in rendering function for a layer.
      */
-    void GeoTileRenderer::_prepareLuaScriptForLayer(GeoTileRendererLayer *layer, GeoTileRendererDrawSettings *draw_settings, int64_t element_count) {
+    void GeoTileRenderer::_prepareLuaScriptForLayer(
+            GeoTileRendererLayer *layer,
+            GeoTileRendererDrawSettings *draw_settings,
+            int64_t element_count) {
+
         if (!layer->m_has_lua_script) {
             // No Lua script is used in the layer, return immediately
             return;
@@ -1494,7 +1516,11 @@ namespace Grain {
     /**
      *  @brief Render a layer from WKB data in a PSQL database.
      */
-    void GeoTileRenderer::_renderPSQLLayer(GeoTileRendererLayer *layer, GraphicContext &gc, RemapRectd &remap_rect) {
+    void GeoTileRenderer::_renderPSQLLayer(
+            GeoTileRendererLayer *layer,
+            GraphicContext &gc,
+            RemapRectd &remap_rect) {
+
         auto result = ErrorCode::None;
         Timestamp timestamp;
 
@@ -1845,7 +1871,11 @@ namespace Grain {
     /**
      *  @brief Render a layer from data in a ESRI Shape file.
      */
-    void GeoTileRenderer::_renderShapeLayer(GeoTileRendererLayer *layer, GraphicContext &gc, RemapRectd &remap_rect) {
+    void GeoTileRenderer::_renderShapeLayer(
+            GeoTileRendererLayer *layer,
+            GraphicContext &gc,
+            RemapRectd &remap_rect) {
+
         Timestamp timestamp;
 
         // Check if shape must be loaded
@@ -1911,7 +1941,11 @@ namespace Grain {
     /**
      *  @brief Render a layer from data in a Grain Polygon File.
      */
-    void GeoTileRenderer::_renderPolygonLayer(GeoTileRendererLayer *layer, GraphicContext &gc, RemapRectd &remap_rect) {
+    void GeoTileRenderer::_renderPolygonLayer(
+            GeoTileRendererLayer *layer,
+            GraphicContext &gc,
+            RemapRectd &remap_rect) {
+
         Timestamp timestamp;
 
         // TODO: Check SRID/CRS ... what to do, if destination is different frm polygon files SRID?

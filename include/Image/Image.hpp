@@ -24,7 +24,6 @@
 #include "String/String.hpp"
 
 
-
 namespace Grain {
 
     // Forward declarations
@@ -151,10 +150,10 @@ namespace Grain {
 
         cairo_surface_t* _m_cairo_surface = nullptr;
 
-        #if defined(__APPLE__) && defined(__MACH__)
-            CGContextRef _m_cg_context_ref = nullptr;
-            CGImageRef _m_cg_image_ref = nullptr;
-        #endif
+#if defined(__APPLE__) && defined(__MACH__)
+        CGContextRef _m_cg_context_ref = nullptr;
+        CGImageRef _m_cg_image_ref = nullptr;
+#endif
 
     public:
         Image() noexcept = default;

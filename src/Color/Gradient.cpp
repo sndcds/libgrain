@@ -18,8 +18,7 @@
 #include "String/CSVString.hpp"
 #include "Math/Math.hpp"
 #include "Graphic/GraphicContext.hpp"
-// #include "Image.hpp" TODO !!!!!
-// #include "GrApp.hpp" TODO !!!!!
+#include "Graphic/MacCGContext.hpp"
 
 
 namespace Grain {
@@ -750,30 +749,29 @@ namespace Grain {
 
 
     void Gradient::needsUpdate(bool flag) noexcept {
-
         if (flag) {
             m_must_sort = true;
             m_lut_must_update = true;
-            #if defined(__APPLE__) && defined(__MACH__)
-                m_cg_gradient_must_update = true;
-            #endif
+#if defined(__APPLE__) && defined(__MACH__)
+            m_cg_gradient_must_update = true;
+#endif
         }
     }
 
 
-    void Gradient::update(GraphicContext& gc) noexcept {
-        #if defined(__APPLE__) && defined(__MACH__)
-            if (m_cg_gradient_must_update) {
-                if (m_cg_gradient != nullptr) {
-                    CGGradientRelease(m_cg_gradient);
-                }
-
-                m_cg_gradient = macos_cgGradient(gc);
-                m_cg_gradient_must_update = false;
+    void Gradient::update(GraphicContext* gc) noexcept {
+#if defined(__APPLE__) && defined(__MACH__)
+        if (m_cg_gradient_must_update) {
+            if (m_cg_gradient != nullptr) {
+                CGGradientRelease(m_cg_gradient);
             }
-        #else
-            // TODO: Implement linux version
-        #endif
+
+            m_cg_gradient = macos_cgGradient(gc);
+            m_cg_gradient_must_update = false;
+        }
+#else
+        // TODO: Implement linux version
+#endif
     }
 
 
@@ -871,8 +869,14 @@ namespace Grain {
 
 
 #if defined(__APPLE__) && defined(__MACH__)
-    CGGradientRef Gradient::macos_cgGradient(GraphicContext& gc) noexcept {
+    CGGradientRef Gradient::macos_cgGradient(GraphicContext* gc) noexcept {
         constexpr int32_t kMaxColorStops = 512;
+
+        if (!gc || gc->magic() != Type::fourcc('m', 'a', 'c', ' ')) {
+            return nullptr;
+        }
+
+        auto mac_cg = static_cast<MacCGContext*>(gc);
 
         int32_t cg_color_count = macos_cgColorCount();
         if (cg_color_count > kMaxColorStops) {
@@ -1016,7 +1020,7 @@ namespace Grain {
         }
 
         if (cg_color_space == nullptr) {
-            cg_color_space = gc.macos_cgColorSpace();
+            cg_color_space = mac_cg->cgColorSpace();
         }
 
         /*
@@ -1117,53 +1121,24 @@ namespace Grain {
     }
 
 
-    void Gradient::draw(GraphicContext& gc, const Vec2d& start_pos, const Vec2d& end_pos) noexcept {
-
-        draw(gc, start_pos, end_pos, true, true);
+    void Gradient::draw(GraphicContext* gc, const Vec2d& start_pos, const Vec2d& end_pos) noexcept {
+        gc->drawGradient(this, start_pos, end_pos);
     }
 
 
-#if defined(__APPLE__) && defined(__MACH__)
- void Gradient::draw(GraphicContext& gc, const Vec2d& start_pos, const Vec2d& end_pos, bool draw_before, bool draw_after) noexcept {
-
-        if (stopCount() > 1) {
-            update(gc);
-
-            if (m_cg_gradient != nullptr) {
-
-                CGGradientDrawingOptions options = 0x0;
-
-                if (draw_before) {
-                    options |= kCGGradientDrawsBeforeStartLocation;
-                }
-                if (draw_after) {
-                    options |= kCGGradientDrawsAfterEndLocation;
-                }
-
-                CGContextDrawLinearGradient(gc.macos_cgContext(),
-                                            m_cg_gradient,
-                                            start_pos.cgPoint(),
-                                            end_pos.cgPoint(),
-                                            options);
-            }
-        }
+    void Gradient::draw(GraphicContext* gc, const Vec2d& start_pos, const Vec2d& end_pos, bool draw_before, bool draw_after) noexcept {
+        gc->drawGradient(this, start_pos, end_pos, draw_before, draw_after);
     }
-#else
-    void Gradient::draw(GraphicContext& gc, const Vec2d& start_pos, const Vec2d& end_pos, bool draw_before, bool draw_after) noexcept {
-        // TODO: Implement linux version
-    }
-#endif
 
 
-    void Gradient::drawInRect(GraphicContext& gc, const Rectd& rect, Direction direction) noexcept {
-
+    void Gradient::drawInRect(GraphicContext* gc, const Rectd& rect, Direction direction) noexcept {
         drawInRect(gc, rect, direction, true, true);
     }
 
 
-    void Gradient::drawInRect(GraphicContext& gc, const Rectd& rect, Direction direction, bool draw_before, bool draw_after) noexcept {
-        Vec2f start_pos;
-        Vec2f end_pos;
+    void Gradient::drawInRect(GraphicContext* gc, const Rectd& rect, Direction direction, bool draw_before, bool draw_after) noexcept {
+        Vec2d start_pos;
+        Vec2d end_pos;
 
         switch (direction) {
             case Direction::LeftToRight:
@@ -1172,49 +1147,42 @@ namespace Grain {
                 end_pos.m_x = rect.x2();
                 end_pos.m_y = rect.m_y;
                 break;
-
             case Direction::RightToLeft:
                 start_pos.m_x = rect.x2();
                 start_pos.m_y = rect.m_y;
                 end_pos.m_x = rect.m_x;
                 end_pos.m_y = rect.m_y;
                 break;
-
             case Direction::TopToBottom:
                 start_pos.m_x = rect.m_x;
                 start_pos.m_y = rect.m_y;
                 end_pos.m_x = rect.m_x;
                 end_pos.m_y = rect.y2();
                 break;
-
             case Direction::BottomToTop:
                 start_pos.m_x = rect.m_x;
                 start_pos.m_y = rect.y2();
                 end_pos.m_x = rect.m_x;
                 end_pos.m_y = rect.m_y;
                 break;
-
             case Direction::DiagonalRightUp:
                 start_pos.m_x = rect.m_x;
                 start_pos.m_y = rect.y2();
                 end_pos.m_x = rect.x2();
                 end_pos.m_y = rect.m_y;
                 break;
-
             case Direction::DiagonalRightDown:
                 start_pos.m_x = rect.m_x;
                 start_pos.m_y = rect.m_y;
                 end_pos.m_x = rect.x2();
                 end_pos.m_y = rect.y2();
                 break;
-
             case Direction::DiagonalLeftUp:
                 start_pos.m_x = rect.x2();
                 start_pos.m_y = rect.y2();
                 end_pos.m_x = rect.m_x;
                 end_pos.m_y = rect.m_y;
                 break;
-
             case Direction::DiagonalLeftDown:
                 start_pos.m_x = rect.x2();
                 start_pos.m_y = rect.m_y;
@@ -1223,45 +1191,21 @@ namespace Grain {
                 break;
         }
 
-        /* TODO !!!!!!
         draw(gc, start_pos, end_pos, draw_before, draw_after);
-         */
     }
 
 
-#if defined(__APPLE__) && defined(__MACH__)
-    void Gradient::drawRadial(GraphicContext& gc, const Vec2d& pos, double radius, bool draw_before, bool draw_after) noexcept {
-
-        if (stopCount() > 1) {
-            updateLUT();
-            update(gc);
-
-            if (m_cg_gradient != nullptr) {
-                CGGradientDrawingOptions options = 0x0;
-
-                if (draw_before) {
-                    options |= kCGGradientDrawsBeforeStartLocation;
-                }
-                if (draw_after) {
-                    options |= kCGGradientDrawsAfterEndLocation;
-                }
-
-                CGContextDrawRadialGradient(gc.macos_cgContext(), m_cg_gradient, pos.cgPoint(), 0, pos.cgPoint(), radius, options);
-            }
-        }
+    void Gradient::drawRadial(GraphicContext* gc, const Vec2d& pos, double radius, bool draw_before, bool draw_after) noexcept {
+        gc->drawRadialGradient(this, pos, radius, draw_before, draw_after);
     }
-#else
-    void Gradient::drawRadial(GraphicContext& gc, const Vec2d& pos, double radius, bool draw_before, bool draw_after) noexcept {
-        // TODO: Implement linux version
-    }
-#endif
+
 
 #if defined(__APPLE__) && defined(__MACH__)
     GradientFunction::GradientFunction(StandardFunctionType function_type) noexcept {
 
         struct TypedFunction {
             StandardFunctionType type;
-            GradientColorFunc func;
+            GradientMacOSColorFunc func;
         };
 
         static TypedFunction typed_functions[static_cast<int32_t>(StandardFunctionType::Count)] = {
@@ -1288,7 +1232,7 @@ namespace Grain {
 #endif
 
 #if defined(__APPLE__) && defined(__MACH__)
-    GradientFunction::GradientFunction(GradientColorFunc func) noexcept {
+    GradientFunction::GradientFunction(GradientMacOSColorFunc func) noexcept {
 
     }
 #endif
@@ -1300,7 +1244,7 @@ namespace Grain {
 
 #if defined(__APPLE__) && defined(__MACH__)
     void GradientFunction::_draw(GraphicContext& gc, const Vec2d& start_point, double start_radius, const Vec2d& end_point, double end_radius, bool extend_start, bool extend_end) noexcept {
-
+        /* TODO: !!!!!
         // Set up the function callbacks structure
         CGFunctionCallbacks callbacks = {
                 0,              // Version
@@ -1335,6 +1279,7 @@ namespace Grain {
         // Cleanup
         CGFunctionRelease(function);
         CGShadingRelease(shading);
+        */
     }
 #else
     void GradientFunction::_draw(GraphicContext& gc, const Vec2d& start_point, double start_radius, const Vec2d& end_point, double end_radius, bool extend_start, bool extend_end) noexcept {

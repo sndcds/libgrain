@@ -187,7 +187,7 @@ namespace Grain {
         CSSValueStorageOverflow,
         CSSInvalidFormat,
         CSSNumberParseError,
-        CSSUnkownUnit,
+        CSSUnknownUnit,
         CSSNoneHexLetter,
         CSSToManyDigitsInHexCode,
         CSSWrongDigitsInHexCode,

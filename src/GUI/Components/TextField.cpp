@@ -15,6 +15,10 @@
 #include "2d/Rect.hpp"
 #include "App/App.hpp"
 
+#if defined(__APPLE__) && defined(__MACH__)
+#include "Graphic/MacCGContext.hpp"
+#endif
+
 
 namespace Grain {
 
@@ -70,7 +74,7 @@ namespace Grain {
 
 #if defined(__APPLE__) && defined(__MACH__)
     void TextField::draw(const Rectd& dirty_rect) noexcept {
-        GraphicContext gc(this);
+        MacCGContext gc(this);
         gc.disableFontSubpixelQuantization();
 
         auto style= guiStyle();
@@ -79,7 +83,7 @@ namespace Grain {
             return;
         }
 
-        CGContextRef cg_context = gc.macos_cgContext();
+        CGContextRef cg_context = gc.cgContext();
 
         _checkSelectionAndCursor();
 

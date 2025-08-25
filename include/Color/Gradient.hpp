@@ -20,7 +20,7 @@
 #include "2d/Rect.hpp"
 
 #if defined(__APPLE__) && defined(__MACH__)
-    #include <CoreGraphics/CoreGraphics.h>
+#include <CoreGraphics/CoreGraphics.h>
 #endif
 
 
@@ -28,6 +28,7 @@ namespace Grain {
 
     class RGBLUT1;
     class GraphicContext;
+    class MacCGContext;
 
 
     /**
@@ -211,11 +212,11 @@ namespace Grain {
         bool m_must_sort = false;               ///< Indicates, if stops must be sorted befor usage
         bool m_lut_must_update = false;         ///< Indicates, if LUT must be updated before usage
 
-        #if defined(__APPLE__) && defined(__MACH__)
-            CGGradientRef m_cg_gradient = nullptr;  ///< CoreGraphics representation for internal use
-            int32_t m_cg_resolution = 20;           ///< Define resolution for smoothing, when using CoreGraphics
-            bool m_cg_gradient_must_update = true;  ///< Indicates, that CoreGraphics representation must be updated
-        #endif
+#if defined(__APPLE__) && defined(__MACH__)
+        CGGradientRef m_cg_gradient = nullptr;  ///< CoreGraphics representation for internal use
+        int32_t m_cg_resolution = 20;           ///< Define resolution for smoothing, when using CoreGraphics
+        bool m_cg_gradient_must_update = true;  ///< Indicates, that CoreGraphics representation must be updated
+#endif
 
 
     public:
@@ -294,16 +295,16 @@ namespace Grain {
         bool setColorModeOfSetectedStops(bool two_colored) noexcept;
 
         void needsUpdate(bool flag = true) noexcept;
-        void update(GraphicContext& gc) noexcept;
+        void update(GraphicContext* gc) noexcept;
         bool reset() noexcept;
         bool flip() noexcept;
         bool distribute() noexcept;
         bool stretch() noexcept;
 
-        #if defined(__APPLE__) && defined(__MACH__)
-            CGGradientRef macos_cgGradient(GraphicContext& gc) noexcept;
-            int32_t macos_cgColorCount() noexcept;
-        #endif
+#if defined(__APPLE__) && defined(__MACH__)
+        CGGradientRef macos_cgGradient(GraphicContext* gc) noexcept;
+        int32_t macos_cgColorCount() noexcept;
+#endif
 
         void sortStops() noexcept;
 
@@ -313,12 +314,11 @@ namespace Grain {
         bool updateLUT() noexcept;
         bool lookupFromLUT(float pos, RGB& out_color) noexcept;
 
-        void draw(GraphicContext& gc, const Vec2d& start_pos, const Vec2d& end_pos) noexcept;
-        void draw(GraphicContext& gc, const Vec2d& start_pos, const Vec2d& end_pos, bool draw_before, bool draw_after) noexcept;
-        void drawInRect(GraphicContext& gc, const Rectd& rect, Direction direction) noexcept;
-        void drawInRect(GraphicContext& gc, const Rectd& rect, Direction direction, bool draw_before, bool draw_after) noexcept;
-
-        void drawRadial(GraphicContext& gc, const Vec2d& pos, double radius, bool draw_before, bool draw_after) noexcept;
+        void draw(GraphicContext* gc, const Vec2d& start_pos, const Vec2d& end_pos) noexcept;
+        void draw(GraphicContext* gc, const Vec2d& start_pos, const Vec2d& end_pos, bool draw_before, bool draw_after) noexcept;
+        void drawInRect(GraphicContext* gc, const Rectd& rect, Direction direction) noexcept;
+        void drawInRect(GraphicContext* gc, const Rectd& rect, Direction direction, bool draw_before, bool draw_after) noexcept;
+        void drawRadial(GraphicContext* gc, const Vec2d& pos, double radius, bool draw_before, bool draw_after) noexcept;
 
         static int _spotSortCompareFunc(const GradientStop* a, const GradientStop* b) {
             if (a == nullptr || b == nullptr) {
@@ -337,9 +337,9 @@ namespace Grain {
 
 
 
-    #if defined(__APPLE__) && defined(__MACH__)
-        typedef void (*GradientColorFunc)(void* info_ptr, const CGFloat* in, CGFloat* out);
-    #endif
+#if defined(__APPLE__) && defined(__MACH__)
+    typedef void (*GradientMacOSColorFunc)(void* info_ptr, const CGFloat* in, CGFloat* out);
+#endif
 
 
     class GradientFunction {
@@ -368,15 +368,15 @@ namespace Grain {
         void* m_info_ptr = nullptr;
         double _m_vars[kMaxVars]{};
         RGBA m_colors[kMaxColors];
-        #if defined(__APPLE__) && defined(__MACH__)
-            GradientColorFunc _m_color_func = nullptr;
-        #endif
+    #if defined(__APPLE__) && defined(__MACH__)
+        GradientMacOSColorFunc _m_color_func = nullptr;
+    #endif
 
     public:
         GradientFunction(StandardFunctionType function_type) noexcept;
-        #if defined(__APPLE__) && defined(__MACH__)
-            GradientFunction(GradientColorFunc func) noexcept;
-        #endif
+    #if defined(__APPLE__) && defined(__MACH__)
+        GradientFunction(GradientMacOSColorFunc func) noexcept;
+    #endif
 
         ~GradientFunction() noexcept;
 
@@ -408,14 +408,14 @@ namespace Grain {
         }
         void _draw(GraphicContext& gc, const Vec2d& start_point, double start_radius, const Vec2d& end_point, double end_radius, bool extend_start = false, bool extend_end = false) noexcept;
 
-        #if defined(__APPLE__) && defined(__MACH__)
-            static void _standardFunc_gradient(void* info_ptr, const CGFloat* in, CGFloat* out);
-            static void _standardFunc_gradientAlpha(void* info_ptr, const CGFloat* in, CGFloat* out);
-            static void _standardFunc_LUT1(void* info_ptr, const CGFloat* in, CGFloat* out);
-            static void _standardFunc_RGBLUT1(void* info_ptr, const CGFloat* in, CGFloat* out);
-            static void _standardFunc_oklchHue(void* info_ptr, const CGFloat* in, CGFloat* out);
-            static void _standardFunc_kelvin(void* info_ptr, const CGFloat* in, CGFloat* out);
-        #endif
+#if defined(__APPLE__) && defined(__MACH__)
+        static void _standardFunc_gradient(void* info_ptr, const CGFloat* in, CGFloat* out);
+        static void _standardFunc_gradientAlpha(void* info_ptr, const CGFloat* in, CGFloat* out);
+        static void _standardFunc_LUT1(void* info_ptr, const CGFloat* in, CGFloat* out);
+        static void _standardFunc_RGBLUT1(void* info_ptr, const CGFloat* in, CGFloat* out);
+        static void _standardFunc_oklchHue(void* info_ptr, const CGFloat* in, CGFloat* out);
+        static void _standardFunc_kelvin(void* info_ptr, const CGFloat* in, CGFloat* out);
+#endif
     };
 
 

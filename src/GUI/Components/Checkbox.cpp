@@ -11,6 +11,10 @@
 #include "Graphic/GraphicContext.hpp"
 #include "App/App.hpp"
 
+#if defined(__APPLE__) && defined(__MACH__)
+#include "Graphic/MacCGContext.hpp"
+#endif
+
 
 namespace Grain {
 
@@ -71,7 +75,11 @@ namespace Grain {
 
 
     void Checkbox::draw(const Rectd& dirty_rect) noexcept {
+#if defined(__APPLE__) && defined(__MACH__)
+        MacCGContext gc(this);
+#else
         GraphicContext gc(this);
+#endif
 
         auto style= guiStyle();
         if (!style) {

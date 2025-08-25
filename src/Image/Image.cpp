@@ -30,12 +30,13 @@
 
 
 #if defined(__APPLE__) && defined(__MACH__)
-    #include <CoreImage/CoreImage.h>
-    #include <CoreGraphics/CoreGraphics.h>
+#include "Graphic/MacCGContext.hpp"
+#include <CoreImage/CoreImage.h>
+#include <CoreGraphics/CoreGraphics.h>
 
-    namespace Grain {
-        Image* _mac_loadImageFromFile(const String& file_path, Image::PixelType pixel_type);
-    } // namespace Grain
+namespace Grain {
+    Image* _mac_loadImageFromFile(const String& file_path, Image::PixelType pixel_type);
+} // namespace Grain
 #endif
 
 
@@ -1200,11 +1201,16 @@ namespace Grain {
 
 #if defined(__APPLE__) && defined(__MACH__)
     bool Image::graphicContext(GraphicContext *out_gc) noexcept {
-
         try {
             if (!out_gc) {
                 throw ErrorCode::BadArgs;
             }
+
+            if (out_gc->m_magic != Type::fourcc('m', 'a', 'c', ' ')) {
+                throw ErrorCode::BadArgs;
+            }
+
+            auto mac_gc = static_cast<MacCGContext*>(out_gc);
 
             if (bitsPerComponent() > 32) {
                 throw Error::specific(kErrUnsupportedBitDepth);
@@ -1248,15 +1254,7 @@ namespace Grain {
                 throw Error::specific(kErrCGContextMissing);
             }
 
-            if (out_gc) {
-                out_gc->m_cg_context = _m_cg_context_ref;
-            }
-
-            /* TODO !!!!!
-            // Create an NSGraphicsContext from CGContextRef and set it as the active context
-            NSGraphicsContext *ns_graphics_context = [NSGraphicsContext graphicsContextWithCGContext:_m_cg_context_ref flipped:true];
-            [NSGraphicsContext setCurrentContext:ns_graphics_context];
-            */
+            mac_gc->setCGContext(_m_cg_context_ref);
         }
         catch (ErrorCode err) {
         }
