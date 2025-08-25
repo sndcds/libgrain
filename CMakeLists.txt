@@ -11,8 +11,8 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 if (APPLE)
     include_directories(
             /opt/local/include
-            /opt/local/include/postgresql15/
-            /opt/local/include/lua5.4/
+            /opt/local/include/postgresql15
+            /opt/local/include/lua5.4
             /opt/homebrew/include
     )
     link_directories(
@@ -22,8 +22,8 @@ if (APPLE)
 elseif (UNIX AND NOT APPLE)
     include_directories(
             /usr/include
-            /usr/include/postgresql/
-            /usr/include/lua5.4/
+            /usr/include/postgresql
+            /usr/include/lua5.1
             /usr/local/include
     )
     link_directories(
