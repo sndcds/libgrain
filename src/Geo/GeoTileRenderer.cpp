@@ -1295,11 +1295,12 @@ namespace Grain {
                     gc = new CairoContext();
                     std::cout << "Renderer: Cairo" << std::endl;
                 }
+#if defined(__APPLE__) && defined(__MACH__)
                 else {
                     gc = new MacCGContext();
                     std::cout << "Renderer: MacCG" << std::endl;
                 }
-
+#endif
                 if (!gc) {
                     Exception::throwSpecific(kErrGraphicsContextFailed);
                 }
