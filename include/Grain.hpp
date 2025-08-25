@@ -27,9 +27,10 @@
 #include <cinttypes>
 #include <cstring>
 #include <algorithm>
+#include <cstdarg>
 
 #if defined(__APPLE__) && defined(__MACH__)
-    #include <TargetConditionals.h>  // Required for TARGET_OS_* macros
+#include <TargetConditionals.h>  // Required for TARGET_OS_* macros
 #endif
 
 #define GRAIN_RETAIN(o) Grain::Object::retain(o)
