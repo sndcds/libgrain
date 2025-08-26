@@ -883,10 +883,12 @@ namespace Grain {
 
                         // Render the meta-tile, composed of 8 x 8 ordinary tiles
 
+                        std::cout << "render()" << std::endl;
                         auto err = render();
                         if (err != ErrorCode::None) {
                             Exception::throwSpecific(1);    // TODO: !!!!!
                         }
+                        std::cout << "render() done " << std::endl;
 
                         // Split the meta-tile into 8 x 8 tiles and save to files as separate tiles
                         if (use_meta_tile) {
