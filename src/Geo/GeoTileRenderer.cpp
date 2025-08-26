@@ -1486,7 +1486,6 @@ namespace Grain {
 
             std::cout << "buff... GeoTileRenderer::_renderPSQLLayer() 6" << std::endl;
             std::cout << sql.utf8() << std::endl;
-            Exception::throwStandard(ErrorCode::None);
 
             sql = "SELECT name, layer, highway, ST_Length(way) AS road_length, ST_SRID(way) AS srid, ST_AsBinary(way) AS wkb FROM planet_osm_line LIMIT 1";
             sql_result = PQexecParams(pg_conn, sql.utf8(), 0, NULL, NULL, NULL, NULL, 1);
