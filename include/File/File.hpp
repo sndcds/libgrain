@@ -20,6 +20,8 @@
 #include "Type/Data.hpp"
 
 #include <fstream>
+#include <fcntl.h>
+#include <unistd.h>
 
 
 namespace Grain {
