@@ -263,7 +263,6 @@ namespace Grain {
 
 
     int Lua::_funcLuaPrintRedirect(lua_State* l) {
-
         int arg_n = lua_gettop(l);
         std::string output;
 
@@ -281,7 +280,8 @@ namespace Grain {
             }
         }
 
-        std::cout << "[Lua] " << output << std::endl;
+        std::cout << "[Lua] " << output << std::endl << std::flush;
+
         return 0;
     }
 

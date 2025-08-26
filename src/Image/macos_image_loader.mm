@@ -7,9 +7,6 @@ namespace Grain {
 
 
     Image* _mac_loadImageFromFile(const String& file_path, Image::PixelType pixel_type) {
-
-        std::cout << "_mac_loadImageFromFile: " << file_path << '\n';
-
         Image* image = nullptr;
         NSImage* ns_image = nil;
         NSData* ns_image_data = nil;
@@ -39,15 +36,6 @@ namespace Grain {
             NSBitmapFormat ns_bitmap_format = [ns_bitmap_rep bitmapFormat];
             BOOL ns_has_alpha = [ns_bitmap_rep hasAlpha];
             NSInteger ns_bytes_per_row = [ns_bitmap_rep bytesPerRow];  // Unused
-
-            std::cout << "ns_width: " << ns_width << '\n';
-            std::cout << "ns_height: " << ns_height << '\n';
-            std::cout << "ns_bits_per_pixel: " << ns_bits_per_pixel << '\n';
-            std::cout << "ns_bits_per_sample: " << ns_bits_per_sample << '\n';
-            std::cout << "ns_number_of_planes: " << ns_number_of_planes << '\n';
-            std::cout << "ns_samples_per_pixel: " << ns_samples_per_pixel << '\n';
-            std::cout << "ns_has_alpha: " << ns_has_alpha << '\n';
-            std::cout << "ns_bytes_per_row: " << ns_bytes_per_row << '\n';
 
             NSColorSpaceModel ns_color_space_model = [ns_color_space colorSpaceModel];
 

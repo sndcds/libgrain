@@ -2614,15 +2614,6 @@ namespace Grain {
             // int32_t bytes_per_pixel = bytesPerPixel();
             int bytes_per_row = bytesPerRow();
 
-
-            std::cout << "bit_depth: " << bit_depth << std::endl;
-            std::cout << "width_px: " << width_px << std::endl;
-            std::cout << "height_px: " << height_px << std::endl;
-            // std::cout << "channels: " << channels << std::endl;
-            // std::cout << "bytes_per_pixel: " << bytes_per_pixel << std::endl;
-            std::cout << "bytes_per_row: " << bytes_per_row << std::endl;
-
-
             png_set_IHDR(
                     png_ptr, info_ptr,
                     width_px, height_px,
@@ -2938,7 +2929,7 @@ namespace Grain {
         #if defined(__APPLE__) && defined(__MACH__)
             return _mac_loadImageFromFile(file_path, data_type);
         #else
-            #warning "loadImageFromFile is only implemented for macOS
+            #warning "loadImageFromFile is only implemented for macOS"
             return nullptr;
         #endif
     }
@@ -2961,14 +2952,15 @@ namespace Grain {
             return nullptr;
         }
 
+        /*
         auto &c = lr.imgdata.color;
-        std::cout << "Cam → XYZFile:\n";
+        std::cout << "Cam → XYZFile:\n";
         for (int32_t i = 0; i < 3; i++) {
             for (int32_t j = 0; j < 3; j++) {
                 std::cout << c.cam_xyz[i][j] << " | ";
             }
         }
-        std::cout << "\nCam → sRGB:\n";
+        std::cout << "\nCam → sRGB:\n";
         for (int32_t i = 0; i < 3; i++) {
             for (int32_t j = 0; j < 4; j++) {
                 std::cout << c.rgb_cam[i][j] << " | ";
@@ -2982,6 +2974,7 @@ namespace Grain {
         for (int32_t i = 0; i < 4; i++) {
             std::cout << c.cam_mul[i] << " | ";
         }
+         */
 
         // lr.subtract_black();
         // RawProcessor.raw2image();
@@ -3055,23 +3048,23 @@ namespace Grain {
             return nullptr;
         }
 
-        std::cout << "raw_width: " << lr.imgdata.sizes.raw_width << std::endl;
-        std::cout << "raw_height: " << lr.imgdata.sizes.raw_height << std::endl;
-        std::cout << "width: " << lr.imgdata.sizes.width << std::endl;
-        std::cout << "height: " << lr.imgdata.sizes.height << std::endl;
+        // std::cout << "raw_width: " << lr.imgdata.sizes.raw_width << std::endl;
+        // std::cout << "raw_height: " << lr.imgdata.sizes.raw_height << std::endl;
+        // std::cout << "width: " << lr.imgdata.sizes.width << std::endl;
+        // std::cout << "height: " << lr.imgdata.sizes.height << std::endl;
 
-        std::cout << "RAW w: " << lr.imgdata.rawdata.sizes.raw_width << std::endl;
-        std::cout << "RAW h: " << lr.imgdata.rawdata.sizes.raw_height << std::endl;
-        std::cout << "RAW p: " << lr.imgdata.rawdata.sizes.raw_pitch << std::endl;
+        // std::cout << "RAW w: " << lr.imgdata.rawdata.sizes.raw_width << std::endl;
+        // std::cout << "RAW h: " << lr.imgdata.rawdata.sizes.raw_height << std::endl;
+        // std::cout << "RAW p: " << lr.imgdata.rawdata.sizes.raw_pitch << std::endl;
 
         uint16_t* raw = lr.imgdata.rawdata.raw_image;
         int width = lr.imgdata.sizes.raw_width;
         int height = lr.imgdata.sizes.raw_height;
         int pitch = width;
 
-        std::cout << "raw_width: " << width << std::endl;
-        std::cout << "raw_height: " << height << std::endl;
-        std::cout << "raw: " << (long)raw << std::endl;
+        // std::cout << "raw_width: " << width << std::endl;
+        // std::cout << "raw_height: " << height << std::endl;
+        // std::cout << "raw: " << (long)raw << std::endl;
 
         constexpr fourcc_t grbg = Type::fourcc('G', 'R', 'B', 'G');
         constexpr fourcc_t rggb = Type::fourcc('R', 'G', 'G', 'B');
@@ -3086,8 +3079,8 @@ namespace Grain {
         }
 
         Log l;
-        l << "cfa_pattern_code: " << l.fourCCValue(cfa_pattern_code) << Log::endl;
-        std::cout << "cfa_pattern_code: " << cfa_pattern_code << std::endl;
+        // l << "cfa_pattern_code: " << l.fourCCValue(cfa_pattern_code) << Log::endl;
+        // l << "cfa_pattern_code: " << cfa_pattern_code << l.endl;
 
         int32_t cfa[2][2]{};
 
@@ -3139,7 +3132,6 @@ namespace Grain {
 
 
         for (int32_t y = 0; y < height; y++) {
-            std::cout << y << std::endl;
             for (int32_t x = 0; x < width; x++) {
                 ia.setPos(x, y);
 
