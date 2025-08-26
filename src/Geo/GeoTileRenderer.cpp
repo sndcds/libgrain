@@ -1485,6 +1485,7 @@ namespace Grain {
             }
 
             std::cout << "buff... GeoTileRenderer::_renderPSQLLayer() 6" << std::endl;
+            std::cout << sql.utf8() << std::endl;
             sql_result = PQexecParams(pg_conn, sql.utf8(), 0, NULL, NULL, NULL, NULL, 1);
             if (PQresultStatus(sql_result) != PGRES_TUPLES_OK) {
                 m_last_sql_err = PQerrorMessage(pg_conn);
