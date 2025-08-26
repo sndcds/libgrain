@@ -1200,27 +1200,27 @@ namespace Grain {
 
 
 #if defined(__APPLE__) && defined(__MACH__)
-    bool Image::graphicContext(GraphicContext *out_gc) noexcept {
+    bool Image::graphicContext(GraphicContext* out_gc) noexcept {
         try {
             if (!out_gc) {
-                throw ErrorCode::BadArgs;
+                Exception::throwStandard(ErrorCode::BadArgs);
             }
 
             if (out_gc->m_magic != Type::fourcc('m', 'a', 'c', ' ')) {
-                throw ErrorCode::BadArgs;
+                Exception::throwStandard(ErrorCode::BadArgs);
             }
 
             auto mac_gc = static_cast<MacCGContext*>(out_gc);
 
             if (bitsPerComponent() > 32) {
-                throw Error::specific(kErrUnsupportedBitDepth);
+                Exception::throwSpecific(kErrUnsupportedBitDepth);
             }
 
             if (m_color_model != Color::Model::RGB &&
                 m_color_model != Color::Model::RGBA &&
                 m_color_model != Color::Model::Lumina &&
                 m_color_model != Color::Model::LuminaAlpha) {
-                throw Error::specific(kErrUnsupportedColorModel);
+                Exception::throwSpecific(kErrUnsupportedColorModel);
             }
 
             if (!_m_cg_context_ref) {
@@ -1235,7 +1235,7 @@ namespace Grain {
                 }
 
                 if (cg_color_space == nil) {
-                    throw Error::specific(kErrNoColorSpace);
+                    Exception::throwSpecific(kErrNoColorSpace);
                 }
 
                 CGBitmapInfo cg_bitmap_info = macos_cgBitmapInfo();
@@ -1251,18 +1251,19 @@ namespace Grain {
             }
 
             if (!_m_cg_context_ref) {
-                throw Error::specific(kErrCGContextMissing);
+                Exception::throwSpecific(kErrCGContextMissing);
             }
 
             mac_gc->setCGContext(_m_cg_context_ref);
         }
-        catch (ErrorCode err) {
+        catch (const Exception& e) {
+
         }
 
         return _m_cg_context_ref;
     }
 #else
-    bool Image::graphicContext(GraphicContext *out_gc) noexcept {
+    bool Image::graphicContext(GraphicContext* out_gc) noexcept {
         // TODO: Implement linux version
         return false;
     }
@@ -1459,19 +1460,18 @@ namespace Grain {
 
 
     ErrorCode Image::drawImage(Image *image, const Rectd& rect) noexcept {
-
         auto result = ErrorCode::None;
 
         try {
             if (!image) {
-                throw ErrorCode::NullData;
+                Exception::throwStandard(ErrorCode::NullData);
             }
 
             if (m_color_model != Color::Model::RGB &&
                 m_color_model != Color::Model::RGBA &&
                 m_color_model != Color::Model::Lumina &&
                 m_color_model != Color::Model::LuminaAlpha) {
-                throw ErrorCode::UnsupportedColorModel;
+                Exception::throwStandard(ErrorCode::UnsupportedColorModel);
             }
 
             GraphicContext gc;
@@ -1486,8 +1486,8 @@ namespace Grain {
 
             endDraw();
         }
-        catch (ErrorCode err) {
-            result = err;
+        catch (const Exception& e) {
+            result = e.code();
         }
 
         return result;
@@ -1495,9 +1495,7 @@ namespace Grain {
 
 
     void Image::flipHorizontal() noexcept {
-
         if (isUsable()) {
-
             ImageAccess ia(this);
             //TODO: Implement!
         }
@@ -1505,13 +1503,11 @@ namespace Grain {
 
 
     void Image::flipVertical() noexcept {
-
         // TODO: Implement!
     }
 
 
     void Image::normalize() noexcept {
-
         updateSampleValueRange();
 
         float pixel[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -1554,7 +1550,6 @@ namespace Grain {
 
 
     void Image::clampFloat() noexcept {
-
         if (isUsable() && m_pixel_type != PixelType::Float) {
             return;
         }
@@ -1573,7 +1568,6 @@ namespace Grain {
 
 
     void Image::linearToGamma() noexcept {
-
         if (isUsable() && m_pixel_type != PixelType::Float) {
             return;
         }
@@ -1611,7 +1605,6 @@ namespace Grain {
 
 
     ErrorCode Image::applyMatrix(const Mat3f &matrix) noexcept {
-
         float pixel[4];
         ImageAccess ia(this, pixel);
 
@@ -1696,7 +1689,6 @@ namespace Grain {
  *  @brief Function that returns true if the given pixel is valid.
  */
     bool isValid(int screen[][8], int m, int n, int x, int y, int prev_c, int new_c) {
-
         if (x < 0 || x >= m || y < 0 || y >= n || screen[x][y] != prev_c || screen[x][y] == new_c) {
             return false;
         }
@@ -1707,13 +1699,11 @@ namespace Grain {
 
 
     void Image::floodFill(const Vec2i& pos, const RGB& color, Image& out_image) noexcept {
-
         // TODO: Implement!
     }
 
 
     Image *Image::extractRegion(const Recti& region) noexcept {
-
         Image *region_image = nullptr;
 
         Recti image_rect(0, 0, m_width, m_height);
@@ -1740,7 +1730,6 @@ namespace Grain {
 
 
     ErrorCode Image::downscale(Image *dst_image) noexcept {
-
         if (!dst_image) {
             return ErrorCode::NullData;
         }
@@ -1882,7 +1871,6 @@ namespace Grain {
      */
     /* TODO !!!!!!
    NSBitmapImageRep *Image::createNSBitmapImageRep() {
-
        if (!isUsable()) {
            return nil;
        }
@@ -2046,7 +2034,6 @@ namespace Grain {
 
     /* TODO !!!!!!!
     NSBitmapImageRep *Image::createNSBitmapImageRepWithBPS(int16_t bits_per_sample) {
-
         // TODO: Error with unequal sizes!
 
         if (!isUsable()) {
@@ -2138,7 +2125,6 @@ namespace Grain {
 
 /* TODO !!!!!!
     bool Image::copyToNSBitmapImageRep(NSBitmapImageRep *bitmap_rep) {
-
         // TODO: Compare pixelsWide, pixelsHigh, bitsPerSample, samplesPerPixel, isPlanar, hasAlpha!
 
         if (![bitmap_rep bitmapData]) {
@@ -2201,7 +2187,6 @@ namespace Grain {
 /* TODO !!!!!!
 
     bool Image::copyFromNSBitmapImageRep(NSBitmapImageRep *bitmap_rep) {
-
         if (bitmap_rep == nil) {
             return false;
         }
@@ -2226,7 +2211,6 @@ namespace Grain {
 
 #if defined(__APPLE__) && defined(__MACH__)
     bool Image::macos_buildCGImageRef() noexcept {
-
         macos_releaseCGImageRef();
 
         CGColorSpaceRef cg_color_space;
@@ -2246,16 +2230,17 @@ namespace Grain {
         CGDataProviderRef cg_data_provider = CGDataProviderCreateWithCFData(cg_data);
         CGBitmapInfo cg_bitmap_info = macos_cgBitmapInfo();
 
-        _m_cg_image_ref = CGImageCreate(m_width, m_height,
-                                        bitsPerComponent(),
-                                        bitsPerPixel(),
-                                        bytesPerRow(),
-                                        cg_color_space,
-                                        cg_bitmap_info,
-                                        cg_data_provider,
-                                        NULL,
-                                        true,
-                                        kCGRenderingIntentDefault);
+        _m_cg_image_ref = CGImageCreate(
+                m_width, m_height,
+                bitsPerComponent(),
+                bitsPerPixel(),
+                bytesPerRow(),
+                cg_color_space,
+                cg_bitmap_info,
+                cg_data_provider,
+                NULL,
+                true,
+                kCGRenderingIntentDefault);
 
         CGDataProviderRelease(cg_data_provider);
         CFRelease(cg_data);
@@ -2268,7 +2253,6 @@ namespace Grain {
 
 #if defined(__APPLE__) && defined(__MACH__)
     void Image::macos_releaseCGImageRef() noexcept {
-
         if (_m_cg_image_ref) {
             CGImageRelease(_m_cg_image_ref);
             _m_cg_image_ref = nullptr;
@@ -2283,15 +2267,17 @@ namespace Grain {
 
         try {
             tiff_file = new TiffFile(file_path);
-            if (!tiff_file) { throw ErrorCode::MemCantAllocate; }
+            if (!tiff_file) {
+                Exception::throwStandard(ErrorCode::MemCantAllocate);
+            }
 
             tiff_file->startWriteOverwrite();
             tiff_file->setDropAlpha(drop_alpha);
 
             tiff_file->writeImage(this, Image::pixelTypeDataType(pixel_type));
         }
-        catch (ErrorCode err) {
-            result = err;
+        catch (const Exception& e) {
+            result = e.code();
         }
 
         delete tiff_file;
@@ -2318,10 +2304,9 @@ namespace Grain {
      *  @note If the file type does not support the specified bit depth, it may be adjusted automatically.
      */
     ErrorCode Image::writeImage(const String& file_path, fourcc_t type, float quality, bool use_alpha) noexcept {
-
+        auto result = ErrorCode::None;
         /* TODO !!!!!!!
          *  Can evt. be dropped due to the usage of other os independent libs
-        auto result = ErrorCode::None;
 
         NSBitmapImageFileType ns_file_type = NSBitmapImageFileTypeJPEG;
         switch (type) {
@@ -2367,7 +2352,6 @@ namespace Grain {
 
 
     ErrorCode Image::writeTiff(const String& file_path, float quality, bool use_alpha) {
-
         auto result = ErrorCode::None;
 
         TIFF* tif = TIFFOpen(file_path.utf8(), "w");
@@ -2452,7 +2436,6 @@ namespace Grain {
 
 
     ErrorCode Image::writeJpg(const String& file_path, float quality) {
-
         auto result = ErrorCode::None;
 
         if (m_color_model != Color::Model::RGB &&
@@ -2477,7 +2460,9 @@ namespace Grain {
 
         try {
             fp = fopen(file_path.utf8(), "wb");
-            if (!fp) { throw ErrorCode::FileCantCreate; }
+            if (!fp) {
+                Exception::throwStandard(ErrorCode::FileCantCreate);
+            }
 
             jpeg_compress_struct cinfo;
             jpeg_error_mgr jerr;
@@ -2499,26 +2484,26 @@ namespace Grain {
 
             while (cinfo.next_scanline < cinfo.image_height) {
                 JSAMPROW row_ptr = pixelDataPtrAtRow(cinfo.next_scanline);
-                if (!row_ptr) { throw ErrorCode::FileCantCreate; }
+                if (!row_ptr) {
+                    Exception::throwStandard(ErrorCode::FileCantCreate);
+                }
                 jpeg_write_scanlines(&cinfo, &row_ptr, 1);
             }
 
             jpeg_finish_compress(&cinfo);
             jpeg_destroy_compress(&cinfo);
+
+            auto err = File::closeFILE(fp);
+            Exception::throwStandard(err);
         }
-        catch (ErrorCode err) {
-            result = err;
+        catch (const Exception& e) {
+            result = e.code();
         }
         catch (...) {
             result = ErrorCode::Unknown;
         }
 
         // Clean up
-        {
-            if (fp) {
-                fclose(fp);
-            }
-        }
 
         return result;
     }
@@ -2583,19 +2568,23 @@ namespace Grain {
         try {
             fp = fopen(file_path.utf8(), "wb");
             if (!fp) {
-                throw ErrorCode::FileCantCreate;
+                Exception::throwStandard(ErrorCode::FileCantCreate);
             }
 
             png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
-            if (!png_ptr) { throw Error::specific(1); }
+            if (!png_ptr) {
+                Exception::throwSpecific(1);
+            }
 
             png_set_compression_level(png_ptr, compression_level);
 
             info_ptr = png_create_info_struct(png_ptr);
-            if (!info_ptr) { throw Error::specific(2); }
+            if (!info_ptr) {
+                Exception::throwSpecific(2);
+            }
 
             if (setjmp(png_jmpbuf(png_ptr))) {
-                throw Error::specific(3);
+                Exception::throwSpecific(3);
             }
 
             png_init_io(png_ptr, fp);
@@ -2653,7 +2642,9 @@ namespace Grain {
 #endif
 
             row_pointers = (png_bytep*)malloc(sizeof(png_bytep) * height_px);
-            if (!row_pointers) { throw Error::specific(4); }
+            if (!row_pointers) {
+                Exception::throwSpecific(4);
+            }
 
             for (int y = 0; y < height_px; y++) {
                 row_pointers[y] = pixelDataPtrAtRow(y);
@@ -2661,36 +2652,26 @@ namespace Grain {
 
             png_write_image(png_ptr, row_pointers);
             png_write_end(png_ptr, nullptr);
+
+            auto err = File::closeFILE(fp);
+            Exception::throwStandard(err);
         }
-        catch (ErrorCode err) {
-            result = err;
+        catch (const Exception& e) {
+            result = e.code();
         }
         catch (...) {
             result = ErrorCode::Unknown;
         }
 
         // Clean up
-        {
-            png_destroy_write_struct(&png_ptr, &info_ptr);
-
-            int fd = fileno(fp);
-            if (fd >= 0) {
-                fsync(fd);
-            }
-
-            if (fp) {
-                fclose(fp);
-            }
-
-            free(row_pointers);
-        }
+        png_destroy_write_struct(&png_ptr, &info_ptr);
+        free(row_pointers);
 
         return result;
     }
 
 
     ErrorCode Image::writeWebP(const String& file_path, float quality, bool use_alpha) {
-
         auto result = ErrorCode::None;
         size_t webp_size = 0;
         uint8_t *webp_data = nullptr;
@@ -2732,10 +2713,12 @@ namespace Grain {
                 return result;
             }
             else {
-                throw ErrorCode::UnsupportedColorModel;
+                Exception::throwStandard(ErrorCode::UnsupportedColorModel);
             }
 
-            if (!byte_data) { throw Error::specific(kErrNoBufferForConversion); }
+            if (!byte_data) {
+                Exception::throwSpecific(kErrNoBufferForConversion);
+            }
 
             float pixel[4] = { 1.0f, 0.0f, 0.0f, 1.0f };
             ImageAccess ia(this, pixel);
@@ -2777,7 +2760,9 @@ namespace Grain {
             }
 
 
-            if (webp_size == 0) { throw Error::specific(kErrWebPEncodingFailed); }
+            if (webp_size == 0) {
+                Exception::throwSpecific(kErrWebPEncodingFailed);
+            }
 
             File::removeFile(file_path);
             File file(file_path);
@@ -2786,8 +2771,8 @@ namespace Grain {
             file.flush();
             file.close();
         }
-        catch (ErrorCode err) {
-            result = err;
+        catch (const Exception& e) {
+            result = e.code();
         }
         catch (...) {
             result = ErrorCode::Unknown;
@@ -2820,7 +2805,6 @@ namespace Grain {
      *  @return An error code or `ErrorCode::None`.
      */
     ErrorCode Image::writeCVF2File(const String& cvf2_file_path, int32_t srid, const RangeRectFix& bbox, LengthUnit length_unit, int32_t z_decimals, int32_t min_digits, int32_t max_digits) noexcept {
-
         /* TODO !!!!!!
         auto result = ErrorCode::None;
 
@@ -2889,7 +2873,6 @@ namespace Grain {
 
 
     Image::FileType Image::fileTypeByFormatName(const String& file_format_name) noexcept {
-
         static const char *knownFileFormats[] = {
                 "png", "jpg", "webp", "tiff", nullptr
         };
@@ -2910,13 +2893,11 @@ namespace Grain {
 
 
     bool Image::isKnownFileType(FileType file_type) noexcept {
-
         return file_type >= FileType::First && file_type < FileType::Count;
     }
 
 
     const char *Image::fileTypeExtension(FileType file_type) noexcept {
-
         constexpr const char *unknown_extension = "";
         constexpr const char *known_extensions[] = {
                 "png", "jpg", "webp", "tiff", ""
@@ -2932,7 +2913,6 @@ namespace Grain {
 
 
     ErrorCode Image::copyImageData(const ImageAccess& src_image_access) noexcept {
-
         if (src_image_access.width() != m_width || src_image_access.height() != m_height) {
             return Error::specific(0);
         }
@@ -4772,44 +4752,39 @@ namespace Grain {
 
 
 /* TODO: !
-GLenum Image::glGetType() {
-
-    switch (m_pixel_type) {
-        case Image::PixelType::UInt8: return GL_UNSIGNED_BYTE;
-        case Image::PixelType::UInt16: return GL_UNSIGNED_SHORT;
-        case Image::PixelType::Float: return GL_FLOAT;
-
-        default:
-            return 0;    // Undefined
+    GLenum Image::glGetType() {
+        switch (m_pixel_type) {
+            case Image::PixelType::UInt8: return GL_UNSIGNED_BYTE;
+            case Image::PixelType::UInt16: return GL_UNSIGNED_SHORT;
+            case Image::PixelType::Float: return GL_FLOAT;
+            default: return 0;    // Undefined
+        }
     }
-}
 */
 
 
 /* TODO: !
-GLenum Image::glGetFormat() {
+    GLenum Image::glGetFormat() {
+        switch (getComponentsPerPixel()) {
+            case 1: return GL_RED;
+            case 2: return GL_RG;
+            case 3: return GL_RGB;
+            case 4: return GL_RGBA;
 
-    switch (getComponentsPerPixel()) {
-        case 1: return GL_RED;
-        case 2: return GL_RG;
-        case 3: return GL_RGB;
-        case 4: return GL_RGBA;
-
-        default:
-            return 0;    // Undefined
+            default:
+                return 0;    // Undefined
+        }
     }
-}
 */
 
 
 /* TODO: Metal!
-bool Image::glTexture(GLenum textureUnitID, bool initMode) {
+    bool Image::glTexture(GLenum textureUnitID, bool initMode) {
+        int16_t depth = getPlaneCount();
+        GLenum type = glGetType();
 
-    int16_t depth = getPlaneCount();
-    GLenum type = glGetType();
-
-    return GrGL::set2DTexture(textureUnitID, m_width, m_height, depth, getPixelDataPtr(), type, initMode);
-}
+        return GrGL::set2DTexture(textureUnitID, m_width, m_height, depth, getPixelDataPtr(), type, initMode);
+    }
 */
 
 
@@ -4840,15 +4815,12 @@ bool Image::glTexture(GLenum textureUnitID, bool initMode) {
             case Image::PixelType::UInt8:
                 _m_int_max = std::numeric_limits<uint8_t>::max();
                 break;
-
             case Image::PixelType::UInt16:
                 _m_int_max = std::numeric_limits<uint16_t>::max();
                 break;
-
             case Image::PixelType::Float:
                 m_float_type = true;
                 break;
-
             default:
                 _m_bytes_per_component = 0;
                 _m_mem_size = 0;
@@ -4861,7 +4833,6 @@ bool Image::glTexture(GLenum textureUnitID, bool initMode) {
             case Color::Model::RGBA:
                 m_has_alpha = true;
                 break;
-
             default:
                 m_has_alpha = false;
                 break;
@@ -4870,13 +4841,11 @@ bool Image::glTexture(GLenum textureUnitID, bool initMode) {
 
 
     void Image::_malloc() {
-
         _m_pixel_data = _m_mem_size > 0 ? (uint64_t*)std::malloc(_m_mem_size) : nullptr;
     }
 
 
     void Image::_free() {
-
         std::free(_m_pixel_data);
         _m_pixel_data = nullptr;
         _m_mem_size = 0;

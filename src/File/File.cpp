@@ -2279,11 +2279,8 @@ namespace Grain {
      */
     bool File::makeDirs(const String& path) noexcept {
         try {
-            std::filesystem::path dir_path = path.utf8();
+            std::string dir_path = path.utf8();
             std::filesystem::create_directories(dir_path);
-
-            std::cout << "File::makeDirs: " << path << std::endl;
-            std::cout << std::unitbuf;  // auto flush everything
 
 #if defined(__APPLE__) && defined(__MACH__)
             int fd = ::open(dir_path.c_str(), O_RDONLY);

@@ -575,6 +575,27 @@ namespace Grain {
 
         static int32_t execFileAction(const String& dir_path, FileAction action, void* action_ref = nullptr, int32_t max_depth = kFileActionMaxRecursionDeoth, int32_t curr_depth = 0);
 
+        static ErrorCode closeFILE(FILE* fp) {
+            // Flush stdio buffer
+            if (std::fflush(fp) != 0) {
+                std::fclose(fp);
+                return ErrorCode::FileFlushFailed;
+            }
+            // Ensure OS flushes to disk
+            int fd = fileno(fp);   // Convert FILE* -> file descriptor
+            if (fd >= 0) {
+                if (::fsync(fd) != 0) {
+                    // Continue anyway, since data may still be safe in many cases
+                }
+            }
+            // Close file
+            if (std::fclose(fp) != 0) {
+               return ErrorCode::FileFlushFailed;
+            }
+            return ErrorCode::None;
+        };
+
+
 #if defined(__APPLE__) && defined(__MACH__)
         static CFDataRef macos_cfDataRefFromFile(const String& file_path);
         static ErrorCode macos_writeCFPlistXML(const String& file_path, const CFPropertyListRef plist) noexcept;

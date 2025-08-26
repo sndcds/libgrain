@@ -255,9 +255,7 @@ namespace Grain {
             }
              */
 
-
             // Post adjust some values ...
-
             if (m_render_mode == RenderMode::Image) {
                 auto w = m_bounding_box.width();
                 auto h = m_bounding_box.height();
@@ -267,37 +265,13 @@ namespace Grain {
                 m_bounding_box.m_max_y += h * m_image_padding.bottom() / 100;
             }
 
-
-            /*
-            std::cout << "title: " << m_title << std::endl;
-            std::cout << "render-mode: " << m_render_mode_string << std::endl;
-            std::cout << "zoom-min: " << m_min_zoom << ", zoom-max: " << m_max_zoom << ", zoom-level: " << m_current_zoom << std::endl;
-            std::cout << "tile-size: " << m_tile_size << " (px)" << std::endl;
-            std::cout << "output-path: " << m_output_path << std::endl;
-            std::cout << "output-file-format: " << m_output_file_format_name << std::endl;
-            std::cout << "image-width, image-height: " << m_image_size << std::endl;
-            std::cout << "image-padding: " << m_image_padding << std::endl;
-            std::cout << "bounds: " << m_bounding_box << std::endl;
-            std::cout << "destination-srid: " << m_dst_srid << std::endl;
-            std::cout << "map-background-opacity: " << m_map_bg_opacity << std::endl;
-            std::cout << "map-background-color: " << m_map_bg_color << std::endl;
-            std::cout << "Custom Colors:" << std::endl;
-            std::cout << "  number of colors: " << m_color_n << std::endl;
-            for (int32_t i = 0; i < m_color_n; i++) {
-                std::cout << "  " << i << ": " << m_color_names.stringAtIndex(i) << ", " << m_colors.elementAtIndex(i) << std::endl;
-            }
-             */
-
-            // Confugure layers
-            {
-                auto layers = m_toml.arrayByNameOrThrow("layer", kTomlErrNoLayers);
-                for (const auto& layer : layers) {
-                    _configLayer(layer);
-                }
+            // Configure layers
+            auto layers = m_toml.arrayByNameOrThrow("layer", kTomlErrNoLayers);
+            for (const auto& layer : layers) {
+                _configLayer(layer);
             }
         }
         catch (const Exception& e) {
-            std::cout << "Exception: " << e.message() << std::endl;
             m_conf_err = e.code();
         }
 
@@ -313,16 +287,8 @@ namespace Grain {
             Exception::throwStandard(ErrorCode::MemCantAllocate);
         }
 
-        // m_toml._printTableKeys(layer_node);
-
-        layer->m_name = layer_table.stringOrThrow("name", 11111);
-        std::cout << "layer->m_name: " << layer->m_name << std::endl;
-
-
-        // Layer type
+        layer->m_name = layer_table.stringOrThrow("name", 11111);   // TODO: !!!!!
         layer->m_type_name = layer_table.stringOrThrow("type", 11111);
-        std::cout << "layer->m_type_name: " << layer->m_type_name << std::endl;
-
 
         bool geometry_field_needed = false;
         bool dir_needed = false;
@@ -485,16 +451,11 @@ namespace Grain {
 
         // Custom fields
 
-        std::cout << layer->m_name << " check custom-fields\n";
         if (layer_table.hasItem("custom-fields")) {
-
-            std::cout << "custom-fields exists\n";
-
             TomlArray custom_fields;
             layer_table.arrayOrThrow("custom-fields", 11111, custom_fields);
 
             int32_t field_count = custom_fields.size();
-            std::cout << "custom_fields count: " << field_count <<std::endl;
             layer->m_custom_field_infos = new CSVDataColumnInfo[field_count + 1];
             layer->m_custom_field_infos[field_count].m_index = -1;
 
@@ -519,11 +480,9 @@ namespace Grain {
                 switch (layer->m_custom_field_infos[field_index].m_usage) {
                     case CSVDataColumnInfo::Usage::X:
                         layer->m_x_field_index = field_index;
-                        std::cout << "layer->m_x_field_index: " << layer->m_x_field_index << std::endl;
                         break;
                     case CSVDataColumnInfo::Usage::Y:
                         layer->m_y_field_index = field_index;
-                        std::cout << "layer->m_y_field_index: " << layer->m_y_field_index << std::endl;
                         break;
                     default:
                         // throw Error::specificError(kErrUnknownCustomFieldUsage);
@@ -534,50 +493,6 @@ namespace Grain {
                 field_index++;
             }
         }
-
-        /* TODO: !!!! */
-        std::cout << "Layer: " << std::endl;
-        std::cout << "  name: " << layer->m_name << std::endl;
-        std::cout << "  type: " << layer->m_type_name << std::endl;
-        if (dir_needed) {
-            std::cout << "  dir: " << layer->m_dir_path << std::endl;
-        }
-        if (file_needed) {
-            std::cout << "  file: " << layer->m_file_name << std::endl;
-        }
-        if (geometry_field_needed) {
-            std::cout << "  geometry-field: " << layer->m_geometry_field << std::endl;
-        }
-        std::cout << "  ignore-header: " << layer->m_csv_ignore_header << std::endl;
-        std::cout << "  x-field, y-field: " << layer->m_x_field_index << ", " << layer->m_y_field_index << std::endl;
-        std::cout << "  radius-field: " << layer->m_radius_field_index << std::endl;
-        std::cout << "  zoom-min, zoom-max: " << layer->m_min_zoom << ", " << layer->m_max_zoom << std::endl;
-        std::cout << "  srid: " << layer->m_srid << std::endl;
-
-        std::cout << "  draw-mode: " << layer->m_draw_mode_name << std::endl;
-        std::cout << "  point-shape: " << layer->m_point_shape_name << std::endl;
-        std::cout << "  blend-mode: " << blend_mode_name << std::endl;
-        std::cout << "  fill-color: " << layer->m_draw_settings.m_fill_color << std::endl;
-        std::cout << "  fill-extent-width: " << layer->m_draw_settings.m_fill_extend_width << std::endl;
-        std::cout << "  fill-extent-fix: " << layer->m_draw_settings.m_fill_extend_px_fix << std::endl;
-        std::cout << "  fill-opacity: " << layer->m_draw_settings.m_fill_opacity << std::endl;
-        std::cout << "  stroke-color: " << layer->m_draw_settings.m_stroke_color << std::endl;
-        std::cout << "  stroke-opacity: " << layer->m_draw_settings.m_stroke_opacity << std::endl;
-        std::cout << "  stroke-width: " << layer->m_draw_settings.m_stroke_width << std::endl;
-        std::cout << "  stroke-px-min: " << layer->m_draw_settings.m_stroke_px_min << std::endl;
-        std::cout << "  stroke-px-max: " << layer->m_draw_settings.m_stroke_px_max << std::endl;
-        std::cout << "  stroke-px-fix: " << layer->m_draw_settings.m_stroke_px_fix << std::endl;
-        std::cout << "  stroke-dash-length: " << layer->m_draw_settings.m_stroke_dash_length << std::endl;
-        for (int32_t i = 0; i < layer->m_draw_settings.m_stroke_dash_length; i++) {
-            std::cout << "    " << i << ": " << layer->m_draw_settings.m_stroke_dash_array[i] << std::endl;
-        }
-
-        std::cout << "  text-color: " << layer->m_draw_settings.m_text_color << std::endl;
-        std::cout << "  text-opacity: " << layer->m_draw_settings.m_text_opacity << std::endl;
-        std::cout << "  radius: " << layer->m_draw_settings.m_radius << std::endl;
-        std::cout << "  has Lua script: " << layer->m_has_lua_script << std::endl;
-        //
-
 
         // TODO: Script variablen austauschen!
         //   layer->m_setup_script.replace("style.fill", "superstyle->fill");
@@ -952,13 +867,9 @@ namespace Grain {
                 Vec2i tile_index;  // Current top left tile inside meta tile
                 for (tile_index.m_y = tile_start_y; tile_index.m_y <= tile_end.m_y; tile_index.m_y += kMetaTileGridSize) {
                     for (tile_index.m_x = tile_start_x; tile_index.m_x <= tile_end.m_x; tile_index.m_x += kMetaTileGridSize) {
-                        // TODO: !!!!
-
                         m_log_file->writeCurrentDateTime();
                         m_log_file->writeFormatted(": %d x %d\n", tile_index.m_x, tile_index.m_y);
-
-                        std::cout << tile_index << "meta-tiles needed: " << meta_tiles_needed << ", rendered: " << meta_tile_n << ", rest: " << (meta_tiles_needed - meta_tile_n) << std::endl;
-                        std::cout << std::flush;
+                        std::cout << "Tile: " << tile_index.m_x << " x " << tile_index.m_y << std::endl;
 
                         // Preparation for rendering a single meta-tile
                         Vec2d lonlat;
@@ -982,7 +893,6 @@ namespace Grain {
                             // For meta-tiles, create a temporary directory
                             meta_temp_dir = m_output_path + "/_temp_" + m_current_zoom + "_" + tile_index.m_y + "_" + tile_index.m_x;
 
-                            std::cout << "meta_temp_dir: " << meta_temp_dir << std::endl;
                             if (!File::makeDirs(meta_temp_dir)) {
                                 m_last_err_message.setFormatted(2560, "Temporary directory %s does not exist.", meta_temp_dir.utf8());
                                 Exception::throwStandard(ErrorCode::FileDirNotFound);
@@ -1179,8 +1089,6 @@ namespace Grain {
         else {
             m_render_meter_per_pixel = Geo::haversineDistanceAtLat(m_bounding_box.centerY(), m_bounding_box.minX(), m_bounding_box.maxX(), Geo::kEarthRadius_m) / m_render_image_size.width();
         }
-
-        std::cout << "m_render_meter_per_pixel: " << m_render_meter_per_pixel << std::endl;
     }
 
 
@@ -1211,36 +1119,15 @@ namespace Grain {
             m_render_dst_bounding_box.m_max_x = m_render_bottom_right.m_x;
             m_render_dst_bounding_box.m_max_y = m_render_bottom_right.m_y;
 
-            /* TODO: debug */
-            std::cout << "GeoTileRenderer::render()" << std::endl;
-            std::cout << "  m_render_dst_bounding_box: " << m_render_dst_bounding_box << std::endl;
-            std::cout << "  m_render_lonlat_top_left: " << m_render_lonlat_top_left << std::endl;
-            std::cout << "  m_render_lonlat_bottom_right: " << m_render_lonlat_bottom_right << std::endl;
-            std::cout << "  m_render_top_left: " << m_render_top_left << std::endl;
-            std::cout << "  m_render_bottom_right: " << m_render_bottom_right << std::endl;
-
             m_render_left_string += m_render_top_left.m_x;
             m_render_right_string += m_render_bottom_right.m_x;
             m_render_top_string += m_render_top_left.m_y;
             m_render_bottom_string += m_render_bottom_right.m_y;
 
-            // m_render_left_string.setFormatted(100, "%.8f", m_render_top_left.m_x);
-            // m_render_right_string.setFormatted(100, "%.8f", m_render_bottom_right.m_x);
-            // m_render_top_string.setFormatted(100, "%.8f", m_render_top_left.m_y);
-            // m_render_bottom_string.setFormatted(100, "%.8f", m_render_bottom_right.m_y);
-
-            std::cout << "  m_render_left_string: " << m_render_left_string << std::endl;
-            std::cout << "  m_render_right_string: " << m_render_right_string << std::endl;
-            std::cout << "  m_render_top_string: " << m_render_top_string << std::endl;
-            std::cout << "  m_render_bottom_string: " << m_render_bottom_string << std::endl;
-
-
             src_rect.m_x = m_render_top_left.m_x;
             src_rect.m_y = m_render_top_left.m_y;
             src_rect.m_width = m_render_bottom_right.m_x - m_render_top_left.m_x;
             src_rect.m_height = m_render_bottom_right.m_y - m_render_top_left.m_y;
-
-            std::cout << "  src_rect: " << src_rect << std::endl;
 
             dst_rect.m_x = 0;
             dst_rect.m_width = m_render_image_size.width();
@@ -1253,8 +1140,6 @@ namespace Grain {
                 dst_rect.m_width = dst_rect.m_height / m_render_image_size.aspectRatio();
                 dst_rect.m_x = -0.5 * (dst_rect.m_width - m_render_image_size.width());
             }
-
-            std::cout << "  dst_rect: " << dst_rect << std::endl; // TODO: Debug
 
             if (m_render_mode == RenderMode::Tiles) {
                 if (m_current_zoom < 3) {
@@ -1270,10 +1155,6 @@ namespace Grain {
                 double w_ratio = std::fabs(fitted_rect.m_width) / dst_rect.m_width;
                 double h_ratio = std::fabs(fitted_rect.m_height) / dst_rect.m_height;
 
-                std::cout << "  fitted_rect: " << fitted_rect << std::endl; // TODO: Debug
-                std::cout << "  w_ratio: " << w_ratio << std::endl; // TODO: Debug
-                std::cout << "  h_ratio: " << h_ratio << std::endl; // TODO: Debug
-
                 if (w_ratio > h_ratio) {
                     dst_rect.m_height /= w_ratio;
                 }
@@ -1282,7 +1163,6 @@ namespace Grain {
                 }
 
                 setRenderSize(dst_rect.m_width, dst_rect.m_height);
-                // std::cout << "  dst_rect: " << dst_rect << std::endl; // TODO: Debug
             }
 
             RemapRectd remap_rect(src_rect, dst_rect, true);
@@ -1296,20 +1176,15 @@ namespace Grain {
                 }
             }
 
-            std::cout << "m_render_image: " << m_render_image << std::endl;
-
             if (m_render_image->beginDraw()) {
                 m_render_image->clear(RGBA(m_map_bg_color, m_map_bg_opacity));
                 GraphicContext* gc = nullptr;
-                std::cout << "Renderer: " << m_renderer_name << std::endl;
                 if (m_renderer_name.compareIgnoreCase("cairo") == 0) {
                     gc = new CairoContext();
-                    std::cout << "Renderer: Cairo" << std::endl;
                 }
 #if defined(__APPLE__) && defined(__MACH__)
                 else {
                     gc = new MacCGContext();
-                    std::cout << "Renderer: MacCG" << std::endl;
                 }
 #endif
                 if (!gc) {
@@ -1339,20 +1214,11 @@ namespace Grain {
     void GeoTileRenderer::_renderLayers(GraphicContext& gc, RemapRectd& remap_rect) {
         m_current_layer_index = 0;
 
-        std::cout << "Render layers at zoom level: " << m_current_zoom << std::endl;
-
         for (auto& layer : m_layers) {
             layer->m_ignore_proj = layer->m_srid == m_dst_srid;
 
             if (m_current_zoom >= layer->m_min_zoom && m_current_zoom <= layer->m_max_zoom) {
                 TimeMeasure tm_render_layer;
-
-                std::cout << "Layer " << m_current_layer_index << std::endl;
-                std::cout << "  m_name: " << layer->m_name << std::endl;
-                std::cout << "  m_type_name: " << layer->m_type_name << std::endl;
-                std::cout << "  m_min_zoom: " << layer->m_min_zoom << std::endl;
-                std::cout << "  m_max_zoom: " << layer->m_max_zoom << std::endl;
-                std::cout << "  m_custom_field_count: " << layer->m_custom_field_count << std::endl;
 
                 switch (layer->m_type) {
                     case GeoTileRendererLayer::LayerType::PSQL:
@@ -1443,7 +1309,6 @@ namespace Grain {
 
         // Compiled chunk is now at the top of the stack, no need to pop unless you want to discard it
         status = lua_pcall(m_lua->luaState(), 0, 1, 0);
-        std::cout << " lua_pcall status: " << status << std::endl;
         _handleLuaError(status, Error::specific(kErrLuaScriptError));
 
         m_lua->setGlobalPointer("_map_renderer_draw_settings", draw_settings);
@@ -1623,10 +1488,7 @@ namespace Grain {
                     }
 
                     for (int32_t field_index = 0; field_index < field_count; field_index++) {
-
                         auto field_name = PQfname(sql_result, field_index);  // Note: Does allways return the real name and not the alias
-
-                        std::cout << "............. field_name: " << field_name << std::endl;
 
                         auto property = layer->m_data_property_list->mutPropertyPtrAtIndex(field_index);
                         property->m_name.set(field_name);
@@ -1756,7 +1618,6 @@ namespace Grain {
                     }
                     else {
                         m_last_err_message.setFormatted(1000, "Unsupported WKB type %s on layer.", wkbParser.typeName());
-                        std::cout << m_last_err_message << std::endl;
                         Exception::throwSpecific(kErrUnsupportedWKBType);
                     }
 
@@ -2002,7 +1863,6 @@ namespace Grain {
             if (!entry) {
                 // TODO: !!!!
                 m_last_err_message.setFormatted(1000, "GeoTileRenderer::_renderPolygonLayer() polygon_index: %d", polygon_index);
-                std::cout << "polygon_index: " << polygon_index << std::endl;
                 Exception::throwStandard(ErrorCode::Fatal);
             }
 
@@ -2120,12 +1980,6 @@ namespace Grain {
         int32_t y_field_index = layer->m_y_field_index;
         int32_t radius_field_index = layer->m_radius_field_index;
 
-        /* TODO: !!!!
-        std::cout << "x_field_index: " << x_field_index << std::endl;
-        std::cout << "y_field_index: " << y_field_index << std::endl;
-        std::cout << "layer->m_custom_field_count: " << layer->m_custom_field_count << std::endl;
-         */
-
         bool has_pos_fields = x_field_index >= 0 && x_field_index < layer->m_custom_field_count && y_field_index >= 0 && y_field_index < layer->m_custom_field_count;
         bool has_radius_field = radius_field_index >= 0;
         bool ignore_proj = layer->m_ignore_proj;
@@ -2148,7 +2002,6 @@ namespace Grain {
                 src_pos.m_x = layer->m_csv_data.doubleValue(row_index, x_field_index);
                 src_pos.m_y = layer->m_csv_data.doubleValue(row_index, y_field_index);
                 src_pos *= layer->m_xy_scale;
-                // std::cout << std::fixed << "src_pos: " << src_pos << std::endl; TODO: !!!
 
                 if (src_is_4326 && !GeoProj::isWGS84Pos(src_pos)) {
                     layer->m_total_pos_out_of_range++;
@@ -2162,10 +2015,8 @@ namespace Grain {
                 else {
                     layer->m_proj->transform(src_pos, pos);
                 }
-                // std::cout << std::fixed << "  projected pos: " << pos << std::endl; TODO: !!!
 
                 remap_rect.mapVec2(pos);
-                // std::cout << std::fixed << "  mapped pos: " << pos << std::endl; TODO: !!!
             }
 
 
@@ -2333,7 +2184,6 @@ namespace Grain {
             Rectd bounds(pos.m_x - radius_px, pos.m_y - radius_px, radius_px * 2, radius_px * 2);
 
             if (bounds.intersect(render_rect)) {
-                std::cout << pos << std::endl;
                 Gradient gradient;
                 gradient.addStop(0, RGB(1.0f, 0.5f, 0.3f));
                 gradient.addStop(0.5, RGB(1, 1, 0));
