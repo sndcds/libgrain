@@ -1121,10 +1121,10 @@ namespace Grain {
             m_render_dst_bounding_box.m_max_x = m_render_bottom_right.m_x;
             m_render_dst_bounding_box.m_max_y = m_render_bottom_right.m_y;
 
-            m_render_left_string += m_render_top_left.m_x;
-            m_render_right_string += m_render_bottom_right.m_x;
-            m_render_top_string += m_render_top_left.m_y;
-            m_render_bottom_string += m_render_bottom_right.m_y;
+            m_render_left_string = m_render_top_left.m_x;
+            m_render_right_string = m_render_bottom_right.m_x;
+            m_render_top_string = m_render_top_left.m_y;
+            m_render_bottom_string = m_render_bottom_right.m_y;
 
             src_rect.m_x = m_render_top_left.m_x;
             src_rect.m_y = m_render_top_left.m_y;
