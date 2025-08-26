@@ -1204,12 +1204,7 @@ namespace Grain {
                 _renderLayers(*gc, remap_rect);
                 std::cout << "buff... GeoTileRenderer::render() 7" << std::endl;
 
-                std::cout << "buff... GeoTileRenderer::render() 8a" << std::endl;
-                std::cout << "buff... GeoTileRenderer::render() 8b" << std::endl;
-                std::cout << "buff... GeoTileRenderer::render() 8c" << std::endl;
-                std::cout << "buff... GeoTileRenderer::render() 8d" << std::endl;
                 m_render_image->endDraw();
-                std::cout << "buff... GeoTileRenderer::render() 8e" << std::endl;
             }
         }
         catch (const Exception& e) {
@@ -1229,26 +1224,35 @@ namespace Grain {
     void GeoTileRenderer::_renderLayers(GraphicContext& gc, RemapRectd& remap_rect) {
         m_current_layer_index = 0;
 
+        std::cout << "buff... GeoTileRenderer::_renderLayers() 1" << std::endl;
+
         for (auto& layer : m_layers) {
             layer->m_ignore_proj = layer->m_srid == m_dst_srid;
 
+            std::cout << "buff... GeoTileRenderer::_renderLayers() 2" << std::endl;
             if (m_current_zoom >= layer->m_min_zoom && m_current_zoom <= layer->m_max_zoom) {
                 TimeMeasure tm_render_layer;
 
+                std::cout << "buff... GeoTileRenderer::_renderLayers() 3" << std::endl;
+
                 switch (layer->m_type) {
                     case GeoTileRendererLayer::LayerType::PSQL:
+                        std::cout << "buff... GeoTileRenderer::_renderLayers() 4a" << std::endl;
                         _renderPSQLLayer(layer, gc, remap_rect);
                         break;
 
                     case GeoTileRendererLayer::LayerType::Shape:
+                        std::cout << "buff... GeoTileRenderer::_renderLayers() 4b" << std::endl;
                         _renderShapeLayer(layer, gc, remap_rect);
                         break;
 
                     case GeoTileRendererLayer::LayerType::Polygon:
+                        std::cout << "buff... GeoTileRenderer::_renderLayers() 4c" << std::endl;
                         _renderPolygonLayer(layer, gc, remap_rect);
                         break;
 
                     case GeoTileRendererLayer::LayerType::CSV:
+                        std::cout << "buff... GeoTileRenderer::_renderLayers() 4d" << std::endl;
                         _renderCSVLayer(layer, gc, remap_rect);
                         break;
 
@@ -1418,11 +1422,14 @@ namespace Grain {
 
         auto result = ErrorCode::None;
 
+        std::cout << "buff... GeoTileRenderer::_renderPSQLLayer() 1" << std::endl;
+
         auto err = layer->checkProj(m_dst_srid);
         if (err != ErrorCode::None) {
             std::cout << "  layer->checkProj err: " << (int)err << std::endl;  // For debugging only
         }
 
+        std::cout << "buff... GeoTileRenderer::_renderPSQLLayer() 2" << std::endl;
         // Replace variables in SQL query
         String sql = layer->m_sql_query;
         if (layer->m_sql_query.find("{{") >= 0) {
@@ -1444,6 +1451,7 @@ namespace Grain {
             std::snprintf(dst_srid_str, 20, "%d", m_dst_srid);
             sql.replace("{{destination-srid}}", dst_srid_str);
 
+            std::cout << "buff... GeoTileRenderer::_renderPSQLLayer() 3" << std::endl;
             // TODO: Replace other variables?
         }
 
@@ -1453,6 +1461,7 @@ namespace Grain {
         bool gc_saved_flag = false;
 
         try {
+            std::cout << "buff... GeoTileRenderer::_renderPSQLLayer() 4" << std::endl;
             TimeMeasure tm_data_access;
 
             // Execute SQL query, binary result
@@ -1465,6 +1474,7 @@ namespace Grain {
                         layer->sqlIdendifierStr());
             }
 
+            std::cout << "buff... GeoTileRenderer::_renderPSQLLayer() 5" << std::endl;
             auto pg_conn = (PGconn*)psql_connection->_m_pg_conn_ptr;
             if (PQstatus(pg_conn) != CONNECTION_OK) {
                 Exception::throwSpecificFormattedMessage(
@@ -1474,6 +1484,7 @@ namespace Grain {
                         layer->sqlIdendifierStr());
             }
 
+            std::cout << "buff... GeoTileRenderer::_renderPSQLLayer() 6" << std::endl;
             sql_result = PQexecParams(pg_conn, sql.utf8(), 0, NULL, NULL, NULL, NULL, 1);
             if (PQresultStatus(sql_result) != PGRES_TUPLES_OK) {
                 m_last_sql_err = PQerrorMessage(pg_conn);
@@ -1485,16 +1496,19 @@ namespace Grain {
                         layer->sqlIdendifierStr());
             }
 
+            std::cout << "buff... GeoTileRenderer::_renderPSQLLayer() 7" << std::endl;
 
             auto row_count = PQntuples(sql_result);
             int32_t field_count = PQnfields(sql_result);
 
             layer->m_total_data_access_time += tm_data_access.elapsedNanos();
 
+            std::cout << "buff... GeoTileRenderer::_renderPSQLLayer() 8" << std::endl;
 
             if (!layer->m_db_field_names_scanned) {
                 TimeMeasure tm_script_preparation;
 
+                std::cout << "buff... GeoTileRenderer::_renderPSQLLayer() 9" << std::endl;
                 // Scan all field names for accessing them in Lua scripts
                 if (field_count > 0) {
                     layer->m_data_property_list = new PSQLPropertyList(field_count);
@@ -1502,6 +1516,7 @@ namespace Grain {
                         Exception::throwStandard(ErrorCode::MemCantAllocate);
                     }
 
+                    std::cout << "buff... GeoTileRenderer::_renderPSQLLayer() 10" << std::endl;
                     for (int32_t field_index = 0; field_index < field_count; field_index++) {
                         auto field_name = PQfname(sql_result, field_index);  // Note: Does allways return the real name and not the alias
 
@@ -1517,6 +1532,7 @@ namespace Grain {
                         }
                     }
                 }
+                std::cout << "buff... GeoTileRenderer::_renderPSQLLayer() 11" << std::endl;
 
                 if (layer->m_db_wkb_field_index < 0 || layer->m_db_srid_field_index < 0) {
                     Exception::throwSpecific(kErrDBMissingRequiredFields);
@@ -1529,11 +1545,13 @@ namespace Grain {
             layer->m_total_db_rows_n += row_count;
             m_total_db_rows_n += row_count;
 
+            std::cout << "buff... GeoTileRenderer::_renderPSQLLayer() 12" << std::endl;
 
             // Load Lua script, preparation, setup and process
             GeoTileRendererDrawSettings draw_settings;
 
             _prepareLuaScriptForLayer(layer, &draw_settings, row_count);
+            std::cout << "buff... GeoTileRenderer::_renderPSQLLayer() 13" << std::endl;
 
             // Rendering
             gc.save();
@@ -1542,6 +1560,7 @@ namespace Grain {
             // Process each row
             int32_t wkb_field_index = layer->m_db_wkb_field_index;
             int32_t srid_field_index = layer->m_db_srid_field_index;
+            std::cout << "buff... GeoTileRenderer::_renderPSQLLayer() 14" << std::endl;
 
             /*
              *  `fill_extend_width` is used to render polygons without gaps between neighboring polygons.
