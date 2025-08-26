@@ -171,14 +171,13 @@ namespace Grain {
 
 
     bool GraphicPath::bounds(Rectd &out_bounds) noexcept {
-
         if (pointCount() < 1) {
             out_bounds.zero();
             return false;
         }
 
-
         RangeRectd range_rect;
+        range_rect.initForMinMaxSearch();
 
         int32_t n = segmentCount();
         for (int32_t i = 0; i < n; i++) {

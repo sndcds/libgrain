@@ -38,6 +38,7 @@
 #include "Type/Type.hpp"
 #include "Geo/GeoMetaTile.hpp"
 #include "Database/PostgreSQL.hpp"
+#include "Time/TimeMeasure.hpp"
 
 #include <stdlib.h>
 #include <algorithm>
@@ -1551,20 +1552,16 @@ namespace Grain {
             std::snprintf(dst_srid_str, 20, "%d", m_dst_srid);
             sql.replace("{{destination-srid}}", dst_srid_str);
 
-            std::cout << sql << std::endl;
-
             // TODO: Replace other variables?
         }
 
-        // std::cout << "SQL: " << sql << std::endl;  // For debugging only
 
-
-        PSQLConnection *psql_connection = nullptr;
-        PGresult *sql_result = nullptr;
+        PSQLConnection* psql_connection = nullptr;
+        PGresult* sql_result = nullptr;
         bool gc_saved_flag = false;
 
+        TimeMeasure tm;
         try {
-
             // Execute SQL query, binary result
             psql_connection = _psqlConnForLayer(layer);
             if (!psql_connection) {
@@ -1575,8 +1572,8 @@ namespace Grain {
                         layer->sqlIdendifierStr());
             }
 
-            auto psql_conn = (PGconn *)psql_connection->_m_pg_conn_ptr;
-            if (PQstatus(psql_conn) != CONNECTION_OK) {
+            auto pg_conn = (PGconn*)psql_connection->_m_pg_conn_ptr;
+            if (PQstatus(pg_conn) != CONNECTION_OK) {
                 Exception::throwSpecificFormattedMessage(
                         kErrPSQLConnectionFailed,
                         "Database connection failed for PSQL layer \"%s\", identifier: \"%s\"",
@@ -1584,20 +1581,22 @@ namespace Grain {
                         layer->sqlIdendifierStr());
             }
 
-            sql_result = PQexecParams(psql_conn, sql.utf8(), 0, NULL, NULL, NULL, NULL, 1);
-
+            sql_result = PQexecParams(pg_conn, sql.utf8(), 0, NULL, NULL, NULL, NULL, 1);
             if (PQresultStatus(sql_result) != PGRES_TUPLES_OK) {
-                m_last_sql_err = PQerrorMessage(psql_conn);
+                m_last_sql_err = PQerrorMessage(pg_conn);
                 m_last_failed_sql_query = sql;
-                std::cout << m_last_failed_sql_query << std::endl;
-                Exception::throwSpecific(kErrPSQLQueryFailed);
+                Exception::throwSpecificFormattedMessage(
+                        kErrPSQLQueryFailed,
+                        "Database SQL execution failed for PSQL layer \"%s\", identifier: \"%s\"",
+                        layer->nameStr(),
+                        layer->sqlIdendifierStr());
             }
 
 
             auto row_count = PQntuples(sql_result);
             int32_t field_count = PQnfields(sql_result);
 
-            // layer->m_total_data_access_time += timestamp.elapsedMilliseconds(); TODO: !!!!
+            layer->m_total_data_access_time += tm.elapsedNanos();
 
 
             if (!layer->m_db_field_names_scanned) {
@@ -1949,8 +1948,10 @@ namespace Grain {
 
         Timestamp timestamp;
 
-        // TODO: Check SRID/CRS ... what to do, if destination is different frm polygon files SRID?
+        // TODO: Check SRID/CRS ... what to do, if destination is different from polygon files SRID?
         // Check if polygon must be loaded
+
+        TimeMeasure tm;
 
         if (!layer->m_polygons_file) {
             // Load all polygon records
@@ -1964,11 +1965,9 @@ namespace Grain {
 
             err = layer->checkProj(m_dst_srid);
             Exception::throwStandard(err);
+       }
 
-            // layer->m_total_data_access_time += timestamp.elapsedMilliseconds(); TODO: !!!!!
-
-            std::cout << "Polygon: " << layer->m_polygons_file << std::endl;
-        }
+        layer->m_total_data_access_time += tm.elapsedNanos();
 
         auto polygons_file = layer->m_polygons_file;
 

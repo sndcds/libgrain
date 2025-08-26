@@ -214,7 +214,7 @@ namespace Grain {
         // Statistics
         int64_t m_rendering_calls = 0;
 
-        int64_t m_total_data_access_time = 0;
+        int64_t m_total_data_access_time = 0;       ///< Database of File acccess time in nanoseconds
         int64_t m_total_script_preparation_time = 0;
         int64_t m_total_script_exec_time = 0;
         int64_t m_total_parse_time = 0;

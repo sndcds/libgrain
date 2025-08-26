@@ -143,6 +143,7 @@
 #include "String/CSVString.hpp"
 #include "String/CSVData.hpp"
 
+#include "Time/TimeMeasure.hpp"
 #include "Time/Timestamp.hpp"
 #include "Time/DateTime.hpp"
 
