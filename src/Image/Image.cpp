@@ -3114,6 +3114,7 @@ namespace Grain {
         uint16_t mmin[2][2] = { { 435, 451 }, { 451, 441 } };
         uint16_t mmax[2][2] = { { 16336, 16336 }, { 16336, 16336 } };
 
+        auto &c = lr.imgdata.color;
         float cfa_scale[2][2];
         for (int32_t y = 0; y < 2; y++) {
             for (int32_t x = 0; x < 2; x++) {
