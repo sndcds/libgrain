@@ -1204,8 +1204,12 @@ namespace Grain {
                 _renderLayers(*gc, remap_rect);
                 std::cout << "buff... GeoTileRenderer::render() 7" << std::endl;
 
+                std::cout << "buff... GeoTileRenderer::render() 8a" << std::endl;
+                std::cout << "buff... GeoTileRenderer::render() 8b" << std::endl;
+                std::cout << "buff... GeoTileRenderer::render() 8c" << std::endl;
+                std::cout << "buff... GeoTileRenderer::render() 8d" << std::endl;
                 m_render_image->endDraw();
-                std::cout << "buff... GeoTileRenderer::render() 8" << std::endl;
+                std::cout << "buff... GeoTileRenderer::render() 8e" << std::endl;
             }
         }
         catch (const Exception& e) {
