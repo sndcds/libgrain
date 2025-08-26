@@ -883,12 +883,12 @@ namespace Grain {
 
                         // Render the meta-tile, composed of 8 x 8 ordinary tiles
 
-                        std::cout << "render()" << std::endl;
+                        std::cout << "buff... render()" << std::endl;
                         auto err = render();
                         if (err != ErrorCode::None) {
                             Exception::throwSpecific(1);    // TODO: !!!!!
                         }
-                        std::cout << "render() done " << std::endl;
+                        std::cout << "buff... render() done " << std::endl;
 
                         // Split the meta-tile into 8 x 8 tiles and save to files as separate tiles
                         if (use_meta_tile) {
@@ -1143,6 +1143,8 @@ namespace Grain {
                 dst_rect.m_x = -0.5 * (dst_rect.m_width - m_render_image_size.width());
             }
 
+            std::cout << "buff... GeoTileRenderer::render() 1" << std::endl;
+
             if (m_render_mode == RenderMode::Tiles) {
                 if (m_current_zoom < 3) {
                     switch (m_current_zoom) {
@@ -1167,11 +1169,13 @@ namespace Grain {
                 setRenderSize(dst_rect.m_width, dst_rect.m_height);
             }
 
+            std::cout << "buff... GeoTileRenderer::render() 2" << std::endl;
             RemapRectd remap_rect(src_rect, dst_rect, true);
 
             _updateMeterPerPixel();
 
             if (!m_render_image) {
+                std::cout << "buff... GeoTileRenderer::render() 3" << std::endl;
                 m_render_image = Image::createRGBAFloat(m_render_image_size.width(), m_render_image_size.height());
                 if (!m_render_image) {
                     Exception::throwSpecific(kErrUnableToAllocateRenderImage);
@@ -1179,6 +1183,7 @@ namespace Grain {
             }
 
             if (m_render_image->beginDraw()) {
+                std::cout << "buff... GeoTileRenderer::render() 4" << std::endl;
                 m_render_image->clear(RGBA(m_map_bg_color, m_map_bg_opacity));
                 GraphicContext* gc = nullptr;
                 if (m_renderer_name.compareIgnoreCase("cairo") == 0) {
@@ -1192,11 +1197,15 @@ namespace Grain {
                 if (!gc) {
                     Exception::throwSpecific(kErrGraphicsContextFailed);
                 }
+                std::cout << "buff... GeoTileRenderer::render() 5" << std::endl;
 
                 gc->setImage(m_render_image);
+                std::cout << "buff... GeoTileRenderer::render() 6" << std::endl;
                 _renderLayers(*gc, remap_rect);
+                std::cout << "buff... GeoTileRenderer::render() 7" << std::endl;
 
                 m_render_image->endDraw();
+                std::cout << "buff... GeoTileRenderer::render() 8" << std::endl;
             }
         }
         catch (const Exception& e) {
