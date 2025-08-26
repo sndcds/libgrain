@@ -343,9 +343,7 @@ namespace Grain {
         };
 
     public:
-
         // Configurable properties
-
         Toml m_toml;
 
         String m_title;                     ///< Title
@@ -440,6 +438,8 @@ namespace Grain {
         int64_t m_total_point_n = 0;
         int64_t m_total_stroke_n = 0;
         int64_t m_total_fill_n = 0;
+
+        File* m_log_file;
 
 
     public:

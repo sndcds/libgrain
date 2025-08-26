@@ -84,6 +84,10 @@ namespace Grain {
 
     GeoTileRenderer::GeoTileRenderer() {
         m_default_font_name = "Helvetica Neue";
+        m_log_file = new (std::nothrow) File("tile-renderer-log.txt");
+        if (m_log_file) {
+            m_log_file->startWriteAsciiAppend();
+        }
     }
 
 
@@ -94,6 +98,10 @@ namespace Grain {
         delete m_render_image;
 
         _freeLua();
+
+        if (m_log_file) {
+            delete m_log_file;
+        }
     }
 
 
@@ -945,6 +953,10 @@ namespace Grain {
                 for (tile_index.m_y = tile_start_y; tile_index.m_y <= tile_end.m_y; tile_index.m_y += kMetaTileGridSize) {
                     for (tile_index.m_x = tile_start_x; tile_index.m_x <= tile_end.m_x; tile_index.m_x += kMetaTileGridSize) {
                         // TODO: !!!!
+
+                        m_log_file->writeCurrentDateTime();
+                        m_log_file->writeFormatted(": %d x %d\n", tile_index.m_x, tile_index.m_y);
+
                         std::cout << tile_index << "meta-tiles needed: " << meta_tiles_needed << ", rendered: " << meta_tile_n << ", rest: " << (meta_tiles_needed - meta_tile_n) << std::endl;
                         std::cout << std::flush;
 
@@ -1305,8 +1317,8 @@ namespace Grain {
                 }
 
                 gc->setImage(m_render_image);
-                m_render_image->beginDraw();
                 _renderLayers(*gc, remap_rect);
+
                 m_render_image->endDraw();
             }
         }
