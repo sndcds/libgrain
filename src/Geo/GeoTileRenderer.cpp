@@ -97,12 +97,12 @@ namespace Grain {
     }
 
 
-    void GeoTileRenderer::setLastErrMessage(const String &message) noexcept {
+    void GeoTileRenderer::setLastErrMessage(const String& message) noexcept {
         m_last_err_message = message;
     }
 
 
-    ErrorCode GeoTileRenderer::readConfigFromToml(const String &file_path) noexcept {
+    ErrorCode GeoTileRenderer::readConfigFromToml(const String& file_path) noexcept {
         m_conf_err = ErrorCode::None;
 
         // TODO: Inform about unknown keys.
@@ -590,7 +590,7 @@ namespace Grain {
     }
 
 
-    void GeoTileRenderer::setRenderBoundsWGS84(const Vec2d &top_left, const Vec2d &bottom_right) noexcept {
+    void GeoTileRenderer::setRenderBoundsWGS84(const Vec2d& top_left, const Vec2d& bottom_right) noexcept {
         m_render_lonlat_top_left.m_x = std::clamp(top_left.m_x, Geo::kMinLonDeg, Geo::kMaxLonDeg);
         m_render_lonlat_bottom_right.m_x = std::clamp(bottom_right.m_x, Geo::kMinLonDeg, Geo::kMaxLonDeg);
 
@@ -610,7 +610,7 @@ namespace Grain {
     }
 
 
-    GeoTileRendererLayer *GeoTileRenderer::addLayer() noexcept {
+    GeoTileRendererLayer* GeoTileRenderer::addLayer() noexcept {
         auto layer = new(std::nothrow) GeoTileRendererLayer();
         if (layer) {
             m_layers.push(layer);
@@ -629,7 +629,7 @@ namespace Grain {
     /**
      *  @brief Check if zoom is in range.
      */
-    int GeoTileRenderer::_lua_checkZoom(lua_State *l) {
+    int GeoTileRenderer::_lua_checkZoom(lua_State* l) {
         bool result = true;
 
         int arg_n = lua_gettop(l);  // Number of arguments
@@ -655,7 +655,7 @@ namespace Grain {
     /**
      *  @brief Set a property.
      */
-    int GeoTileRenderer::_lua_getProperty(lua_State *l) {
+    int GeoTileRenderer::_lua_getProperty(lua_State* l) {
         // Check if the argument count is correct (1 argument expected)
         if (lua_gettop(l) != 1) {
             lua_pushstring(l, "Expected exactly one argument (the property name)");
@@ -671,10 +671,10 @@ namespace Grain {
         }
 
         // Get the property name from Lua
-        const char *property_name = lua_tostring(l, 1);
+        const char* property_name = lua_tostring(l, 1);
 
         // Compare the property name and push the corresponding value
-        auto renderer = (GeoTileRenderer *)Lua::getGlobalPointer(l, "rendererPointer");
+        auto renderer = (GeoTileRenderer*)Lua::getGlobalPointer(l, "rendererPointer");
         if (!renderer) {
             return 0;
         }
@@ -711,10 +711,10 @@ namespace Grain {
     /**
      *  @brief Set a property.
      */
-    int GeoTileRenderer::_lua_setProperty(lua_State *l) {
+    int GeoTileRenderer::_lua_setProperty(lua_State* l) {
         int arg_n = lua_gettop(l);  // Number of arguments
 
-        const char *name = luaL_checkstring(l, 1);
+        const char* name = luaL_checkstring(l, 1);
 
         auto tile_renderer = (GeoTileRenderer*)Lua::getGlobalPointer(l, "_tile_renderer_ptr");
         if (tile_renderer) {
@@ -723,7 +723,7 @@ namespace Grain {
         auto draw_settings = (GeoTileRendererDrawSettings*)Lua::getGlobalPointer(l, "_map_renderer_draw_settings");
         if (draw_settings) {
             if (strcmp(name, "draw-mode") == 0) {
-                const char *str = Lua::stringFromStack(l, 2);
+                const char* str = Lua::stringFromStack(l, 2);
                 draw_settings->m_draw_mode = drawModeFromName(str);
             }
             else if (strcmp(name, "stroke-width") == 0) {
@@ -751,7 +751,7 @@ namespace Grain {
                 Lua::doubleFromStack(l, 2, draw_settings->m_radius);
             }
             else if (strcmp(name, "blend-mode") == 0) {
-                const char *str = Lua::stringFromStack(l, 2);
+                const char* str = Lua::stringFromStack(l, 2);
                 draw_settings->m_blend_mode = GraphicContext::blendModeByName(str);
             }
 
@@ -894,7 +894,7 @@ namespace Grain {
     ErrorCode GeoTileRenderer::renderTiles() noexcept {
         auto result = ErrorCode::None;
 
-        Image *tile_image = nullptr;
+        Image* tile_image = nullptr;
         String meta_temp_dir;
 
         bool use_meta_tile = m_render_mode == RenderMode::MetaTiles;
@@ -1288,7 +1288,7 @@ namespace Grain {
 
             if (m_render_image->beginDraw()) {
                 m_render_image->clear(RGBA(m_map_bg_color, m_map_bg_opacity));
-                GraphicContext *gc = nullptr;
+                GraphicContext* gc = nullptr;
                 std::cout << "Renderer: " << m_renderer_name << std::endl;
                 if (m_renderer_name.compareIgnoreCase("cairo") == 0) {
                     gc = new CairoContext();
@@ -1324,7 +1324,7 @@ namespace Grain {
     /**
      *  @brief Render all layers.
      */
-    void GeoTileRenderer::_renderLayers(GraphicContext &gc, RemapRectd &remap_rect) {
+    void GeoTileRenderer::_renderLayers(GraphicContext& gc, RemapRectd& remap_rect) {
         m_current_layer_index = 0;
 
         std::cout << "Render layers at zoom level: " << m_current_zoom << std::endl;
@@ -1414,8 +1414,8 @@ namespace Grain {
      *  @brief Prepare Lua script access in rendering function for a layer.
      */
     void GeoTileRenderer::_prepareLuaScriptForLayer(
-            GeoTileRendererLayer *layer,
-            GeoTileRendererDrawSettings *draw_settings,
+            GeoTileRendererLayer* layer,
+            GeoTileRendererDrawSettings* draw_settings,
             int64_t element_count) {
 
         if (!layer->m_has_lua_script) {
@@ -1464,7 +1464,7 @@ namespace Grain {
     }
 
 
-    void GeoTileRenderer::_setLuaValueByPSQLProperty(const PSQLProperty *property) {
+    void GeoTileRenderer::_setLuaValueByPSQLProperty(const PSQLProperty* property) {
         // TODO: Move to Lua class!?
 
         lua_pushstring(m_lua->luaState(), property->m_name.utf8());
@@ -1502,8 +1502,8 @@ namespace Grain {
     /**
      *  @brief Get the PSQLConnection for a layer.
      */
-    PSQLConnection *GeoTileRenderer::_psqlConnForLayer(GeoTileRendererLayer *layer) {
-        PSQLConnection *psql_connection = m_psql_connections.connectionByIdentifier(layer->m_sql_identifier);
+    PSQLConnection* GeoTileRenderer::_psqlConnForLayer(GeoTileRendererLayer* layer) {
+        PSQLConnection* psql_connection = m_psql_connections.connectionByIdentifier(layer->m_sql_identifier);
         if (!psql_connection) {
             psql_connection = m_psql_connections.firstConnection();
         }
@@ -1520,9 +1520,9 @@ namespace Grain {
      *  @brief Render a layer from WKB data in a PSQL database.
      */
     void GeoTileRenderer::_renderPSQLLayer(
-            GeoTileRendererLayer *layer,
-            GraphicContext &gc,
-            RemapRectd &remap_rect) {
+            GeoTileRendererLayer* layer,
+            GraphicContext& gc,
+            RemapRectd& remap_rect) {
 
         auto result = ErrorCode::None;
 
@@ -1671,7 +1671,7 @@ namespace Grain {
                 m_current_element_index = row_index;
 
                 // Get the WKB data
-                char *wkb_data = PQgetvalue(sql_result, row_index, wkb_field_index);
+                char* wkb_data = PQgetvalue(sql_result, row_index, wkb_field_index);
                 int32_t wkb_data_size = PQgetlength(sql_result, row_index, wkb_field_index);
 
                 if (layer->m_has_lua_script) {
@@ -1688,7 +1688,7 @@ namespace Grain {
 
                     for (int32_t field_index = 0; field_index < field_count; field_index++) {
                         auto type = (PSQLType)PQftype(sql_result, field_index);
-                        char *data = PQgetvalue(sql_result, row_index, field_index);
+                        char* data = PQgetvalue(sql_result, row_index, field_index);
                         int32_t size = PQgetlength(sql_result, row_index, field_index);
                         if (PQgetisnull(sql_result, row_index, field_index)) {
                             type = PSQLType::Undefined;
@@ -1879,9 +1879,9 @@ namespace Grain {
      *  @brief Render a layer from data in a ESRI Shape file.
      */
     void GeoTileRenderer::_renderShapeLayer(
-            GeoTileRendererLayer *layer,
-            GraphicContext &gc,
-            RemapRectd &remap_rect) {
+            GeoTileRendererLayer* layer,
+            GraphicContext& gc,
+            RemapRectd& remap_rect) {
 
         TimeMeasure tm;
 
@@ -1949,9 +1949,9 @@ namespace Grain {
      *  @brief Render a layer from data in a Grain Polygon File.
      */
     void GeoTileRenderer::_renderPolygonLayer(
-            GeoTileRendererLayer *layer,
-            GraphicContext &gc,
-            RemapRectd &remap_rect) {
+            GeoTileRendererLayer* layer,
+            GraphicContext& gc,
+            RemapRectd& remap_rect) {
 
         TimeMeasure tm_render;
 
@@ -2050,7 +2050,7 @@ namespace Grain {
     /**
      *  @brief Release resources for polygon layer.
      */
-    void GeoTileRenderer::_releasePolygonLayerResouces(GeoTileRendererLayer *layer) {
+    void GeoTileRenderer::_releasePolygonLayerResouces(GeoTileRendererLayer* layer) {
         if (layer->m_polygons_file) {
             delete layer->m_polygons_file;
             layer->m_polygons_file = nullptr;
@@ -2063,7 +2063,7 @@ namespace Grain {
     /**
      *  @brief Render a layer from CSV data.
      */
-    void GeoTileRenderer::_renderCSVLayer(GeoTileRendererLayer *layer, GraphicContext &gc, RemapRectd &remap_rect) {
+    void GeoTileRenderer::_renderCSVLayer(GeoTileRendererLayer* layer, GraphicContext& gc, RemapRectd& remap_rect) {
         TimeMeasure tm;
 
         // TODO: How can data be defined and become a property? Color, Size, ...
@@ -2378,7 +2378,7 @@ namespace Grain {
     }
 
 
-    void GeoTileRenderer::_setupGCDrawing(GraphicContext &gc, GeoTileRendererDrawSettings &draw_settings) {
+    void GeoTileRenderer::_setupGCDrawing(GraphicContext& gc, GeoTileRendererDrawSettings& draw_settings) {
         draw_settings.m_radius_px = meterToPixel(draw_settings.m_radius, draw_settings.m_radius_px_fix, draw_settings.m_radius_px_min, draw_settings.m_radius_px_max);
 
         if (drawModeHasFill(draw_settings.m_draw_mode)) {

@@ -2278,20 +2278,24 @@ namespace Grain {
      *  @return True if all directories were successfully created or already existed, false otherwise.
      */
     bool File::makeDirs(const String& path) noexcept {
-        std::filesystem::path dir_path = path.utf8();
-
         try {
-            // Create the directory with read/write/search permissions for owner and group, and with read/search permissions for others
+            std::filesystem::path dir_path = path.utf8();
             std::filesystem::create_directories(dir_path);
 
-            // Open directory and force fsync
-            int fd = ::open(dir_path.c_str(), O_DIRECTORY | O_RDONLY);
+            std::cout << "File::makeDirs: " << path << std::endl;
+            std::cout << std::unitbuf;  // auto flush everything
+
+#if defined(__APPLE__) && defined(__MACH__)
+            int fd = ::open(dir_path.c_str(), O_RDONLY);
+#else
+            int fd = ::open(dir_path.c_str(), O_RDONLY | O_DIRECTORY);
+#endif
             if (fd >= 0) {
                 ::fsync(fd);
                 ::close(fd);
             }
         }
-        catch (std::filesystem::filesystem_error& exc) {
+        catch (const std::filesystem::filesystem_error&) {
             return false;
         }
 
