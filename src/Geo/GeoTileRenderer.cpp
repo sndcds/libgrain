@@ -46,18 +46,13 @@ namespace Grain {
 
     const Font* GeoTileRendererDrawSettings::font(GeoTileRenderer* geo_renderer) noexcept {
         if (!m_font) {
-            std::cout << "GeoTileRendererDrawSettings::font nullptr, m_font_name: " << m_font_name << std::endl;
             if (m_font_name.compareIgnoreCase("default") == 0) {
-                std::cout << ".... 1 geo_renderer->m_default_font_name: " << geo_renderer->m_default_font_name << std::endl;
                 m_font = new (std::nothrow) Font(geo_renderer->m_default_font_name, m_font_size);
             }
             else {
-                std::cout << ".... 2\n";
                 m_font = new (std::nothrow) Font(m_font_name, m_font_size);
             }
-            std::cout << ".... 3\n" << m_font << std::endl;
         }
-
         return m_font;
     }
 
@@ -78,13 +73,11 @@ namespace Grain {
     ErrorCode GeoTileRendererLayer::checkProj(int32_t dst_srid) {
         if (!m_proj) {
             // TODO: No projection needed, if m_src_crs == dst_crs!
-
             m_proj = new GeoProj(m_srid, dst_srid);
             if (!m_proj->isValid()) {
                 Exception::throwSpecific(GeoTileRenderer::kErrDefaultRenderProjNotValid);
             }
         }
-
         return ErrorCode::None;
     }
 
@@ -598,7 +591,6 @@ namespace Grain {
 
 
     void GeoTileRenderer::setRenderBoundsWGS84(const Vec2d &top_left, const Vec2d &bottom_right) noexcept {
-
         m_render_lonlat_top_left.m_x = std::clamp(top_left.m_x, Geo::kMinLonDeg, Geo::kMaxLonDeg);
         m_render_lonlat_bottom_right.m_x = std::clamp(bottom_right.m_x, Geo::kMinLonDeg, Geo::kMaxLonDeg);
 
@@ -623,7 +615,6 @@ namespace Grain {
         if (layer) {
             m_layers.push(layer);
         }
-
         return layer;
     }
 
@@ -809,8 +800,7 @@ namespace Grain {
 
 
     ErrorCode GeoTileRenderer::startRenderer() noexcept {
-
-        TimeMeasure tm;
+        TimeMeasure tm_total_render;
         ErrorCode err;
 
         _initLua(); // TODO: Can be optimiezed to be called only if Lua scripts are involved!
@@ -830,8 +820,7 @@ namespace Grain {
                 break;
         }
 
-        // Statistics
-        m_total_render_time = tm.elapsedNanos();
+        m_total_render_time = tm_total_render.elapsedNanos();
 
         // Verbose output
         // TODO: Verbose flags and variable output stream!
@@ -852,8 +841,10 @@ namespace Grain {
         l << "fills: " << m_total_fill_n << l.endl;
 
         if (m_render_mode == RenderMode::Tiles) {
-            l << "total meta tiles: " << m_total_meta_tile_n << l.endl;
             l << "total tiles: " << m_total_tile_n << l.endl;
+        }
+        else if (m_render_mode == RenderMode::MetaTiles) {
+            l << "total meta tiles: " << m_total_meta_tile_n << l.endl;
         }
 
         l--;
@@ -955,6 +946,7 @@ namespace Grain {
                     for (tile_index.m_x = tile_start_x; tile_index.m_x <= tile_end.m_x; tile_index.m_x += kMetaTileGridSize) {
                         // TODO: !!!!
                         std::cout << tile_index << "meta-tiles needed: " << meta_tiles_needed << ", rendered: " << meta_tile_n << ", rest: " << (meta_tiles_needed - meta_tile_n) << std::endl;
+                        std::cout << std::flush;
 
                         // Preparation for rendering a single meta-tile
                         Vec2d lonlat;
@@ -1568,8 +1560,9 @@ namespace Grain {
         PGresult* sql_result = nullptr;
         bool gc_saved_flag = false;
 
-        TimeMeasure tm_data_access;
         try {
+            TimeMeasure tm_data_access;
+
             // Execute SQL query, binary result
             psql_connection = _psqlConnForLayer(layer);
             if (!psql_connection) {
@@ -1960,12 +1953,14 @@ namespace Grain {
             GraphicContext &gc,
             RemapRectd &remap_rect) {
 
+        TimeMeasure tm_render;
+
         // TODO: Check SRID/CRS ... what to do, if destination is different from polygon files SRID?
         // Check if polygon must be loaded
 
-        TimeMeasure tm;
-
         if (!layer->m_polygons_file) {
+            TimeMeasure tm_data_access;
+
             // Load all polygon records
             String file_path = layer->m_dir_path + "/" + layer->m_file_name;
             layer->m_polygons_file = new(std::nothrow) PolygonsFile(file_path);
@@ -1977,9 +1972,9 @@ namespace Grain {
 
             err = layer->checkProj(m_dst_srid);
             Exception::throwStandard(err);
-       }
 
-        layer->m_total_data_access_time += tm.elapsedNanos();
+            layer->m_total_data_access_time += tm_data_access.elapsedNanos();
+       }
 
         auto polygons_file = layer->m_polygons_file;
 
@@ -2048,7 +2043,7 @@ namespace Grain {
             }
         }
 
-        layer->m_total_render_time += tm.elapsedMillis();
+        layer->m_total_render_time += tm_render.elapsedMillis();
     }
 
 

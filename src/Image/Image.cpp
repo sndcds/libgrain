@@ -2538,7 +2538,6 @@ namespace Grain {
      *  @return ErrorCode indicating success or failure.
      */
     ErrorCode Image::writePng(const String& file_path, int32_t compression_level, bool use_alpha) {
-
         auto result = ErrorCode::None;
 
         if (m_color_model != Color::Model::RGB &&
@@ -2571,6 +2570,7 @@ namespace Grain {
 
             result = temp_image->writePng(file_path, compression_level, use_alpha);
             delete temp_image;
+
             return result;
         }
 
@@ -2582,7 +2582,9 @@ namespace Grain {
 
         try {
             fp = fopen(file_path.utf8(), "wb");
-            if (!fp) { throw ErrorCode::FileCantCreate; }
+            if (!fp) {
+                throw ErrorCode::FileCantCreate;
+            }
 
             png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
             if (!png_ptr) { throw Error::specific(1); }
@@ -2669,8 +2671,12 @@ namespace Grain {
 
         // Clean up
         {
-
             png_destroy_write_struct(&png_ptr, &info_ptr);
+
+            int fd = fileno(fp);
+            if (fd >= 0) {
+                fsync(fd);
+            }
 
             if (fp) {
                 fclose(fp);
@@ -2681,7 +2687,6 @@ namespace Grain {
 
         return result;
     }
-
 
 
     ErrorCode Image::writeWebP(const String& file_path, float quality, bool use_alpha) {

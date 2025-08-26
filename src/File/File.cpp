@@ -583,7 +583,6 @@ namespace Grain {
      *  @return The number of white space characters skipped.
      */
     int64_t File::skipWhiteSpace() {
-
         int64_t n = 0;
         do {
             readUtf8Symbol();
@@ -610,7 +609,6 @@ namespace Grain {
      *  - Returns true if a matching line is found; otherwise, returns false.
      */
     bool File::skipUntilLineWithText(const String& text) {
-
         String line;
         while (readLine(line)) {
             auto cindex = line.find(text);
@@ -634,7 +632,6 @@ namespace Grain {
      *  @return The FourCC read from the file as a four-byte value.
      */
     fourcc_t File::readFourCC() {
-
         fourcc_t result = 0;
 
         result = static_cast<fourcc_t>(readValue<uint8_t>());
@@ -701,7 +698,6 @@ namespace Grain {
      *  @param out_string A reference to a String where the read chars will be stored.
      */
     void File::readToString(int64_t size, String& out_string) {
-
         if (size > std::numeric_limits<int32_t>::max()) {
             Exception::throwStandard(ErrorCode::FileCantReadInternalLimits);
         }
@@ -770,7 +766,6 @@ namespace Grain {
      */
     template <typename U>
     void File::readArray(int64_t length, U* out_array) {
-
         if (out_array != nullptr) {
             for (int64_t i = 0; i < length; i++)
                 out_array[i] = readValue<U>();
@@ -823,8 +818,6 @@ namespace Grain {
      *  @return `true` if more atoms can be read, `false` if this was the last readable atom.
      */
     bool File::readQTMovieAtomType(uint64_t* out_atom_size, fourcc_t* out_atom_type) {
-        // TODO: Test!
-
         uint32_t atom_size32;
         uint64_t atom_size;
         fourcc_t atom_type;
@@ -832,6 +825,8 @@ namespace Grain {
 
         atom_size32 = readValue<uint32_t>();
         atom_type = readFourCC();
+
+        // TODO: Test!
 
         if (atom_size32 == 1) {
             // Extended size
@@ -869,7 +864,6 @@ namespace Grain {
      *  @return The value read from the TIFF file, interpreted according to the field type.
      */
     uint32_t File::readTIFFValue(uint16_t field_type) {
-
         uint32_t result = 0;
         int32_t skip_n = 4;
 
@@ -912,7 +906,6 @@ namespace Grain {
      *  @return ErrorCode Returns an error code indicating the success or failure of the operation.
      */
     ErrorCode File::readToBuffer(const String& file_path, int64_t buffer_size, uint8_t* out_buffer) {
-
         auto result = ErrorCode::None;
 
         try {
@@ -949,7 +942,6 @@ namespace Grain {
      *  @return `true` if the last symbol is a white space character, `false` otherwise.
      */
     bool File::lastUtf8SymbolIsWhiteSpace() noexcept {
-
         char c = _m_utf8_buffer[0];
         return _m_utf8_seq_length == 1 && (c == 0x20 || c == 0x09 || c == 0x0d || c == 0x0a || c == 0x0c || c == 0x0b);
     }
@@ -966,7 +958,6 @@ namespace Grain {
      *  @return `true` if the last symbol matches the provided symbol, `false` otherwise.
      */
     bool File::compareLastUtf8Symbol(const char* symbol) noexcept {
-
         return strcmp(_m_utf8_buffer, symbol) == 0;
     }
 
@@ -978,7 +969,6 @@ namespace Grain {
      *  This is typically used in file formats that require an endian indicator.
      */
     void File::writeEndianSignature() {
-
         if (m_big_endian) {
             writeStr("MM");
         }
@@ -1011,7 +1001,6 @@ namespace Grain {
 
     template <typename U>
     void File::writeData(const U* data, int64_t length) {
-
         if (!data) {
             Exception::throwStandard(ErrorCode::NullData);
         }
@@ -1122,7 +1111,6 @@ namespace Grain {
     }
 
 
-
     /**
      *  @brief Write a null-terminated C-string to the file.
      *
@@ -1132,7 +1120,6 @@ namespace Grain {
      *  @param str A pointer to the null-terminated C-string to be written.
      */
     void File::writeStr(const char* str) {
-
         int64_t length = str != nullptr ? static_cast<int64_t>(strlen(str)) : 0;
         auto c = str;
         if (length > 0) {
@@ -1152,7 +1139,6 @@ namespace Grain {
      *  @param string The String to be written to the file.
      */
     void File::writeString(const String& string) {
-
         writeStr(string.utf8());
     }
 
@@ -1164,7 +1150,6 @@ namespace Grain {
      *  @param ... Optional arguments to be formatted and included as the value.
      */
     void File::writeFormatted(const char *format, ...) {
-
         va_list args;
         va_start(args, format);
 
@@ -1188,9 +1173,9 @@ namespace Grain {
      *  @return The number of bytes written, including the length byte and string content.
      */
     int32_t File::writePascalStr(const char* str) {
-        // TODO: Test!
-
         int64_t length = str ? static_cast<int64_t>(strlen(str)) : 0;
+
+        // TODO: Test!
         if (length > 0) {
             if (length > 255) {
                 length = 255;
@@ -1210,7 +1195,6 @@ namespace Grain {
      *  to the file. It is designed to help format and structure the content in the file.
      */
     void File::writeIndent() {
-
         if (m_indent > 0) {
             for (int32_t i = 0; i < m_indent; i++) {
                 writeChar('\t');
@@ -1228,7 +1212,6 @@ namespace Grain {
      *  @param key A pointer to the null-terminated C-string representing the key.
      */
     void File::writeKey(const char* key) {
-
         writeIndent();
         writeStr(key);
         writeColon();
@@ -1245,7 +1228,6 @@ namespace Grain {
      *  @param value A pointer to the null-terminated C-string representing the corresponding value.
      */
     void File::writeLine(const char* key, const char* value) {
-
         writeKey(key);
         writeStr(value);
         writeNewLine();
@@ -1263,7 +1245,6 @@ namespace Grain {
      *  @param value The boolean value associated with the key.
      */
     void File::writeLineBool(const char* key, bool value) {
-
         writeKey(key);
         writeTextBool(value);
         writeNewLine();
@@ -1281,7 +1262,6 @@ namespace Grain {
      *  @param value The 32-bit integer value associated with the key.
      */
     void File::writeLineInt32(const char* key, int32_t value) {
-
         writeKey(key);
         writeTextInt32(value);
         writeNewLine();
@@ -1300,7 +1280,6 @@ namespace Grain {
      *  @param fractional_digits (Optional, default: 4) The number of fractional digits to include in the value.
      */
     void File::writeLineFloat(const char* key, float value, int32_t fractional_digits) {
-
         writeKey(key);
         writeTextFloat(value, fractional_digits);
         writeNewLine();
@@ -1318,7 +1297,6 @@ namespace Grain {
      *  @param value The GrFix fixed-point value associated with the key.
      */
     void File::writeLineFix(const char* key, const Fix& value) {
-
         writeKey(key);
         writeTextFix(value);
         writeNewLine();
@@ -1337,7 +1315,6 @@ namespace Grain {
      *  @param ... Optional arguments to be formatted and included as the value.
      */
     void File::writeLineFormatted(const char* key, const char* format, ...) {
-
         writeKey(key);
 
         va_list args;
@@ -1363,7 +1340,6 @@ namespace Grain {
      *  @param str A pointer to the null-terminated C-string representing the value.
      */
     void File::writeLineStr(const char* key, const char* str) {
-
         writeKey(key);
         writeQuote();
         writeStr(str);
@@ -1385,7 +1361,6 @@ namespace Grain {
     void File::writeLineString(const char* key, const String& string) {
         writeLineStr(key, string.utf8());
     }
-
 
 
     void File::writeTextBool(bool value) {
@@ -1497,7 +1472,6 @@ namespace Grain {
      *  @return `true` if the file has a TIFF signature, indicating it may be a TIFF image; otherwise, `false`.
      */
     bool File::hasTiffSignature() {
-
         bool result = false;
 
         try {
@@ -1527,7 +1501,6 @@ namespace Grain {
      *  @return `true` if the file has a DNG signature, indicating it may be a DNG image; otherwise, `false`.
      */
     bool File::hasDNGSignature() {
-
         return hasTiffSignature();
     }
 
@@ -1541,7 +1514,6 @@ namespace Grain {
      *  @return `true` if the file has an AIFF signature, indicating it may be in AIFF audio format; otherwise, `false`.
      */
     bool File::hasAIFFSignature() {
-
         bool result = false;
 
         try {
@@ -1576,7 +1548,6 @@ namespace Grain {
      *  @return `true` if the file has an AIFC signature, indicating it may be in AIFC audio format; otherwise, `false`.
      */
     bool File::hasAIFCSignature() {
-
         bool result = false;
 
         try {
@@ -1611,7 +1582,6 @@ namespace Grain {
      *  @return `true` if the file has a WAV signature, indicating it may be in WAV audio format; otherwise, `false`.
      */
     bool File::hasWAVESignature() {
-
         bool result = false;
 
         try {
@@ -1646,7 +1616,6 @@ namespace Grain {
      *  @return `true` if the file has a QuickTime signature, indicating it may be in QuickTime format; otherwise, `false`.
      */
     bool File::hasQuickTimeSignature() {
-
         bool result = false;
 
         try {
@@ -1722,10 +1691,9 @@ namespace Grain {
      *  @return `true` if the file has an MPEG-4 signature, indicating it may be in MPEG-4 format; otherwise, `false`.
      */
     bool File::hasMPEG4Signature() {
+        bool result = false;
 
         // TODO: Brands: XAVC, XAVC, mp42, iso2
-
-        bool result = false;
 
         try {
             int64_t remembered_pos = pos();
@@ -1779,7 +1747,6 @@ namespace Grain {
      *  @return `true` if the file has an MXF signature, indicating it may be in MXF format; otherwise, `false`.
      */
     bool File::hasMXFSignature() {
-
         static uint8_t reference[4] = { 0x06, 0x0E, 0x2B, 0x34 };
 
         bool result = false;
@@ -1835,7 +1802,6 @@ namespace Grain {
      *  @return `true` if the file has an MP3 audio file signature, indicating it may be in MP3 audio format; otherwise, `false`.
      */
     bool File::hasMP3Signature() {
-
         bool result = false;
 
         try {
@@ -1868,7 +1834,6 @@ namespace Grain {
      *  @return `true` if the file has a MIDI file signature, indicating it may be in MIDI format; otherwise, `false`.
      */
     bool File::hasMIDISignature() {
-
         bool result = false;
 
         try {
@@ -2019,7 +1984,6 @@ namespace Grain {
      *  The caller will then be responsible for freeing the buffer.
      */
     uint8_t* File::readBase64ToBuffer(int64_t base64_size, int64_t buffer_size, uint8_t *buffer) noexcept {
-
         bool malloc_flag = false;
 
         // Check if `base64_size` is a multiple of four
@@ -2043,7 +2007,6 @@ namespace Grain {
         }
 
         if (buffer != nullptr) {
-
             uint8_t *dst = buffer;
 
             try {
@@ -2087,7 +2050,6 @@ namespace Grain {
      *  @throws Exception if the object could not be created.
      */
     File* File::createFile(const String& file_path) {
-
         auto file = new (std::nothrow) File(file_path);
         if (!file) {
             Exception::throwStandard(ErrorCode::FileInstantiationFailed);
@@ -2097,7 +2059,6 @@ namespace Grain {
 
 
     bool File::fileExists(const char* file_path) {
-
         try {
             return std::filesystem::exists(file_path);
         }
@@ -2117,7 +2078,6 @@ namespace Grain {
      *  @return `true` if the file exists at the specified path; otherwise, `false`.
      */
     bool File::fileExists(const String& file_path) {
-
         return fileExists(file_path.utf8());
     }
 
@@ -2130,7 +2090,6 @@ namespace Grain {
      *  @return `true` if the file exists at the specified path; otherwise, `false`.
      */
     bool File::fileExists(const String& dir_path, const String& file_name) {
-
         if (dir_path.length() < 1) {
             String file_path = "./";
             file_path += file_name;
@@ -2152,7 +2111,6 @@ namespace Grain {
      *  @return The signature of the file as a `File::Signature` enumeration.
      */
     File::Signature File::fileSignature(const String& file_path) {
-
         Signature signature = Signature::Unknown;
         File* file = nullptr;
 
@@ -2220,7 +2178,6 @@ namespace Grain {
      *  @param curr_depth The current depth during traversal (typically used for recursion).
      */
     int32_t File::execFileAction(const String& dir_path, FileAction action, void* action_ref, int32_t max_depth, int32_t curr_depth) {
-
         int32_t err_count = 0;
 
         if (curr_depth < 0 || curr_depth >= max_depth || !action) {
@@ -2273,7 +2230,6 @@ namespace Grain {
      *  @return true if the path is a directory, false if it is not a directory.
      */
     bool File::isDir(const String& path) noexcept {
-
         try {
             return std::filesystem::is_directory(path.utf8());
         }
@@ -2292,7 +2248,6 @@ namespace Grain {
      *  @return true if the directory with the given name is found within the specified path; false otherwise.
      */
     bool File::containsDir(const String& path, const String& dir_name) noexcept {
-
         DIR* dir = opendir(path.utf8());
         if (dir != nullptr) {
             struct dirent* entry = readdir(dir);
@@ -2323,13 +2278,18 @@ namespace Grain {
      *  @return True if all directories were successfully created or already existed, false otherwise.
      */
     bool File::makeDirs(const String& path) noexcept {
-
-        // Create the directory with read/write/search permissions for owner and group, and with read/search permissions for others
-
         std::filesystem::path dir_path = path.utf8();
 
         try {
+            // Create the directory with read/write/search permissions for owner and group, and with read/search permissions for others
             std::filesystem::create_directories(dir_path);
+
+            // Open directory and force fsync
+            int fd = ::open(dir_path.c_str(), O_DIRECTORY | O_RDONLY);
+            if (fd >= 0) {
+                ::fsync(fd);
+                ::close(fd);
+            }
         }
         catch (std::filesystem::filesystem_error& exc) {
             return false;
@@ -2381,7 +2341,6 @@ NSString *file = [NSString stringWithUTF8String:file_path.utf8()];
 
 
     ErrorCode File::removeFile(const char* file_path) noexcept {
-
         if (file_path == nullptr) {
             return ErrorCode::NullData;
         }
@@ -2420,7 +2379,6 @@ NSString *file = [NSString stringWithUTF8String:file_path.utf8()];
      *  @return ErrorCode::None on success, or an appropriate ErrorCode on failure.
      */
     ErrorCode File::removeDirAll(const char* dir_path) noexcept {
-
         auto result = ErrorCode::None;
 
         try {
@@ -2438,7 +2396,6 @@ NSString *file = [NSString stringWithUTF8String:file_path.utf8()];
 
 
     void File::checkCanOverwrite(const String& file_path, CanOverwrite can_overwrite) {
-
         if (can_overwrite == CanOverwrite::Yes) {
             removeFile(file_path);
         }
@@ -2449,7 +2406,6 @@ NSString *file = [NSString stringWithUTF8String:file_path.utf8()];
 
 
     ErrorCode File::changeBytes(const String& file_path, int32_t n, const int32_t* pos, const uint8_t* bytes) noexcept {
-
         auto result = ErrorCode::None;
         FILE* file = nullptr;
 
@@ -2509,7 +2465,6 @@ NSString *file = [NSString stringWithUTF8String:file_path.utf8()];
 
 
     ErrorCode File::changeBytes(const String& file_path, int32_t pos, int32_t length, const uint8_t* bytes) noexcept {
-
         auto result = ErrorCode::None;
         FILE* file = nullptr;
 
@@ -2571,7 +2526,6 @@ NSString *file = [NSString stringWithUTF8String:file_path.utf8()];
      *  @return
      */
     ErrorCode File::toHex(const String& src_file_path, const String& dst_file_path) noexcept {
-
         auto result = ErrorCode::None;
 
         File src_file(src_file_path);
@@ -2613,7 +2567,6 @@ NSString *file = [NSString stringWithUTF8String:file_path.utf8()];
      *  @return The number of directories found.
      */
     int32_t File::dirNameList(const String& path, StringList& out_list) noexcept {
-
         int32_t dir_count = 0;
 
         DIR* dir = opendir(path.utf8());
@@ -2646,7 +2599,6 @@ NSString *file = [NSString stringWithUTF8String:file_path.utf8()];
      *  @note Ignores hidden files (files starting with a dot).
      */
     int32_t File::fileNameList(const String& path, StringList& out_list) noexcept {
-
         int32_t file_count = 0;
 
         DIR* dir = opendir(path.utf8());
@@ -2683,7 +2635,6 @@ NSString *file = [NSString stringWithUTF8String:file_path.utf8()];
      *  @note Ignores hidden files (files starting with a dot).
      */
     int32_t File::fileNameList(const String& path, const String& extensions, int64_t min_size, int64_t max_size, int32_t* out_ignored, StringList& out_list) noexcept {
-
         namespace fs = std::filesystem;
 
         StringList ext_list;
@@ -2754,7 +2705,6 @@ NSString *file = [NSString stringWithUTF8String:file_path.utf8()];
 
 
     int32_t File::countDir(const String& path) noexcept {
-
         int32_t count = 0;
         DIR* dir = opendir(path.utf8());
         if (dir != nullptr) {
@@ -2773,7 +2723,6 @@ NSString *file = [NSString stringWithUTF8String:file_path.utf8()];
 
 
     int32_t File::countFiles(const String& path) noexcept {
-
         int32_t count = 0;
         DIR* dir = opendir(path.utf8());
         if (dir != nullptr) {
@@ -2808,7 +2757,6 @@ NSString *file = [NSString stringWithUTF8String:file_path.utf8()];
      *        it will be set to 0.
      */
     ErrorCode File::fileEntryByPath(const String& file_path, FileEntry& out_file_entry) noexcept {
-
         auto result = ErrorCode::None;
         std::filesystem::path path(file_path.utf8());
 
@@ -2843,10 +2791,8 @@ NSString *file = [NSString stringWithUTF8String:file_path.utf8()];
 
 
     ErrorCode File::forAllFiles(const String& path, FileEntryAction action, void* ref) noexcept {
-
-        // TODO: Refactor to rethrow Exception!
-
         auto result = ErrorCode::None;
+        // TODO: Refactor to rethrow Exception!
 
         try {
             for (const auto& entry : std::filesystem::directory_iterator(path.utf8())) {
@@ -2891,9 +2837,9 @@ NSString *file = [NSString stringWithUTF8String:file_path.utf8()];
 
 
     ErrorCode File::forAllFilesRecursive(const String& path, FileEntryAction action, void* ref) noexcept {
-        // TODO: Refactor to rethrow Exception!
-
         auto result = ErrorCode::None;
+
+        // TODO: Refactor to rethrow Exception!
 
         try {
             for (auto entry = std::filesystem::recursive_directory_iterator(path.utf8()); entry != std::filesystem::recursive_directory_iterator(); entry++) {
@@ -2929,7 +2875,6 @@ NSString *file = [NSString stringWithUTF8String:file_path.utf8()];
 
 
     ErrorCode File::writeFileEntriesRecursive(const String& path, FileEntryFilterAction action, void* ref, bool relative_flag) noexcept {
-
         auto result = ErrorCode::None;
 
         try {
@@ -2956,7 +2901,6 @@ NSString *file = [NSString stringWithUTF8String:file_path.utf8()];
 
 
     String File::buildFilePath(const String& path, const String& file_name) noexcept {
-
         String file_path = path;
         file_path.append("/");
         file_path.append(file_name);
@@ -2966,7 +2910,6 @@ NSString *file = [NSString stringWithUTF8String:file_path.utf8()];
 
 
     bool File::findFilePath(const String& file_path, const String& alt_root_dir, String& out_file_path) noexcept {
-
         try {
             if (fileExists(file_path)) {
                 out_file_path = file_path;
@@ -3028,7 +2971,6 @@ NSString *file = [NSString stringWithUTF8String:file_path.utf8()];
      */
 #if defined(__APPLE__) && defined(__MACH__)
     ErrorCode File::macos_writeCFPlistXML(const String& file_path, const CFPropertyListRef plist) noexcept {
-
         auto result = ErrorCode::None;
 
         auto cf_file_path = file_path.createCFStringRef();
