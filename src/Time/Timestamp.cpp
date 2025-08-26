@@ -34,7 +34,7 @@ namespace Grain {
 
     void Timestamp::durationStr(int32_t out_str_length, char* out_str) const noexcept {
         if (out_str != nullptr) {
-            int64_t ms = elapsedMilliseconds();
+            int64_t ms = elapsedMillis();
             int64_t total_seconds = ms / 1000;
             int64_t hours = total_seconds / 3600;
             int64_t minutes = (total_seconds % 3600) / 60;

@@ -26,13 +26,11 @@
 
 #include "Geo/GeoTileRenderer.hpp"
 #include "Geo/WKBParser.hpp"
-#include "App/App.hpp"
 #include "Graphic/GraphicContext.hpp"
 #include "Graphic/MacCGContext.hpp"
 #include "Graphic/CairoContext.hpp"
 #include "2d/GraphicCompoundPath.hpp"
 #include "File/File.hpp"
-#include "String/CSVString.hpp"
 #include "String/StringList.hpp"
 #include "Color/Gradient.hpp"
 #include "Type/Type.hpp"
@@ -811,7 +809,8 @@ namespace Grain {
 
 
     ErrorCode GeoTileRenderer::startRenderer() noexcept {
-        Timestamp ts;
+
+        TimeMeasure tm;
         ErrorCode err;
 
         _initLua(); // TODO: Can be optimiezed to be called only if Lua scripts are involved!
@@ -832,43 +831,50 @@ namespace Grain {
         }
 
         // Statistics
-        m_total_render_time = ts.elapsedMilliseconds();
+        m_total_render_time = tm.elapsedNanos();
 
         // Verbose output
         // TODO: Verbose flags and variable output stream!
 
-        std::cout << "***** Render statistics:\n *****";
-        std::cout << "render mode: " << m_render_mode_name << std::endl;
-        std::cout << "total render time: " << (0.001 * m_total_render_time) << " sec." << std::endl;
+        Log l;
+        l << l.fixed(8);
 
-        std::cout << "database rows queried: " << m_total_db_rows_n << std::endl;
-        std::cout << "rendered elements:\n";
-        std::cout << "  points: " << m_total_point_n << std::endl;
-        std::cout << "  strokes: " << m_total_stroke_n << std::endl;
-        std::cout << "  fills: " << m_total_fill_n << std::endl;
+        l << "Render statistics . . . . . . . . . ." << l.endl;
+        l++;
+        l << "render mode: " << m_render_mode_name << l.endl;
+        l << "total render time: " << (1e-9 * m_total_render_time) << " sec." << l.endl;
+
+        l << "database rows queried: " << m_total_db_rows_n << l.endl;
+        l << "rendered elements:" << l.endl;
+        l++;
+        l << "points: " << m_total_point_n << l.endl;
+        l << "strokes: " << m_total_stroke_n << l.endl;
+        l << "fills: " << m_total_fill_n << l.endl;
 
         if (m_render_mode == RenderMode::Tiles) {
-            std::cout << "total meta tiles: " << m_total_meta_tile_n << std::endl;
-            std::cout << "total tiles: " << m_total_tile_n << std::endl;
+            l << "total meta tiles: " << m_total_meta_tile_n << l.endl;
+            l << "total tiles: " << m_total_tile_n << l.endl;
         }
 
-
-        std::cout << "Layers:\n";
+        l--;
+        l << "Layers:" << l.endl;
+        l++;
 
         String text;
         int32_t index = 0;
         for (auto& layer : m_layers) {
-            std::cout << index << ": " << layer->m_name;
-            text.setElapsedTimeText(layer->m_total_data_access_time);
-            std::cout << ", access: " << text;
-            text.setElapsedTimeText(layer->m_total_script_preparation_time + layer->m_total_script_exec_time);
-            std::cout << ", script: " << text;
-            text.setElapsedTimeText(layer->m_total_render_time);
-            std::cout << ", render: " << text << std::endl;
+            l << index << ": " << layer->m_name << l.endl;
+            l++;
+            l << "access: " << (1e-9 * layer->m_total_data_access_time) << " sec." << l.endl;
+            l << "parse: " << (1e-9 * layer->m_total_parse_time) << " sec." << l.endl;
+            l << "script preparation: " << (1e-9 * layer->m_total_script_preparation_time) << " sec." << l.endl;
+            l << "script execution: " << (1e-9 * layer->m_total_script_exec_time) << " sec." << l.endl;
+            l << "render: " << (1e-9 * layer->m_total_render_time) << " sec." << l.endl;
+            l--;
             index++;
         }
 
-        std::cout << std::endl;
+        l << l.endl;
 
         // Cleanup
         delete m_render_image;
@@ -1335,6 +1341,8 @@ namespace Grain {
             layer->m_ignore_proj = layer->m_srid == m_dst_srid;
 
             if (m_current_zoom >= layer->m_min_zoom && m_current_zoom <= layer->m_max_zoom) {
+                TimeMeasure tm_render_layer;
+
                 std::cout << "Layer " << m_current_layer_index << std::endl;
                 std::cout << "  m_name: " << layer->m_name << std::endl;
                 std::cout << "  m_type_name: " << layer->m_type_name << std::endl;
@@ -1363,6 +1371,7 @@ namespace Grain {
                         break;
                 }
 
+                layer->m_total_render_time += tm_render_layer.elapsedNanos();
                 layer->m_rendering_calls++;
             }
             else if (!layer->m_resources_released_flag && m_current_zoom > layer->m_max_zoom) {
@@ -1422,7 +1431,7 @@ namespace Grain {
             return;
         }
 
-        Timestamp ts;
+        TimeMeasure tm;
 
         // Load the Lua code
         int status = luaL_loadstring(m_lua->luaState(), layer->m_lua_script.utf8());
@@ -1459,7 +1468,7 @@ namespace Grain {
 
         lua_pop(m_lua->luaState(), 1);
 
-        layer->m_total_script_preparation_time += ts.elapsedMilliseconds();
+        layer->m_total_script_preparation_time += tm.elapsedNanos();
     }
 
 
@@ -1524,7 +1533,6 @@ namespace Grain {
             RemapRectd &remap_rect) {
 
         auto result = ErrorCode::None;
-        Timestamp timestamp;
 
         auto err = layer->checkProj(m_dst_srid);
         if (err != ErrorCode::None) {
@@ -1560,7 +1568,7 @@ namespace Grain {
         PGresult* sql_result = nullptr;
         bool gc_saved_flag = false;
 
-        TimeMeasure tm;
+        TimeMeasure tm_data_access;
         try {
             // Execute SQL query, binary result
             psql_connection = _psqlConnForLayer(layer);
@@ -1596,10 +1604,12 @@ namespace Grain {
             auto row_count = PQntuples(sql_result);
             int32_t field_count = PQnfields(sql_result);
 
-            layer->m_total_data_access_time += tm.elapsedNanos();
+            layer->m_total_data_access_time += tm_data_access.elapsedNanos();
 
 
             if (!layer->m_db_field_names_scanned) {
+                TimeMeasure tm_script_preparation;
+
                 // Scan all field names for accessing them in Lua scripts
                 if (field_count > 0) {
                     layer->m_data_property_list = new PSQLPropertyList(field_count);
@@ -1631,6 +1641,7 @@ namespace Grain {
                 }
 
                 layer->m_db_field_names_scanned = true;
+                layer->m_total_script_preparation_time += tm_script_preparation.elapsedNanos();
             }
 
             layer->m_total_db_rows_n += row_count;
@@ -1671,6 +1682,8 @@ namespace Grain {
                 int32_t wkb_data_size = PQgetlength(sql_result, row_index, wkb_field_index);
 
                 if (layer->m_has_lua_script) {
+                    TimeMeasure tm_script_execution;
+
                     // Prepare for processing row through Lua script
                     m_lua->openTable("map_layer");
 
@@ -1704,7 +1717,7 @@ namespace Grain {
 
                     auto process_result = m_lua->callFunction("process");
 
-                    // layer->m_total_script_exec_time += timestamp.elapsedMilliseconds();  TODO: !!!!!
+                    layer->m_total_script_exec_time += tm_script_execution.elapsedNanos();
 
                     if (process_result == 0) {
                         continue;  // This row doesn´t render, go to next row in loop
@@ -1720,6 +1733,8 @@ namespace Grain {
                 Vec2d point;
 
                 {
+                    TimeMeasure tm_wkb_parsing;
+
                     WKBParser wkbParser;
                     wkbParser.setBinaryData((uint8_t*)wkb_data, wkb_data_size);
 
@@ -1739,7 +1754,8 @@ namespace Grain {
                         std::cout << m_last_err_message << std::endl;
                         Exception::throwSpecific(kErrUnsupportedWKBType);
                     }
-                    // layer->m_total_parse_time += timestamp.elapsedMilliseconds();   // TODO: !!!!!
+
+                    layer->m_total_parse_time += tm_wkb_parsing.elapsedNanos();
                 }
 
                 if (render_flag) {
@@ -1862,8 +1878,6 @@ namespace Grain {
             }
         }
 
-        layer->m_total_render_time += timestamp.elapsedMilliseconds();
-
         Exception::throwStandard(result);
     }
 
@@ -1876,7 +1890,7 @@ namespace Grain {
             GraphicContext &gc,
             RemapRectd &remap_rect) {
 
-        Timestamp timestamp;
+        TimeMeasure tm;
 
         // Check if shape must be loaded
 
@@ -1934,7 +1948,7 @@ namespace Grain {
 
         gc.restore();
 
-        layer->m_total_render_time += timestamp.elapsedMilliseconds();
+        layer->m_total_render_time += tm.elapsedMillis();
     }
 
 
@@ -1945,8 +1959,6 @@ namespace Grain {
             GeoTileRendererLayer *layer,
             GraphicContext &gc,
             RemapRectd &remap_rect) {
-
-        Timestamp timestamp;
 
         // TODO: Check SRID/CRS ... what to do, if destination is different from polygon files SRID?
         // Check if polygon must be loaded
@@ -2036,7 +2048,7 @@ namespace Grain {
             }
         }
 
-        layer->m_total_render_time += timestamp.elapsedMilliseconds();
+        layer->m_total_render_time += tm.elapsedMillis();
     }
 
 
@@ -2057,7 +2069,7 @@ namespace Grain {
      *  @brief Render a layer from CSV data.
      */
     void GeoTileRenderer::_renderCSVLayer(GeoTileRendererLayer *layer, GraphicContext &gc, RemapRectd &remap_rect) {
-        Timestamp timestamp;
+        TimeMeasure tm;
 
         // TODO: How can data be defined and become a property? Color, Size, ...
         // TODO: Statistics!
@@ -2220,7 +2232,7 @@ namespace Grain {
                 */
                 auto process_result = m_lua->callFunction("process");
 
-                // layer->m_total_script_exec_time += timestamp.elapsedMilliseconds();  TODO: !!!!!
+                // layer->m_total_script_exec_time += timestamp.elapsedMillis();  TODO: !!!!!
 
                 if (process_result == 0) {
                     continue;  // This row doesn´t render, go to next row in loop
@@ -2367,7 +2379,7 @@ namespace Grain {
         gc.setBlendMode(GraphicContext::BlendMode::Normal);
         gc.restore();
 
-        layer->m_total_render_time += timestamp.elapsedMilliseconds();
+        layer->m_total_render_time += tm.elapsedMillis();
     }
 
 

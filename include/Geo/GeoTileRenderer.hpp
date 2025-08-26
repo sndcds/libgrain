@@ -214,8 +214,9 @@ namespace Grain {
         // Statistics
         int64_t m_rendering_calls = 0;
 
-        int64_t m_total_data_access_time = 0;       ///< Database of File acccess time in nanoseconds
-        int64_t m_total_script_preparation_time = 0;
+        // Time measurement in nanoseconds
+        int64_t m_total_data_access_time = 0;           ///< Database of File acccess time
+        int64_t m_total_script_preparation_time = 0;    ///< Script (e.g. Lua) preparation time
         int64_t m_total_script_exec_time = 0;
         int64_t m_total_parse_time = 0;
         int64_t m_total_proj_time = 0;
@@ -431,7 +432,7 @@ namespace Grain {
         String m_output_file_ext;           ///< File extension, "png", "jpg" ...
 
         // Statistics
-        timestamp_t m_total_render_time = 0;
+        int64_t m_total_render_time = 0;
 
         int64_t m_total_meta_tile_n = 0;
         int64_t m_total_tile_n = 0;

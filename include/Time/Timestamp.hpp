@@ -144,7 +144,7 @@ namespace Grain {
          */
         [[nodiscard]] double elapsedSeconds() const noexcept { return static_cast<double>(elapsed()) * k_ms_to_sec; }
 
-        [[nodiscard]] int64_t elapsedMilliseconds() const noexcept { return static_cast<int64_t>(elapsed()); }
+        [[nodiscard]] int64_t elapsedMillis() const noexcept { return static_cast<int64_t>(elapsed()); }
 
         void dateTimeStr(int32_t out_str_length, char* out_str) const noexcept;
         void durationStr(int32_t out_str_length, char* out_str) const noexcept;
