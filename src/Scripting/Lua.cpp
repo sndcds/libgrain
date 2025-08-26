@@ -280,7 +280,7 @@ namespace Grain {
             }
         }
 
-        // std::cout << "[Lua] " << output << std::endl << std::flush; TODO: Uncomment!
+        std::cout << "[Lua] " << output << std::endl;
 
         return 0;
     }
