@@ -131,146 +131,75 @@ namespace Grain {
     }
 
 
-    const char* TomlTable::stringOr(const char* name, const char* fallback, int32_t local_exc_code) const {
-        return hasItem(name) ? stringOrThrow(name, local_exc_code) : fallback;
+    const char* TomlTable::stringOr(const char* name, const char* fallback) const {
+        return hasItem(name) ? stringOrThrow(name) : fallback;
     }
 
 
-    const char* TomlTable::stringOrThrow(const char* name, int32_t local_exc_code) const {
-        auto item = _tppItemByNameOrThrow(name, local_exc_code);
-        if (!item->second.is_string()) {
-            Exception::throwFormattedMessage(
-                    ErrorCode::TomlExpectedString,
-                    "Expected a string for table item with name \"%s\", code: %d",
-                    name,
-                    local_exc_code);
-        }
+    const char* TomlTable::stringOrThrow(const char* name) const {
+        auto item = _tppItemByNameOrThrow(name, toml::node_type::string);
         return item->second.as_string()->get().c_str();
     }
 
 
-    bool TomlTable::booleanOr(const char* name, bool fallback, int32_t local_exc_code) const {
-        return hasItem(name) ? booleanOrThrow(name, local_exc_code) : fallback;
+    bool TomlTable::booleanOr(const char* name, bool fallback) const {
+        return hasItem(name) ? booleanOrThrow(name) : fallback;
     }
 
 
-    bool TomlTable::booleanOrThrow(const char* name, int32_t local_exc_code) const {
-        auto item = _tppItemByNameOrThrow(name, local_exc_code);
-        if (!item->second.is_boolean()) {
-            Exception::throwFormattedMessage(
-                    ErrorCode::TomlExpectedString,
-                    "Expected a boolean for table item with name \"%s\", code: %d",
-                    name,
-                    local_exc_code);
-        }
+    bool TomlTable::booleanOrThrow(const char* name) const {
+        auto item = _tppItemByNameOrThrow(name, toml::node_type::boolean);
         return item->second.as_boolean()->get();
     }
 
 
-    int64_t TomlTable::integerOr(const char* name, int64_t fallback, int32_t local_exc_code) const {
-        return hasItem(name) ? integerOrThrow(name, local_exc_code) : fallback;
+    int64_t TomlTable::integerOr(const char* name, int64_t fallback) const {
+        return hasItem(name) ? integerOrThrow(name) : fallback;
     }
 
 
-    int64_t TomlTable::integerOrThrow(const char* name, int32_t local_exc_code) const {
-        auto item = _tppItemByNameOrThrow(name, local_exc_code);
-        if (!item->second.is_integer()) {
-            Exception::throwFormattedMessage(
-                    ErrorCode::TomlExpectedString,
-                    "Expected an integer for table item with name \"%s\", code: %d",
-                    name,
-                    local_exc_code);
-        }
+    int64_t TomlTable::integerOrThrow(const char* name) const {
+        auto item = _tppItemByNameOrThrow(name, toml::node_type::integer);
         return item->second.as_integer()->get();
     }
 
 
-    double TomlTable::doubleOr(const char* name, double fallback, int32_t local_exc_code) const {
-        return hasItem(name) ? doubleOrThrow(name, local_exc_code) : fallback;
+    double TomlTable::doubleOr(const char* name, double fallback) const {
+        return hasItem(name) ? doubleOrThrow(name) : fallback;
     }
 
 
-    double TomlTable::doubleOrThrow(const char* name, int32_t local_exc_code) const {
-        auto item = _tppItemByNameOrThrow(name, local_exc_code);
-        if (item->second.is_floating_point()) {
-            return item->second.as_floating_point()->get();
-        }
-        else if (item->second.is_integer()) {
-            return static_cast<double>(item->second.as_integer()->get());
-        }
-        else {
-            Exception::throwFormattedMessage(
-                    ErrorCode::TomlExpectedString,
-                    "Expected a floating point for table item with name \"%s\", code: %d",
-                    name,
-                    local_exc_code);
-        }
-        return 0.0;
+    double TomlTable::doubleOrThrow(const char* name) const {
+        auto item = _tppItemByNameOrThrow(name, toml::node_type::floating_point);
+        return item->second.as_floating_point()->get();
     }
 
 
-    void TomlTable::tableOrThrow(const char* name, int32_t local_exc_code, TomlTable& out_table) const {
-        if (name == nullptr) {
-            Exception::throwMessage(
-                    ErrorCode::TomlNoName,
-                    "Expected table item name, but a nullptr was found");
-        }
-
-        auto item = _tppItemByNameOrThrow(name, local_exc_code);
-        if (!item->second.is_table()) {
-            Exception::throwFormattedMessage(
-                    ErrorCode::TomlExpectedString,
-                    "Expected a table for table item with name \"%s\", code: %d",
-                    name,
-                    local_exc_code);
-        }
-
+    void TomlTable::tableOrThrow(const char* name, TomlTable& out_table) const {
+        auto item = _tppItemByNameOrThrow(name, toml::node_type::table);
         out_table._setTppTablePtr(item->second.as_table());
     }
 
 
-    void TomlTable::arrayOrThrow(const char* name, int32_t local_exc_code, TomlArray& out_array) const {
-        if (name == nullptr) {
-            Exception::throwMessage(
-                    ErrorCode::TomlNoName,
-                    "Expected array item name, but a nullptr was found");
-        }
-
-        auto item = _tppItemByNameOrThrow(name, local_exc_code);
-        if (!item->second.is_array()) {
-            Exception::throwFormattedMessage(
-                    ErrorCode::TomlExpectedString,
-                    "Expected an array for table item with name \"%s\", code: %d",
-                    name,
-                    local_exc_code);
-        }
-
+    void TomlTable::arrayOrThrow(const char* name, TomlArray& out_array) const {
+        auto item = _tppItemByNameOrThrow(name, toml::node_type::array);
         out_array._setTppArrayPtr(item->second.as_array());
     }
 
 
-    int32_t TomlTable::doublesOrThrow(const char* name, int32_t local_exc_code, int32_t max_values, double* out_values) {
+    int32_t TomlTable::doublesOrThrow(const char* name, int32_t max_values, double* out_values) {
         if (out_values == nullptr) {
             Toml::throwParserErrorFileLine(__FILE__, __LINE__);
         }
-        auto item = _tppItemByNameOrThrow(name, local_exc_code);
-        if (!item->second.is_array()) {
-            Exception::throwFormattedMessage(
-                    ErrorCode::TomlExpectedArray,
-                    "Expected an array for table item with name \"%s\", code: %d",
-                    name,
-                    local_exc_code);
-        }
-
+        auto item = _tppItemByNameOrThrow(name, toml::node_type::array);
         auto array = item->second.as_array();
         int32_t n = static_cast<int32_t>(array->size());
         if (n > max_values) {
             Exception::throwFormattedMessage(
                     ErrorCode::TomlParseError,
-                    "Array to big for item with name \"%s\", max array size is: %d, code: %d",
+                    "Array to big for item with name \"%s\", max array size is: %d",
                     name,
-                    max_values,
-                    local_exc_code);
+                    max_values);
         }
         int32_t value_index = 0;
         for (const auto& elem : *array) {
@@ -283,9 +212,8 @@ namespace Grain {
             else {
                 Exception::throwFormattedMessage(
                         ErrorCode::TomlParseError,
-                        "Array to big for item with name \"%s\", accepts integers or doubles only, code: %d",
-                        name,
-                        local_exc_code);
+                        "Array to big for item with name \"%s\", accepts integers or doubles onlyd",
+                        name);
             }
             value_index++;
         }
@@ -293,22 +221,21 @@ namespace Grain {
     }
 
 
-    const RGB TomlTable::rgbOr(const char* name, const RGB& fallback, int32_t local_exc_code) {
-        return hasItem(name) ? rgbOrThrow(name, local_exc_code) : fallback;
+    const RGB TomlTable::rgbOr(const char* name, const RGB& fallback) {
+        return hasItem(name) ? rgbOrThrow(name) : fallback;
     }
 
 
-    const RGB TomlTable::rgbOrThrow(const char* name, int32_t local_exc_code) {
+    const RGB TomlTable::rgbOrThrow(const char* name) {
         RGB rgb;
-        auto s = stringOrThrow(name, local_exc_code);
+        auto s = stringOrThrow(name);
         auto err = CSSColor::parseColorToRGB(s, rgb);
         if (err != ErrorCode::None) {
             Exception::throwFormattedMessage(
                     ErrorCode::TomlParseError,
-                    "Invalid CSS color string for item with name \"%s\", CSS: \"%s\", code: %d",
+                    "Invalid CSS color string for item with name \"%s\", CSS: \"%s\"",
                     name,
-                    s,
-                    local_exc_code);
+                    s);
         }
         return rgb;
     }
@@ -322,9 +249,28 @@ namespace Grain {
     }
 
 
+    /**
+     *  @brief Parse a TOML configuration file.
+     *
+     *  Attempts to read and parse the specified TOML file. Optionally, it
+     *  supports including external TOML files if the corresponding option
+     *  is set. The method internally handles parsing errors, memory allocation
+     *  failures, and file I/O issues.
+     *
+     *  If any error occurs during parsing or processing (e.g., failed file access,
+     *  invalid TOML syntax, memory allocation failure, or included file errors),
+     *  the method throws a specific Exception indicating the problem.
+     *
+     *  @param file_path Path to the TOML file to parse.
+     *  @param options   Parsing options (e.g., whether to process [[include]] directives).
+     *
+     *  @throw Exception Throws if reading or parsing the TOML file fails, or
+     *                   if an included file cannot be read or any memory allocation fails.
+     */
     void Toml::parseFile(const String& file_path, Option options) {
         constexpr const char* include_token = "[[include]]";
-        auto result = ErrorCode::None;
+
+        DeferredException deferred_exception;
         uint8_t* data_buffer = nullptr;
 
         try {
@@ -362,17 +308,20 @@ namespace Grain {
                 m_included_files_count = static_cast<int32_t>(files_list.size());
                 m_included_files_total_size = 0;
                 for (auto f : files_list) {
-                    m_included_files_total_size += f->m_file_size;
+                    m_included_files_total_size += static_cast<int64_t>(f->m_file_size);
                 }
 
                 if (m_included_files_count == 0 || m_included_files_total_size < 1) {
                     _m_tpp_parse_result = toml::parse_file(file_path.utf8());
                 }
                 else {
-                    int64_t bytes_needed = m_included_files_total_size + toml_file_entry.m_file_size;
+                    int64_t bytes_needed = m_included_files_total_size + static_cast<int64_t>(toml_file_entry.m_file_size);
 
                     data_buffer = (uint8_t*)malloc(bytes_needed);
-                    throwIfNull(data_buffer, ErrorCode::MemCantAllocate);
+                    if (!data_buffer) {
+                        Exception::throwStandard(ErrorCode::MemCantAllocate);
+                    }
+
                     auto data_rest = bytes_needed;
                     auto data_ptr = data_buffer;
 
@@ -385,16 +334,23 @@ namespace Grain {
                         line.trim();
 
                         if (line == include_token) {
-                            file.skipLine();  // Skip the line defining the included file path
-
+                            file.skipLine(); // Skip the line defining the included file path
                             auto file_entry = files_list.elementAtIndex(included_file_index);
+                            if (!file_entry) {
+                                Exception::throwMessage(ErrorCode::NullPointer, "Missing file entry");
+                            }
 
-                            throwIfNull(file_entry, ErrorCode::NullData);
                             if (file_entry->m_file_size > 0) {
                                 auto err = File::readToBuffer(file_entry->m_path, data_rest, data_ptr);
-                                throwIfError(err);
+                                if (err != ErrorCode::None) {
+                                    Exception::throwSpecificFormattedMessage(
+                                            kErrFailedToIncludeFile,
+                                            "Unable to read included file: %s",
+                                            file_entry->m_path.utf8());;
+                                }
+
                                 data_ptr += file_entry->m_file_size;
-                                data_rest -= file_entry->m_file_size;
+                                data_rest -= static_cast<int32_t>(file_entry->m_file_size);
                                 *data_ptr++ = '\n';
                                 data_rest--;
                             }
@@ -413,15 +369,6 @@ namespace Grain {
 
                     *data_ptr = '\0';  // End of string, important!
 
-                    /* TODO: Refactor for debugging */
-                    /*
-                    File wf("/Users/roaldchristesen/Desktop/test.toml");
-                    wf.startWriteAsciiOverwrite();
-                    wf.writeStr((const char*)data_buffer);
-                    // wf.writeData(1, data_ptr, data_ptr - data_buffer);
-                    wf.close();
-                    */
-
                     _m_tpp_parse_result = toml::parse(std::string_view((const char*)data_buffer));
                 }
             }
@@ -430,45 +377,42 @@ namespace Grain {
             }
         }
         catch (const Exception& e) {
-            result = e.code();
+            deferred_exception.createAndCaptureUnexpected(e);
         }
         catch (const toml::parse_error& err) {
-            _tppParserError(err);
-            result = m_last_err_code = ErrorCode::TomlParseError;
-        }
-        catch (ErrorCode err) {
-            result = err;
+            _tppParserError(err, m_last_err_message);
+            deferred_exception.createAndCaptureUnexpected(m_last_err_message.utf8(), ErrorCode::TomlParseError);
         }
         catch (...) {
-            result = ErrorCode::Unknown;
+            deferred_exception.createAndCaptureUnexpected("Unknown TOML parsing error", ErrorCode::Unknown);
         }
 
         // Cleanup
         free(data_buffer);
 
-        throwIfError(result);
+        deferred_exception.rethrow();
     }
 
 
     void Toml::parse(const char* str) {
-        auto result = ErrorCode::None;
+        DeferredException deferred_exception;
 
         try {
             _m_tpp_parse_result = toml::parse(std::string_view(str));
         }
         catch (const toml::parse_error& err) {
-            _tppParserError(err);
-            result = m_last_err_code = ErrorCode::TomlParseError;
+            _tppParserError(err, m_last_err_message);
+            deferred_exception.createAndCaptureUnexpected(m_last_err_message.utf8(), ErrorCode::TomlParseError);
         }
         catch (...) {
-            result = ErrorCode::Unknown;
+            deferred_exception.createAndCaptureUnexpected("Unknown TOML parsing error", ErrorCode::Unknown);
         }
 
-        throwIfError(result);
+        deferred_exception.rethrow();
     }
 
 
-    void Toml::_tppParserError(const toml::parse_error& err) {
+    void Toml::_tppParserError(const toml::parse_error& err, String& out_message) {
         const auto& region = err.source();
         m_line = region.begin.line;
         m_column = region.begin.column;
@@ -482,7 +426,7 @@ namespace Grain {
                 m_column,
                 std::string(err.description()).c_str());
 
-        m_last_err_message = buffer;
+        out_message = buffer;
     }
 
 
@@ -501,21 +445,19 @@ namespace Grain {
     }
 
 
-    TomlArray Toml::arrayByNameOrThrow(const char* name, int32_t local_exc_code) {
+    TomlArray Toml::arrayByNameOrThrow(const char* name) {
         if (name == nullptr) {
             Exception::throwFormattedMessage(
                     ErrorCode::TomlNoName,
-                    "Expected a name, but a nullptr was found, code: %d",
-                    local_exc_code);
+                    "Expected a name, but a nullptr was found");
         }
         else {
             auto tpp_array = _m_tpp_parse_result[name].as_array();
             if (!tpp_array) {
                 Exception::throwFormattedMessage(
                         ErrorCode::TomlExpectedNode,
-                        "Expected array with name \"%s\" not found, code: %d",
-                        name,
-                        local_exc_code);
+                        "Expected array with name \"%s\" not found",
+                        name);
             }
 
             return TomlArray(_m_tpp_parse_result[name].as_array());
@@ -553,13 +495,12 @@ namespace Grain {
     ErrorCode Toml::toJson(String& out_string) {
         try {
             toml::json_formatter formatter{ _m_tpp_parse_result };
-
             std::stringstream stream;
             stream << toml::json_formatter{ _m_tpp_parse_result };
             out_string = stream.str().c_str();
         }
         catch (...) {
-            throwIfError(ErrorCode::Fatal);
+            Exception::throwMessage(ErrorCode::Fatal, "Failed to convert TOML to JSON");
         }
 
         return ErrorCode::None;

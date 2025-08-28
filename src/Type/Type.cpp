@@ -51,7 +51,6 @@ namespace Grain {
      *  @return ErrorCode Success, NullData, InvalidLength, or UnexpectedData.
      */
     ErrorCode Type::hexToUint32(const char* hex, Endianess endianess, uint32_t& out_value) noexcept {
-
         uint32_t result = 0;
 
         if (!hex) {

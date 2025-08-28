@@ -233,7 +233,7 @@ namespace Grain {
 
     public:
         GeoTileRendererLayer();
-        virtual ~GeoTileRendererLayer();
+        virtual ~GeoTileRendererLayer() override;
 
         friend std::ostream& operator << (std::ostream& os, const GeoTileRendererLayer* o) {
             // TODO: Complete this!
@@ -250,14 +250,14 @@ namespace Grain {
             return os;
         }
 
-        bool isShape() const noexcept { return m_type == LayerType::Shape; }
-        bool isSQL() const noexcept { return m_type == LayerType::PSQL; }
+        [[nodiscard]] bool isShape() const noexcept { return m_type == LayerType::Shape; }
+        [[nodiscard]] bool isSQL() const noexcept { return m_type == LayerType::PSQL; }
 
-        const char* nameStr() const noexcept { return m_name.utf8(); }
-        const char* sqlIdendifierStr() const noexcept { return m_sql_identifier.utf8(); }
+        [[nodiscard]] const char* nameStr() const noexcept { return m_name.utf8(); }
+        [[nodiscard]] const char* sqlIdendifierStr() const noexcept { return m_sql_identifier.utf8(); }
 
 
-        ErrorCode checkProj(int32_t dst_srid);
+        void checkProj(int32_t dst_srid);
     };
 
 
@@ -285,7 +285,8 @@ namespace Grain {
         };
 
         enum {
-            kErrTileSizeNotPowerOfTwo = 1,
+            kErrLayerNameMissing,
+            kErrTileSizeNotPowerOfTwo,
             kErrTileSizeOutOfRange,
             kErrImageSizeOutOfRange,
             kErrUnknownRenderMode,
@@ -361,7 +362,7 @@ namespace Grain {
         int32_t m_max_zoom = -1;            ///< End zoom level, -1 means undefined
         RangeRectd m_bounding_box = { 0.0, 0.0, 0.0, 0.0 };   ///< Bounding box as lon/lat min and max values
 
-        int32_t m_default_src_srid = 4326;          ///< Default source SRID
+        int32_t m_default_src_srid = 4326;          ///< Default source SRID, used by layers without specified SRID
         int32_t m_dst_srid = 0;                     ///< Destination SRID
         GeoProj* m_default_render_proj = nullptr;   ///< Projection from default source CRS to destination CRS
 
@@ -407,8 +408,10 @@ namespace Grain {
 
         ErrorCode m_conf_err = ErrorCode::None;
 
-        // Errors
-        String m_last_err_message;          // TODO: REMOVE!!! ///< Last error message
+        // Error Handling
+        ErrorCode m_last_err_code;
+        String m_last_err_message;
+        String m_last_err_item_name;
 
         // Lua
         Lua* m_lua = nullptr;
@@ -430,7 +433,10 @@ namespace Grain {
         String m_output_file_ext;           ///< File extension, "png", "jpg" ...
 
         // Statistics
-        int64_t m_total_render_time = 0;
+        int64_t m_config_time = 0;          ///< Total time for parsing config file
+        int64_t m_db_connection_time = 0;   ///< Total time for connecting to databases
+        int64_t m_total_render_time = 0;    ///< Total render time for all images or tiles
+        int64_t m_db_query_max_time = 0;    ///< Maximum time for a single database query
 
         int64_t m_total_meta_tile_n = 0;
         int64_t m_total_tile_n = 0;
@@ -475,10 +481,14 @@ namespace Grain {
             return os;
         }
 
+
+        const char* lastErrMessage() const noexcept { return m_last_err_message.utf8(); }
         void setLastErrMessage(const String& message) noexcept;
 
         ErrorCode readConfigFromToml(const String& file_path) noexcept;
         void _configLayer(const TomlArrayItem& layer_item);
+
+        void setDbTimeout(const char* timeout) noexcept;
 
         bool setFileFormatByName(const String& file_format_name) noexcept;
 
@@ -517,7 +527,7 @@ namespace Grain {
 
         void _setLuaValueByPSQLProperty(const PSQLProperty* property);
 
-        PSQLConnection* _psqlConnForLayer(GeoTileRendererLayer* layer);
+        PSQLConnection* _psqlConnForLayer(GeoTileRendererLayer* layer) noexcept;
         void _renderPSQLLayer(GeoTileRendererLayer* layer, GraphicContext& gc, RemapRectd& remap_rect);
 
         void _renderShapeLayer(GeoTileRendererLayer* layer, GraphicContext& gc, RemapRectd& remap_rect);
@@ -556,7 +566,6 @@ namespace Grain {
             else {
                 out_file_path = dir_path + "/" + file_name;
             }
-            std::cout << "buildFilePath: " << out_file_path << std::endl;
         }
 
         double meterToPixel(double value) const noexcept {
@@ -619,6 +628,9 @@ namespace Grain {
                     draw_mode == GeoTileDrawMode::FillStroke ||
                     draw_mode == GeoTileDrawMode::StrokeFill;
         }
+
+
+        static const char* rendererErrorString(int32_t errorCode) noexcept;
     };
 
 

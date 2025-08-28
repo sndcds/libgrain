@@ -9,20 +9,19 @@
 //  LastChecked: 24.08.2025
 //
 
-// TODO: Check!
-// Handling of errors during reading an interpreting of the config file.
-// Handling of errors during the layer rendering.
-// Time statistics, layer render time, sql query time, file loading time ...
-// stroke-offset
-// stroke-pattern
-// Animation
-// Render series of images based on a CSV File with locations or bounding boxes.
-// Check all statistics!
-// File read error, output file path in error message!
-// PDF- and SVG-Rendering, Cairo
-// Option: Tiles nur rendern, sofern noch nicht als Datei vorhanden!
-// When Lesen aus Datei oder SQL fehlt schlägt, dann kurze Pause (konfigurierbar) und neuer versuch N-Mal.
-
+// TODO: Proper error handling when reading and interpreting the config file.
+// TODO: Implement robust error handling during layer rendering.
+// TODO: Collect and report time statistics: layer render time, SQL query time, file loading time.
+// TODO: Support stroke-offset rendering.
+// TODO: Support stroke-pattern rendering.
+// TODO: Add support for animations.
+// TODO: Implement rendering of image series based on a CSV file containing locations or bounding boxes.
+// TODO: Review and validate all collected statistics for correctness.
+// TODO: Improve file error reporting: include file path in error messages when a read fails.
+// TODO: Add support for PDF and SVG rendering (via Cairo).
+// TODO: Add option to skip rendering of tiles if they already exist on disk.
+// TODO: When reading from file or SQL fails, retry up to N times with a configurable delay between attempts.
+// TODO: Verify behavior when rendering across the 180° longitude (dateline).
 
 #include "Geo/GeoTileRenderer.hpp"
 #include "Geo/WKBParser.hpp"
@@ -38,7 +37,7 @@
 #include "Database/PostgreSQL.hpp"
 #include "Time/TimeMeasure.hpp"
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <algorithm>
 
 
@@ -70,15 +69,22 @@ namespace Grain {
     }
 
 
-    ErrorCode GeoTileRendererLayer::checkProj(int32_t dst_srid) {
+    /**
+     *  @brief Ensures a projection object exists between the source SRID and the given destination SRID.
+     *
+     *  If no projection has been created yet, this method instantiates a new one.
+     *
+     *  @param dst_srid Destination spatial reference system identifier (SRID).
+     *  @throw Exception If the projection could not be created or is invalid
+     *                   (throws GeoTileRenderer::kErrDefaultRenderProjNotValid).
+     */
+    void GeoTileRendererLayer::checkProj(int32_t dst_srid) {
         if (!m_proj) {
-            // TODO: No projection needed, if m_src_crs == dst_crs!
             m_proj = new GeoProj(m_srid, dst_srid);
             if (!m_proj->isValid()) {
                 Exception::throwSpecific(GeoTileRenderer::kErrDefaultRenderProjNotValid);
             }
         }
-        return ErrorCode::None;
     }
 
 
@@ -110,34 +116,50 @@ namespace Grain {
     }
 
 
+    /**
+     *  @brief Read and parse a TOML configuration file.
+     *
+     *  Attempts to read the configuration from the specified TOML file and
+     *  apply the settings to the renderer. Any exceptions thrown by the
+     *  underlying parsing or configuration methods are caught internally.
+     *
+     *  The method does not propagate exceptions; instead, it sets an appropriate
+     *  ErrorCode value indicating success or the type of failure.
+     *
+     *  @param file_path Path to the TOML configuration file to read.
+     *  @return ErrorCode::None if the configuration was successfully read and applied,
+     *          or a specific error code if an error occurred during parsing or processing.
+     *
+     *  @note TODOs:
+     *        - Inform the user about unknown configuration keys.
+     *        - Validate values to ensure they are within allowed ranges.
+     */
     ErrorCode GeoTileRenderer::readConfigFromToml(const String& file_path) noexcept {
         m_conf_err = ErrorCode::None;
 
-        // TODO: Inform about unknown keys.
-        // TODO: Check values for allowed range.
+        TimeMeasure tm_config;
 
         try {
             m_config_path = file_path;
-
             m_toml.parseFile(file_path, Toml::Option::FileIncludes);
 
             TomlTable config_table;
             m_toml.asTable(config_table);
 
-            m_title = config_table.stringOrThrow("title", kTomlErrTitle);
+            m_title = config_table.stringOrThrow("title");
 
-            m_render_mode_name = config_table.stringOrThrow("render-mode", kTomlErrRenderMode);
+            m_render_mode_name = config_table.stringOrThrow("render-mode");
             setRenderModeByName(m_render_mode_name);
 
-            m_renderer_name = config_table.stringOr("renderer", "System", kTomlErrRenderer);
+            m_renderer_name = config_table.stringOr("renderer", "System");
 
             if (m_render_mode == RenderMode::Image) {
-                m_output_file_name = config_table.stringOrThrow("output-file-name", kTomlErrOutputFileName);
+                m_output_file_name = config_table.stringOrThrow("output-file-name");
             }
 
-            m_min_zoom = (int32_t)config_table.integerOrThrow("zoom-min", kTomlErrZoomMin);
-            m_max_zoom = (int32_t)config_table.integerOrThrow("zoom-max", kTomlErrZoomMax);
-            m_current_zoom = (int32_t)config_table.integerOr("image-zoom-level", 10, kTomlErrImageZoomLevel);
+            m_min_zoom = (int32_t)config_table.integerOrThrow("zoom-min");
+            m_max_zoom = (int32_t)config_table.integerOrThrow("zoom-max");
+            m_current_zoom = (int32_t)config_table.integerOr("image-zoom-level", 10);
 
             if (m_max_zoom < m_min_zoom) {
                 Exception::throwSpecificFormattedMessage(
@@ -161,30 +183,31 @@ namespace Grain {
             // PostgreSQL connections
             {
                 TomlArray psql_db_array;
-                config_table.arrayOrThrow("psql-db", kTomlErrPsqlDb, psql_db_array);
+                config_table.arrayOrThrow("psql-db", psql_db_array);
 
                 for (auto& item : psql_db_array) {
-                    auto table = item.asTableOrThrow(kTomlErrPsqlDb);
+                    auto table = item.asTableOrThrow();
 
-                    auto conn = m_psql_connections.addConnection();
-                    if (!conn) {
+                    auto db = m_psql_connections.addConnection();
+                    if (!db) {
                         Exception::throwStandard(ErrorCode::MemCantAllocate);
                     }
 
-                    conn->m_identifier = table.stringOr("identifier", "", kTomlErrPsqlDb);
-                    conn->m_host = table.stringOr("host", "", kTomlErrPsqlDb);
-                    conn->m_port = (int32_t)table.integerOr("port", 5432, kTomlErrPsqlDb);
-                    conn->m_db_name = table.stringOrThrow("db-name", kTomlErrPsqlDb);
-                    conn->m_user = table.stringOrThrow("user", kTomlErrPsqlDb);
-                    conn->m_password = table.stringOr("password", "", kTomlErrPsqlDb);
+                    db->m_identifier = table.stringOr("identifier", "");
+                    db->m_host = table.stringOr("host", "");
+                    db->m_port = (int32_t)table.integerOr("port", 5432);
+                    db->m_db_name = table.stringOrThrow("db-name");
+                    db->m_user = table.stringOrThrow("user");
+                    db->m_password = table.stringOr("password", "");
+                    db->m_timeout_sec = table.doubleOr("timeout", 30.0);
 
                     // TODO: Validate parameters!
                 }
             }
 
-            m_tile_size = (int32_t)config_table.integerOrThrow("tile-size", kTomlErrTileSize);
-            m_output_path = config_table.stringOrThrow("output-path", kTomlErrOutputPath);
-            m_output_file_format_name = config_table.stringOr("output-file-format", "png", kTomlErrOutputFileFormat);
+            m_tile_size = (int32_t)config_table.integerOrThrow("tile-size");
+            m_output_path = config_table.stringOrThrow("output-path");
+            m_output_file_format_name = config_table.stringOr("output-file-format", "png");
             m_output_file_type = Image::fileTypeByFormatName(m_output_file_format_name);
             if (!Image::isKnownFileType(m_output_file_type)) {
                 Exception::throwSpecificFormattedMessage(
@@ -194,13 +217,13 @@ namespace Grain {
             }
             m_output_file_ext = Image::fileTypeExtension(m_output_file_type);
 
-            m_image_size.m_width = (int32_t)config_table.integerOrThrow("image-width", kTomlErrImageSize);
-            m_image_size.m_height = (int32_t)config_table.integerOrThrow("image-height", kTomlErrImageSize);
+            m_image_size.m_width = (int32_t)config_table.integerOrThrow("image-width");
+            m_image_size.m_height = (int32_t)config_table.integerOrThrow("image-height");
 
             // Output image padding
             {
                 double values[4]{};
-                int32_t n = config_table.doublesOrThrow("image-padding", kTomlErrImagePadding, 4, values);
+                int32_t n = config_table.doublesOrThrow("image-padding", 4, values);
                 if (n > 0 && !m_image_padding.set(values, n)) {
                     Exception::throwSpecificFormattedMessage(
                             kTomlErrImagePadding,
@@ -212,7 +235,7 @@ namespace Grain {
             // Bounds
             {
                 double values[4]{};
-                int32_t n = config_table.doublesOrThrow("bounds", kTomlErrBounds, 4, values);
+                int32_t n = config_table.doublesOrThrow("bounds", 4, values);
                 if (n != 4 || values[0] >= values[2] || values[1] >= values[3]) {
                     Exception::throwSpecificFormattedMessage(
                             kTomlErrBounds,
@@ -221,15 +244,15 @@ namespace Grain {
                 m_bounding_box.set(values, 4);
             }
 
-            m_dst_srid = (int32_t)config_table.integerOr("destination-srid", 3857, kTomlErrDestinationSRID);
+            m_dst_srid = (int32_t)config_table.integerOr("destination-srid", 3857);
 
             // TODO: Validate m_dst_srid
 
-            m_map_bg_opacity = std::clamp(config_table.doubleOr("map-background-opacity", 1.0, kTomlErrMapBackgroundOpacity), 0.0, 1.0);
-            m_map_bg_color = config_table.rgbOrThrow("map-background-color", kTomlErrMapBackgroundColor);
-            m_default_fill_color = config_table.rgbOr("default-fill-color", RGB(0.8, 0.8, 0.8), kTomlErrDefaultFillColor);
-            m_default_stroke_color = config_table.rgbOr("default-stroke-color", RGB(0, 0, 0), kTomlErrDefaultStrokeColor);
-            m_default_text_color = config_table.rgbOr("default-text-color", RGB(0, 0, 0), kTomlErrDefaultTextColor);
+            m_map_bg_opacity = std::clamp(config_table.doubleOr("map-background-opacity", 1.0), 0.0, 1.0);
+            m_map_bg_color = config_table.rgbOrThrow("map-background-color");
+            m_default_fill_color = config_table.rgbOr("default-fill-color", RGB(0.8, 0.8, 0.8));
+            m_default_stroke_color = config_table.rgbOr("default-stroke-color", RGB(0, 0, 0));
+            m_default_text_color = config_table.rgbOr("default-text-color", RGB(0, 0, 0));
 
             m_image_use_alpha = m_map_bg_opacity < (1.0f - FLT_EPSILON);
 
@@ -266,29 +289,32 @@ namespace Grain {
             }
 
             // Configure layers
-            auto layers = m_toml.arrayByNameOrThrow("layer", kTomlErrNoLayers);
+            auto layers = m_toml.arrayByNameOrThrow("layer");
             for (const auto& layer : layers) {
                 _configLayer(layer);
             }
         }
         catch (const Exception& e) {
+            m_last_err_message = e.message();
             m_conf_err = e.code();
         }
+
+        m_config_time = tm_config.elapsedNanos();
 
         return m_conf_err;
     }
 
 
     void GeoTileRenderer::_configLayer(const TomlArrayItem& layer_item) {
-        auto layer_table = layer_item.asTableOrThrow(11111); // TODO: Message!
+        auto layer_table = layer_item.asTableOrThrow();
 
         auto layer = addLayer();
         if (!layer) {
             Exception::throwStandard(ErrorCode::MemCantAllocate);
         }
 
-        layer->m_name = layer_table.stringOrThrow("name", 11111);   // TODO: !!!!!
-        layer->m_type_name = layer_table.stringOrThrow("type", 11111);
+        layer->m_name = layer_table.stringOrThrow("name");   // TODO: !!!!
+        layer->m_type_name = layer_table.stringOrThrow("type");
 
         bool geometry_field_needed = false;
         bool dir_needed = false;
@@ -296,7 +322,7 @@ namespace Grain {
 
         if (layer->m_type_name.compare("psql") == 0) {
             layer->m_type = GeoTileRendererLayer::LayerType::PSQL;
-            layer->m_sql_query = layer_table.stringOrThrow("query", 11111);
+            layer->m_sql_query = layer_table.stringOrThrow("query");
             geometry_field_needed = true;
         }
         else if (layer->m_type_name.compare("shape") == 0) {
@@ -317,14 +343,14 @@ namespace Grain {
 
 
         if (dir_needed) {
-            layer->m_dir_path = layer_table.stringOrThrow("dir", 11111);
+            layer->m_dir_path = layer_table.stringOrThrow("dir");
         }
         else {
             layer->m_dir_path.clear();
         }
 
         if (file_needed) {
-            layer->m_file_name = layer_table.stringOrThrow("file", 11111);
+            layer->m_file_name = layer_table.stringOrThrow("file");
 
             buildFilePath(layer->m_dir_path, layer->m_file_name, layer->m_used_file_path);
 
@@ -334,22 +360,22 @@ namespace Grain {
             }
         }
 
-        layer->m_sql_identifier = layer_table.stringOr("psql-identifier", "", 11111);
+        layer->m_sql_identifier = layer_table.stringOr("psql-identifier", "");
 
         if (geometry_field_needed) {
-            layer->m_geometry_field = layer_table.stringOrThrow("geometry-field", 11111);
+            layer->m_geometry_field = layer_table.stringOrThrow("geometry-field");
         }
 
-        layer->m_csv_ignore_header = layer_table.booleanOr("ignore-header", false, 11111);
+        layer->m_csv_ignore_header = layer_table.booleanOr("ignore-header", false);
 
 
-        layer->m_char_set = layer_table.stringOr("char-set", "UTF-8", 11111);
+        layer->m_char_set = layer_table.stringOr("char-set", "UTF-8");
 
         // TODO: Check, if m_char_set is known! char-set
         // TODO: Check, if quote is known!
 
 
-        String string = layer_table.stringOr("delimiter", ",", 11111);
+        String string = layer_table.stringOr("delimiter", ",");
         if (string.byteLength() != 1) {
             Exception::throwMessage(
                     ErrorCode::TomlParseError,
@@ -357,7 +383,7 @@ namespace Grain {
         }
         layer->m_csv_delimiter = string.firstAsciiChar();
 
-        string = layer_table.stringOr("quote", "\"", 11111);
+        string = layer_table.stringOr("quote", "\"");
         if (string.byteLength() != 1) {
             Exception::throwMessage(
                     ErrorCode::TomlParseError,
@@ -366,14 +392,14 @@ namespace Grain {
         layer->m_csv_quote = string.firstAsciiChar();
 
 
-        layer->m_xy_scale = layer_table.doubleOr("xy-scale", 1.0, 11111);
+        layer->m_xy_scale = layer_table.doubleOr("xy-scale", 1.0);
 
-        layer->m_radius_field_index = layer_table.integerOr("radius-field", -1, 11111);
+        layer->m_radius_field_index = layer_table.integerOr("radius-field", -1);
 
         // TODO: Check lat, lon and radius field indices, must be >= 0 and < max number of custom fields.
 
-        layer->m_min_zoom = (int32_t)layer_table.integerOr("zoom-min", kMinZoom, 11111);
-        layer->m_max_zoom = (int32_t)layer_table.integerOr("zoom-max", kMaxZoom, 11111);
+        layer->m_min_zoom = (int32_t)layer_table.integerOr("zoom-min", kMinZoom);
+        layer->m_max_zoom = (int32_t)layer_table.integerOr("zoom-max", kMaxZoom);
         if (layer->m_min_zoom < kMinZoom || layer->m_min_zoom > kMaxZoom ||
             layer->m_max_zoom < layer->m_min_zoom || layer->m_max_zoom > kMaxZoom) {
             Exception::throwFormattedMessage(
@@ -384,9 +410,9 @@ namespace Grain {
                     layer->m_name.utf8());
         }
 
-        layer->m_srid = (int32_t)layer_table.integerOr("srid", kDefaultSRID, 11111);
+        layer->m_srid = (int32_t)layer_table.integerOr("srid", kDefaultSRID);
 
-        layer->m_draw_mode_name = layer_table.stringOrThrow("draw-mode", 11111);
+        layer->m_draw_mode_name = layer_table.stringOrThrow("draw-mode");
 
         layer->m_draw_settings.m_draw_mode = drawModeFromName(layer->m_draw_mode_name.utf8());
         if (layer->m_draw_settings.m_draw_mode == GeoTileDrawMode::Undefined) {
@@ -397,7 +423,7 @@ namespace Grain {
                     layer->m_name.utf8());
         }
 
-        layer->m_point_shape_name = layer_table.stringOr("point-shape", "circle", 11111);
+        layer->m_point_shape_name = layer_table.stringOr("point-shape", "circle");
         layer->m_draw_settings.m_point_shape = drawShapeFromName(layer->m_point_shape_name.utf8());
         if (layer->m_draw_settings.m_point_shape == GeoTileDrawShape::Undefined) {
             Exception::throwFormattedMessage(
@@ -408,35 +434,35 @@ namespace Grain {
         }
 
 
-        layer->m_draw_settings.m_fill_color = layer_table.rgbOr("fill-color", m_default_fill_color, 11111);
-        layer->m_draw_settings.m_fill_extend_width = layer_table.doubleOr("fill-extent-width", 0.0, 11111);
-        layer->m_draw_settings.m_fill_extend_px_fix = layer_table.doubleOr("fill-extent-fix", -1.0, 11111);
-        layer->m_draw_settings.m_fill_opacity = layer_table.doubleOr("fill-opacity", 1.0, 11111);
+        layer->m_draw_settings.m_fill_color = layer_table.rgbOr("fill-color", m_default_fill_color);
+        layer->m_draw_settings.m_fill_extend_width = layer_table.doubleOr("fill-extent-width", 0.0);
+        layer->m_draw_settings.m_fill_extend_px_fix = layer_table.doubleOr("fill-extent-fix", -1.0);
+        layer->m_draw_settings.m_fill_opacity = layer_table.doubleOr("fill-opacity", 1.0);
 
-        layer->m_draw_settings.m_stroke_color = layer_table.rgbOr("stroke-color", m_default_stroke_color, 11111);
-        layer->m_draw_settings.m_stroke_opacity = layer_table.doubleOr("stroke-opacity", 1.0, 11111);
+        layer->m_draw_settings.m_stroke_color = layer_table.rgbOr("stroke-color", m_default_stroke_color);
+        layer->m_draw_settings.m_stroke_opacity = layer_table.doubleOr("stroke-opacity", 1.0);
 
-        layer->m_draw_settings.m_stroke_width = layer_table.doubleOr("stroke-width", 10.0, 11111);
-        layer->m_draw_settings.m_stroke_px_min = layer_table.doubleOr("stroke-px-min", 0.1, 11111);
-        layer->m_draw_settings.m_stroke_px_max = layer_table.doubleOr("stroke-px-max", 10.0, 11111);
-        layer->m_draw_settings.m_stroke_px_fix = layer_table.doubleOr("stroke-px-fix", -1.0, 11111);
+        layer->m_draw_settings.m_stroke_width = layer_table.doubleOr("stroke-width", 10.0);
+        layer->m_draw_settings.m_stroke_px_min = layer_table.doubleOr("stroke-px-min", 0.1);
+        layer->m_draw_settings.m_stroke_px_max = layer_table.doubleOr("stroke-px-max", 10.0);
+        layer->m_draw_settings.m_stroke_px_fix = layer_table.doubleOr("stroke-px-fix", -1.0);
 
         /* TODO: INCLUDE AGAIN!
         layer->m_draw_settings.m_stroke_dash_length = m_toml.allDoublesAt(layer_node, "stroke-dash", Toml::kOptional, GeoTileRendererDrawSettings::kMaxStrokeDashLength, layer->m_draw_settings.m_stroke_dash_array);
           */
 
-        layer->m_draw_settings.m_text_color = layer_table.rgbOr("text-color", m_default_text_color, 11111);
-        layer->m_draw_settings.m_text_opacity = layer_table.doubleOr("text-opacity", 1.0, 11111);
+        layer->m_draw_settings.m_text_color = layer_table.rgbOr("text-color", m_default_text_color);
+        layer->m_draw_settings.m_text_opacity = layer_table.doubleOr("text-opacity", 1.0);
 
-        layer->m_draw_settings.m_radius = layer_table.doubleOr("radius", 10.0, 11111);
-        layer->m_draw_settings.m_radius_px_fix = layer_table.doubleOr("radius-px-fix", -1, 11111);
-        layer->m_draw_settings.m_radius_px_min = layer_table.doubleOr("radius-px-min", 0.0, 11111);
-        layer->m_draw_settings.m_radius_px_max = layer_table.doubleOr("radius-px-max", 1000000.0, 11111);
+        layer->m_draw_settings.m_radius = layer_table.doubleOr("radius", 10.0);
+        layer->m_draw_settings.m_radius_px_fix = layer_table.doubleOr("radius-px-fix", -1);
+        layer->m_draw_settings.m_radius_px_min = layer_table.doubleOr("radius-px-min", 0.0);
+        layer->m_draw_settings.m_radius_px_max = layer_table.doubleOr("radius-px-max", 1000000.0);
 
 
         // TODO: Check `radius`, must be >= 0.0.
 
-        String blend_mode_name = layer_table.stringOr("blend-mode", "normal", 11111);
+        String blend_mode_name = layer_table.stringOr("blend-mode", "normal");
         layer->m_draw_settings.m_blend_mode = GraphicContext::blendModeByName(blend_mode_name.utf8());
         if (layer->m_draw_settings.m_blend_mode == GraphicContext::BlendMode::Undefined) {
             Exception::throwFormattedMessage(
@@ -446,14 +472,14 @@ namespace Grain {
                     layer->m_name.utf8());
         }
 
-        layer->m_lua_script = layer_table.stringOr("script", "", 11111);
+        layer->m_lua_script = layer_table.stringOr("script", "");
         layer->m_has_lua_script = layer->m_lua_script.length() > 0;
 
         // Custom fields
 
         if (layer_table.hasItem("custom-fields")) {
             TomlArray custom_fields;
-            layer_table.arrayOrThrow("custom-fields", 11111, custom_fields);
+            layer_table.arrayOrThrow("custom-fields", custom_fields);
 
             int32_t field_count = custom_fields.size();
             layer->m_custom_field_infos = new CSVDataColumnInfo[field_count + 1];
@@ -461,12 +487,12 @@ namespace Grain {
 
             int32_t field_index = 0;
             for (const auto& field : custom_fields) {
-                const auto field_description = field.asTableOrThrow(111111);
+                const auto field_description = field.asTableOrThrow();
 
-                int32_t index = (int32_t)field_description.integerOrThrow("index", 222222);
-                String name = field_description.stringOrThrow("name", 222222);
-                String type_name = field_description.stringOrThrow("type", 222222);
-                String usage = field_description.stringOr("usage", "", 222222);
+                int32_t index = (int32_t)field_description.integerOrThrow("index");
+                String name = field_description.stringOrThrow("name");
+                String type_name = field_description.stringOrThrow("type");
+                String usage = field_description.stringOr("usage", "");
 
                 layer->m_custom_field_infos[field_index].set(index, name.utf8(), type_name.utf8(), usage.utf8());
 
@@ -754,6 +780,8 @@ namespace Grain {
         l << "Render statistics . . . . . . . . . ." << l.endl;
         l++;
         l << "render mode: " << m_render_mode_name << l.endl;
+        l << "config time: " << (1e-9 * m_config_time) << " sec." << l.endl;
+        l << "database connection time: " << (1e-9 * m_db_connection_time) << " sec." << l.endl;
         l << "total render time: " << (1e-9 * m_total_render_time) << " sec." << l.endl;
 
         l << "database rows queried: " << m_total_db_rows_n << l.endl;
@@ -776,6 +804,7 @@ namespace Grain {
 
         String text;
         int32_t index = 0;
+        int64_t total = 0;
         for (auto& layer : m_layers) {
             l << index << ": " << layer->m_name << l.endl;
             l++;
@@ -786,7 +815,14 @@ namespace Grain {
             l << "render: " << (1e-9 * layer->m_total_render_time) << " sec." << l.endl;
             l--;
             index++;
+
+            total += layer->m_total_data_access_time;
+            total += layer->m_total_parse_time;
+            total += layer->m_total_script_preparation_time;
+            total += layer->m_total_script_exec_time;
+            total += layer->m_total_render_time;
         }
+        l << "total: " << (1e-9 * total) << " sec." << l.endl;
 
         l << l.endl;
 
@@ -883,12 +919,10 @@ namespace Grain {
 
                         // Render the meta-tile, composed of 8 x 8 ordinary tiles
 
-                        std::cout << "buff... render()" << std::endl;
                         auto err = render();
                         if (err != ErrorCode::None) {
                             Exception::throwSpecific(1);    // TODO: !!!!!
                         }
-                        std::cout << "buff... render() done " << std::endl;
 
                         // Split the meta-tile into 8 x 8 tiles and save to files as separate tiles
                         if (use_meta_tile) {
@@ -1095,9 +1129,21 @@ namespace Grain {
 
 
     /**
-     *  @brief Start rendering.
+     *  @brief Start the rendering process.
+     *
+     *  Initializes the default projection (if not already created), computes
+     *  source and destination rectangles, sets up the render target image and
+     *  graphics context, and renders all configured layers.
+     *
+     *  Any exceptions thrown by lower-level operations (e.g. projection setup,
+     *  image allocation, graphics context creation, or layer rendering) are
+     *  caught internally. The method does not propagate exceptions; instead,
+     *  it returns an appropriate ErrorCode value to signal success or failure.
+     *
+     *  @return ErrorCode::None if rendering completed successfully, or a specific
+     *          error code if an error occurred during rendering.
      */
-    ErrorCode GeoTileRenderer::render() noexcept {
+     ErrorCode GeoTileRenderer::render() noexcept {
         auto result = ErrorCode::None;
 
         try {
@@ -1143,8 +1189,6 @@ namespace Grain {
                 dst_rect.m_x = -0.5 * (dst_rect.m_width - m_render_image_size.width());
             }
 
-            std::cout << "buff... GeoTileRenderer::render() 1" << std::endl;
-
             if (m_render_mode == RenderMode::Tiles) {
                 if (m_current_zoom < 3) {
                     switch (m_current_zoom) {
@@ -1169,13 +1213,11 @@ namespace Grain {
                 setRenderSize(dst_rect.m_width, dst_rect.m_height);
             }
 
-            std::cout << "buff... GeoTileRenderer::render() 2" << std::endl;
             RemapRectd remap_rect(src_rect, dst_rect, true);
 
             _updateMeterPerPixel();
 
             if (!m_render_image) {
-                std::cout << "buff... GeoTileRenderer::render() 3" << std::endl;
                 m_render_image = Image::createRGBAFloat(m_render_image_size.width(), m_render_image_size.height());
                 if (!m_render_image) {
                     Exception::throwSpecific(kErrUnableToAllocateRenderImage);
@@ -1183,7 +1225,6 @@ namespace Grain {
             }
 
             if (m_render_image->beginDraw()) {
-                std::cout << "buff... GeoTileRenderer::render() 4" << std::endl;
                 m_render_image->clear(RGBA(m_map_bg_color, m_map_bg_opacity));
                 GraphicContext* gc = nullptr;
                 if (m_renderer_name.compareIgnoreCase("cairo") == 0) {
@@ -1197,12 +1238,9 @@ namespace Grain {
                 if (!gc) {
                     Exception::throwSpecific(kErrGraphicsContextFailed);
                 }
-                std::cout << "buff... GeoTileRenderer::render() 5" << std::endl;
 
                 gc->setImage(m_render_image);
-                std::cout << "buff... GeoTileRenderer::render() 6" << std::endl;
                 _renderLayers(*gc, remap_rect);
-                std::cout << "buff... GeoTileRenderer::render() 7" << std::endl;
 
                 m_render_image->endDraw();
             }
@@ -1219,40 +1257,44 @@ namespace Grain {
 
 
     /**
-     *  @brief Render all layers.
+     *  @brief Render all layers in the current map context.
+     *
+     *  Iterates over all registered layers and renders those that match the
+     *  current zoom level. Each layer type delegates to its own renderer.
+     *  Layers outside their valid zoom range may release resources instead.
+     *
+     *  @param gc         Target graphics context used for rendering.
+     *  @param remap_rect Coordinate remapping rectangle.
+     *
+     *  @throw Exception If rendering of a layer fails. Possible reasons include:
+     *                   - invalid projection setup,
+     *                   - database query or WKB parsing errors (PSQL layers),
+     *                   - file access or format errors (Shape/CSV layers),
+     *                   - invalid geometry (Polygon layers).
      */
-    void GeoTileRenderer::_renderLayers(GraphicContext& gc, RemapRectd& remap_rect) {
+     void GeoTileRenderer::_renderLayers(GraphicContext& gc, RemapRectd& remap_rect) {
         m_current_layer_index = 0;
-
-        std::cout << "buff... GeoTileRenderer::_renderLayers() 1" << std::endl;
 
         for (auto& layer : m_layers) {
             layer->m_ignore_proj = layer->m_srid == m_dst_srid;
 
-            std::cout << "buff... GeoTileRenderer::_renderLayers() 2" << std::endl;
             if (m_current_zoom >= layer->m_min_zoom && m_current_zoom <= layer->m_max_zoom) {
                 TimeMeasure tm_render_layer;
 
-                std::cout << "buff... GeoTileRenderer::_renderLayers() 3" << std::endl;
-
                 switch (layer->m_type) {
                     case GeoTileRendererLayer::LayerType::PSQL:
-                        std::cout << "buff... GeoTileRenderer::_renderLayers() 4a" << std::endl;
                         _renderPSQLLayer(layer, gc, remap_rect);
                         break;
 
                     case GeoTileRendererLayer::LayerType::Shape:
-                        std::cout << "buff... GeoTileRenderer::_renderLayers() 4b" << std::endl;
                         _renderShapeLayer(layer, gc, remap_rect);
                         break;
 
                     case GeoTileRendererLayer::LayerType::Polygon:
-                        std::cout << "buff... GeoTileRenderer::_renderLayers() 4c" << std::endl;
                         _renderPolygonLayer(layer, gc, remap_rect);
                         break;
 
                     case GeoTileRendererLayer::LayerType::CSV:
-                        std::cout << "buff... GeoTileRenderer::_renderLayers() 4d" << std::endl;
                         _renderCSVLayer(layer, gc, remap_rect);
                         break;
 
@@ -1398,14 +1440,19 @@ namespace Grain {
     /**
      *  @brief Get the PSQLConnection for a layer.
      */
-    PSQLConnection* GeoTileRenderer::_psqlConnForLayer(GeoTileRendererLayer* layer) {
+    PSQLConnection* GeoTileRenderer::_psqlConnForLayer(GeoTileRendererLayer* layer) noexcept {
         PSQLConnection* psql_connection = m_psql_connections.connectionByIdentifier(layer->m_sql_identifier);
         if (!psql_connection) {
             psql_connection = m_psql_connections.firstConnection();
         }
 
         if (psql_connection) {
+            TimeMeasure tm;
             auto err = psql_connection->open();
+            m_db_connection_time += tm.elapsedNanos();
+            if (err != ErrorCode::None) {
+                return nullptr;
+            }
         }
 
         return psql_connection;
@@ -1414,6 +1461,11 @@ namespace Grain {
 
     /**
      *  @brief Render a layer from WKB data in a PSQL database.
+     *
+     *  Attempts to read geometry in Well-Known Binary (WKB) format from the
+     *  specified PostgreSQL source and render it into the current layer.
+     *
+     *  @throw Exception If the WKB data cannot be retrieved, parsed, or rendered.
      */
     void GeoTileRenderer::_renderPSQLLayer(
             GeoTileRendererLayer* layer,
@@ -1422,14 +1474,8 @@ namespace Grain {
 
         auto result = ErrorCode::None;
 
-        std::cout << "buff... GeoTileRenderer::_renderPSQLLayer() 1" << std::endl;
+        layer->checkProj(m_dst_srid);
 
-        auto err = layer->checkProj(m_dst_srid);
-        if (err != ErrorCode::None) {
-            std::cout << "  layer->checkProj err: " << (int)err << std::endl;  // For debugging only
-        }
-
-        std::cout << "buff... GeoTileRenderer::_renderPSQLLayer() 2" << std::endl;
         // Replace variables in SQL query
         String sql = layer->m_sql_query;
         if (layer->m_sql_query.find("{{") >= 0) {
@@ -1451,17 +1497,14 @@ namespace Grain {
             std::snprintf(dst_srid_str, 20, "%d", m_dst_srid);
             sql.replace("{{destination-srid}}", dst_srid_str);
 
-            std::cout << "buff... GeoTileRenderer::_renderPSQLLayer() 3" << std::endl;
             // TODO: Replace other variables?
         }
 
 
         PSQLConnection* psql_connection = nullptr;
-        PGresult* sql_result = nullptr;
         bool gc_saved_flag = false;
 
         try {
-            std::cout << "buff... GeoTileRenderer::_renderPSQLLayer() 4" << std::endl;
             TimeMeasure tm_data_access;
 
             // Execute SQL query, binary result
@@ -1474,9 +1517,7 @@ namespace Grain {
                         layer->sqlIdendifierStr());
             }
 
-            std::cout << "buff... GeoTileRenderer::_renderPSQLLayer() 5" << std::endl;
-            auto pg_conn = (PGconn*)psql_connection->_m_pg_conn_ptr;
-            if (PQstatus(pg_conn) != CONNECTION_OK) {
+            if (psql_connection->status() != PSQLConnection::Status::Ok) {
                 Exception::throwSpecificFormattedMessage(
                         kErrPSQLConnectionFailed,
                         "Database connection failed for PSQL layer \"%s\", identifier: \"%s\"",
@@ -1484,11 +1525,20 @@ namespace Grain {
                         layer->sqlIdendifierStr());
             }
 
-            std::cout << "buff... GeoTileRenderer::_renderPSQLLayer() 6" << std::endl;
+            /*
+            err = psql_connection->useTimeout();
+            Exception::throwStandard(err);
+            */
 
-            sql_result = PQexecParams(pg_conn, sql.utf8(), 0, NULL, NULL, NULL, NULL, 1);
-            if (PQresultStatus(sql_result) != PGRES_TUPLES_OK) {
-                m_last_sql_err = PQerrorMessage(pg_conn);
+            // Access the underlying raw libpq connection handle (PGconn*).
+            // This allows calling libpq functions directly on the PostgreSQL connection.
+            // NOTE: Prefer higher-level abstractions if available; only use this when
+            // direct libpq access is necessary.
+            // auto pg_conn = (PGconn*)psql_connection->_m_pg_conn_ptr;
+
+            auto psql_result = psql_connection->query(sql, PSQLResult::Format::Binary);
+            if (!psql_result.areTuplesOK()) {
+                m_last_sql_err = psql_connection->errorMessage();
                 m_last_failed_sql_query = sql;
                 Exception::throwSpecificFormattedMessage(
                         kErrPSQLQueryFailed,
@@ -1497,19 +1547,14 @@ namespace Grain {
                         layer->sqlIdendifierStr());
             }
 
-            std::cout << "buff... GeoTileRenderer::_renderPSQLLayer() 7" << std::endl;
-
-            auto row_count = PQntuples(sql_result);
-            int32_t field_count = PQnfields(sql_result);
+            auto row_count = psql_result.tupleCount();
+            int32_t field_count = psql_result.fieldCount();
 
             layer->m_total_data_access_time += tm_data_access.elapsedNanos();
-
-            std::cout << "buff... GeoTileRenderer::_renderPSQLLayer() 8" << std::endl;
 
             if (!layer->m_db_field_names_scanned) {
                 TimeMeasure tm_script_preparation;
 
-                std::cout << "buff... GeoTileRenderer::_renderPSQLLayer() 9" << std::endl;
                 // Scan all field names for accessing them in Lua scripts
                 if (field_count > 0) {
                     layer->m_data_property_list = new PSQLPropertyList(field_count);
@@ -1517,13 +1562,11 @@ namespace Grain {
                         Exception::throwStandard(ErrorCode::MemCantAllocate);
                     }
 
-                    std::cout << "buff... GeoTileRenderer::_renderPSQLLayer() 10" << std::endl;
                     for (int32_t field_index = 0; field_index < field_count; field_index++) {
-                        auto field_name = PQfname(sql_result, field_index);  // Note: Does allways return the real name and not the alias
-
+                        auto field_name = psql_result.fieldName(field_index);
                         auto property = layer->m_data_property_list->mutPropertyPtrAtIndex(field_index);
                         property->m_name.set(field_name);
-                        property->m_psql_type = (PSQLType)PQftype(sql_result, field_index);
+                        property->m_psql_type = psql_result.fieldType(field_index);
 
                         if (strcmp(field_name, "wkb") == 0) {
                             layer->m_db_wkb_field_index = field_index;
@@ -1533,7 +1576,6 @@ namespace Grain {
                         }
                     }
                 }
-                std::cout << "buff... GeoTileRenderer::_renderPSQLLayer() 11" << std::endl;
 
                 if (layer->m_db_wkb_field_index < 0 || layer->m_db_srid_field_index < 0) {
                     Exception::throwSpecific(kErrDBMissingRequiredFields);
@@ -1546,13 +1588,10 @@ namespace Grain {
             layer->m_total_db_rows_n += row_count;
             m_total_db_rows_n += row_count;
 
-            std::cout << "buff... GeoTileRenderer::_renderPSQLLayer() 12" << std::endl;
-
             // Load Lua script, preparation, setup and process
             GeoTileRendererDrawSettings draw_settings;
 
             _prepareLuaScriptForLayer(layer, &draw_settings, row_count);
-            std::cout << "buff... GeoTileRenderer::_renderPSQLLayer() 13" << std::endl;
 
             // Rendering
             gc.save();
@@ -1561,7 +1600,6 @@ namespace Grain {
             // Process each row
             int32_t wkb_field_index = layer->m_db_wkb_field_index;
             int32_t srid_field_index = layer->m_db_srid_field_index;
-            std::cout << "buff... GeoTileRenderer::_renderPSQLLayer() 14" << std::endl;
 
             /*
              *  `fill_extend_width` is used to render polygons without gaps between neighboring polygons.
@@ -1569,7 +1607,6 @@ namespace Grain {
              *  Rendering a border with the same color can help in this scenario.
              *  However, this approach does not work when the fill contains patterns, gradients, or transparency.
              */
-
             double fill_extend_width = meterToPixel(layer->m_draw_settings.m_fill_extend_width, layer->m_draw_settings.m_fill_extend_px_fix, 0.0, 1000.0);
             bool fill_extend_flag =  fill_extend_width > 0.005;
 
@@ -1580,8 +1617,8 @@ namespace Grain {
                 m_current_element_index = row_index;
 
                 // Get the WKB data
-                char* wkb_data = PQgetvalue(sql_result, row_index, wkb_field_index);
-                int32_t wkb_data_size = PQgetlength(sql_result, row_index, wkb_field_index);
+                auto wkb_data = psql_result.fieldValue(row_index, wkb_field_index);
+                auto wkb_data_size = psql_result.fieldLength(row_index, wkb_field_index);
 
                 if (layer->m_has_lua_script) {
                     TimeMeasure tm_script_execution;
@@ -1596,10 +1633,10 @@ namespace Grain {
                     auto property_list = layer->m_data_property_list;
 
                     for (int32_t field_index = 0; field_index < field_count; field_index++) {
-                        auto type = (PSQLType)PQftype(sql_result, field_index);
-                        char* data = PQgetvalue(sql_result, row_index, field_index);
-                        int32_t size = PQgetlength(sql_result, row_index, field_index);
-                        if (PQgetisnull(sql_result, row_index, field_index)) {
+                        auto type = psql_result.fieldType(field_index);
+                        auto data = psql_result.fieldValue(row_index, field_index);
+                        auto size = psql_result.fieldLength(row_index, field_index);
+                        if (psql_result.fieldIsNull(row_index, field_index)) {
                             type = PSQLType::Undefined;
                         }
 
@@ -1751,6 +1788,8 @@ namespace Grain {
                     m_total_stroke_n += stroke_n;
                 }
             }
+
+            psql_result.clear();
         }
         catch (const Exception& e) {
             std::cout << "Exception code: " << (int)e.code() << std::endl;
@@ -1763,10 +1802,6 @@ namespace Grain {
         // Cleanup
         if (gc_saved_flag) {
             gc.restore();
-        }
-
-        if (sql_result) {
-            PQclear(sql_result);
         }
 
         if (psql_connection) {
@@ -1790,8 +1825,6 @@ namespace Grain {
             GeoTileRendererLayer* layer,
             GraphicContext& gc,
             RemapRectd& remap_rect) {
-
-        TimeMeasure tm;
 
         // Check if shape must be loaded
 
@@ -1848,8 +1881,6 @@ namespace Grain {
         // TODO: Statistics!
 
         gc.restore();
-
-        layer->m_total_render_time += tm.elapsedMillis();
     }
 
 
@@ -1860,8 +1891,6 @@ namespace Grain {
             GeoTileRendererLayer* layer,
             GraphicContext& gc,
             RemapRectd& remap_rect) {
-
-        TimeMeasure tm_render;
 
         // TODO: Check SRID/CRS ... what to do, if destination is different from polygon files SRID?
         // Check if polygon must be loaded
@@ -1878,8 +1907,7 @@ namespace Grain {
             auto err = layer->m_polygons_file->readInfo();
             Exception::throwStandard(err);
 
-            err = layer->checkProj(m_dst_srid);
-            Exception::throwStandard(err);
+            layer->checkProj(m_dst_srid);
 
             layer->m_total_data_access_time += tm_data_access.elapsedNanos();
        }
@@ -1949,8 +1977,6 @@ namespace Grain {
                 overlap_n++;
             }
         }
-
-        layer->m_total_render_time += tm_render.elapsedMillis();
     }
 
 
@@ -1971,7 +1997,6 @@ namespace Grain {
      *  @brief Render a layer from CSV data.
      */
     void GeoTileRenderer::_renderCSVLayer(GeoTileRendererLayer* layer, GraphicContext& gc, RemapRectd& remap_rect) {
-        TimeMeasure tm;
 
         // TODO: How can data be defined and become a property? Color, Size, ...
         // TODO: Statistics!
@@ -1994,8 +2019,7 @@ namespace Grain {
                 std::cerr << "GeoTileRenderer::_renderCSVLayer err: " << (int)e.code() << std::endl;  // TODO: Error Handling!!!
             }
 
-            ErrorCode err = layer->checkProj(m_dst_srid);
-            Exception::throwStandard(err);
+            layer->checkProj(m_dst_srid);
 
             layer->m_csv_must_read = false;
         }
@@ -2125,7 +2149,7 @@ namespace Grain {
                 */
                 auto process_result = m_lua->callFunction("process");
 
-                // layer->m_total_script_exec_time += timestamp.elapsedMillis();  TODO: !!!!!
+                // layer->m_total_script_exec_time += timestamp.elapsedNanos();  TODO: !!!!!
 
                 if (process_result == 0) {
                     continue;  // This row doesn´t render, go to next row in loop
@@ -2270,8 +2294,6 @@ namespace Grain {
 
         gc.setBlendMode(GraphicContext::BlendMode::Normal);
         gc.restore();
-
-        layer->m_total_render_time += tm.elapsedMillis();
     }
 
 
@@ -2294,6 +2316,49 @@ namespace Grain {
         }
 
         gc.setBlendMode(draw_settings.m_blend_mode);
+    }
+
+
+    const char* GeoTileRenderer::rendererErrorString(int32_t errorCode) noexcept {
+        struct Message {
+            int32_t code;
+            const char* message;
+        };
+        static Message _messages[] = {
+                { kErrLayerNameMissing, "Layer name missing" },
+                { kErrTileSizeNotPowerOfTwo, "" },
+                { kErrTileSizeOutOfRange, "" },
+                { kErrImageSizeOutOfRange, "" },
+                { kErrUnknownRenderMode, "" },
+                { kErrUnknownLayerType, "" },
+                { kErrLayerFileNotFound, "" },
+                { kErrLuaInitFailed, "" },
+                { kErrInvalidBounds, "" },
+                { kErrInvalidImagePadding, "" },
+                { kErrUnknownOutputFileFormat, "" },
+                { kErrUnsupportedImageOutputFileType, "" },
+                { kErrShapeInstantiationFailed, "" },
+                { kErrPolygonsFileInstantiationFailed, "" },
+                { kErrPSQLConnectionMissing, "" },
+                { kErrPSQLConnectionFailed, "" },
+                { kErrPSQLQueryFailed, "" },
+                { kErrUnsupportedWKBType, "" },
+                { kErrLuaScriptError, "" },
+                { kErrLuaScriptProcessFunctionMissing, "" },
+                { kErrLuaScriptErrorUnexpectedResultFromProcessFunction, "" },
+                { kErrDBMissingRequiredFields, "" },
+                { kErrTileOutputPathNotFound, "" },
+                { kErrDefaultRenderProjNotValid, "" },
+                { kErrUnableToAllocateRenderImage, "" },
+                { kErrUnableToAllocateTileImage, "" },
+                { kErrRenderImageDoesNotExist, "" },
+                { kErrUnknownCustomFieldType, "" },
+                { kErrUnknownCustomFieldUsage, "" },
+                { kErrUnknownRenderer, "" },
+                { kErrGraphicsContextFailed, "" },
+        };
+        enum {
+        };
     }
 
 

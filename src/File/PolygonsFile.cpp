@@ -49,7 +49,6 @@ namespace Grain {
 
             // Read bounding box
             m_bounding_box.readFromFile(*this);
-            std::cout << "... m_bounding_box ... " << m_bounding_box << std::endl;
 
             // Read CRS
             m_srid = readValue<int64_t>();

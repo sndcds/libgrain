@@ -229,7 +229,9 @@ namespace Grain {
             _m_tpp_table_ptr = tpp_table;
         }
 
-        void _setTppTablePtr(const toml::table* ttp_table_ptr) { _m_tpp_table_ptr = ttp_table_ptr; }
+        void _setTppTablePtr(const toml::table* ttp_table_ptr) {
+            _m_tpp_table_ptr = ttp_table_ptr;
+        }
 
         TomlTableIterator begin() const {
             return TomlTableIterator(
@@ -245,54 +247,91 @@ namespace Grain {
             );
         }
 
-        [[nodiscard]] const toml::table::const_iterator _tppItemByName(const char* name) const {
-            if (name == nullptr || _m_tpp_table_ptr == nullptr) {
-                return _m_tpp_table_ptr->end();
+        [[nodiscard]] toml::table::const_iterator _tppItemByName(const char* name) const {
+            if (!name || !_m_tpp_table_ptr) {
+                return toml::table::const_iterator{}; // return default-constructed (invalid) iterator
             }
             else {
                 return _m_tpp_table_ptr->find(name);
             }
         }
 
-        [[nodiscard]] const toml::table::const_iterator _tppItemByNameOrThrow(const char* name, int32_t local_exc_code) const {
-            if (name == nullptr) {
-                throw Exception(ErrorCode::TomlNoName, "Expected a table item name, but a nullptr was found");
-            }
-            auto item = _m_tpp_table_ptr->find(name);
-            if (item == _m_tpp_table_ptr->end()) {
+        [[nodiscard]] toml::table::const_iterator
+        _tppItemByNameOrThrow(const char* name, toml::node_type expected_type) const {
+            if (!_m_tpp_table_ptr) {
                 Exception::throwFormattedMessage(
                         ErrorCode::TomlExpectedTableItem,
-                        "Expected table item with name \"%s\"",
+                        "Fatal: No TOML table loaded while looking for key \"%s\"",
+                        name ? name : "(null)");
+            }
+
+            if (!name) {
+                Exception::throwFormattedMessage(
+                        ErrorCode::TomlExpectedTableItem,
+                        "Fatal: Expected a valid key name, got nullptr");
+            }
+
+            auto it = _m_tpp_table_ptr->find(name);
+            if (it == _m_tpp_table_ptr->end()) {
+                Exception::throwFormattedMessage(
+                        ErrorCode::TomlExpectedTableItem,
+                        "Expected key \"%s\" not found",
                         name);
             }
-            return item;
+
+            // Validate type
+            if (it->second.type() != expected_type) {
+                Exception::throwFormattedMessage(
+                        ErrorCode::TomlWrongType,
+                        "Key \"%s\" has wrong type (expected %s, got %s)",
+                        name,
+                        nodeTypeToString(expected_type),
+                        nodeTypeToString(it->second.type()));
+            }
+
+            return it;
         }
 
+        inline const char* nodeTypeToString(toml::node_type type) const noexcept {
+            switch (type) {
+                case toml::node_type::none: return "none";
+                case toml::node_type::table: return "table";
+                case toml::node_type::array: return "array";
+                case toml::node_type::string: return "string";
+                case toml::node_type::integer: return "integer";
+                case toml::node_type::floating_point: return "floating-point";
+                case toml::node_type::boolean: return "boolean";
+                case toml::node_type::date: return "date";
+                case toml::node_type::time: return "time";
+                case toml::node_type::date_time: return "date-time";
+                default: return "unknown";
+            }
+        }
 
         [[nodiscard]] TomlPos position();
         [[nodiscard]] bool hasItem(const char* name) const;
         [[nodiscard]] bool hasItemThrowIfRequired(const char* name, bool required) const;
         [[nodiscard]] bool itemByName(const char* name, TomlTableItem& out_table_item);
 
-        void tableOrThrow(const char* name, int32_t local_exc_code, TomlTable& out_table) const;
-        void arrayOrThrow(const char* name, int32_t local_exc_code, TomlArray& out_array) const;
+        void tableOrThrow(const char* name, TomlTable& out_table) const;
+        void arrayOrThrow(const char* name, TomlArray& out_array) const;
 
-        [[nodiscard]] const char* stringOr(const char* name, const char* fallback, int32_t local_exc_code) const;
-        [[nodiscard]] const char* stringOrThrow(const char* name, int32_t local_exc_code) const;
+        [[nodiscard]] const char* stringOr(const char* name, const char* fallback) const;
+        [[nodiscard]] const char* stringOrThrow(const char* name) const;
 
-        [[nodiscard]] bool booleanOr(const char* name, bool fallback, int32_t local_exc_code) const;
-        [[nodiscard]] bool booleanOrThrow(const char* name, int32_t local_exc_code) const;
+        [[nodiscard]] bool booleanOr(const char* name, bool fallback) const;
+        [[nodiscard]] bool booleanOrThrow(const char* name) const;
 
-        [[nodiscard]] int64_t integerOr(const char* name, int64_t fallback, int32_t local_exc_code) const;
-        [[nodiscard]] int64_t integerOrThrow(const char* name, int32_t local_exc_code) const;
+        [[nodiscard]] int64_t integerOr(const char* name, int64_t fallback) const;
+        [[nodiscard]] int64_t integerOrThrow(const char* name) const;
 
-        [[nodiscard]] double doubleOr(const char* name, double fallback, int32_t local_exc_code) const;
-        [[nodiscard]] double doubleOrThrow(const char* name, int32_t local_exc_code) const;
+        [[nodiscard]] double doubleOr(const char* name, double fallback) const;
+        [[nodiscard]] double doubleOrThrow(const char* name) const;
 
-        [[nodiscard]] int32_t doublesOrThrow(const char* name, int32_t local_exc_code, int32_t max_values, double* out_values);
+        [[nodiscard]] int32_t doublesOrThrow(const char* name, int32_t max_values, double* out_values);
 
-        const RGB rgbOr(const char* name, const RGB& fallback, int32_t local_exc_code);
-        const RGB rgbOrThrow(const char* name, int32_t local_exc_code);
+        const RGB rgbOr(const char* name, const RGB& fallback);
+        const RGB rgbOrThrow(const char* name);
 
     };
 
@@ -312,15 +351,15 @@ namespace Grain {
         [[nodiscard]] bool isString() const { return m_value.isString(); }
         [[nodiscard]] const char* asString() const { return m_value.asString(); }
 
-        [[nodiscard]] const TomlTable asTableOrThrow(int32_t local_exc_code) const {
-            if (m_value.isTable()) {
-                TomlTable table;
-                m_value.asTable(table);
-                return table;
+        [[nodiscard]] TomlTable asTableOrThrow() const {
+            if (!m_value.isTable()) {
+                Exception::throwMessage(
+                        ErrorCode::TomlExpectedTable,
+                        "Expected a TOML table but found something else");
             }
-            else {
-                throw Exception(ErrorCode::TomlExpectedTable, "Expected a TOML table but found something else");
-            }
+            TomlTable table;
+            m_value.asTable(table);
+            return table;
         }
     };
 
@@ -441,29 +480,17 @@ namespace Grain {
         int32_t lastErrorColumn() const noexcept { return m_column; }
         const char* lastErrorMessage() const noexcept { return m_last_err_message.utf8(); }
 
-        void _tppParserError(const toml::parse_error& err);
+        void _tppParserError(const toml::parse_error& err, String& out_message);
 
         void logError(Log& l);
 
         toml::parse_result _ttpParseResult() { return _m_tpp_parse_result; }
 
         TomlArray arrayByName(const char* name) noexcept;
-        TomlArray arrayByNameOrThrow(const char* name, int32_t local_exc_code);
+        TomlArray arrayByNameOrThrow(const char* name);
 
         void asTable(TomlTable& out_table) {
             out_table._m_tpp_table_ptr = _m_tpp_parse_result.as_table();
-        }
-
-        void throwIfError(ErrorCode err) {
-            if (err != ErrorCode::None) {
-                throw err;
-            }
-        }
-
-        void throwIfNull(void* ptr, ErrorCode err) {
-            if (ptr == nullptr) {
-                throw err;
-            }
         }
 
         void throwTomlParseError(const toml::source_region& region);

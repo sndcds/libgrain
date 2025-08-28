@@ -55,16 +55,33 @@ namespace Grain {
     }
 
 
+    PSQLConnection::~PSQLConnection() {
+        close();
+    }
+
+
     ErrorCode PSQLConnection::open() noexcept {
         if (!_m_pg_conn_ptr) {
             PGconn* pg_conn = nullptr;
-            char connection_info[2056];
-            std::snprintf(connection_info, 2056, "host=%s port=%d dbname=%s user=%s password=%s", m_host.utf8(), m_port, m_db_name.utf8(), m_user.utf8(), m_password.utf8());
 
-            pg_conn = PQconnectdb(connection_info);
+            String connection_info;
+            connection_info += "host=";
+            connection_info += m_host;
+            connection_info += " port=";
+            connection_info += m_port;
+            connection_info += " dbname=";
+            connection_info += m_db_name;
+            connection_info += " user=";
+            connection_info += m_user;
+            connection_info += " password=";
+            connection_info += m_password;
+            connection_info += " connect_timeout=5";
+
+            pg_conn = PQconnectdb(connection_info.utf8());
 
             if (PQstatus(pg_conn) != CONNECTION_OK) {
                 m_last_err_message = "Unable to connect to database.";
+                PQfinish(pg_conn);
                 return Error::specific(kErrConnectionFailed);
             }
 
@@ -104,22 +121,56 @@ namespace Grain {
         }
     }
 
-    ErrorCode PSQLConnection::query(const String& sql, const PSQLParamList& param_list) noexcept {
+
+    PSQLResult PSQLConnection::query(
+            const String& sql,
+            PSQLResult::Format result_format) noexcept {
+
         static constexpr int32_t kMaxParams = 32;
+
+        PSQLResult psql_result;
+
+        auto pg_conn = (PGconn*)_m_pg_conn_ptr;
+        if (!pg_conn) {
+            psql_result.m_last_err = ErrorCode::DatabaseNotConnected;
+            return psql_result;
+        }
+
+        PGresult* pg_res = PQexecParams(
+                pg_conn,
+                sql.utf8(),
+                0,
+                NULL,
+                NULL,
+                NULL,
+                NULL,
+                result_format == PSQLResult::Format::Text ? 0 : 1
+        );
+
+        _collectResult(pg_res, psql_result);
+        return psql_result;
+    }
+
+
+    PSQLResult PSQLConnection::query(
+            const String& sql,
+            const PSQLParamList& param_list,
+            PSQLResult::Format result_format) noexcept {
+
+        static constexpr int32_t kMaxParams = 32;
+
+        PSQLResult psql_result;
 
         Oid param_types[kMaxParams];
         const char* param_values[kMaxParams];
         int param_lengths[kMaxParams];
         int param_formats[kMaxParams];
 
-        m_rows_affected = -1; // Undefined
-
-        auto pg_conn = (PGconn*)_m_pg_conn_ptr;
+        auto pg_conn = static_cast<PGconn*>(_m_pg_conn_ptr);
         if (!pg_conn) {
-            return ErrorCode::DatabaseNotConnected;
+            psql_result.m_last_err = ErrorCode::DatabaseNotConnected;
+            return psql_result;
         }
-
-        Log l;
 
         auto param_count = static_cast<int32_t>(param_list.size());
         int32_t index = 0;
@@ -133,9 +184,107 @@ namespace Grain {
             }
             else {
                 param_formats[index] = 1;   // 1 = binary
-                // TODO: Implement binary length for all types
-            }
+                switch (param->m_type) {
+                    /* TODO: Implement !!!
+                    case PSQLType::Boolean: {
+                        // Binary = 1 byte (0 or 1)
+                        static unsigned char b;
+                        b = param->m_value.asBool() ? 1 : 0;
+                        param_values[index] = reinterpret_cast<char*>(&b);
+                        param_lengths[index] = 1;
+                        break;
+                    }
 
+                    case PSQLType::ByteArray: {
+                        // Binary raw data
+                        param_values[index] = param->m_value.bytes();
+                        param_lengths[index] = param->m_value.size();
+                        break;
+                    }
+
+                    case PSQLType::Char:
+                    case PSQLType::Name:
+                    case PSQLType::Text:
+                    case PSQLType::VarChar:
+                    case PSQLType::CharN: {
+                        // All string-like types: just use text format usually.
+                        // If you insist on binary: it's a length-prefixed internal format (messy).
+                        // → Recommend keeping these as TEXT (param_formats=0).
+                        break;
+                    }
+
+                    case PSQLType::SmallInt: {
+                        // int16, must be sent in network byte order
+                        static int16_t v;
+                        v = htons(param->m_value.asInt16());
+                        param_values[index] = reinterpret_cast<char*>(&v);
+                        param_lengths[index] = sizeof(v);
+                        break;
+                    }
+
+                    case PSQLType::Integer: {
+                        // int32
+                        static int32_t v;
+                        v = htonl(param->m_value.asInt32());
+                        param_values[index] = reinterpret_cast<char*>(&v);
+                        param_lengths[index] = sizeof(v);
+                        break;
+                    }
+
+                    case PSQLType::BigInt: {
+                        // int64 (need 64-bit network order helper)
+                        static int64_t v;
+                        v = htobe64(param->m_value.asInt64()); // use portable macro
+                        param_values[index] = reinterpret_cast<char*>(&v);
+                        param_lengths[index] = sizeof(v);
+                        break;
+                    }
+
+                    case PSQLType::OID: {
+                        // OID is uint32
+                        static uint32_t v;
+                        v = htonl(param->m_value.asUInt32());
+                        param_values[index] = reinterpret_cast<char*>(&v);
+                        param_lengths[index] = sizeof(v);
+                        break;
+                    }
+
+                    case PSQLType::Real: {
+                        // float4: must be bitwise, in network order
+                        static uint32_t v;
+                        float f = param->m_value.asFloat();
+                        memcpy(&v, &f, 4);
+                        v = htonl(v);
+                        param_values[index] = reinterpret_cast<char*>(&v);
+                        param_lengths[index] = 4;
+                        break;
+                    }
+
+                    case PSQLType::Double: {
+                        // float8
+                        static uint64_t v;
+                        double d = param->m_value.asDouble();
+                        memcpy(&v, &d, 8);
+                        v = htobe64(v);
+                        param_values[index] = reinterpret_cast<char*>(&v);
+                        param_lengths[index] = 8;
+                        break;
+                    }
+
+                    case PSQLType::Date:
+                    case PSQLType::Timestamp:
+                    case PSQLType::TimestampZ:
+                    case PSQLType::Numeric:
+                    case PSQLType::JSON:
+                    case PSQLType::Void:
+                    case PSQLType::WKB: {
+                        // These are *complicated binary formats* (internal PostgreSQL encodings).
+                        // Unless you *really need binary*, keep them in TEXT mode.
+                        break;
+                    }
+                     */
+                }
+            }
             index++;
         }
 
@@ -147,88 +296,107 @@ namespace Grain {
                 param_values,
                 param_lengths,
                 param_formats,
-                0  // resultFormat: 0 = text, 1 = binary
+                result_format == PSQLResult::Format::Text ? 0 : 1
         );
 
-        _m_pg_res_ptr = pg_res;
-        _m_pg_status = PQresultStatus(pg_res);
-        if (_m_pg_status == PGRES_TUPLES_OK) {
-            _m_field_n = PQnfields(pg_res);
-            _m_tuple_n = PQntuples(pg_res);
+        _collectResult(pg_res, psql_result);
+        return psql_result;
+    }
+
+
+    const char* PSQLConnection::errorMessage() const noexcept {
+        return PQerrorMessage(static_cast<PGconn*>(_m_pg_conn_ptr));
+    }
+
+
+    void PSQLConnection::_collectResult(void* pg_result_ptr, Grain::PSQLResult &out_result) {
+        out_result.clear();
+        if (!pg_result_ptr) {
+            out_result.m_exec_status = PSQLResult::ExecStatus::FatalError;
+            return;
         }
-        else if (_m_pg_status == PGRES_COMMAND_OK) {
-             if (!String::strToVar(PQcmdTuples(pg_res), m_rows_affected)) {
-                 m_rows_affected = -1;
-             }
+
+        out_result.m_pg_result_ptr = pg_result_ptr;
+
+        auto pg_status = PQresultStatus(static_cast<PGresult*>(pg_result_ptr));
+        switch (pg_status) {
+            case PGRES_EMPTY_QUERY:
+                out_result.m_exec_status = PSQLResult::ExecStatus::EmptyQuery;
+                break;
+            case PGRES_COMMAND_OK:
+                out_result.m_exec_status = PSQLResult::ExecStatus::CommandOK;
+                if (!String::strToVar(PQcmdTuples(static_cast<PGresult*>(pg_result_ptr)), out_result.m_rows_affected)) {
+                    out_result.m_rows_affected = -1;
+                }
+                break;
+            case PGRES_TUPLES_OK:
+                out_result.m_exec_status = PSQLResult::ExecStatus::TuplesOK;
+                out_result.m_field_n = PQnfields(static_cast<PGresult*>(pg_result_ptr));
+                out_result.m_tuple_n = PQntuples(static_cast<PGresult*>(pg_result_ptr));
+                break;
+            case PGRES_COPY_OUT:
+                out_result.m_exec_status = PSQLResult::ExecStatus::CopyOut;
+                break;
+            case PGRES_COPY_IN:
+                out_result.m_exec_status = PSQLResult::ExecStatus::CopyIn;
+                break;
+            case PGRES_BAD_RESPONSE:
+                out_result.m_exec_status = PSQLResult::ExecStatus::BadResponse;
+                break;
+            case PGRES_NONFATAL_ERROR:
+                out_result.m_exec_status = PSQLResult::ExecStatus::NonfatalError;
+                break;
+            case PGRES_FATAL_ERROR:
+                out_result.m_exec_status = PSQLResult::ExecStatus::FatalError;
+                break;
+            case PGRES_COPY_BOTH:
+                out_result.m_exec_status = PSQLResult::ExecStatus::CopyBoth;
+                break;
+            case PGRES_SINGLE_TUPLE:
+                out_result.m_exec_status = PSQLResult::ExecStatus::SingleTuple;
+                break;
+            case PGRES_PIPELINE_SYNC:
+                out_result.m_exec_status = PSQLResult::ExecStatus::PipelineSync;
+                break;
+            case PGRES_PIPELINE_ABORTED:
+                out_result.m_exec_status = PSQLResult::ExecStatus::PipelineAborted;
+                break;
+        }
+    }
+
+
+    ErrorCode PSQLConnection::_psqlStatementTimeout(double sec) noexcept {
+        auto pg_conn = (PGconn*)_m_pg_conn_ptr;
+        if (!pg_conn || PQstatus(pg_conn) != CONNECTION_OK) {
+            return ErrorCode::DatabaseNotConnected;
+        }
+
+        String sql = "SET statement_timeout = ";
+        if (sec <= 0.0) {
+            sql += "0";
         }
         else {
-            // TODO: Message
-            std::cerr << "Execution failed: " << PQerrorMessage(pg_conn) << ", " << _m_pg_status << std::endl;
-            return ErrorCode::DatabaseNoResult;
+            sql += sec;
+            sql += "s";
         }
+        PGresult* res = PQexec(pg_conn, sql.utf8());
+        if (!res) {
+            m_last_err_message = "Unable to set statement timeout: ";
+            m_last_err_message += PQerrorMessage(pg_conn);
+            return ErrorCode::DatabaseSetTimeoutFailed;
+        }
+
+        ExecStatusType status = PQresultStatus(res);
+        if (status != PGRES_COMMAND_OK) {
+            m_last_err_message = "Error while setting statement timeout ";
+            m_last_err_message += PQresultErrorMessage(res);
+            PQclear(res);
+            return ErrorCode::DatabaseSetTimeoutFailed;
+        }
+
+        PQclear(res);
 
         return ErrorCode::None;
-    }
-
-
-    void PSQLConnection::clear() noexcept {
-        if (_m_pg_res_ptr) {
-            PQclear((PGresult*) _m_pg_res_ptr);
-            _m_pg_res_ptr = nullptr;
-        }
-    }
-
-
-    const char* PSQLConnection::fieldName(int32_t column_index) const noexcept {
-        if (_m_pg_res_ptr && column_index >= 0 && column_index < _m_field_n) {
-            return PQfname((PGresult*) _m_pg_res_ptr, column_index);
-        }
-        else {
-            return nullptr;
-        }
-    }
-
-    const char* PSQLConnection::fieldValue(int32_t row_index, int32_t column_index) const noexcept {
-        if (_m_pg_res_ptr &&
-            row_index >= 0 && row_index < _m_tuple_n &&
-            column_index >= 0 && column_index < _m_field_n) {
-            return PQgetvalue((PGresult*)_m_pg_res_ptr, row_index, column_index);
-        }
-        else {
-            return nullptr;
-        }
-    }
-
-    void PSQLConnection::logResult(Log& l) const noexcept {
-        if (_m_pg_res_ptr) {
-            auto pg_res = (PGresult*) _m_pg_res_ptr;
-            if (_m_pg_status == PGRES_TUPLES_OK) {
-                // Print column headers
-                for (int i = 0; i < _m_field_n; i++) {
-                    l << PQfname(pg_res, i);
-                    if (i < _m_field_n - 1) {
-                        l << " | ";
-                    }
-                }
-                l << l.endl;
-
-                // Print rows
-                for (int row = 0; row < _m_tuple_n; row++) {
-                    for (int col = 0; col < _m_field_n; col++) {
-                        char* value = PQgetvalue(pg_res, row, col);
-                        l << value;
-                        if (col < _m_field_n - 1) {
-                            l << " | ";
-                        }
-                    }
-                    l << l.endl;
-                }
-                l << l.endl;
-            }
-            else if (_m_pg_status == PGRES_COMMAND_OK) {
-                l << "affected rows: " << m_rows_affected << l.endl;
-            }
-        }
     }
 
 
@@ -285,13 +453,90 @@ namespace Grain {
     }
 
 
+    void PSQLResult::log(Log& l) const noexcept {
+        l << "PSQLResult" << l.endl;
+        if (m_pg_result_ptr) {
+            l++;
+            auto pg_res = static_cast<PGresult*>(m_pg_result_ptr);
+            if (m_exec_status == ExecStatus::TuplesOK) {
+                l << "m_exec_status: TuplesOK" << l.endl;
+                l << "m_tuple_n: " << m_tuple_n << l.endl;
+                l << "m_field_n: " << m_field_n << l.endl;
+            }
+            else if (m_exec_status == ExecStatus::CommandOK) {
+                l << "m_exec_status: CommandOK" << l.endl;
+                l << "affected rows: " << m_rows_affected << l.endl;
+            }
+            l--;
+        }
+    }
+
+    /**
+     *  @brief Check if the query result contains usable tuples (rows).
+     *
+     *  Returns true only if the underlying PostgreSQL result status
+     *  is PGRES_TUPLES_OK, meaning the query successfully produced
+     *  a row set that can be iterated over.
+     */
+    bool PSQLResult::areTuplesOK() const noexcept {
+        if (!m_pg_result_ptr) {
+            return false;
+        }
+        return PQresultStatus(static_cast<PGresult*>(m_pg_result_ptr)) == PGRES_TUPLES_OK;
+    }
+
+
+    void PSQLResult::clear() noexcept {
+        if (m_pg_result_ptr) {
+            PQclear(static_cast<PGresult*>(m_pg_result_ptr));
+            m_pg_result_ptr = nullptr;
+        }
+    }
+
+
+    PSQLType PSQLResult::fieldType(int32_t column_index) const noexcept {
+        return static_cast<PSQLType>(PQftype(static_cast<PGresult*>(m_pg_result_ptr), column_index));
+    }
+
+
+    /**
+     *  @note // Note: Does allways return the real name and not the alias
+     */
+    const char* PSQLResult::fieldName(int32_t column_index) const noexcept {
+        if (m_pg_result_ptr && column_index >= 0 && column_index < m_field_n) {
+            return PQfname(static_cast<PGresult*>(m_pg_result_ptr), column_index);
+        }
+        return nullptr;
+    }
+
+
+    const char* PSQLResult::fieldValue(int32_t row_index, int32_t column_index) const noexcept {
+        if (m_pg_result_ptr &&
+            row_index >= 0 && row_index < m_tuple_n &&
+            column_index >= 0 && column_index < m_field_n) {
+            return PQgetvalue(static_cast<PGresult*>(m_pg_result_ptr), row_index, column_index);
+        }
+        return nullptr;
+    }
+
+
+    int32_t PSQLResult::fieldLength(int32_t row_index, int32_t column_index) const noexcept {
+        return PQgetlength(static_cast<PGresult*>(m_pg_result_ptr), row_index, column_index);
+    }
+
+
+    bool PSQLResult::fieldIsNull(int32_t row_index, int32_t column_index) const noexcept {
+        return PQgetisnull(static_cast<PGresult*>(m_pg_result_ptr), row_index, column_index);
+    }
+
+
     PSQLPropertyList::PSQLPropertyList(int32_t size) {
-        m_properties = new PSQLProperty[size];
-        if (m_properties != nullptr) {
-            m_size = size;
+        m_properties = new (std::nothrow) PSQLProperty[size];
+        if (!m_properties) {
+            m_size = 0;
         }
         else {
-            m_size = 0;
+            m_size = size;
         }
     }
 
@@ -316,7 +561,6 @@ namespace Grain {
         if (p != nullptr && p->m_type == PSQLPropertyType::String) {
             return p->m_string.utf8();
         }
-
         return nullptr;
     }
 

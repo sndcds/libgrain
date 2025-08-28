@@ -77,8 +77,65 @@ namespace Grain {
 
     class PSQLParamList : public ObjectList<PSQLParam*> {
     public:
+        PSQLParamList() = default;
+        virtual ~PSQLParamList() {
+        }
+
         ErrorCode addParam(PSQLType type, const char* value) noexcept;
         ErrorCode addParam(PSQLType type, const String& value) noexcept;
+    };
+
+
+    class PSQLResult {
+        friend class PSQLConnection;
+
+    public:
+        enum class ExecStatus {
+            Undefined = -1,
+            EmptyQuery = 0, ///< Empty query string was executed
+            CommandOK,      ///< A query command that doesn't return anything was executed properly by the backend
+            TuplesOK,       ///< A query command that returns tuples was executed properly by the backend
+            CopyOut,        ///< Copy Out data transfer in progress
+            CopyIn,			///< Copy In data transfer in progress
+            BadResponse,	///< An unexpected response was recv'd from the backend
+            NonfatalError,	///< Notice or warning message
+            FatalError,		///< Query failed
+            CopyBoth,		///< Copy In/Out data transfer in progress
+            SingleTuple,	///< Single tuple from larger resultset
+            PipelineSync,   ///< Pipeline synchronization point
+            PipelineAborted	///< Command didn't run because of an abort earlier in a pipeline
+        };
+
+        enum class Format {
+            Text = 0,
+            Binary = 1
+        };
+
+    protected:
+        ErrorCode m_last_err = ErrorCode::None;
+        void* m_pg_result_ptr = nullptr; ///< The real PGresult* for using the result
+        ExecStatus m_exec_status = ExecStatus::Undefined;
+        int32_t m_tuple_n = -1;
+        int32_t m_field_n = -1;
+        int32_t m_rows_affected = -1;
+
+    public:
+        PSQLResult() = default;
+        ~PSQLResult() {
+            clear();
+        }
+
+        void log(Log& l) const noexcept;
+
+        bool areTuplesOK() const noexcept;
+        void clear() noexcept;
+        int32_t tupleCount() const noexcept { return m_tuple_n; }
+        int32_t fieldCount() const noexcept { return m_field_n; }
+        PSQLType fieldType(int32_t column_index) const noexcept;
+        const char* fieldName(int32_t column_index) const noexcept;
+        const char* fieldValue(int32_t row_index, int32_t column_index) const noexcept;
+        int32_t fieldLength(int32_t row_index, int32_t column_index) const noexcept;
+        bool fieldIsNull(int32_t row_index, int32_t column_index) const noexcept;
     };
 
 
@@ -111,23 +168,21 @@ namespace Grain {
         };
 
     public:
-        String m_identifier;        ///< Unique identifier
-        String m_host;              ///< Hostname, default is 'localhost'
-        int32_t m_port;             ///< TCP port, default is 5432. The full range of valid TCP ports is 1 to 65535
-        String m_db_name;           ///< Database name
-        String m_user;              ///< User name
-        String m_password;          ///< Password. Default is an empty password
-        String m_last_err_message;  ///< Last error message
+        String m_identifier;            ///< Unique identifier
+        String m_host;                  ///< Hostname, default is 'localhost'
+        int32_t m_port;                 ///< TCP port, default is 5432. The full range of valid TCP ports is 1 to 65535
+        String m_db_name;               ///< Database name
+        String m_user;                  ///< User name
+        String m_password;              ///< Password. Default is an empty password
+        double m_timeout_sec = 30.0;    ///< Maximum seconds to wait for a database statement
+        String m_last_err_message;      ///< Last error message
         StringList m_psql_notices;
-        int32_t m_rows_affected = -1;
-
-        void* _m_pg_conn_ptr = nullptr;     ///< The real PGconn* for using the database
-        void* _m_pg_res_ptr = nullptr;      ///< PGresult*
-        int32_t _m_pg_status;               ///< ExecStatusType
-        int32_t _m_field_n = -1;
-        int32_t _m_tuple_n = -1;
+        void* _m_pg_conn_ptr = nullptr; ///< The real PGconn* for using the database
 
     public:
+        PSQLConnection() = default;
+        ~PSQLConnection();
+
         friend std::ostream& operator<<(std::ostream& os, const PSQLConnection* o) {
             o == nullptr ? os << "PSQLConnection nullptr" : os << *o;
             return os;
@@ -146,16 +201,25 @@ namespace Grain {
         ErrorCode open() noexcept;
         void close() noexcept;
         Status status() noexcept;
-        ErrorCode query(const String& sql, const PSQLParamList& param_list) noexcept;
-        void clear() noexcept;
+        PSQLResult query(const String& sql, PSQLResult::Format result_format) noexcept;
+        PSQLResult query(const String& sql, const PSQLParamList& param_list, PSQLResult::Format result_format) noexcept;
 
-        int32_t fieldCount() const noexcept {  return _m_field_n; }
-        int32_t rowCount() const noexcept {  return _m_tuple_n; }
-        const char* fieldName(int32_t column_index) const noexcept;
-        const char* fieldValue(int32_t row_index, int32_t column_index) const noexcept;
-        int32_t rowsAffected() const noexcept { return m_rows_affected; }
+        const char* errorMessage() const noexcept;
 
-        void logResult(Log& l) const noexcept;
+        void _collectResult(void* pg_result_ptr, PSQLResult& out_result);
+
+        // XXX void clear() noexcept;
+        // XXX int32_t fieldCount() const noexcept { return _m_field_n; }
+        // XXX int32_t rowCount() const noexcept { return _m_tuple_n; }
+        // XXX const char* fieldName(int32_t column_index) const noexcept;
+        // XXX const char* fieldValue(int32_t row_index, int32_t column_index) const noexcept;
+        // XXX int32_t rowsAffected() const noexcept { return m_rows_affected; } // ???
+        // XXX void logResult(Log& l) const noexcept;
+
+        void setTimeoutSec(double sec) noexcept { m_timeout_sec = sec; };
+        ErrorCode useTimeout() noexcept { return _psqlStatementTimeout(m_timeout_sec); }
+        ErrorCode disableTimeout() noexcept { return _psqlStatementTimeout(0.0); }
+        ErrorCode _psqlStatementTimeout(double sec) noexcept;
     };
 
 

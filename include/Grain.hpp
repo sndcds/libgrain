@@ -178,6 +178,7 @@ namespace Grain {
 
         DatabaseNotConnected = 800,
         DatabaseNoResult = 801,
+        DatabaseSetTimeoutFailed,
 
         CSVIndexOutOfRange,
         CSVValueOutOfRange,
@@ -204,13 +205,12 @@ namespace Grain {
         LuaInstantiationFailed = 1500,
         LuaCodeError = 1501,
 
-        TomlNoName = 1700,
-        TomlExpectedTableItem = 1701,
+        TomlParseError = 1700,
+        TomlNoName,
+        TomlExpectedTableItem,
         TomlExpectedTable,
-        TomlParseError,
-        TomlExpectedString,
-        TomlExpectedArray,
         TomlExpectedNode,
+        TomlWrongType,
 
         InvalidProjection,
 
@@ -282,14 +282,34 @@ namespace Grain {
             m_ptr = nullptr;
         }
 
-        // Create and store a custom Exception with code, specific code and message
-        void createAndCaptureUnexpceted(const char* message) noexcept {
+        /**
+         *  @brief Create and store a custom deferred Exception without throwing.
+         *
+         *  Constructs an Exception with the given message and code, and stores it
+         *  in m_ptr as a std::exception_ptr for later re-throwing.
+         *
+         *  @param message The error message.
+         *  @param code    Optional specific error code (default: UnexpectedRuntimeError).
+         */
+        void createAndCaptureUnexpected(
+                const char* message,
+                ErrorCode code = ErrorCode::UnexpectedRuntimeError) noexcept
+        {
             try {
-                throw Exception(ErrorCode::UnexpectedRuntimeError, message);
+                // Create the Exception object
+                Exception e(code, message);
+
+                // Store it as a std::exception_ptr
+                m_ptr = std::make_exception_ptr(e);
             }
             catch (...) {
+                // This should never throw, but in case of memory allocation failure
                 m_ptr = std::current_exception();
             }
+        }
+
+        void createAndCaptureUnexpected(const Exception& e) {
+            createAndCaptureUnexpected(e.message(), e.code());
         }
     };
 
