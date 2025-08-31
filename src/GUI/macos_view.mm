@@ -254,8 +254,7 @@ if (i > 10) {
 
 - (void)drawRect:(NSRect)dirty_rect {
     // [super drawRect:dirty_rect]; // TODO: Check!
-
-    if (m_component != nullptr) {
+    if (m_component) {
         Grain::Rectd rect(dirty_rect);
         m_component->updateBeforeDrawing(rect);
 

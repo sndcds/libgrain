@@ -79,7 +79,7 @@ namespace Grain {
     };
 
 
-    const char *CSSValue::unitName() const noexcept {
+    const char* CSSValue::unitName() const noexcept {
 
         return CSS::unitName(m_unit);
     }
@@ -166,9 +166,8 @@ namespace Grain {
     /**
      *  @brief Checks a C-string for values and delimiters.
      */
-    bool CSSValidator::checkValueContent(const char *str) noexcept {
-
-        if (str == nullptr) {
+    bool CSSValidator::checkValueContent(const char* str) noexcept {
+        if (!str) {
             return false;
         }
 
@@ -297,7 +296,7 @@ namespace Grain {
      *  // Result: values = {255.0, 128.0, 64.0, 0.5}, num_values = 4
      *  @endcode
      */
-    int32_t CSS::extractValuesFromStr(const char *str, char *buffer, int32_t buffer_size, char closing_char, int32_t values_size, float *out_values) {
+    int32_t CSS::extractValuesFromStr(const char* str, char* buffer, int32_t buffer_size, char closing_char, int32_t values_size, float* out_values) {
 
         static constexpr int32_t kMaxValuesCount = 128;
 
@@ -312,7 +311,7 @@ namespace Grain {
             return 0;
         }
 
-        const char *end_ptr = nullptr;
+        const char* end_ptr = nullptr;
 
         if (closing_char != '\0') {
             end_ptr = strchr(str, ')');
@@ -337,9 +336,9 @@ namespace Grain {
 
         // Find all value pointers.
 
-        const char *value_ptr[kMaxValuesCount]; // Pointer to start of values in `buffer`.
+        const char* value_ptr[kMaxValuesCount]; // Pointer to start of values in `buffer`.
 
-        char *b_ptr = buffer;
+        char* b_ptr = buffer;
         bool prev_space_flag = false;
         int32_t value_index = 0;
         value_ptr[0] = b_ptr;
@@ -403,7 +402,7 @@ namespace Grain {
      *  }
      *  @endcode
      */
-    ErrorCode CSS::extractCSSValueFromStr(const char *str, CSSValue &out_value, char **next_value_ptr) noexcept {
+    ErrorCode CSS::extractCSSValueFromStr(const char* str, CSSValue& out_value, char** next_value_ptr) noexcept {
 
         auto result = ErrorCode::None;
 
@@ -447,8 +446,8 @@ namespace Grain {
 
             auto unit_beg_ptr = ptr;
 
-            if (next_value_ptr != nullptr) {
-                char *end_ptr = (char*)strchr(value_beg_ptr, ' ');
+            if (next_value_ptr) {
+                char* end_ptr = (char*)strchr(value_beg_ptr, ' ');
                 *next_value_ptr = end_ptr != nullptr ? end_ptr + 1 : nullptr;
             }
 
@@ -482,9 +481,9 @@ namespace Grain {
     }
 
 
-    const char *CSS::unitName(CSSUnit unit) noexcept {
+    const char* CSS::unitName(CSSUnit unit) noexcept {
 
-        static const char *undefined_name = "unknown";
+        static const char* undefined_name = "unknown";
 
         if (unit >= CSSUnit::First && unit <= CSSUnit::Last) {
             return _g_css_unit_infos[static_cast<int32_t>(unit)].m_unit_str;
@@ -495,9 +494,8 @@ namespace Grain {
     }
 
 
-    bool CSS::_css_strcmp(const char *a, const char *b) noexcept {
-
-        if (a == nullptr || b == nullptr) {
+    bool CSS::_css_strcmp(const char* a, const char* b) noexcept {
+        if (!a || !b) {
             return false;
         }
 
@@ -534,9 +532,8 @@ namespace Grain {
     /**
      *  @brief Checks if there are characters for values inbetween commas in a string.
      */
-    bool CSS::_css_check_comma_delimiters(const char *str) noexcept {
-
-        if (str == nullptr) {
+    bool CSS::_css_check_comma_delimiters(const char* str) noexcept {
+        if (!str) {
             return false;
         }
 

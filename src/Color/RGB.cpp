@@ -150,7 +150,7 @@ namespace Grain {
      *  @see RGB(float r, float g, float b)
      */
     RGB::RGB(const float *values) noexcept {
-        if (values != nullptr) {
+        if (values) {
             m_data[0] = values[0];
             m_data[1] = values[1];
             m_data[2] = values[2];
@@ -375,7 +375,7 @@ namespace Grain {
 
 
     void RGB::values(float* out_values) const noexcept {
-        if (out_values != nullptr) {
+        if (out_values) {
             out_values[0] = m_data[0];
             out_values[1] = m_data[1];
             out_values[2] = m_data[2];
@@ -467,7 +467,7 @@ namespace Grain {
 
 
     void RGB::setValues(const float* values) noexcept {
-        if (values != nullptr) {
+        if (values) {
             m_data[0] = values[0];
             m_data[1] = values[1];
             m_data[2] = values[2];
@@ -476,7 +476,7 @@ namespace Grain {
 
 
     void RGB::setValues(const float* values, float scale) noexcept {
-        if (values != nullptr) {
+        if (values) {
             m_data[0] = values[0] * scale;
             m_data[1] = values[1] * scale;
             m_data[2] = values[2] * scale;
@@ -1060,7 +1060,7 @@ namespace Grain {
 
 
     void RGB::readFromMem(const float* ptr) noexcept {
-        if (ptr != nullptr) {
+        if (ptr) {
             m_data[0] = ptr[0];
             m_data[1] = ptr[1];
             m_data[2] = ptr[2];
@@ -1069,7 +1069,7 @@ namespace Grain {
 
 
     void RGB::writeToMem(float*ptr) const noexcept {
-        if (ptr != nullptr) {
+        if (ptr) {
             ptr[0] = m_data[0];
             ptr[1] = m_data[1];
             ptr[2] = m_data[2];
@@ -1078,7 +1078,7 @@ namespace Grain {
 
 
     void RGB::writeToMemUInt8(uint8_t* ptr) const noexcept {
-        if (ptr != nullptr) {
+        if (ptr) {
             ptr[0] = Type::floatToUInt8(m_data[0]);
             ptr[1] = Type::floatToUInt8(m_data[1]);
             ptr[2] = Type::floatToUInt8(m_data[2]);
@@ -1087,7 +1087,7 @@ namespace Grain {
 
 
     void RGB::writeToMemUInt16(uint16_t* ptr) const noexcept {
-        if (ptr != nullptr) {
+        if (ptr) {
             ptr[0] = Type::floatToUInt16(m_data[0]);
             ptr[1] = Type::floatToUInt16(m_data[1]);
             ptr[2] = Type::floatToUInt16(m_data[2]);

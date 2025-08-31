@@ -52,13 +52,12 @@ namespace Grain {
  *  exceptions internally.
  */
     ErrorCode Lua::_init(LuaInitAction init_action) noexcept {
-
         auto result = ErrorCode::None;
 
         try {
             clearMessages();
 
-            if (m_lua_vm == nullptr) {
+            if (!m_lua_vm) {
 
                 // Creates a new Lua interpreter
                 m_lua_vm = luaL_newstate();

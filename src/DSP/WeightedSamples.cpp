@@ -156,7 +156,7 @@ namespace Grain {
 
     void WeightedSamples::addWeightedSample(int32_t index, float value, float weight) noexcept {
 
-        if (m_samples != nullptr && m_weights && index >= 0 && index < m_resolution) {
+        if (m_samples && m_weights && index >= 0 && index < m_resolution) {
             m_samples[index] += value;
             m_weights[index] += weight;
         }
@@ -164,8 +164,7 @@ namespace Grain {
 
 
     float WeightedSamples::weightAtIndex(int32_t index) const noexcept {
-
-        return m_weights != nullptr && index >= 0 && index < m_resolution ? m_weights[index] : 0;
+        return m_weights && index >= 0 && index < m_resolution ? m_weights[index] : 0;
     }
 
 

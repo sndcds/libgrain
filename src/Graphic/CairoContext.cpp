@@ -212,7 +212,7 @@ namespace Grain {
 
 
     void CairoContext::setStrokeDash(int32_t array_length, const double* array, double scale) noexcept {
-        if (array_length <= 0 || array == nullptr) {
+        if (array_length <= 0 || !array) {
             cairo_set_dash(m_cairo_cr, nullptr, 0, 0); // solid
         }
         else {

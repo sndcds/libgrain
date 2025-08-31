@@ -94,11 +94,11 @@ namespace Grain {
             m_textfield->setEnabled(enabled);
         }
 /*
-        if (m_label != nullptr) {
+        if (m_label) {
             m_label->setEnabled(enabled);
         }
 
-        if (m_color_well != nullptr) {
+        if (m_color_well) {
             // m_color_well->setEnabled(enabled);  TODO: Uncomment!
         }
         */
@@ -107,7 +107,7 @@ namespace Grain {
     }
 
     void Component::setVisibility(bool visibility) noexcept {
-        if (m_textfield != nullptr) {
+        if (m_textfield) {
             m_textfield->setVisibility(visibility);
         }
 
@@ -124,15 +124,15 @@ namespace Grain {
 
 
     void Component::setText(const char *text_str) noexcept {
-        if (text_str == nullptr) {
+        if (!text_str) {
             text_str = "";
         }
 
-        if (m_text == nullptr) {
+        if (!m_text) {
             m_text = new (std::nothrow) String();
         }
 
-        if (m_text != nullptr) {
+        if (m_text) {
             m_text->set(text_str);
         }
 
@@ -194,7 +194,7 @@ namespace Grain {
         _m_action_type = action_type;
         updateRepresentations(excluded_component);
         transmit();
-        if (m_action != nullptr) {
+        if (m_action) {
             m_action(this);
         }
     }
@@ -208,10 +208,10 @@ namespace Grain {
 
     void Component::updateRepresentations(const Component *excluded_component) noexcept {
         /* !!!!!
-        if (m_textfield != nullptr && m_textfield != excluded_component) {
+        if (m_textfield && m_textfield != excluded_component) {
             m_textfield->setValue(value());
         }
-        if (m_color_well != nullptr && m_color_well != excluded_component) {
+        if (m_color_well && m_color_well != excluded_component) {
             m_color_well->setByComponent(this);
         }
          */
@@ -285,7 +285,7 @@ namespace Grain {
     }
 
     void Component::parentGeometryChanged() noexcept {
-        if (m_parent != nullptr && m_edge_alignment != Alignment::No) {
+        if (m_parent && m_edge_alignment != Alignment::No) {
             Rectd rect = m_parent->m_rect.edgeAlignedRectRelative(m_edge_alignment, m_margin.m_top, m_margin.m_right, m_margin.m_bottom, m_margin.m_left);
             if (rect != m_rect) {
                 setRect(rect);
@@ -465,7 +465,7 @@ namespace Grain {
 
 
     Component* Component::addComponentToView(Component* component, View* view, AddFlags flags) noexcept {
-        if (component != nullptr && view != nullptr) {
+        if (component && view) {
             view->addComponent(component, flags);
         }
         return component;

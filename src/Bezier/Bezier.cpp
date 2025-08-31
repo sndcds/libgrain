@@ -388,7 +388,7 @@ namespace Grain {
 
     void Bezier::buildVec2LUT(Vec2d* lut, int32_t resolution) const noexcept {
 
-        if (lut != nullptr && resolution > 1) {
+        if (lut && resolution > 1) {
             for (int32_t i = 0; i < resolution; i++) {
                 lut[i] = posOnCurve(static_cast<double>(i) / static_cast<double>(resolution - 1));
             }

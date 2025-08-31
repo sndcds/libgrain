@@ -50,7 +50,7 @@ namespace Grain {
         File* file = nullptr;
 
         try {
-            if (column_infos == nullptr) {
+            if (!column_infos) {
                 throw ErrorCode::NullPointer;
             }
 

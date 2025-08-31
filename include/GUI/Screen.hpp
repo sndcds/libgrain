@@ -39,7 +39,7 @@ namespace Grain {
         [[nodiscard]] const char* className() const noexcept override { return "Screen"; }
 
         friend std::ostream& operator << (std::ostream& os, const Screen* o) {
-            if (o == nullptr) {
+            if (!o) {
                 os << "Screen nullptr";
             }
             else {

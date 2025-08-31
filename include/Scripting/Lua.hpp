@@ -199,7 +199,7 @@ namespace Grain {
 
         // * * * * *
 
-        void removeGlobalsByName(const char* name, fourcc_t mode = 'full') {
+        void removeGlobalsByName(const char* name, bool full_mode = true) {
             auto len = strlen(name);
             // Push the global table (_G) onto the stack.
             lua_pushglobaltable(m_lua_vm);
@@ -212,17 +212,13 @@ namespace Grain {
                 if (lua_type(m_lua_vm, -2) == LUA_TSTRING) {
                     const char* key = lua_tostring(m_lua_vm, -2);
                     bool remove_flag = false;
-                    switch (mode) {
-                        case 'full':
-                            remove_flag = strcmp(key, name ) == 0;
-                            break;
-                        case 'beg_':
-                            remove_flag = strncmp(key, name, len) == 0;
-                            break;
-                        default:
-                            break;
+                    if (full_mode) {
+                        remove_flag = strcmp(key, name) == 0;
                     }
-                    if (remove_flag == true) {
+                    else {
+                        remove_flag = strncmp(key, name, len) == 0;
+                    }
+                    if (remove_flag) {
                         // Set _G[key] to nil (remove the key).
                         lua_pushnil(m_lua_vm);
                         lua_setglobal(m_lua_vm, key);

@@ -79,7 +79,7 @@ namespace Grain {
         if (textfield != m_textfield) {
             m_textfield = textfield;
 
-            if (m_textfield != nullptr) {
+            if (m_textfield) {
                 m_textfield->setVariable(&m_value, Grain::Type::Class::Fix);
                 m_textfield->setValueRange(m_min, m_max);
                 m_textfield->setStep(m_step, m_big_step);
@@ -93,7 +93,7 @@ namespace Grain {
     */
 
     void ValueComponent::setByComponent(Component* component) noexcept {
-        if (component != nullptr) {
+        if (component) {
             if (m_value.set(component->value(), m_min, m_max, m_fractional_digits)) {
                 updateRepresentations(component);
                 needsDisplay();

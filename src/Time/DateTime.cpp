@@ -72,7 +72,7 @@ namespace Grain {
 
 
     void DateTime::toStr(int32_t max_length, char* out_str) const noexcept {
-        if (out_str != nullptr) {
+        if (out_str) {
             std::snprintf(
                     out_str, max_length, "%02d.%02d.%d %02d:%02d:%02d UTC%+03d",
                     m_day, m_month, m_year,
@@ -83,14 +83,14 @@ namespace Grain {
 
 
     void DateTime::toDateStr(int32_t max_length, char* out_str) const noexcept {
-        if (out_str != nullptr) {
+        if (out_str) {
             std::snprintf(out_str, max_length, "%02d.%02d.%d", m_day, m_month, m_year);
         }
     }
 
 
     void DateTime::toTimeStr(int32_t max_length, char* out_str) const noexcept {
-        if (out_str != nullptr) {
+        if (out_str) {
             std::snprintf(out_str, max_length, "%02d:%02d:%02d", m_hour, m_minute, m_second);
         }
     }

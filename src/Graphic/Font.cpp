@@ -33,14 +33,14 @@ namespace Grain {
 
 
     Font::Font(const Font* font) noexcept : Object() {
-        if (font != nullptr) {
+        if (font) {
             set(font->fontNameUtf8(), font->size());
         }
     }
 
 
     Font::Font(const Font* font, float size) noexcept : Object() {
-        if (font != nullptr) {
+        if (font) {
             set(font->fontNameUtf8(), size);
         }
     }
@@ -61,7 +61,7 @@ namespace Grain {
 
     Font::~Font() noexcept {
 #if defined(__APPLE__) && defined(__MACH__)
-        if (m_ct_font != nullptr) {
+        if (m_ct_font) {
             CFRelease(m_ct_font);
         }
 #endif
@@ -85,7 +85,7 @@ namespace Grain {
 
         m_font_size = size;
 
-        if (name == nullptr || strcasecmp(name, "System") == 0) {
+        if (!name || strcasecmp(name, "System") == 0) {
             // Use system font
             m_font_name.clear();
             m_ct_font = CTFontCreateUIFontForLanguage(kCTFontUIFontSystem, size, nullptr);
@@ -98,7 +98,7 @@ namespace Grain {
             CFRelease(ct_font_name);
         }
 
-        if (m_ct_font != nullptr) {
+        if (m_ct_font) {
 
             // Get the display name of the font
             CFStringRef display_name = CTFontCopyDisplayName(m_ct_font);
@@ -137,7 +137,7 @@ namespace Grain {
 
 #if defined(__APPLE__) && defined(__MACH__)
     double Font::glyphAdvanceWidth(const char* symbol, int32_t length) const noexcept {
-        if (symbol == nullptr || symbol[0] == '\0' || length == 0) {
+        if (!symbol || symbol[0] == '\0' || length == 0) {
             return 0.0;
         }
 
@@ -148,7 +148,7 @@ namespace Grain {
         else {
             cf_str = CFStringCreateWithBytes(nullptr, reinterpret_cast<const UInt8*>(symbol), length, kCFStringEncodingUTF8, false);
         }
-        if (cf_str == nullptr) {
+        if (!cf_str) {
             return 0.0;
         }
 
@@ -253,7 +253,7 @@ namespace Grain {
      */
 #if defined(__APPLE__) && defined(__MACH__)
     Dimensiond Font::macos_textDimensionUsingCTFramesetter(const char* str, int32_t byte_length) const noexcept {
-        if (str == nullptr || byte_length == 0 || m_ct_font == nullptr) {
+        if (!str || byte_length == 0 || !m_ct_font) {
             return { 0.0, 0.0 };
         }
 
@@ -291,7 +291,7 @@ namespace Grain {
     int32_t Font::charIndexAtX(const char* str, double x, double& in_out_delta, double& out_cursor_x) const noexcept {
         int32_t cursor_index = -1;
 
-        if (str != nullptr && str[0] != '\0') {
+        if (str && str[0] != '\0') {
 
             CFStringRef cf_str = CFStringCreateWithCString(NULL, str, kCFStringEncodingUTF8);
             CFMutableAttributedStringRef cf_attr_str = CFAttributedStringCreateMutable(kCFAllocatorDefault, 0);

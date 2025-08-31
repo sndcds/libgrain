@@ -45,7 +45,7 @@ namespace Grain {
             int32_t new_max_resolution = std::clamp<int32_t>(resolution, kMinResolution, kMaxResolution);
             RGB* new_samples = (RGB*)std::realloc(m_samples, sizeof(RGB) * new_max_resolution);
 
-            if (new_samples == nullptr) {
+            if (!new_samples) {
                 return false;
             }
 
@@ -72,9 +72,8 @@ namespace Grain {
 
 
     bool RGBLUT1::shrink() noexcept {
-
         RGB* new_samples = (RGB*)std::realloc(m_samples, sizeof(RGB) * m_resolution);
-        if (new_samples == nullptr) {
+        if (!new_samples) {
             return false;
         }
 
@@ -86,8 +85,7 @@ namespace Grain {
 
 
     void RGBLUT1::updateByGradient(Gradient* gradient) noexcept {
-
-        if (gradient == nullptr) {
+        if (!gradient) {
             return;
         }
 
@@ -190,10 +188,9 @@ namespace Grain {
 
 
     RGBLUT1 const *RGBLUT1::_initKelvinLUT() noexcept {
-
         int32_t resolution = 128;
         auto lut = new (std::nothrow) RGBLUT1(resolution);
-        if (lut != nullptr) {
+        if (lut) {
             for (int32_t i = 0; i < resolution; i++) {
                 RGB rgb;
                 rgb.setKelvin(Math::remap(0, resolution - 1, Color::kKelvinMin, Color::kKelvinMax, i));

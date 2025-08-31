@@ -160,7 +160,7 @@ namespace Grain {
 
 
     typedef struct {
-        const char *m_unit_str;
+        const char* m_unit_str;
         int32_t m_unit_str_len;
         CSSUnit m_unit;
         CSSUnitContext m_unit_context;
@@ -184,9 +184,9 @@ namespace Grain {
             m_valid = m_unit != CSSUnit::Undefined;
         }
 
-        virtual const char *className() const noexcept { return "CSSValue"; }
+        virtual const char* className() const noexcept { return "CSSValue"; }
 
-        friend std::ostream& operator << (std::ostream &os, const CSSValue *o) {
+        friend std::ostream& operator << (std::ostream &os, const CSSValue* o) {
             o == nullptr ? os << "CSSValue nullptr" : os << *o;
             return os;
         }
@@ -238,7 +238,7 @@ namespace Grain {
         }
 
         CSSUnit unit() const noexcept { return m_unit; }
-        const char *unitName() const noexcept;
+        const char* unitName() const noexcept;
 
         bool isColorLevelUnit() const noexcept { return m_unit == CSSUnit::Absolute || m_unit <= CSSUnit::Percentage; }
         bool isAngleUnit() const noexcept { return m_unit == CSSUnit::Absolute || (m_unit >= CSSUnit::FirstAngle && m_unit <= CSSUnit::LastAngle); }
@@ -283,7 +283,7 @@ namespace Grain {
         int32_t m_pre_slash_value_n;
 
     public:
-        friend std::ostream& operator << (std::ostream &os, const CSSValidator *o) {
+        friend std::ostream& operator << (std::ostream &os, const CSSValidator* o) {
             o == nullptr ? os << "CSSValidator nullptr" : os << *o;
             return os;
         }
@@ -296,7 +296,7 @@ namespace Grain {
             return os;
         }
 
-        bool checkValueContent(const char *str) noexcept;
+        bool checkValueContent(const char* str) noexcept;
     };
 
 
@@ -309,13 +309,13 @@ namespace Grain {
         CSS() noexcept;
         ~CSS() noexcept;
 
-        static int32_t extractValuesFromStr(const char *str, char *buffer, int32_t buffer_size, char closing_char, int32_t values_size, float *out_values);
-        static ErrorCode extractCSSValueFromStr(const char *str, CSSValue &out_value, char **next_value_ptr) noexcept;
-        static const char *unitName(CSSUnit unit) noexcept;
+        static int32_t extractValuesFromStr(const char* str, char* buffer, int32_t buffer_size, char closing_char, int32_t values_size, float* out_values);
+        static ErrorCode extractCSSValueFromStr(const char* str, CSSValue& out_value, char** next_value_ptr) noexcept;
+        static const char* unitName(CSSUnit unit) noexcept;
 
-        static bool _css_strcmp(const char *a, const char *b) noexcept;
+        static bool _css_strcmp(const char* a, const char* b) noexcept;
         static bool _css_isDelimiter(const char c) noexcept;
-        static bool _css_check_comma_delimiters(const char *str) noexcept;
+        static bool _css_check_comma_delimiters(const char* str) noexcept;
     };
 
 

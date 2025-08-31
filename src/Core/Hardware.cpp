@@ -56,13 +56,13 @@ namespace Grain {
 
         // `out_ip_addr` must be a buffer with space for 4 uint8_t values
 
-        if (out_ip_addr == nullptr) {
+        if (!out_ip_addr) {
             return false;
         }
 
         Type::clearArray<uint8_t>(out_ip_addr, 4);
 
-        if (interface_name == nullptr) {
+        if (!interface_name) {
             return false;
         }
 
@@ -124,13 +124,13 @@ namespace Grain {
     bool Hardware::interfaceMacAddr(const char* interface_name, uint8_t* out_mac_addr) noexcept {
 
         // 'out_mac_addr' must be a buffer with space for 6 uint8_t values
-        if (out_mac_addr == nullptr) {
+        if (!out_mac_addr) {
             return false;
         }
 
         Type::clearArray<uint8_t>(out_mac_addr, 6);
 
-        if (interface_name == nullptr) {
+        if (!interface_name) {
             return false;
         }
 
@@ -288,7 +288,7 @@ namespace Grain {
 #if defined(__APPLE__) && defined(__MACH__)
     bool Hardware::kernelInt32(const char* name, int32_t& out_value) noexcept {
 
-        if (name == nullptr) {
+        if (!name) {
             return false;
         }
 
@@ -321,7 +321,7 @@ namespace Grain {
 #if defined(__APPLE__) && defined(__MACH__)
     bool Hardware::kernelInt64(const char* name, int64_t& out_value) noexcept {
 
-        if (name == nullptr) {
+        if (!name) {
             return false;
         }
 
@@ -360,7 +360,7 @@ namespace Grain {
 #if defined(__APPLE__) && defined(__MACH__)
     int32_t Hardware::kernelString(const char* name, char* out_buffer, int32_t out_buffer_size) noexcept {
 
-        if (name == nullptr || out_buffer == nullptr || out_buffer_size < 1) {
+        if (!name || !out_buffer || out_buffer_size < 1) {
             return -1;
         }
 
@@ -372,7 +372,7 @@ namespace Grain {
         }
 
         char* temp_buffer = static_cast<char*>(std::malloc(size));
-        if (temp_buffer == nullptr) {
+        if (!temp_buffer) {
             return -3;
         }
 
@@ -483,17 +483,16 @@ namespace Grain {
 
 #if defined(__APPLE__) && defined(__MACH__)
     bool Hardware::reportMemorySize(size_t* out_virtual_size, size_t* out_max_size) noexcept {
-
         struct mach_task_basic_info info;
         mach_msg_type_number_t size = MACH_TASK_BASIC_INFO_COUNT;
         kern_return_t kerr = task_info(mach_task_self(), MACH_TASK_BASIC_INFO, (task_info_t)&info, &size);
 
         if (kerr == KERN_SUCCESS) {
-            if (out_virtual_size != nullptr) {
+            if (out_virtual_size) {
                 *out_virtual_size = info.virtual_size;
             }
 
-            if (out_max_size  != nullptr) {
+            if (out_max_size) {
                 *out_max_size = info.resident_size_max;
             }
 

@@ -97,7 +97,7 @@ namespace Grain {
             }
 
             data = (uint8_t*)malloc(tile_max_size);
-            if (data == nullptr) {
+            if (!data) {
                 throw ErrorCode::MemCantAllocate;
             }
 
@@ -164,8 +164,8 @@ namespace Grain {
         uint8_t* tile_img_data = nullptr;
 
         try {
-            if (image == nullptr) { throw Error::specific(1); }
-            if (tile_image == nullptr) { throw Error::specific(2); }
+            if (!image) { throw Error::specific(1); }
+            if (!tile_image) { throw Error::specific(2); }
             if (zoom < 0) { throw Error::specific(3); }
 
             if (tile_image->width() != tile_w || tile_image->height() != tile_h) {
@@ -242,14 +242,14 @@ namespace Grain {
                                 tile_offs += tile_img_file_size;
                             }
                             else if (pass == 1) {
-                                if (tile_img_data == nullptr) {
+                                if (!tile_img_data) {
                                     tile_img_data = (uint8_t *) malloc(tile_img_max_size);
-                                    if (tile_img_data == nullptr) {
+                                    if (!tile_img_data) {
                                         throw ErrorCode::MemCantAllocate;
                                     }
                                 }
                                 // Write image data for tile
-                                if (tile_img_data == nullptr) {
+                                if (!tile_img_data) {
                                     throw ErrorCode::MemCantAllocate;
                                 }
                                 tile_img_file.read(tile_img_file_size, (uint8_t*)tile_img_data);
@@ -397,7 +397,7 @@ namespace Grain {
                  m_curr_tile.m_x <= m_tile_end.m_x;
                  m_curr_tile.m_x += kGridSize, m_curr_meta_index.m_x++) {
 
-                if (m_action != nullptr) {
+                if (m_action) {
                     m_action(this, m_action_ref);
                 }
                 log << "index: " << m_curr_index << ": " << m_curr_tile << std::endl;

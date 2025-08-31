@@ -104,7 +104,7 @@ namespace Grain {
             }
 
             m_entries = (GeoMetaTileEntry*)malloc(sizeof(GeoMetaTileEntry) * m_count);
-            if (m_entries == nullptr) {
+            if (!m_entries) {
                 throw ErrorCode::MemCantAllocate;
             }
 

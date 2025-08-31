@@ -49,7 +49,7 @@ namespace Grain {
 
     GraphicContext::GraphicContext(PDFWriter* pdf_writer) noexcept {
         /* TODO: !!!!!
-        if (pdf_writer != nullptr) {
+        if (pdf_writer) {
 
             setCGContext(pdf_writer->m_cg_context);
 
@@ -98,10 +98,10 @@ namespace Grain {
     }
 
     void GraphicContext::addPolygon(Polygon* polygon) noexcept {
-        if (polygon != nullptr) {
+        if (polygon) {
             auto points = polygon->pointsListPtr();
 
-            if (points != nullptr) {
+            if (points) {
                 auto n = static_cast<int32_t>(points->size());
 
                 if (n > 1) {
@@ -122,7 +122,7 @@ namespace Grain {
     }
 
     void GraphicContext::addPath(GraphicPath* path) noexcept {
-        if (path != nullptr && path->pointCount() > 1) {
+        if (path && path->pointCount() > 1) {
             GraphicPathPoint* prev_point = nullptr;
             // GraphicPathPoint* first_point = nullptr; // Unused
 
@@ -158,7 +158,7 @@ namespace Grain {
     }
 
     void GraphicContext::addPath(GraphicPath* path, const GraphicPathSplitParam& split_param) noexcept {
-        if (path != nullptr) {
+        if (path) {
             double ts = 0.0;
             double te = 1.0;
 
@@ -612,7 +612,7 @@ namespace Grain {
     }
 
     void GraphicContext::addPolygonPath(int32_t point_count, const Vec2d* points) noexcept {
-        if (points != nullptr && point_count > 2) {
+        if (points && point_count > 2) {
             const Vec2d* p = points;
             moveTo(*p);
             for (int32_t i = 1; i < point_count; i++) {
@@ -885,7 +885,7 @@ namespace Grain {
     }
 
     void GraphicContext::addQuadrilateralPath(const Vec2d* points) noexcept {
-        if (points != nullptr) {
+        if (points) {
             moveTo(points[0]);
             lineTo(points[1]);
             lineTo(points[2]);
@@ -903,7 +903,7 @@ namespace Grain {
     }
 
     void GraphicContext::fillQuadrilateral(const Vec2d* points) noexcept {
-        if (points != nullptr) {
+        if (points) {
             beginPath();
             addQuadrilateralPath(points);
             fillPath();
@@ -1010,7 +1010,7 @@ namespace Grain {
             }
         }
 
-        if (icon != nullptr) {
+        if (icon) {
             // drawIcon(icon, icon->centeredRect(rect), icon_color, icon_alpha); TODO: !!!!
         }
     }

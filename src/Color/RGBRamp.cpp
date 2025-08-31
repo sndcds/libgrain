@@ -101,8 +101,7 @@ namespace Grain {
 
 
     void RGBRamp::lookup(float t, float* out_values) const noexcept {
-
-        if (out_values != nullptr) {
+        if (out_values) {
             RGB rgb;
             lookup(t, rgb);
             out_values[0] = rgb.m_data[0];
@@ -137,8 +136,7 @@ namespace Grain {
 
 
     void RGBRamp::lookupRing(float t, float* out_values) const noexcept {
-
-        if (out_values != nullptr) {
+        if (out_values) {
             RGB rgb;
             lookupRing(t, rgb);
             out_values[0] = rgb.m_data[0];

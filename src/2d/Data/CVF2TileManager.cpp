@@ -26,7 +26,6 @@ namespace Grain {
      *  @return true if a ValueGrid exists for the tile; otherwise, false.
      */
     bool CVF2Tile::hasValueGrid() noexcept {
-
         return m_value_grid != nullptr;
     }
 

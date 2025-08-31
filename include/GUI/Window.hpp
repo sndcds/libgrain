@@ -58,7 +58,7 @@ namespace Grain {
         const char* className() const noexcept override { return "Window"; }
 
         friend std::ostream& operator << (std::ostream& os, const Window* o) {
-            if (o == nullptr) {
+            if (!o) {
                 return os << "Window nullptr";
             }
             else {

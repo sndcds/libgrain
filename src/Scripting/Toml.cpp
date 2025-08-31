@@ -49,7 +49,7 @@ namespace Grain {
 
 
     bool TomlTable::hasItem(const char* name) const {
-        if (_m_tpp_table_ptr == nullptr || name == nullptr) {
+        if (!_m_tpp_table_ptr || !name) {
             return false;
         }
         else {
@@ -77,7 +77,7 @@ namespace Grain {
      *          in the table.
      */
     bool TomlTable::hasItemThrowIfRequired(const char* name, bool required) const {
-        if (_m_tpp_table_ptr == nullptr || name == nullptr) {
+        if (!_m_tpp_table_ptr || !name) {
             return false;
         }
 
@@ -114,7 +114,7 @@ namespace Grain {
      *        ensure `name` is valid.
      */
     bool TomlTable::itemByName(const char* name, TomlTableItem& out_table_item) {
-        if (_m_tpp_table_ptr == nullptr) {
+        if (!_m_tpp_table_ptr) {
             return false;
         }
 
@@ -188,7 +188,7 @@ namespace Grain {
 
 
     int32_t TomlTable::doublesOrThrow(const char* name, int32_t max_values, double* out_values) {
-        if (out_values == nullptr) {
+        if (!out_values) {
             Toml::throwParserErrorFileLine(__FILE__, __LINE__);
         }
         auto item = _tppItemByNameOrThrow(name, toml::node_type::array);
@@ -446,7 +446,7 @@ namespace Grain {
 
 
     TomlArray Toml::arrayByNameOrThrow(const char* name) {
-        if (name == nullptr) {
+        if (!name) {
             Exception::throwFormattedMessage(
                     ErrorCode::TomlNoName,
                     "Expected a name, but a nullptr was found");

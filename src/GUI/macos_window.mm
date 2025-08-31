@@ -67,8 +67,7 @@ namespace Grain {
         // Root View
         Rectd bounds_rect = window->boundsRect();
         auto view = new (std::nothrow) View(bounds_rect);
-
-        if (view != nullptr) {
+        if (view) {
             window->_setRootView(view);
             auto ns_view = (GrainNSView*)view->nsView();
             [ns_view setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
@@ -111,7 +110,7 @@ namespace Grain {
     }
 
     void _macosWindow_makeFirstResponder(Window* window, Component* component) {
-        if (component != nullptr) {
+        if (component) {
             [(GrainNSWindow*)window->nsWindow() makeFirstResponder:(NSView*)component->nsView()];
         }
         else {

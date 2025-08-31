@@ -14,7 +14,7 @@
 
 namespace Grain {
     void Timestamp::dateTimeStr(int32_t out_str_length, char* out_str) const noexcept {
-        if (out_str != nullptr) {
+        if (out_str) {
             // Convert milliseconds to seconds & remaining milliseconds
             std::chrono::milliseconds ms(m_value);
             std::chrono::seconds sec = std::chrono::duration_cast<std::chrono::seconds>(ms);
@@ -33,7 +33,7 @@ namespace Grain {
 
 
     void Timestamp::durationStr(int32_t out_str_length, char* out_str) const noexcept {
-        if (out_str != nullptr) {
+        if (out_str) {
             int64_t ms = elapsedMillis();
             int64_t total_seconds = ms / 1000;
             int64_t hours = total_seconds / 3600;
@@ -50,7 +50,7 @@ namespace Grain {
 
 
     void Timestamp::durationStr(const Timestamp begin_timestamp, int32_t out_str_length, char* out_str) const noexcept {
-        if (out_str != nullptr) {
+        if (out_str) {
             int64_t ms = (*this - begin_timestamp).milliseconds();
             int64_t total_seconds = ms / 1000;
             int64_t hours = total_seconds / 3600;
@@ -65,7 +65,7 @@ namespace Grain {
 
 
     void Timestamp::dateTimeUTCStr(int32_t out_str_length, char* out_str) const noexcept {
-        if (out_str != nullptr) {
+        if (out_str) {
 
             // Convert the timestamp to a duration
             std::chrono::milliseconds ms(m_value);  // Convert int64_t to milliseconds duration

@@ -199,7 +199,7 @@ namespace Grain {
 
     void BezierValueCurvePoint::curveMustUpdate() const noexcept {
 
-        if (m_bezier_value_curve != nullptr) {
+        if (m_bezier_value_curve) {
             m_bezier_value_curve->mustUpdate();
         }
     }
@@ -280,7 +280,7 @@ namespace Grain {
 
     int32_t BezierValueCurvePoint::compare(const BezierValueCurvePoint* point) const noexcept {
 
-        if (point != nullptr) {
+        if (point) {
             if (m_pos.m_x > point->m_pos.m_x) {
                 return 1;
             }
@@ -612,7 +612,7 @@ namespace Grain {
         BezierValueCurvePoint* b = nullptr;
 
         for (auto& point : m_points) {
-            if (a != nullptr && b != nullptr) {
+            if (a && b) {
                 if (b->isSelected() && !a->isSelected() && !point.isSelected()) {
                     b->m_pos.m_x = a->m_pos.m_x + (point.m_pos.m_x - a->m_pos.m_x) / 2;
                     changed = true;
@@ -638,7 +638,7 @@ namespace Grain {
         BezierValueCurvePoint* b = nullptr;
 
         for (auto& point : m_points) {
-            if (a != nullptr && b != nullptr) {
+            if (a && b) {
                 if (b->isSelected() && !a->isSelected() && !point.isSelected()) {
                     b->m_pos.m_y = a->m_pos.m_y + (point.m_pos.m_y - a->m_pos.m_y) / 2;
                     changed = true;
@@ -973,9 +973,7 @@ namespace Grain {
 
 
     bool BezierValueCurve::fillEnvelopeAttackLUT(LUT1* lut) noexcept {
-
-        if (lut != nullptr && m_mode == Mode::Envelope) {
-
+        if (lut && m_mode == Mode::Envelope) {
             int32_t end_index = decayBeginIndex();
             if (end_index >= 0) {
                 return _updateLUT(lut, 0, end_index) == ErrorCode::None;
@@ -987,9 +985,7 @@ namespace Grain {
 
 
     bool BezierValueCurve::fillEnvelopeDecayLUT(LUT1* lut) noexcept {
-
-        if (lut != nullptr && m_mode == Mode::Envelope) {
-
+        if (lut && m_mode == Mode::Envelope) {
             int32_t begin_index = decayBeginIndex();
             if (begin_index >= 0) {
 
@@ -1217,8 +1213,7 @@ namespace Grain {
 
 
     ErrorCode BezierValueCurve::_updateLUT(LUT1* lut, int32_t start_point_index, int32_t end_point_index) noexcept {
-
-        if (lut == nullptr) {
+        if (!lut) {
             return ErrorCode::NullData;
         }
 

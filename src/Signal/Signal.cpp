@@ -146,10 +146,9 @@ namespace Grain {
 
 
     Signal::~Signal() noexcept {
-
         // Delete all regions
         SignalRegion* region = m_first_region;
-        while (region != nullptr) {
+        while (region) {
             SignalRegion* next = region->next();
             delete region;
             region = next;
@@ -372,14 +371,13 @@ namespace Grain {
      *  @see Signal::copySamples, Signal::clampOffsetAndLength
      */
     Signal* Signal::copySignal(int64_t offset, int64_t length, bool weights_mode) noexcept {
-
         if (clampOffsetAndLength(offset, length) < 1) {
             return nullptr;
         }
 
         // Create a signal with same sample rate, data type ...
         auto signal = new (std::nothrow) Signal(m_channel_count, m_sample_rate, length, m_data_type, weights_mode);
-        if (signal != nullptr) {
+        if (signal) {
             signal->copySamples(this, length, offset, 0);
         }
 
@@ -503,7 +501,7 @@ namespace Grain {
      */
     bool Signal::canAccessFloatInChannel(int32_t channel) const noexcept {
 
-        return m_data.raw != nullptr && m_data_type == DataType::Float && hasChannelAndData(channel);
+        return m_data.raw && m_data_type == DataType::Float && hasChannelAndData(channel);
     }
 
 
@@ -537,7 +535,7 @@ namespace Grain {
     bool Signal::hasSameSettingAs(const Signal* signal) const noexcept {
 
         return
-                signal != nullptr &&
+                signal &&
                 signal->m_channel_count == m_channel_count &&
                 signal->m_sample_rate == m_sample_rate &&
                 signal->m_data_type == m_data_type;
@@ -1427,7 +1425,6 @@ namespace Grain {
 
 
     int64_t Signal::copySamples(const Signal* src) noexcept {
-
         return src != nullptr ? copySamples(src, src->length(), 0, 0) : 0;
     }
 
@@ -2544,7 +2541,7 @@ namespace Grain {
             return ErrorCode::LengthOutOfRange;
         }
 
-        if (out_ptr == nullptr) {
+        if (!out_ptr) {
             return ErrorCode::NullData;
         }
 
@@ -2597,7 +2594,7 @@ namespace Grain {
                 if (sample_count > 1) {
 
                     Signal* signal = new (std::nothrow) Signal(m_channel_count, sample_rate, sample_count, DataType::Float, sample_rate < m_sample_rate);
-                    if (signal == nullptr) {
+                    if (!signal) {
                         throw ErrorCode::MemCantAllocate;
                     }
 
@@ -2694,10 +2691,9 @@ namespace Grain {
 
 
     ErrorCode Signal::applyFilter(SignalFilter* filter, int64_t offset, int64_t length) noexcept {
-
         auto result = ErrorCode::None;
 
-        if (filter == nullptr) {
+        if (!filter) {
             return ErrorCode::NullData;
         }
 
@@ -2719,9 +2715,8 @@ namespace Grain {
 
 
     ErrorCode Signal::applyFilterToChannel(SignalFilter* filter, int32_t channel, int64_t offset, int64_t length) noexcept {
-
         std::cout << "applyFilterToChannel: " << channel << std::endl;
-        if (filter == nullptr) {
+        if (!filter) {
             return ErrorCode::NullData;
         }
 
@@ -2779,15 +2774,13 @@ namespace Grain {
 
 
     ErrorCode Signal::applyFilterFFTToChannel(const Partials* partials, int32_t channel) noexcept {
-
         return applyFilterFFTToChannel(partials, channel, m_sample_count);
     }
 
 
     void Signal::_prepareFilterFFT(int32_t fft_length) {
-
         std::cout << "_prepareFilterFFT() fft_length: " << fft_length << std::endl;
-        if (m_fft != nullptr) {
+        if (m_fft) {
             // FFT allready in use
             if (m_fft->length() != fft_length) {
                 // Changed FFT length
@@ -2807,9 +2800,9 @@ namespace Grain {
         }
 
         // Check if we need a new FFT instance
-        if (m_fft == nullptr) {
+        if (!m_fft) {
             m_fft = new (std::nothrow) FFT(fft_log_n);
-            if (m_fft == nullptr) {
+            if (!m_fft) {
                 Exception::throwMessage(ErrorCode::Fatal, "Failed to allocate FFT instance");
             }
         }
@@ -2817,7 +2810,7 @@ namespace Grain {
         // Two temporary buffers + one window buffer
         int64_t mem_size = fft_length * 3;
         m_computation_mem = static_cast<float*>(malloc(sizeof(float) * mem_size));
-        if (m_computation_mem == nullptr) {
+        if (!m_computation_mem) {
             Exception::throwMessage(ErrorCode::MemCantAllocate, "Failed to allocate memory for FFT");
         }
 
@@ -2826,7 +2819,7 @@ namespace Grain {
         m_window_buffer = &m_computation_mem[2 * fft_length];
 
         m_partials = new (std::nothrow) Partials(fft_length / 2);
-        if (m_partials == nullptr) {
+        if (!m_partials) {
             Exception::throwMessage(ErrorCode::ClassInstantiationFailed, "Failed to instantiate Partials object for FFT");
         }
 
@@ -2865,7 +2858,7 @@ namespace Grain {
                 return ErrorCode::None;
             }
 
-            if (partials == nullptr) {
+            if (!partials) {
                 Exception::throwMessage(ErrorCode::BadArgs, "Partials is null");
             }
 
@@ -2990,7 +2983,7 @@ namespace Grain {
 
             int64_t last_sample_index = length - 1;
 
-            if (partials == nullptr) {
+            if (!partials) {
                 Exception::throwMessage(ErrorCode::BadArgs, "Partials is null");
             }
 
@@ -3049,7 +3042,7 @@ namespace Grain {
 */
 /*
                 auto signal = new Signal(44100, fft_resolution);
-                if (signal != nullptr) {
+                if (signal) {
                     memcpy(signal->mutDataPtr(), m_block_data, sizeof(float) * fft_resolution);
                     String file_path = "/Users/roaldchristesen/Desktop/audio/fft/";
                     file_path += loop_index;
@@ -3121,7 +3114,7 @@ namespace Grain {
         // TODO: possible optimization
         // vDSP_conv(Signal, SignalStride, Filter, FilterStride, Result, ResultStride, ResultLength, FilterLength);
 
-        if (b_signal == nullptr || result_signal == nullptr) {
+        if (!b_signal || !result_signal) {
             return ErrorCode::NullData;
         }
 
@@ -3161,7 +3154,7 @@ namespace Grain {
         int64_t f_rest = b_length;
 
         FFT_FIR* fft_fir = new (std::nothrow) FFT_FIR(FFT::kLogNResolution16384);
-        if (fft_fir == nullptr) {
+        if (!fft_fir) {
             return ErrorCode::Fatal;
         }
         if (!fft_fir->isValid()) {
@@ -3337,13 +3330,13 @@ namespace Grain {
             const noexcept {
 
         std::cout << "Signal::writeToFile\n";
-        SF_INFO sfinfo;
-        sfinfo.frames = m_sample_count;
-        sfinfo.samplerate = m_sample_rate;
-        sfinfo.channels = m_channel_count;
-        sfinfo.format = (SF_FORMAT_AIFF | SF_FORMAT_PCM_24);
+        SF_INFO sf_info;
+        sf_info.frames = m_sample_count;
+        sf_info.samplerate = m_sample_rate;
+        sf_info.channels = m_channel_count;
+        sf_info.format = (SF_FORMAT_AIFF | SF_FORMAT_PCM_24);
 
-        SNDFILE* file = sf_open(file_path.utf8(), SFM_WRITE, &sfinfo);
+        SNDFILE* file = sf_open(file_path.utf8(), SFM_WRITE, &sf_info);
         if (!file) {
             std::cerr << "Error opening file: " << sf_strerror(nullptr) << std::endl;
             return ErrorCode::FileCantOpen;
@@ -3385,48 +3378,35 @@ namespace Grain {
     }
 
 
-
-    Signal* Signal::createFromFile(const String &file_path, DataType data_type) noexcept {
-/*
-        // TODO: Implement version which extracts defined channels in a new channel layout.
-
-        SignalFile *file = nullptr;
-        Signal* signal = nullptr;
-
-        try {
-            file = new (std::nothrow) SignalFile(file_path);
-            if (file == nullptr) {
-                throw ErrorCode::ClassInstantiationFailed;
-            }
-
-            file->startRead();
-            file->scan();
-
-            if (file->signalSampleCount() > 0) {
-
-                signal = new (std::nothrow) Signal(file->signalChannelCount(), file->signalSampleRate(), file->signalSampleCount(), data_type);
-                if (!signal) {
-                    throw ErrorCode::ClassInstantiationFailed;
-                }
-
-                file->read(signal, 0, file->signalSampleCount());
-                file->close();
-            }
-        }
-        catch (ErrorCode err) {
-            // TODO: !!!!
-        }
-        catch (...) {
+    Signal* f(const String &file_path, DataType data_type) noexcept {
+        SF_INFO sf_info;
+        sf_info.format = 0;  // must be set to 0 before opening
+        SNDFILE* snd_file = sf_open(file_path.utf8(), SFM_READ, &sf_info);
+        if (!snd_file) {
+            std::cerr << "Error opening sound file: " << sf_strerror(snd_file) << std::endl;
+            return nullptr;
         }
 
+        std::cout << "Opened file: " << file_path << "\n";
+        std::cout << "Sample rate: " << sf_info.samplerate << " Hz\n";
+        std::cout << "Channels: " << sf_info.channels << "\n";
+        std::cout << "Frames: " << sf_info.frames << "\n";
 
-        if (file != nullptr) {
-            delete file;
+        auto signal = new (std::nothrow) Signal(sf_info.channels, sf_info.samplerate, sf_info.frames, DataType::Float);
+        if (!signal) {
+            throw ErrorCode::ClassInstantiationFailed;
         }
+
+        // Read entire file into buffer (interleaved samples)
+        std::vector<float> samples(sf_info.frames * sf_info.channels);
+        sf_count_t n = sf_readf_float(snd_file, static_cast<float*>(signal->mutDataPtr()), sf_info.frames);
+        if (n != sf_info.frames) {
+            std::cerr << "Warning: only read " << n << " frames.\n";
+        }
+
+        sf_close(snd_file);
 
         return signal;
-        */
-        return nullptr;
     }
 
 
@@ -3445,7 +3425,7 @@ namespace Grain {
 /* TODO: !!!!!
     Signal* Signal::createFromBundle(NSBundle* bundle, String& fileName, const char* type) noexcept {
 
-        if (bundle == nil || type == nullptr) {
+        if (bundle == nil || !type) {
             return nullptr;
         }
 
@@ -3459,8 +3439,7 @@ namespace Grain {
 
 
     bool Signal::waveformValues(int32_t channel, int64_t offset, int64_t length, int64_t values_length, float *out_values) const noexcept {
-
-        if (out_values == nullptr) {
+        if (!out_values) {
             return false;
         }
 
@@ -3493,8 +3472,7 @@ namespace Grain {
 
 
     bool Signal::waveformValues(int64_t offset, int64_t length, int64_t values_length, float *out_values) const noexcept {
-
-        if (out_values == nullptr) {
+        if (!out_values) {
             return false;
         }
 
@@ -3538,7 +3516,7 @@ namespace Grain {
 
         int64_t i = 0;
         SignalRegion *region = m_first_region;
-        while (region != nullptr) {
+        while (region) {
             if (i == index) {
                 return region;
             }
@@ -3551,9 +3529,8 @@ namespace Grain {
 
 
     SignalRegion *Signal::addRegion(const String &name, int32_t channel, int64_t left, int64_t right) noexcept {
-
         SignalRegion *region = new (std::nothrow) SignalRegion(this, name, channel, left, right);
-        if (region == nullptr) {
+        if (!region) {
             return nullptr;
         }
 
@@ -3569,8 +3546,7 @@ namespace Grain {
 
 
     bool Signal::removeRegion(SignalRegion *region) noexcept {
-
-        if (region == nullptr) {
+        if (!region) {
             return false;
         }
 
@@ -3585,7 +3561,7 @@ namespace Grain {
         }
         else {
             SignalRegion *r = m_first_region;
-            while (r != nullptr) {
+            while (r) {
                 if (region == r->next()) {
                     r->setNext(region->next());
                     m_region_count--;
@@ -3629,7 +3605,7 @@ namespace Grain {
         if (n > m_sort_region_ptr_array_capacity) {
             auto size = sizeof(SignalRegion*) * (n + 16);
             m_sort_region_ptr_array = static_cast<SignalRegion**>(std::realloc(m_sort_region_ptr_array, size));
-            if (m_sort_region_ptr_array == nullptr) {
+            if (!m_sort_region_ptr_array) {
                 m_sort_region_ptr_array_capacity = 0;
                 return ErrorCode::MemCantAllocate;
             }
@@ -3639,7 +3615,7 @@ namespace Grain {
 
         int64_t index = 0;
         SignalRegion* region = firstRegionPtr();
-        while (region != nullptr) {
+        while (region) {
             region_ptr_array[index] = region;
             index++;
             region = region->next();
@@ -3715,8 +3691,7 @@ namespace Grain {
 
 
     float SignalRegion::freq() const noexcept {
-
-        if (m_signal == nullptr) {
+        if (!m_signal) {
             return 0;
         }
 
@@ -3814,15 +3789,14 @@ namespace Grain {
 
 
     Signal* SignalRegion::extractSignal(bool mono, DataType data_type) noexcept {
-
-        if (m_signal == nullptr) {
+        if (!m_signal) {
             return nullptr;
         }
 
         int32_t channel_count = mono ? 1 : m_signal->channelCount();
 
         Signal* extracted_signal = new (std::nothrow) Signal(channel_count, m_signal->sampleRate(), length(), data_type, false);
-        if (extracted_signal == nullptr) {
+        if (!extracted_signal) {
             return nullptr;
         }
 

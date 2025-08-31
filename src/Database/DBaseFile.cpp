@@ -43,7 +43,7 @@ namespace Grain {
             File::start(flags);
 
             m_header = (DBaseHeader*)std::malloc(sizeof(DBaseHeader));
-            if (m_header == nullptr) {
+            if (!m_header) {
                 throw ErrorCode::MemCantAllocate;
             }
 
@@ -162,7 +162,7 @@ namespace Grain {
         m_has_variable_length_fields = false;
 
         m_columns = (DBaseField*)std::malloc(sizeof(DBaseField) * m_column_count);
-        if (m_columns == nullptr) {
+        if (!m_columns) {
             throw ErrorCode::MemCantAllocate;
         }
 

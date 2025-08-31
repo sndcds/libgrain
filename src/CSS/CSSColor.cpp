@@ -292,15 +292,14 @@ namespace Grain {
 
 
     bool CSSColor::parseNamed(const char* str) noexcept {
-
         m_valid = false;
 
-        if (str == nullptr) {
+        if (!str) {
             return false;
         }
 
         auto named_color = CSSColor::_g_named_css_colors;
-        while (named_color->m_name != nullptr) {
+        while (named_color->m_name) {
             if (strcasecmp(str, named_color->m_name) == 0) {
                 m_rgba.set32bit(named_color->m_color);
                 m_valid = true;
@@ -348,7 +347,7 @@ namespace Grain {
 
         // Look for ending ')'
         auto end_ptr = strchr(ptr, ')');
-        if (end_ptr == nullptr) {
+        if (!end_ptr) {
             out_err = ErrorCode::CSSClosingBracketMissing;
             return false;
         }

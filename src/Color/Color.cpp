@@ -506,12 +506,11 @@ namespace Grain {
      *  @brief Convert OKLCh to OKLab.
      */
     void Color::oklch_to_oklab(const float* oklch, float* out_oklab) noexcept {
-
         if (!out_oklab) {
             return;
         }
 
-        if (oklch == nullptr) {
+        if (!oklch) {
             out_oklab[0] = out_oklab[1] = out_oklab[2] = 0.0f;
             return;
         }
@@ -534,12 +533,11 @@ namespace Grain {
      *  @brief Convert RGB to Lab.
      */
     void Color::rgb_to_lab(const float* rgb, float* out_lab) noexcept {
-
-        if (out_lab == nullptr) {
+        if (!out_lab) {
             return;
         }
 
-        if (rgb == nullptr) {
+        if (!rgb) {
             out_lab[0] = out_lab[1] = out_lab[2] = 0.0f;
             return;
         }
@@ -564,12 +562,11 @@ namespace Grain {
      *  @brief Convert XYZFile to RGB.
      */
     void Color::xyz_to_rgb(const float* xyz, const Mat3f& matrix, float* out_rgb) noexcept {
-
-        if (out_rgb == nullptr) {
+        if (!out_rgb) {
             return;
         }
 
-        if (xyz == nullptr) {
+        if (!xyz) {
             out_rgb[0] = out_rgb[1] = out_rgb[2] = 0.0f;
             return;
         }
@@ -584,12 +581,11 @@ namespace Grain {
      *  @brief Convert XYZFile to RGB.
      */
     void Color::xyz_to_rgb(const float* xyz, const float* m, float* out_rgb) noexcept {
-
-        if (out_rgb == nullptr) {
+        if (!out_rgb) {
             return;
         }
 
-        if (xyz == nullptr || m == nullptr) {
+        if (!xyz || !m) {
             out_rgb[0] = out_rgb[1] = out_rgb[2] = 0.0f;
             return;
         }

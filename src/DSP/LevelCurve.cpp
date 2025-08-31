@@ -70,8 +70,7 @@ namespace Grain {
 
 
     void LevelCurve::setByIntArray(const int32_t* array, int32_t max_level) noexcept {
-
-        if (array != nullptr) {
+        if (array) {
             double scale = max_level > 0 ? 1.0 / max_level : 1.0;
             m_y1 = scale * array[0];
             m_x2 = scale * array[1];

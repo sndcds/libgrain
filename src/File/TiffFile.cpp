@@ -257,12 +257,12 @@ namespace Grain {
 
 
         // Remove temporary files
-        if (m_temp_data_file != nullptr) {
+        if (m_temp_data_file) {
             // File::removeFile(m_temp_data_file_path);
             delete m_temp_data_file;
         }
 
-        if (m_temp_geo_data_file != nullptr) {
+        if (m_temp_geo_data_file) {
             // File::removeFile(m_temp_geo_data_file_path);
             delete m_temp_geo_data_file;
         }
@@ -524,7 +524,7 @@ namespace Grain {
 
 
     void TiffFile::writeEntryData(TiffTag tag, const void* data, int32_t length) {
-        if (data != nullptr) {
+        if (data) {
             for (auto& ep : m_entry_preparations) {
                 if (ep.m_entry.m_tag == tag) {
                     savePos();
@@ -539,7 +539,7 @@ namespace Grain {
 
 
     void TiffFile::writeTiffDoubles(int32_t n, const double* data) {
-        if (data != nullptr) {
+        if (data) {
             auto p = data;
             while (n > 0) {
                 writeValue<double>(*p++);
@@ -559,7 +559,7 @@ namespace Grain {
 
 
     void TiffFile::addGeoAscii(const char* str) {
-        if (str != nullptr) {
+        if (str) {
             m_geo_ascii_string.append(str);
             m_geo_ascii_string.appendChar('|');
         }

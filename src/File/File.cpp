@@ -202,7 +202,7 @@ namespace Grain {
 
         try {
             file = new (std::nothrow) File(file_path);
-            if (file != nullptr) {
+            if (file) {
                 file->start(flags);
             }
         }
@@ -316,7 +316,7 @@ namespace Grain {
 
 
     bool File::read(int64_t size, uint8_t* out_data) {
-        if (out_data != nullptr) {
+        if (out_data) {
             m_file_stream.read(reinterpret_cast<char*>(out_data), size);
             if (m_file_stream.fail()) {
                 Exception::throwStandard(ErrorCode::FileReadError);
@@ -439,8 +439,7 @@ namespace Grain {
      *  will be stored.
      */
     void File::_readSwapped(int64_t size, uint8_t* out_data) {
-
-        if (out_data != nullptr) {
+        if (out_data) {
             if (size > 64) {
                 Exception::throwStandard(ErrorCode::Fatal);
             }
@@ -563,7 +562,7 @@ namespace Grain {
         }
 
         _m_utf8_buffer[index] = 0;
-        if (out_data != nullptr) {
+        if (out_data) {
             for (int32_t i = 0; i < _m_utf8_seq_length; i++) {
                 out_data[i] = _m_utf8_buffer[i];
             }
@@ -668,7 +667,7 @@ namespace Grain {
             }
 
             auto p = out_string.mutDataPtr();
-            if (p != nullptr) {
+            if (p) {
                 readStr(static_cast<int32_t>(size), p);
                 p[size] = String::EOS;
                 out_string._updateInternalLengthInfo();
@@ -707,7 +706,7 @@ namespace Grain {
         }
 
         auto data_ptr = out_string.mutDataPtr();
-        if (data_ptr != nullptr) {
+        if (data_ptr) {
             readStr(static_cast<int32_t>(size), data_ptr);
             data_ptr[size] = String::EOS;
             out_string._updateInternalLengthInfo();
@@ -766,7 +765,7 @@ namespace Grain {
      */
     template <typename U>
     void File::readArray(int64_t length, U* out_array) {
-        if (out_array != nullptr) {
+        if (out_array) {
             for (int64_t i = 0; i < length; i++)
                 out_array[i] = readValue<U>();
         }
@@ -841,11 +840,11 @@ namespace Grain {
             atom_size = atom_size32;
         }
 
-        if (out_atom_size != nullptr) {
+        if (out_atom_size) {
             *out_atom_size = atom_size;
         }
 
-        if (out_atom_type != nullptr) {
+        if (out_atom_type) {
             *out_atom_type = atom_type;
         }
 
@@ -1080,7 +1079,7 @@ namespace Grain {
 
 
     void File::writeFixLengthString(const String& string, int32_t length, char* buffer) {
-        if (length > 0 && buffer != nullptr) {
+        if (length > 0 && buffer) {
             string.fillBuffer(length, buffer);
             write8BitData((uint8_t*)buffer, length);
         }
@@ -2006,7 +2005,7 @@ namespace Grain {
             }
         }
 
-        if (buffer != nullptr) {
+        if (buffer) {
             uint8_t *dst = buffer;
 
             try {
@@ -2249,9 +2248,9 @@ namespace Grain {
      */
     bool File::containsDir(const String& path, const String& dir_name) noexcept {
         DIR* dir = opendir(path.utf8());
-        if (dir != nullptr) {
+        if (dir) {
             struct dirent* entry = readdir(dir);
-            while (entry != nullptr) {
+            while (entry) {
                 if (entry->d_type == DT_DIR) {
                     if (strcmp(entry->d_name, dir_name.utf8()) == 0) {
                         closedir(dir);
@@ -2342,7 +2341,7 @@ NSString *file = [NSString stringWithUTF8String:file_path.utf8()];
 
 
     ErrorCode File::removeFile(const char* file_path) noexcept {
-        if (file_path == nullptr) {
+        if (!file_path) {
             return ErrorCode::NullData;
         }
 
@@ -2406,12 +2405,35 @@ NSString *file = [NSString stringWithUTF8String:file_path.utf8()];
     }
 
 
-    ErrorCode File::changeBytes(const String& file_path, int32_t n, const int32_t* pos, const uint8_t* bytes) noexcept {
+    /**
+     *  @brief Change multiple individual bytes at arbitrary positions in a file.
+     *
+     *  Opens the file at @p file_path in read/write binary mode and overwrites
+     *  @p n bytes at the positions specified in the @p pos array with the
+     *  corresponding values in the @p bytes array.
+     *
+     *  @param file_path Path to the file to modify.
+     *  @param n Number of bytes to modify.
+     *  @param pos Array of positions in the file where bytes should be changed.
+     *             Each value must be within the file size.
+     *  @param bytes Array of byte values to write at the specified positions.
+     *  @return ErrorCode Returns ErrorCode::None on success or an appropriate
+     *          error code if an error occurs (e.g., file cannot open, out-of-bounds position,
+     *          null pointers, or write failure).
+     *
+     *  @note This method performs a separate fseek + fwrite(1) for each byte.
+     */
+    ErrorCode File::changeBytes(
+            const String& file_path,
+            int32_t n,
+            const int32_t* pos,
+            const uint8_t* bytes) noexcept
+    {
         auto result = ErrorCode::None;
         FILE* file = nullptr;
 
         try {
-            if (!pos || bytes != nullptr) {
+            if (!pos || !bytes) {
                 Exception::throwStandard(ErrorCode::NullData);
             }
 
@@ -2457,7 +2479,7 @@ NSString *file = [NSString stringWithUTF8String:file_path.utf8()];
         }
 
         // Cleanup
-        if (file != nullptr) {
+        if (file) {
             std::fclose(file);
         }
 
@@ -2465,12 +2487,35 @@ NSString *file = [NSString stringWithUTF8String:file_path.utf8()];
     }
 
 
-    ErrorCode File::changeBytes(const String& file_path, int32_t pos, int32_t length, const uint8_t* bytes) noexcept {
+    /**
+     *  @brief Change multiple individual bytes at arbitrary positions in a file.
+     *
+     *  Opens the file at @p file_path in read/write binary mode and overwrites
+     *  @p n bytes at the positions specified in the @p pos array with the
+     *  corresponding values in the @p bytes array.
+     *
+     *  @param file_path Path to the file to modify.
+     *  @param n Number of bytes to modify.
+     *  @param pos Array of positions in the file where bytes should be changed.
+     *             Each value must be within the file size.
+     *  @param bytes Array of byte values to write at the specified positions.
+     *  @return ErrorCode Returns ErrorCode::None on success or an appropriate
+     *          error code if an error occurs (e.g., file cannot open, out-of-bounds position,
+     *          null pointers, or write failure).
+     *
+     *  @note This method performs a separate fseek + fwrite(1) for each byte.
+     */
+    ErrorCode File::changeBytes(
+            const String& file_path,
+            int32_t pos,
+            int32_t length,
+            const uint8_t* bytes) noexcept
+    {
         auto result = ErrorCode::None;
         FILE* file = nullptr;
 
         try {
-            if (pos >= 0 || length < 0 || bytes != nullptr) {
+            if (pos >= 0 || length < 0 || !bytes) {
                 Exception::throwStandard(ErrorCode::BadArgs);
             }
 
@@ -2512,7 +2557,7 @@ NSString *file = [NSString stringWithUTF8String:file_path.utf8()];
         }
 
         // Cleanup
-        if (file != nullptr) {
+        if (file) {
             std::fclose(file);
         }
 
@@ -2571,9 +2616,9 @@ NSString *file = [NSString stringWithUTF8String:file_path.utf8()];
         int32_t dir_count = 0;
 
         DIR* dir = opendir(path.utf8());
-        if (dir != nullptr) {
+        if (dir) {
             struct dirent *entry = readdir(dir);
-            while (entry != nullptr) {
+            while (entry) {
                 if (entry->d_type == DT_DIR && strncmp(entry->d_name, ".", 1) != 0) {
                     if (!out_list.pushString(entry->d_name)) {
                         closedir(dir);
@@ -2603,7 +2648,7 @@ NSString *file = [NSString stringWithUTF8String:file_path.utf8()];
         int32_t file_count = 0;
 
         DIR* dir = opendir(path.utf8());
-        if (dir != nullptr) {
+        if (dir) {
             struct dirent *entry = readdir(dir);
             while (entry!= nullptr) {
                 if (entry->d_type == DT_REG && strncmp(entry->d_name, ".", 1) != 0) {
@@ -2697,7 +2742,7 @@ NSString *file = [NSString stringWithUTF8String:file_path.utf8()];
             return -4;
         }
 
-        if (out_ignored != nullptr) {
+        if (out_ignored) {
             *out_ignored = ignored_count;
         }
 
@@ -2708,9 +2753,9 @@ NSString *file = [NSString stringWithUTF8String:file_path.utf8()];
     int32_t File::countDir(const String& path) noexcept {
         int32_t count = 0;
         DIR* dir = opendir(path.utf8());
-        if (dir != nullptr) {
+        if (dir) {
             struct dirent* entry = readdir(dir);
-            while (entry != nullptr) {
+            while (entry) {
                 if (entry->d_type == DT_DIR && strncmp(entry->d_name, ".", 1) != 0) {
                     count++;
                 }
@@ -2726,9 +2771,9 @@ NSString *file = [NSString stringWithUTF8String:file_path.utf8()];
     int32_t File::countFiles(const String& path) noexcept {
         int32_t count = 0;
         DIR* dir = opendir(path.utf8());
-        if (dir != nullptr) {
+        if (dir) {
             struct dirent* entry = readdir(dir);
-            while (entry != nullptr) {
+            while (entry) {
                 if (entry->d_type == DT_REG && strncmp(entry->d_name, ".", 1) != 0) {
                     count++;
                 }
@@ -2975,14 +3020,12 @@ NSString *file = [NSString stringWithUTF8String:file_path.utf8()];
         auto result = ErrorCode::None;
 
         auto cf_file_path = file_path.createCFStringRef();
-        if (cf_file_path != nullptr) {
-
+        if (cf_file_path) {
             // Create an output stream for writing the XML data
             CFURLRef xml_url = CFURLCreateWithFileSystemPath(nullptr, cf_file_path, kCFURLPOSIXPathStyle, false);
-            if (xml_url != nullptr) {
-
+            if (xml_url) {
                 CFWriteStreamRef stream = CFWriteStreamCreateWithFile(nullptr, xml_url);
-                if (stream != nullptr) {
+                if (stream) {
                     if (CFWriteStreamOpen(stream)) {
                         CFPropertyListWrite(plist, stream, kCFPropertyListXMLFormat_v1_0, 0, nullptr);
                         CFWriteStreamClose(stream);

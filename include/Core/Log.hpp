@@ -76,7 +76,7 @@ namespace Grain {
             if (m_needs_indent) {
                 _applyIndent();
             }
-            if (str == nullptr) {
+            if (!str) {
                 m_stream << "(NULL)";
             }
             else {

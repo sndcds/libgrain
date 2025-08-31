@@ -60,16 +60,16 @@ namespace Grain {
 
 
     Component* View::addComponent(Component* component, AddFlags flags) noexcept {
-        if (component != nullptr) {
+        if (component) {
             component->_setParent(this);
             m_components.push(component);
 
             if (component->canGetFocus()) {
-                if (m_first_key_component != nullptr) {
+                if (m_first_key_component) {
                     m_first_key_component = component;
                 }
 
-                if (m_curr_key_component != nullptr) {
+                if (m_curr_key_component) {
                     m_curr_key_component->setNextKeyComponent(component);
                     component->setNextKeyComponent(m_first_key_component);
                 }

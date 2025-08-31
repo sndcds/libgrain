@@ -133,7 +133,7 @@ namespace Grain {
 
     Rectd App::mainScreenRect() noexcept {
         auto screen = g_instance->screenAtIndex(0);
-        if (screen != nullptr) {
+        if (screen) {
             return screen->rect();
         }
         return Rectd();

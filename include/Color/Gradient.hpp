@@ -321,7 +321,7 @@ namespace Grain {
         void drawRadial(GraphicContext* gc, const Vec2d& pos, double radius, bool draw_before, bool draw_after) noexcept;
 
         static int _spotSortCompareFunc(const GradientStop* a, const GradientStop* b) {
-            if (a == nullptr || b == nullptr) {
+            if (!a || !b) {
                 return 0;
             }
             else {

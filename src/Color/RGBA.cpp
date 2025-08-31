@@ -38,14 +38,12 @@ namespace Grain {
 
 
     RGBA::RGBA(const String &csv) noexcept {
-
         setByCSV(csv.utf8());
     }
 
 
     void RGBA::setValues(const float* comp) noexcept {
-
-        if (comp != nullptr) {
+        if (comp) {
             m_data[0] = comp[0];
             m_data[1] = comp[1];
             m_data[2] = comp[2];
@@ -55,8 +53,7 @@ namespace Grain {
 
 
     void RGBA::setValues(const float* comp, float scale) noexcept {
-
-        if (comp != nullptr) {
+        if (comp) {
             m_data[0] = comp[0] * scale;
             m_data[1] = comp[1] * scale;
             m_data[2] = comp[2] * scale;
@@ -140,8 +137,7 @@ namespace Grain {
 
 
     ErrorCode RGBA::setByCSS(const char* css_str) noexcept {
-
-        if (css_str != nullptr) {
+        if (css_str) {
             return CSSColor::parseColorToRGBA(css_str, *this);
         }
         else {
@@ -160,8 +156,7 @@ namespace Grain {
 
 
     void RGBA::values(float* out_values) const noexcept {
-
-        if (out_values != nullptr) {
+        if (out_values) {
             out_values[0] = m_data[0];
             out_values[1] = m_data[1];
             out_values[2] = m_data[2];

@@ -70,7 +70,7 @@ namespace Grain {
         delete m_lut;
 
         #if defined(__APPLE__) && defined(__MACH__)
-            if (m_cg_gradient != nullptr) {
+            if (m_cg_gradient) {
                 CGGradientRelease(m_cg_gradient);
             }
         #endif
@@ -197,7 +197,7 @@ namespace Grain {
         };
 
         auto gradient = new (std::nothrow) Gradient();
-        if (gradient != nullptr) {
+        if (gradient) {
             if (palette >= Preset::First && palette <= Preset::Last) {
                 auto p_index = static_cast<int32_t>(palette);
                 for (int32_t i = 0; i < 16; i++) {
@@ -216,15 +216,13 @@ namespace Grain {
 
 
     void Gradient::_init() noexcept {
-
         m_stops.setSortCompareFunc((SortCompareFunc)_spotSortCompareFunc);
         needsUpdate();
     }
 
 
     void Gradient::set(const Gradient* gradient) noexcept {
-
-        if (gradient != nullptr) {
+        if (gradient) {
             removeAllStops();
 
             for (int32_t i = 0; i < gradient->stopCount(); i++) {
@@ -389,7 +387,7 @@ namespace Grain {
             while (index++ <= last_index) {
 
                 GradientStop* stop = mutStopPtrAtIndex(index);
-                if (stop == nullptr) {
+                if (!stop) {
                     break;
                 }
 
@@ -465,18 +463,14 @@ namespace Grain {
 
 
     void Gradient::addStop(float pos, const RGBA& color1, const RGBA& color2) noexcept {
-
         m_stops.push(GradientStop(pos, color1, color2));
         needsUpdate();
     }
 
 
     void Gradient::addStop(GradientStop& stop) noexcept {
-
-        if (stop != nullptr) {
-            m_stops.push(stop);
-            needsUpdate();
-        }
+        m_stops.push(stop);
+        needsUpdate();
     }
 
 
@@ -557,9 +551,8 @@ namespace Grain {
 
         auto l_stop = stopPtrAtIndex(0);
         for (int32_t i = 1; i < stop_count; i++) {
-
             auto r_stop = stopPtrAtIndex(i);
-            if (r_stop == nullptr) {
+            if (!r_stop) {
                 return false;
             }
 
@@ -583,10 +576,9 @@ namespace Grain {
 
 
     bool Gradient::lookupColorValues(float pos, float* out_values) noexcept {
-
         bool result = false;
 
-        if (out_values != nullptr) {
+        if (out_values) {
             RGBA rgba;
             result = lookupColor(pos, rgba);
             rgba.values(out_values);
@@ -597,11 +589,10 @@ namespace Grain {
 
 
     bool Gradient::setColorAtIndex(int32_t index, int32_t part, const RGBA& color) noexcept {
-
         if (canAccessStop(index)) {
             sortStops();
             GradientStop* stop = mutStopPtrAtIndex(index);
-            if (stop == nullptr) {
+            if (!stop) {
                 return false;
             }
             stop->setColor(part, color);
@@ -614,10 +605,9 @@ namespace Grain {
 
 
     void Gradient::rememberSelectedStops() noexcept {
-
         for (int32_t i = 0; i < stopCount(); i++) {
             GradientStop* stop = mutStopPtrAtIndex(i);
-            if (stop != nullptr) {
+            if (stop) {
                 if (stop->isSelected()) {
                     stop->remember();
                 }
@@ -627,14 +617,13 @@ namespace Grain {
 
 
     bool Gradient::moveSelectedStops(float delta) noexcept {
-
         float min = std::numeric_limits<float>::max();
         float max = std::numeric_limits<float>::lowest();
 
         for (int32_t i = 0; i < stopCount(); i++) {
             GradientStop* stop = mutStopPtrAtIndex(i);
 
-            if (stop == nullptr) {
+            if (!stop) {
                 // Fatal error
                 return false;
             }
@@ -667,7 +656,7 @@ namespace Grain {
         for (int32_t i = 0; i < stopCount(); i++) {
             GradientStop* stop = mutStopPtrAtIndex(i);
 
-            if (stop == nullptr) {
+            if (!stop) {
                 // Fatal error
                 return false;
             }
@@ -762,7 +751,7 @@ namespace Grain {
     void Gradient::update(GraphicContext* gc) noexcept {
 #if defined(__APPLE__) && defined(__MACH__)
         if (m_cg_gradient_must_update) {
-            if (m_cg_gradient != nullptr) {
+            if (m_cg_gradient) {
                 CGGradientRelease(m_cg_gradient);
             }
 
@@ -812,7 +801,7 @@ namespace Grain {
             GradientStop* first_stop = mutStopPtrAtIndex(first_index);
             GradientStop* last_stop = mutStopPtrAtIndex(last_index);
 
-            if (first_stop != nullptr && last_stop != nullptr) {
+            if (first_stop && last_stop) {
                 float pos = first_stop->m_pos;
                 float distance = last_stop->m_pos - pos;
                 float step = distance / (range - 1);
@@ -821,7 +810,7 @@ namespace Grain {
 
                 for (int32_t i = first_index + 1; i < last_index; i++) {
                     GradientStop* stop = mutStopPtrAtIndex(i);
-                    if (stop != nullptr) {
+                    if (stop) {
                         stop->m_pos = pos;
                     }
                     pos += step;
@@ -845,7 +834,7 @@ namespace Grain {
         auto first_stop = mutStopPtrAtIndex(0);
         auto last_stop = mutStopPtrAtIndex(lastStopIndex());
 
-        if (first_stop != nullptr && last_stop != nullptr) {
+        if (first_stop && last_stop) {
             float length = last_stop->m_pos - first_stop->m_pos;
 
             if (length <= 0) {
@@ -857,7 +846,7 @@ namespace Grain {
 
             for (int32_t i = 0; i < stopCount(); i++) {
                 GradientStop* stop = mutStopPtrAtIndex(i);
-                if (stop != nullptr) {
+                if (stop) {
                     stop->m_pos = (stop->m_pos + t) * s;
                 }
             }
@@ -1019,7 +1008,7 @@ namespace Grain {
                 break;
         }
 
-        if (cg_color_space == nullptr) {
+        if (!cg_color_space) {
             cg_color_space = mac_cg->cgColorSpace();
         }
 
@@ -1079,8 +1068,7 @@ namespace Grain {
 
 
     void Gradient::setLUTResolution(int32_t resolution) noexcept {
-
-        if (m_lut != nullptr) {
+        if (m_lut) {
             if (resolution != m_lut_resolution) {
                 m_lut->setResolution(resolution);
                 m_lut_resolution = resolution;
@@ -1094,9 +1082,9 @@ namespace Grain {
 
         if (m_lut_must_update) {
             sortStops();
-            if (m_lut == nullptr) {
+            if (!m_lut) {
                 m_lut = new (std::nothrow) RGBLUT1(m_lut_resolution);
-                if (m_lut == nullptr) {
+                if (!m_lut) {
                     return false;
                 }
             }
@@ -1271,7 +1259,7 @@ namespace Grain {
             shading = CGShadingCreateRadial(gc.macos_cgColorSpace(), start_point.cgPoint(), start_radius, end_point.cgPoint(), end_radius, function, extend_start, extend_end);
         }
 
-        if (gc.macos_cgContext() != nullptr) {
+        if (gc.macos_cgContext()) {
             CGContextSetShouldAntialias(gc.macos_cgContext(), true);
             CGContextDrawShading(gc.macos_cgContext(), shading);
         }
@@ -1332,7 +1320,7 @@ namespace Grain {
         auto alpha = vars[0];
 
         float value = 0.0f;
-        if (lut != nullptr) {
+        if (lut) {
             value = lut->lookup(t);
         }
 
@@ -1360,7 +1348,7 @@ namespace Grain {
             std::cout << "_standardFunc_RGBLUT1: " << lut->className() << ", " << lut->resolution() << std::endl;
         }
 
-        if (lut != nullptr) {
+        if (lut) {
             RGB color;
             lut->lookup(t, color);
             if (aa < 100) {

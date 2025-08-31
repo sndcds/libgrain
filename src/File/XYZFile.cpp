@@ -149,7 +149,7 @@ namespace Grain {
             // Transformation
             if (src_srid != 0 && dst_srid != 0) {
                 proj = new (std::nothrow) GeoProj();
-                if (proj == nullptr) {
+                if (!proj) {
                     throw ErrorCode::ClassInstantiationFailed;
                 }
 
@@ -164,7 +164,7 @@ namespace Grain {
 
             // First pass, scan
             xyz_file1 = new (std::nothrow) XYZFile(file_path);
-            if (xyz_file1 == nullptr) {
+            if (!xyz_file1) {
                 throw ErrorCode::ClassInstantiationFailed;
             }
 
@@ -189,7 +189,7 @@ namespace Grain {
 
             // Second pass, process
             xyz_file2 = new (std::nothrow) XYZFile(file_path);
-            if (xyz_file2 == nullptr) {
+            if (!xyz_file2) {
                 throw ErrorCode::ClassInstantiationFailed;
             }
 
@@ -201,7 +201,7 @@ namespace Grain {
             xyz_file2->m_step_y = xyz_file1->m_step_y;
 
             image = Image::createLuminaFloat(static_cast<int32_t>(image_width), static_cast<int32_t>(image_height));
-            if (image == nullptr) {
+            if (!image) {
                 throw Error::specific(6);
             }
 
@@ -213,7 +213,7 @@ namespace Grain {
 
             // Add tie points
             Vec2d tie_point_pos;
-            if (proj != nullptr) {
+            if (proj) {
                 Vec2d min_pos, max_pos;
                 proj->transform(Vec2d(range.m_min_x.asDouble(), range.m_min_y.asDouble()), min_pos);
                 proj->transform(Vec2d(range.m_max_x.asDouble(), range.m_max_y.asDouble()), max_pos);
@@ -247,7 +247,7 @@ namespace Grain {
                     int32_t y = image_height - 1 - static_cast<int32_t>(round(xyz_coord.m_y - xyz_min_y));
 
                     auto p = (float*)ia.ptrAt(x, y);
-                    if (p != nullptr) {
+                    if (p) {
                         *p = xyz_coord.z();
                     }
                 }
@@ -324,7 +324,7 @@ namespace Grain {
             }
 
             cvf2 = new (std::nothrow) CVF2(static_cast<int32_t>(xyz_width), static_cast<int32_t>(xyz_height), unit, min_digits, max_digits);
-            if (cvf2 == nullptr) {
+            if (!cvf2) {
                 throw ErrorCode::ClassInstantiationFailed;
             }
 
@@ -367,7 +367,7 @@ namespace Grain {
         }
 
         // Cleanup
-        if (xyz_file != nullptr) {
+        if (xyz_file) {
             xyz_file->close();
             delete xyz_file;
         }

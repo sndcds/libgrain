@@ -182,7 +182,7 @@ namespace Grain {
     }
 
     void AppleCGContext::setStrokeDash(int32_t array_length, const double* array, double scale) noexcept {
-        if (array_length < 0 || array == nullptr) {
+        if (array_length < 0 || !array) {
             CGContextSetLineDash(m_cg_context, 0, nullptr, 0);
         }
         else {
@@ -1011,7 +1011,7 @@ namespace Grain {
 
     void AppleCGContext::addTextPath(const char* text, const Font* font) noexcept {
         /* TODO: !!!!!! Implement!
-        if (text == nullptr || font == nullptr) {
+        if (!text || !font) {
             return;
         }
 

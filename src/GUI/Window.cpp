@@ -33,7 +33,7 @@ namespace Grain {
 
 
     Window::Window(const char* title, const Rectd& rect, Window::Style style, Screen* screen) noexcept : Object() {
-        if (screen != nullptr) {
+        if (screen) {
             screen = App::mainScreen();
         }
         _init(title, rect, style, screen);
@@ -112,7 +112,7 @@ namespace Grain {
 
 
     Rectd Window::rootViewBoundsRect() const noexcept {
-        if (m_root_view != nullptr) {
+        if (m_root_view) {
             return m_root_view->boundsRect();
         }
         else {
@@ -127,7 +127,7 @@ namespace Grain {
 
 
     bool Window::hasComponent(const Component* component) const noexcept {
-        if (m_root_view != nullptr) {
+        if (m_root_view) {
             if (m_root_view->hasDescendant(component)) {
                 return true;
             }
@@ -137,7 +137,7 @@ namespace Grain {
 
 
     void Window::setFirstResponder(Component* component) noexcept {
-        if (component != nullptr) {
+        if (component) {
             #if defined(__APPLE__) && defined(__MACH__)
                 _macosWindow_setFirstResponder(this, component);
             #endif
@@ -165,14 +165,14 @@ namespace Grain {
 
 
     void Window::needsDisplay() const noexcept {
-        if (m_root_view != nullptr) {
+        if (m_root_view) {
             m_root_view->needsDisplay();
         }
     }
 
 
     void Window::firstResponderNeedsDisplay() const noexcept {
-        if (m_root_view != nullptr) {
+        if (m_root_view) {
             m_root_view->needsDisplay();
         }
     }

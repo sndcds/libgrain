@@ -430,7 +430,7 @@ namespace Grain {
             };
 
             int32_t i = 0;
-            while (cg_blend_mode_names[i] != nullptr) {
+            while (cg_blend_mode_names[i]) {
                 if (strcasecmp(cg_blend_mode_names[i], blend_mode_name) == 0) {
                     return (BlendMode)i;
                 }

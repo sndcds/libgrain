@@ -68,8 +68,7 @@ namespace Grain {
          *  @brief Compute tangent points for connecting two circles.
          */
         bool outerTangentPoints(const Circle<T>& circle, Vec2<T>* out_tangent_points) const noexcept {
-
-            if (out_tangent_points == nullptr) {
+            if (!out_tangent_points) {
                 return false;
             }
 
@@ -114,8 +113,7 @@ namespace Grain {
         }
 
         bool innerTangentPoints(const Circle<T>& circle, Vec2<T>* out_tangent_points) const noexcept {
-
-            if (out_tangent_points == nullptr) {
+            if (!out_tangent_points) {
                 return false;
             }
 
