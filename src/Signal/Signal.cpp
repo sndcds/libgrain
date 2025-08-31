@@ -3378,7 +3378,7 @@ namespace Grain {
     }
 
 
-    Signal* f(const String &file_path, DataType data_type) noexcept {
+    Signal* Signal::createFromFile(const String &file_path, DataType data_type) noexcept {
         SF_INFO sf_info;
         sf_info.format = 0;  // must be set to 0 before opening
         SNDFILE* snd_file = sf_open(file_path.utf8(), SFM_READ, &sf_info);
