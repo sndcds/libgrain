@@ -94,6 +94,9 @@ namespace Grain {
 #else
         fftwf_complex* m_out{};
         fftwf_plan m_plan{};
+        float* m_x_buffer;
+        float* m_mag;
+        float* m_phase;
 #endif
 
     public:
