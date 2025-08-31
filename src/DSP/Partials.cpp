@@ -109,7 +109,6 @@ namespace Grain {
 
 
     void Partials::scaleAmplitudeAtIndex(int32_t index, float scale) noexcept {
-
         if (isPartial(index)) {
             m_amplitude_data[index] *= scale;
         }
@@ -117,19 +116,16 @@ namespace Grain {
 
 
     float Partials::phaseAtIndex(int32_t index) const noexcept {
-
         return isPartial(index) ? m_phase_data[index] : 0;
     }
 
 
     float Partials::valueAtIndex(int32_t index, int16_t mode) const noexcept {
-
         return isPartial(index) ? (mode == kModeAmplutude ? m_amplitude_data[index] : m_phase_data[index]) : 0;
     }
 
 
     void Partials::clear() noexcept {
-
         if (hasData()) {
             for (int32_t i = 0; i < m_resolution; i++) {
                 m_amplitude_data[i] = 0;
