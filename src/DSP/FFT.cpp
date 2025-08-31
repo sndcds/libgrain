@@ -66,16 +66,19 @@ namespace Grain {
 
 
     FFT::~FFT() noexcept {
+
+#if defined(__APPLE__) && defined(__MACH__)
         std::free(m_data);
         std::free(m_x_buffer);
         std::free(m_mag);
         std::free(m_phase);
-
-#if defined(__APPLE__) && defined(__MACH__)
         std::free(m_temp_complex);
 #else
         fftwf_destroy_plan(m_plan);
         fftwf_free(m_out);
+        std::free(m_x_buffer);
+        std::free(m_mag);
+        std::free(m_phase);
 #endif
     }
 
