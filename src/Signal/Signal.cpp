@@ -3387,18 +3387,18 @@ namespace Grain {
             return nullptr;
         }
 
-        std::cout << "Opened file: " << file_path << "\n";
-        std::cout << "Sample rate: " << sf_info.samplerate << " Hz\n";
-        std::cout << "Channels: " << sf_info.channels << "\n";
-        std::cout << "Frames: " << sf_info.frames << "\n";
+        // std::cout << "Opened file: " << file_path << "\n";
+        // std::cout << "Sample rate: " << sf_info.samplerate << " Hz\n";
+        // std::cout << "Channels: " << sf_info.channels << "\n";
+        // std::cout << "Frames: " << sf_info.frames << "\n";
 
         auto signal = new (std::nothrow) Signal(sf_info.channels, sf_info.samplerate, sf_info.frames, DataType::Float);
         if (!signal) {
-            throw ErrorCode::ClassInstantiationFailed;
+            sf_close(snd_file);
+            return nullptr;
         }
 
         // Read entire file into buffer (interleaved samples)
-        std::vector<float> samples(sf_info.frames * sf_info.channels);
         sf_count_t n = sf_readf_float(snd_file, static_cast<float*>(signal->mutDataPtr()), sf_info.frames);
         if (n != sf_info.frames) {
             std::cerr << "Warning: only read " << n << " frames.\n";
