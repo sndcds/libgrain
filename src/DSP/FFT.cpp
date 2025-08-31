@@ -51,6 +51,10 @@ namespace Grain {
             m_temp_complex = (DSPComplex*)std::malloc(sizeof(DSPComplex) * m_half_length);
             m_valid = m_fft_setup && m_data && m_temp_complex;
 #else
+            m_x_buffer = static_cast<float*>(std::malloc(sizeof(float) * m_length));
+            m_mag = static_cast<float*>(std::malloc(sizeof(float) * m_half_length));
+            m_phase = static_cast<float*>(std::malloc(sizeof(float) * m_half_length));
+
             // Allocate FFTW output once
             m_out = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * (m_half_length + 1));
 
@@ -63,22 +67,21 @@ namespace Grain {
 
     FFT::~FFT() noexcept {
         std::free(m_data);
+        std::free(m_x_buffer);
+        std::free(m_mag);
+        std::free(m_phase);
 
 #if defined(__APPLE__) && defined(__MACH__)
         std::free(m_temp_complex);
 #else
         fftwf_destroy_plan(m_plan);
         fftwf_free(m_out);
-        delete[] m_x_buffer;
-        delete[] m_mag;
-        delete[] m_phase;
 #endif
     }
 
 
 #if defined(__APPLE__) && defined(__MACH__)
     FFTSetup FFT::_macos_fftSetup(int32_t log_n) noexcept {
-
         FFTSetup fft_setup = nullptr;
 
         if (log_n >= kLogNResolutionFirst && log_n <= kLogNResolutionLast) {
@@ -97,20 +100,17 @@ namespace Grain {
 
 // Returns true, if resolution is FFT compatible
     bool FFT::isValidResolution(int32_t resolution) noexcept {
-
         return (resolution >= (1 << 6)) && (resolution <= (1 << 24)) &&
                ((resolution & (resolution - 1)) == 0);
     }
 
 
     int32_t FFT::logNFromResolution(int32_t resolution) noexcept {
-
         return isValidResolution(resolution) ? Math::pow_inverse(resolution) : -1;
     }
 
 
     int32_t FFT::resolutionFromLogN(int32_t log_n) noexcept {
-
         return 1 << log_n;
     }
 
