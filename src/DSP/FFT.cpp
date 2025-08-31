@@ -159,20 +159,21 @@ namespace Grain {
     ErrorCode FFT::fft(float* data, Partials* out_partials) noexcept {
         // TODO: Reuse settings and memory!
         int32_t N = m_length;
-        int32_t halfN = N / 2;
+        int32_t half_n = N / 2;
 
         // Create FFTW plan (real -> complex)
-        fftwf_complex* out = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * (halfN + 1));
+        fftwf_complex* out = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * (half_n + 1));
         fftwf_plan plan = fftwf_plan_dft_r2c_1d(N, data, out, FFTW_ESTIMATE);
 
         fftwf_execute(plan);
 
         // Fill Partials
-        for (int k = 0; k <= halfN; ++k) {
+        for (int k = 0; k <= half_n; ++k) {
             float re = out[k][0];
             float im = out[k][1];
-            out_partials->amplitudes[k] = std::sqrt(re*re + im*im);
-            out_partials->phases[k] = std::atan2(im, re);
+            for (int32_t i = 0; i < m_half_length; i++) {
+                out_partials->setPartialAtIndex(i, std::sqrt(re * re + im * im), std::atan2(im, re));
+            }
         }
 
         fftwf_destroy_plan(plan);
@@ -243,14 +244,15 @@ namespace Grain {
     ErrorCode FFT::ifft(Partials* partials, float* out_data) noexcept {
         // TODO: Reuse settings and memory!
         int32_t N = m_length;
-        int32_t halfN = N / 2;
+        int32_t half_n = N / 2;
 
-        fftwf_complex* in = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * (halfN + 1));
+        fftwf_complex* in = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * (half_n + 1));
 
         // Convert amplitudes + phases back to complex numbers
-        for (int k = 0; k <= halfN; ++k) {
-            float amp = partials->amplitudes[k];
-            float phase = partials->phases[k];
+        for (int k = 0; k <= half_nhalf_n; ++k) {
+            float amp;
+            float phase;
+            partials->partialAtIndex(k, amp, phase);
             in[k][0] = amp * std::cosf(phase); // real
             in[k][1] = amp * std::sinf(phase); // imaginary
         }
