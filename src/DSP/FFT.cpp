@@ -17,6 +17,8 @@
 #include "Math/Math.hpp"
 #include "DSP/Partials.hpp"
 
+#include <cmath>
+
 
 namespace Grain {
 
@@ -249,7 +251,7 @@ namespace Grain {
         fftwf_complex* in = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * (half_n + 1));
 
         // Convert amplitudes + phases back to complex numbers
-        for (int k = 0; k <= half_nhalf_n; ++k) {
+        for (int k = 0; k <= half_n; ++k) {
             float amp;
             float phase;
             partials->partialAtIndex(k, amp, phase);
