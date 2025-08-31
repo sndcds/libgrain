@@ -255,8 +255,8 @@ namespace Grain {
             float amp;
             float phase;
             partials->partialAtIndex(k, amp, phase);
-            in[k][0] = amp * std::cosf(phase); // real
-            in[k][1] = amp * std::sinf(phase); // imaginary
+            in[k][0] = amp * ::cosf(phase); // real
+            in[k][1] = amp * ::sinf(phase); // imaginary
         }
 
         // Create FFTW plan (complex -> real)
@@ -272,7 +272,7 @@ namespace Grain {
         fftwf_destroy_plan(plan);
         fftwf_free(in);
 
-        return ErrorCode::OK;
+        return ErrorCode::None;
     }
 #endif
 
