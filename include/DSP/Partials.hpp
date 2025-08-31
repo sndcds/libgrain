@@ -30,7 +30,7 @@ namespace Grain {
 
     public:
         enum {
-            kModeAmplutude = 0,
+            kModeAmplitude = 0,
             kModePhase
         };
 

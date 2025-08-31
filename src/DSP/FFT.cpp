@@ -262,7 +262,7 @@ namespace Grain {
 
         // Fill FFTW input buffer from Partials
         for (int32_t k = 0; k <= m_half_length; ++k) {
-            float mag = partials->valueAtIndex(k);
+            float mag = partials->amplitudeAtIndex(k);
             float phase = partials->phaseAtIndex(k);
 
             m_out[k][0] = mag * std::cos(phase) * m_length; // scale back
