@@ -75,11 +75,7 @@ namespace Grain {
 
 
     void Checkbox::draw(const Rectd& dirty_rect) noexcept {
-#if defined(__APPLE__) && defined(__MACH__)
-        MacCGContext gc(this);
-#else
-        GraphicContext gc(this);
-#endif
+        auto gc = graphicContextPtr();
 
         auto style= guiStyle();
         if (!style) {
@@ -112,7 +108,7 @@ namespace Grain {
             Rectd text_rect = bounds_rect;
             text_rect.m_x += check_size + style->labelGap();
             text_rect.m_width -= check_size + style->labelGap();
-            gc.drawTextInRect(m_text->utf8(), text_rect, Alignment::Left, style->font(), style->labelColor());
+            gc->drawTextInRect(m_text->utf8(), text_rect, Alignment::Left, style->font(), style->labelColor());
         }
 
         Rectd check_rect(0, (bounds_rect.m_height - check_size) / 2, check_size, check_size);
@@ -121,13 +117,13 @@ namespace Grain {
             radius = check_rect.m_width / 2;
         }
 
-        gc.setFillRGBA(background_color);
+        gc->setFillRGBA(background_color);
 
         if (radio_group != 0) {
-            gc.fillEllipse(check_rect);
+            gc->fillEllipse(check_rect);
         }
         else {
-            gc.fillRoundRect(check_rect, radius);
+            gc->fillRoundRect(check_rect, radius);
         }
 
         if (selected || highlighted) {
@@ -138,13 +134,13 @@ namespace Grain {
             }
             status_rect.inset(inset_size);
 
-            gc.setFillRGBA(style->foregroundColor());
+            gc->setFillRGBA(style->foregroundColor());
 
             if (radio_group != 0) {
-                gc.fillEllipse(status_rect);
+                gc->fillEllipse(status_rect);
             }
             else {
-                gc.fillRect(status_rect);
+                gc->fillRect(status_rect);
             }
         }
     }

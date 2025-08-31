@@ -93,6 +93,16 @@ namespace Grain {
     };
 
     /**
+     *  @brief Text alignment constants.
+     */
+    enum class TextAlignment {
+        Left = 0,
+        Center,
+        Right,
+        Justified
+    };
+
+    /**
      *  @brief Direction constants.
      */
     enum class Direction {

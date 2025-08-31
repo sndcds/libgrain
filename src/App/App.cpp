@@ -11,16 +11,22 @@
 #include "Core/Hardware.hpp"
 #include "Graphic/Font.hpp"
 #include "GUI/GUIStyle.hpp"
+#include "Graphic/GraphicContext.hpp"
+#include "Graphic/CairoContext.hpp"
+
+#if defined(__APPLE__) && defined(__MACH__)
+#include "Graphic/MacCGContext.hpp"
+#endif
 
 
 namespace Grain {
 
-    #if defined(__APPLE__) && defined(__MACH__)
-        void _macosApp_start();
-        void _macosApp_addMenu();
-        void _macosApp_beep();
-        void _macosApp_updateScreenInfos(Grain::App* app);
-    #endif
+#if defined(__APPLE__) && defined(__MACH__)
+    void _macosApp_start();
+    void _macosApp_addMenu();
+    void _macosApp_beep();
+    void _macosApp_updateScreenInfos(Grain::App* app);
+#endif
 
 
     App* App::g_instance = nullptr;
@@ -40,6 +46,12 @@ namespace Grain {
         }
 
         g_instance = this;
+
+#if defined(__APPLE__) && defined(__MACH__)
+        m_gc_type =  GraphicContextType::AppleMac;
+#else
+        m_gc_type =  GraphicContextType::Cairo;
+#endif
 
         m_start_time.now();
 
@@ -79,29 +91,43 @@ namespace Grain {
 
 
     void App::addMenu() {
-        #if defined(__APPLE__) && defined(__MACH__)
-            _macosApp_addMenu();
-        #endif
+#if defined(__APPLE__) && defined(__MACH__)
+        _macosApp_addMenu();
+#endif
     }
 
     void App::start() {
-        #if defined(__APPLE__) && defined(__MACH__)
-            _macosApp_start();
-        #endif
+#if defined(__APPLE__) && defined(__MACH__)
+        _macosApp_start();
+#endif
     }
 
 
     void App::beep() noexcept {
-        #if defined(__APPLE__) && defined(__MACH__)
-            _macosApp_beep();
-        #endif
+#if defined(__APPLE__) && defined(__MACH__)
+        _macosApp_beep();
+#endif
+    }
+
+
+    GraphicContext* App::createGUIGraphicContext() noexcept {
+#if defined(__APPLE__) && defined(__MACH__)
+        if (g_instance->m_gc_type == GraphicContextType::AppleMac) {
+            return new (std::nothrow) MacCGContext();
+        }
+        else {
+            return new (std::nothrow) CairoContext();
+        }
+#else
+        return new (std::nothrow) CairoContext();
+#endif
     }
 
 
     void App::updateScreenInfos() noexcept {
-        #if defined(__APPLE__) && defined(__MACH__)
-            _macosApp_updateScreenInfos(g_instance);
-        #endif
+#if defined(__APPLE__) && defined(__MACH__)
+        _macosApp_updateScreenInfos(g_instance);
+#endif
     }
 
 

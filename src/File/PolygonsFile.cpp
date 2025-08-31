@@ -10,6 +10,7 @@
 //
 
 #include "File/PolygonsFile.hpp"
+#include "Time/TimeMeasure.hpp"
 
 
 namespace Grain {
@@ -24,6 +25,8 @@ namespace Grain {
 
     ErrorCode PolygonsFile::readInfo() noexcept {
         auto result = ErrorCode::None;
+
+        TimeMeasure tm;
 
         try {
             char buffer[4];
@@ -66,6 +69,8 @@ namespace Grain {
         catch (const Exception& e) {
             result = e.code();
         }
+
+        m_info_read_time = tm.elapsedNanos();
 
         return result;
     }

@@ -70,6 +70,11 @@ namespace Grain {
     }
 
 
+    void MacCGContext::setComponent(Component* component) noexcept {
+        _macosView_setContextByComponent(this, component);
+    }
+
+
     void MacCGContext::setImage(Image* image) noexcept {
         GraphicContext::setImage(image);
 
@@ -462,27 +467,26 @@ namespace Grain {
             bool draw_before,
             bool draw_after) noexcept {
 
-        if (gradient && gradient->stopCount() > 1) {
-            gradient->update(this);
+        if (!gradient || gradient->stopCount() < 2)  return;
 
-            auto cg_gradient = gradient->macos_cgGradient(this);
-            if (cg_gradient) {
-                CGGradientDrawingOptions options = 0x0;
+        gradient->update(this);
+        auto cg_gradient = gradient->macos_cgGradient(this);
+        if (cg_gradient) {
+            CGGradientDrawingOptions options = 0x0;
 
-                if (draw_before) {
-                    options |= kCGGradientDrawsBeforeStartLocation;
-                }
-                if (draw_after) {
-                    options |= kCGGradientDrawsAfterEndLocation;
-                }
-
-                CGContextDrawLinearGradient(
-                        cgContext(),
-                        cg_gradient,
-                        start_pos.cgPoint(),
-                        end_pos.cgPoint(),
-                        options);
+            if (draw_before) {
+                options |= kCGGradientDrawsBeforeStartLocation;
             }
+            if (draw_after) {
+                options |= kCGGradientDrawsAfterEndLocation;
+            }
+
+            CGContextDrawLinearGradient(
+                    cgContext(),
+                    cg_gradient,
+                    start_pos.cgPoint(),
+                    end_pos.cgPoint(),
+                    options);
         }
     }
 
@@ -494,41 +498,40 @@ namespace Grain {
             bool draw_before,
             bool draw_after) noexcept {
 
-        if (gradient && gradient->stopCount() > 1) {
-            gradient->updateLUT();
-            gradient->update(this);
+        if (!gradient || gradient->stopCount() < 2)  return;
 
-            auto cg_gradient = gradient->macos_cgGradient(this);
-            if (cg_gradient) {
-                CGGradientDrawingOptions options = 0x0;
+        gradient->updateLUT();
+        gradient->update(this);
 
-                if (draw_before) {
-                    options |= kCGGradientDrawsBeforeStartLocation;
-                }
-                if (draw_after) {
-                    options |= kCGGradientDrawsAfterEndLocation;
-                }
+        auto cg_gradient = gradient->macos_cgGradient(this);
+        if (cg_gradient) {
+            CGGradientDrawingOptions options = 0x0;
 
-                CGContextDrawRadialGradient(cgContext(), cg_gradient, pos.cgPoint(), 0, pos.cgPoint(), radius, options);
+            if (draw_before) {
+                options |= kCGGradientDrawsBeforeStartLocation;
             }
+            if (draw_after) {
+                options |= kCGGradientDrawsAfterEndLocation;
+            }
+
+            CGContextDrawRadialGradient(cgContext(), cg_gradient, pos.cgPoint(), 0, pos.cgPoint(), radius, options);
         }
     }
 
 
     void MacCGContext::drawImage(Image* image, const Rectd& rect, float alpha) noexcept {
-        if (image != nullptr && image->hasPixel()) {
-            if (CGImageRef cg_image = image->macos_cgImageRef()) {
-                CGContextSaveGState(m_cg_context);
-                if (m_flipped_y) {
-                    CGContextTranslateCTM(m_cg_context, 0, rect.centerY());
-                    CGContextScaleCTM(m_cg_context, 1, -1);
-                    CGContextTranslateCTM(m_cg_context, 0, -rect.centerY());
-                }
-                CGContextSetAlpha(m_cg_context, alpha);
-                CGContextSetInterpolationQuality(m_cg_context, kCGInterpolationMedium);
-                CGContextDrawImage(m_cg_context, rect.cgRect(), cg_image);
-                CGContextRestoreGState(m_cg_context);
+        if (!image || !image->hasPixel()) return;
+        if (CGImageRef cg_image = image->macos_cgImageRef()) {
+            CGContextSaveGState(m_cg_context);
+            if (m_flipped_y) {
+                CGContextTranslateCTM(m_cg_context, 0, rect.centerY());
+                CGContextScaleCTM(m_cg_context, 1, -1);
+                CGContextTranslateCTM(m_cg_context, 0, -rect.centerY());
             }
+            CGContextSetAlpha(m_cg_context, alpha);
+            CGContextSetInterpolationQuality(m_cg_context, kCGInterpolationMedium);
+            CGContextDrawImage(m_cg_context, rect.cgRect(), cg_image);
+            CGContextRestoreGState(m_cg_context);
         }
     }
 
@@ -759,110 +762,250 @@ namespace Grain {
     }
 
 
-    void MacCGContext::drawText(const char* text, const Vec2d& pos, const Font* font, const RGB& color, float alpha) noexcept {
-        if (font != nullptr && text != nullptr) {
-            setTextMatrix(1.0, 0.0, 0.0, -1.0, 0.0, 0.0);
-
-            CGColorRef cg_text_color = color.createCGColor(alpha);
-
-            CFStringRef keys[] = { kCTFontAttributeName, kCTForegroundColorAttributeName };
-            CFTypeRef values[] = { font->ctFont(), cg_text_color };
-
-            CFDictionaryRef cf_str_attr =
-                    CFDictionaryCreate(kCFAllocatorDefault, (const void**)&keys,
-                                       (const void**)&values, sizeof(keys) / sizeof(keys[0]),
-                                       &kCFTypeDictionaryKeyCallBacks,
-                                       &kCFTypeDictionaryValueCallBacks);
-
-
-            CFStringRef cf_str = CFStringCreateWithCString(NULL, text, kCFStringEncodingUTF8);
-            CFAttributedStringRef cf_attr_str = CFAttributedStringCreate(kCFAllocatorDefault, cf_str, cf_str_attr);
-
-
-            CTLineRef line = CTLineCreateWithAttributedString(cf_attr_str);
-
-            CGContextSetTextPosition(m_cg_context, pos.m_x, pos.m_y);
-            CTLineDraw(line, m_cg_context);
-
-            CFRelease(cf_str);
-            CFRelease(cf_str_attr);
-            CFRelease(cf_attr_str);
-            CFRelease(line);
-            CGColorRelease(cg_text_color);
-        }
-    }
-
-
-    double MacCGContext::drawTextLineByLine(
+    void MacCGContext::drawText(
             const char* text,
-            const Rectd& bounds_rect,
-            const Rectd& rect,
-            double line_gap,
+            const Vec2d& pos,
             const Font* font,
             const RGB& color,
-            float alpha) noexcept {
+            float alpha) noexcept
+    {
+        if (!font || !text) return;
 
-        constexpr int32_t kMaxLines = 1024;
-        // TODO: Refine!
-        CGColorRef cg_text_color = color.createCGColor(1.0f);
+        setTextMatrix(1.0, 0.0, 0.0, -1.0, 0.0, 0.0);
+
+        CGColorRef cg_text_color = color.createCGColor(alpha);
 
         CFStringRef keys[] = { kCTFontAttributeName, kCTForegroundColorAttributeName };
         CFTypeRef values[] = { font->ctFont(), cg_text_color };
 
         CFDictionaryRef cf_str_attr =
-                CFDictionaryCreate(kCFAllocatorDefault,
-                                   (const void**)&keys,
-                                   (const void**)&values,
-                                   2, // sizeof(keys) / sizeof(keys[0]),
+                CFDictionaryCreate(kCFAllocatorDefault, (const void**)&keys,
+                                   (const void**)&values, sizeof(keys) / sizeof(keys[0]),
                                    &kCFTypeDictionaryKeyCallBacks,
                                    &kCFTypeDictionaryValueCallBacks);
+
 
         CFStringRef cf_str = CFStringCreateWithCString(NULL, text, kCFStringEncodingUTF8);
         CFAttributedStringRef cf_attr_str = CFAttributedStringCreate(kCFAllocatorDefault, cf_str, cf_str_attr);
 
+        CTLineRef line = CTLineCreateWithAttributedString(cf_attr_str);
 
-        CGRect cg_rect = rect.cgRect();
-
-        CTFramesetterRef framesetter = CTFramesetterCreateWithAttributedString(cf_attr_str);
-        CGPathRef path = CGPathCreateWithRect(cg_rect, NULL);
-        CTFrameRef frame = CTFramesetterCreateFrame(framesetter, CFRangeMake(0, 0), path, NULL);
-
-        CFArrayRef lines = CTFrameGetLines(frame);
-        CFIndex line_count = CFArrayGetCount(lines);
-        CGSize suggestedSize{};
-
-        if (line_count <= kMaxLines) { // TODO: Implement dynamic allocation if line_count gets to big
-            suggestedSize = CTFramesetterSuggestFrameSizeWithConstraints(framesetter, CFRangeMake(0, 0), NULL, cg_rect.size, NULL);
-            suggestedSize.height += (line_count - 1) * line_gap;
-
-            if (rect.overlaps(bounds_rect)) {
-                CGContextSetTextMatrix(m_cg_context, CGAffineTransformIdentity);
-                CGContextTranslateCTM(m_cg_context, 0, CGRectGetHeight(cg_rect));
-                CGContextScaleCTM(m_cg_context, 1.0, -1.0);
-
-                CGPoint lineOrigins[kMaxLines];
-                CTFrameGetLineOrigins(frame, CFRangeMake(0, 0), lineOrigins);
-
-                for (CFIndex i = 0; i < line_count; i++) {
-                    CTLineRef line = (CTLineRef)CFArrayGetValueAtIndex(lines, i);
-                    CGPoint lineOrigin = lineOrigins[i];
-
-                    CGContextSetTextPosition(m_cg_context, lineOrigin.x, lineOrigin.y - rect.m_y - i * line_gap);
-                    CTLineDraw(line, m_cg_context);
-                }
-            }
-        }
+        CGContextSetTextPosition(m_cg_context, pos.m_x, pos.m_y);
+        CTLineDraw(line, m_cg_context);
 
         CFRelease(cf_str);
         CFRelease(cf_str_attr);
         CFRelease(cf_attr_str);
+        CFRelease(line);
+        CGColorRelease(cg_text_color);
+    }
+
+
+    double MacCGContext::drawTextInRect(
+            const char* text,
+            const Rectd& rect,
+            Alignment alignment,
+            const Font* font,
+            const RGB& color,
+            float alpha) noexcept
+    {
+
+        if (!font || !text) return 0.0;
+
+        setTextMatrix(1.0, 0.0, 0.0, -1.0, 0.0, 0.0);
+
+        CGColorRef cg_text_color = color.createCGColor(alpha);
+
+        CFStringRef keys[] = { kCTFontAttributeName, kCTForegroundColorAttributeName };
+        CFTypeRef values[] = { font->ctFont(), cg_text_color };
+
+        CFDictionaryRef cf_str_attr =
+                CFDictionaryCreate(
+                        kCFAllocatorDefault,
+                        (const void**)&keys,
+                        (const void**)&values,
+                        2, // sizeof(keys) / sizeof(keys[0]),
+                        &kCFTypeDictionaryKeyCallBacks,
+                        &kCFTypeDictionaryValueCallBacks);
+
+        CFStringRef cf_str = CFStringCreateWithCString(NULL, text, kCFStringEncodingUTF8);
+        CFAttributedStringRef cf_attr_str = CFAttributedStringCreate(kCFAllocatorDefault, cf_str, cf_str_attr);
+
+        CTLineRef line = CTLineCreateWithAttributedString(cf_attr_str);
+
+        CGFloat ascent, descent, leading;
+        double text_width = CTLineGetTypographicBounds(line, &ascent, &descent, &leading);
+        double text_x, text_y;
+
+        // Horizontal alignment
+        switch (alignment) {
+            case Alignment::Center:
+            case Alignment::Top:
+            case Alignment::Bottom:
+                text_x = rect.m_x + rect.m_width / 2 - text_width / 2;
+                break;
+
+            case Alignment::Right:
+            case Alignment::TopRight:
+            case Alignment::BottomRight:
+                text_x = rect.m_x + rect.m_width - text_width;
+                break;
+
+            default:
+                text_x = rect.m_x;
+                break;
+        }
+
+        // Vertical alignment
+        switch (alignment) {
+            case Alignment::Center:
+            case Alignment::Left:
+            case Alignment::Right:
+                if (m_flipped_y == true) {
+                    text_y = rect.m_y + rect.m_height / 2 + (ascent - descent) / 2;
+                }
+                else {
+                    text_y = rect.m_y + rect.m_height / 2 - (ascent - descent) / 2;
+                }
+                break;
+
+            case Alignment::BottomLeft:
+            case Alignment::Bottom:
+            case Alignment::BottomRight:
+                if (m_flipped_y == true) {
+                    text_y = rect.m_y + rect.m_height - descent;
+                }
+                else {
+                    text_y = rect.m_y + descent;
+                }
+                break;
+
+            default:
+                if (m_flipped_y == true) {
+                    text_y = rect.m_y + ascent;
+                }
+                else {
+                    text_y = rect.m_y + rect.m_height - ascent;
+                }
+                break;
+        }
+
+        CGContextSetTextPosition(m_cg_context, text_x, text_y);
+        CTLineDraw(line, m_cg_context);
+
+        CGRect line_bounds = CTLineGetImageBounds(line, m_cg_context);
+
+        CFRelease(cf_str);
+        CFRelease(cf_str_attr);
+        CFRelease(cf_attr_str);
+        CFRelease(line);
         CGColorRelease(cg_text_color);
 
-        CFRelease(frame);
-        CFRelease(path);
-        CFRelease(framesetter);
+        return line_bounds.size.width;
+    }
 
-        return suggestedSize.height;
+
+    double MacCGContext::drawWrappedText(
+            const char* text,
+            const Rectd& bounds_rect,
+            const Rectd& rect,
+            TextAlignment alignment,
+            double line_gap,
+            const Font* font,
+            const RGB& color,
+            float alpha) noexcept
+    {
+        double total_height = 0.0;
+
+        // Convert our custom alignment enum to CoreText alignment
+        CTTextAlignment ct_alignment = kCTTextAlignmentLeft;
+        switch (alignment) {
+            case TextAlignment::Center:
+                ct_alignment = kCTTextAlignmentCenter;
+                break;
+            case TextAlignment::Right:
+                ct_alignment = kCTTextAlignmentRight;
+                break;
+            case TextAlignment::Justified:
+                ct_alignment = kCTTextAlignmentJustified;
+                break;
+            case TextAlignment::Left:
+            default:
+                ct_alignment = kCTTextAlignmentLeft;
+                break;
+        }
+
+        // Build paragraph style (alignment + line spacing)
+        CGFloat cg_line_gap = line_gap;
+        CTParagraphStyleSetting settings[] = {
+                { kCTParagraphStyleSpecifierAlignment, sizeof(ct_alignment), &ct_alignment },
+                { kCTParagraphStyleSpecifierLineSpacingAdjustment, sizeof(cg_line_gap), &cg_line_gap }
+        };
+        CTParagraphStyleRef paragraph_style =
+                CTParagraphStyleCreate(settings, sizeof(settings) / sizeof(settings[0]));
+
+        // Text attributes
+        CGColorRef cg_text_color = color.createCGColor(alpha);
+        CFStringRef keys[]   = { kCTFontAttributeName, kCTForegroundColorAttributeName, kCTParagraphStyleAttributeName };
+        CFTypeRef   values[] = { font->ctFont(), cg_text_color, paragraph_style };
+
+        CFDictionaryRef attrs = CFDictionaryCreate(
+                kCFAllocatorDefault,
+                (const void**)&keys,
+                (const void**)&values,
+                3,
+                &kCFTypeDictionaryKeyCallBacks,
+                &kCFTypeDictionaryValueCallBacks);
+
+        CFStringRef cf_str = CFStringCreateWithCString(nullptr, text, kCFStringEncodingUTF8);
+        CFAttributedStringRef attr_str = CFAttributedStringCreate(kCFAllocatorDefault, cf_str, attrs);
+
+        // Create framesetter
+        CTFramesetterRef framesetter = CTFramesetterCreateWithAttributedString(attr_str);
+
+        CGRect cg_rect = rect.cgRect();
+
+        // Create a local path at origin (0, 0, width, height)
+        CGRect localRect = CGRectMake(0, 0, cg_rect.size.width, cg_rect.size.height);
+        CGPathRef path = CGPathCreateWithRect(localRect, NULL);
+        CTFrameRef frame = CTFramesetterCreateFrame(framesetter, CFRangeMake(0, 0), path, NULL);
+
+        // Draw only if visible
+        if (rect.overlaps(bounds_rect)) {
+            CGContextSaveGState(m_cg_context);
+            CGContextSetTextMatrix(m_cg_context, CGAffineTransformIdentity);
+
+            // Move origin to bottom-left of the target rect and flip Y
+            CGContextTranslateCTM(m_cg_context, cg_rect.origin.x, cg_rect.origin.y + cg_rect.size.height);
+            CGContextScaleCTM(m_cg_context, 1.0, -1.0);
+
+            // Let CoreText draw the frame (alignment, soft-hyphens, etc. work here)
+            CTFrameDraw(frame, m_cg_context);
+
+            CGContextRestoreGState(m_cg_context);
+        }
+
+        // Measure total height (for layout logic)
+        CGSize suggestedSize = CTFramesetterSuggestFrameSizeWithConstraints(
+                framesetter,
+                CFRangeMake(0, 0),
+                nullptr,
+                cg_rect.size,
+                nullptr);
+
+        total_height = suggestedSize.height;
+
+        // Cleanup
+        CFRelease(cf_str);
+        CFRelease(attrs);
+        CFRelease(attr_str);
+        CGColorRelease(cg_text_color);
+        CFRelease(paragraph_style);
+        CFRelease(framesetter);
+        CFRelease(path);
+        CFRelease(frame);
+
+        return total_height;
     }
 
 

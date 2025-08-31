@@ -46,6 +46,14 @@ namespace Grain {
     concept ScalarType = std::integral<T> || std::floating_point<T>;
 
 
+    enum class GraphicContextType {
+        Undefined = -1,
+        Cairo = 0,
+        AppleMac = 1,
+        // AGG
+    };
+
+
     /**
      *  @brief Enumeration representing various data types or value classes.
      *

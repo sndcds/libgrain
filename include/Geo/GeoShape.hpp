@@ -256,20 +256,20 @@ namespace Grain {
 
         RangeRectd polyBbox(int32_t index) noexcept;
 
-        void buildPolyCompoundPath(GraphicContext& gc, int32_t index, const RemapRectd& remap_rect, GraphicCompoundPath& out_path) noexcept;
-        void buildPolyGCPath(GraphicContext& gc, int32_t index, const RemapRectd& remap_rect) noexcept;
+        void buildPolyCompoundPath(GraphicContext* gc, int32_t index, const RemapRectd& remap_rect, GraphicCompoundPath& out_path) noexcept;
+        void buildPolyGCPath(GraphicContext* gc, int32_t index, const RemapRectd& remap_rect) noexcept;
 
         bool pointAtIndex(int32_t index, Vec2d& out_point) noexcept;
         void pointAtIndex(int32_t index, const RemapRectd& remap_rect, Vec2d& out_point) noexcept;
 
         DrawMode usedDrawMode(DrawMode draw_mode) const noexcept;
-        void applyDrawStyle(GraphicContext& gc);
+        void applyDrawStyle(GraphicContext* gc);
 
-        void drawAll(GraphicContext& gc, const RemapRectd& remap_rect, DrawMode draw_mode = DrawMode::Undefined) noexcept;
+        void drawAll(GraphicContext* gc, const RemapRectd& remap_rect, DrawMode draw_mode = DrawMode::Undefined) noexcept;
 
-        void drawPoly(GraphicContext& gc, int32_t index, const RemapRectd& remap_rect, DrawMode draw_mode = DrawMode::Undefined) noexcept;
-        void drawPolys(GraphicContext& gc, int32_t start_index, int32_t end_index, const RemapRectd& remap_rect, DrawMode draw_mode = DrawMode::Undefined) noexcept;
-        void drawPolys(GraphicContext& gc, const RemapRectd& remap_rect, DrawMode draw_mode = DrawMode::Undefined) noexcept;
+        void drawPoly(GraphicContext* gc, int32_t index, const RemapRectd& remap_rect, DrawMode draw_mode = DrawMode::Undefined) noexcept;
+        void drawPolys(GraphicContext* gc, int32_t start_index, int32_t end_index, const RemapRectd& remap_rect, DrawMode draw_mode = DrawMode::Undefined) noexcept;
+        void drawPolys(GraphicContext* gc, const RemapRectd& remap_rect, DrawMode draw_mode = DrawMode::Undefined) noexcept;
 
 
         ErrorCode readFromShapeFile(const String& file_path, int32_t limit = -1) noexcept;

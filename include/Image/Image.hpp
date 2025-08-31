@@ -110,7 +110,7 @@ namespace Grain {
     protected:
         Color::Model m_color_model = Color::Model::Undefined;
         PixelType m_pixel_type = PixelType::Undefined;
-        PixelType m_png_fallback_pixel_type = PixelType::UInt8;
+        PixelType m_fallback_pixel_type = PixelType::UInt8;     ///< Fallback pixel type for saving when float isn´t wanted or possible
         int32_t m_width = 0;
         int32_t m_height = 0;
         bool m_float_type = false;

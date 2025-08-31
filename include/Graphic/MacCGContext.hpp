@@ -54,6 +54,7 @@ namespace Grain {
 
         void setCGContextByComponent(CGContextRef context, Component* component) noexcept;
 
+        void setComponent(Component* component) noexcept override;
         void setImage(Image* image) noexcept override;
 
         bool isValid() noexcept override;
@@ -129,7 +130,9 @@ namespace Grain {
 
         Rectd textRect(const char* text, const Font* font) noexcept override;
         void drawText(const char* text, const Vec2d& pos, const Font* font, const RGB& color, float alpha = 1.0f) noexcept override;
-        double drawTextLineByLine(const char* text, const Rectd& bounds_rect, const Rectd& rect, double line_gap, const Font* font, const RGB& color, float alpha = 1.0f) noexcept override;
+        double drawTextInRect(const char* text, const Rectd& rect, Alignment alignment, const Font* font, const RGB& color, float alpha) noexcept override;
+        double drawWrappedText(const char* text, const Rectd& bounds_rect, const Rectd& rect, TextAlignment alignment, double line_gap, const Font* font, const RGB& color, float alpha = 1.0f) noexcept override;
+
         void addTextPath(const char* text, const Font* font) noexcept override;
 
         void clipPath() noexcept override;

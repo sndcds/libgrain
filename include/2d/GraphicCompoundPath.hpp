@@ -86,12 +86,12 @@ namespace Grain {
 
         void projectToQuadrilateral(const Quadrilateral& quadrilateral, const Mat3d* matrix = nullptr) noexcept;
 
-        void addAllPaths(GraphicContext& gc) noexcept;
-        void fill(GraphicContext& gc) noexcept;
-        void fillOuter(GraphicContext& gc) noexcept;
-        void fillEvenOdd(GraphicContext& gc) noexcept;
-        void stroke(GraphicContext& gc, StrokeStyle* stroke_style = nullptr) noexcept;
-        void addClip(GraphicContext& gc) noexcept;
+        void addAllPaths(GraphicContext* gc) noexcept;
+        void fill(GraphicContext* gc) noexcept;
+        void fillOuter(GraphicContext* gc) noexcept;
+        void fillEvenOdd(GraphicContext* gc) noexcept;
+        void stroke(GraphicContext* gc, StrokeStyle* stroke_style = nullptr) noexcept;
+        void addClip(GraphicContext* gc) noexcept;
     };
 
 } // End of namespace Grain

@@ -74,7 +74,7 @@ namespace Grain {
 
 
     void ScrollBar::draw(const Rectd &dirty_rect) noexcept {
-        GraphicContext gc(this);
+        auto gc = graphicContextPtr();
 
         auto style = guiStyle();
         if (!style) {
@@ -82,13 +82,13 @@ namespace Grain {
             return;
         }
 
-        gc.save();
+        gc->save();
 
         Rectd bounds_rect = boundsRect();
         RGB bg_color = style->backgroundColor();
 
-        gc.setFillRGB(bg_color);
-        gc.fillRect(bounds_rect);
+        gc->setFillRGB(bg_color);
+        gc->fillRect(bounds_rect);
 
         m_track_rect = bounds_rect;
         m_track_rect.inset(style->scrollBarPadding());
@@ -106,10 +106,10 @@ namespace Grain {
         }
 
         RGB handle_color = style->scrollBarColor();
-        gc.setFillRGB(handle_color);
-        gc.fillRoundBar(m_handle_rect);
+        gc->setFillRGB(handle_color);
+        gc->fillRoundBar(m_handle_rect);
 
-        gc.restore();
+        gc->restore();
     }
 
 

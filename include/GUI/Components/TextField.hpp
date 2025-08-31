@@ -67,7 +67,7 @@ namespace Grain {
 
 
         void draw(const Rectd& dirty_rect) noexcept override;
-        void drawCursor(GraphicContext& gc, float x) const noexcept;
+        void drawCursor(GraphicContext* gc, float x) const noexcept;
 
         virtual float beamWidth() const noexcept { return m_beam_width; }
 

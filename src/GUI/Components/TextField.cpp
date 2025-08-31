@@ -74,8 +74,9 @@ namespace Grain {
 
 #if defined(__APPLE__) && defined(__MACH__)
     void TextField::draw(const Rectd& dirty_rect) noexcept {
-        MacCGContext gc(this);
-        gc.disableFontSubpixelQuantization();
+        auto gc = static_cast<MacCGContext*>(graphicContextPtr());
+
+        gc->disableFontSubpixelQuantization();
 
         auto style= guiStyle();
         if (!style) {
@@ -83,7 +84,7 @@ namespace Grain {
             return;
         }
 
-        CGContextRef cg_context = gc.cgContext();
+        CGContextRef cg_context = gc->cgContext();
 
         _checkSelectionAndCursor();
 
@@ -107,8 +108,8 @@ namespace Grain {
             text_color.setBlend(background_color, 0.5f);
         }
 
-        gc.setFillRGBA(background_color);
-        gc.fillRect(boundsRect());
+        gc->setFillRGBA(background_color);
+        gc->fillRect(boundsRect());
 
         int32_t text_length = textLength();
 
@@ -117,7 +118,7 @@ namespace Grain {
         }
 
         if (text_length > 0) {
-            gc.setTextMatrix(1, 0, 0, -1, 0, 0);
+            gc->setTextMatrix(1, 0, 0, -1, 0, 0);
             float content_width = m_content_rect.width();
             // RGBA fg_selected_color = style->textSelectionColor();
 
@@ -208,8 +209,8 @@ namespace Grain {
                 if (!isEnabled()) {
                 }
 
-                gc.setFillRGBA(selection_background_color);
-                gc.fillRect(rect);
+                gc->setFillRGBA(selection_background_color);
+                gc->fillRect(rect);
             }
 
             // Draw cursor
@@ -243,7 +244,7 @@ namespace Grain {
         if (text_length < 1 && m_info_text) {
             Alignment alignment = m_text_alignment == Alignment::Right ? Alignment::Right : Alignment::Left;
             float alpha = m_is_enabled ? 0.5f : disabled_alpha;
-            gc.drawTextInRect(m_info_text, contentRect(), alignment, style->font(), style->textInfoColor(), alpha);
+            gc->drawTextInRect(m_info_text, contentRect(), alignment, style->font(), style->textInfoColor(), alpha);
         }
     }
 #else
@@ -252,7 +253,7 @@ namespace Grain {
     }
 #endif
 
-    void TextField::drawCursor(GraphicContext& gc, float x) const noexcept {
+    void TextField::drawCursor(GraphicContext* gc, float x) const noexcept {
         if (auto style = guiStyle()) {
             Rectd rect = contentRect();
             rect.m_x = x - 1;
@@ -262,8 +263,8 @@ namespace Grain {
             if (!isEnabled()) {
             }
 
-            gc.setFillRGB(color);
-            gc.fillRect(rect);
+            gc->setFillRGB(color);
+            gc->fillRect(rect);
         }
     }
 

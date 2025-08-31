@@ -18,6 +18,7 @@
 namespace Grain {
 
     class View : public Component {
+        friend class Component;
 
     public:
         explicit View(int32_t tag = 0) noexcept;
@@ -52,7 +53,6 @@ namespace Grain {
         bool m_split_view_flag = false;
         Rectd m_drag_rect;
 
-        // Style
         GUIStyle m_style_set;
     };
 

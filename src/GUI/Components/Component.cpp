@@ -416,7 +416,7 @@ namespace Grain {
     }
 
 
-    void Component::callDrawFunction(GraphicContext& gc) noexcept {
+    void Component::callDrawFunction(GraphicContext* gc) noexcept {
         if (hasDrawFunction()) {
             _m_draw_func(gc, this, _m_draw_func_ref);
         }
@@ -447,20 +447,20 @@ namespace Grain {
     }
 
 
-    void Component::drawDummy(Grain::GraphicContext &gc) const noexcept {
-        gc.setStrokeColor(1, 0, 0, 1);
-        gc.setStrokeWidth(2);
+    void Component::drawDummy(Grain::GraphicContext* gc) const noexcept {
+        gc->setStrokeColor(1, 0, 0, 1);
+        gc->setStrokeWidth(2);
         auto rect = boundsRect();
         rect.inset(1.0f);
-        gc.strokeRect(rect);
-        gc.strokeLine(rect.x(), rect.y(), rect.x2(), rect.y2());
-        gc.strokeLine(rect.x(), rect.y2(), rect.x2(), rect.y());
+        gc->strokeRect(rect);
+        gc->strokeLine(rect.x(), rect.y(), rect.x2(), rect.y2());
+        gc->strokeLine(rect.x(), rect.y2(), rect.x2(), rect.y());
     }
 
 
-    void Component::drawRect(GraphicContext& gc, const Rectd& rect) const noexcept {
-        gc.setFillColor(0, 0, 1, 1);
-        gc.fillRect(rect);
+    void Component::drawRect(GraphicContext* gc, const Rectd& rect) const noexcept {
+        gc->setFillColor(0, 0, 1, 1);
+        gc->fillRect(rect);
     }
 
 
@@ -471,5 +471,19 @@ namespace Grain {
         return component;
     }
 
+
+    GraphicContext* Component::graphicContextPtr() noexcept {
+        auto component = this;
+        while (!component->m_gc_ptr) {
+            if (component->m_parent) {
+                component = component->m_parent;
+            }
+            else {
+                return nullptr;
+            }
+        }
+        component->m_gc_ptr->setComponent(component);
+        return component->m_gc_ptr;
+    }
 
 } // End of namespace Grain

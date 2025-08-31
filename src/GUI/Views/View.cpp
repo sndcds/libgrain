@@ -47,6 +47,8 @@ namespace Grain {
     void View::_init(const Rectd& rect) noexcept {
         m_type = Component::ComponentType::View;
         m_can_have_children = true;
+        m_gc_ptr = App::createGUIGraphicContext();
+        // TODO: Check nullptr
     }
 
 
@@ -143,25 +145,22 @@ namespace Grain {
 
 
     void View::draw(const Rectd& dirty_rect) noexcept {
-        GraphicContext gc(this);
+        auto gc = graphicContextPtr();
 
         auto style = App::guiStyleAtIndex(m_style_index);
         if (style) {
             Rectd bounds_rect = boundsRect();
 
             if (m_fills_bg) {
-                gc.setFillRGBA(style->viewColor());
-                gc.fillRect(bounds_rect);
+                gc->setFillRGBA(style->viewColor());
+                gc->fillRect(bounds_rect);
             }
             else {
-                gc.setFillClearColor();
-                gc.fillRect(bounds_rect);
+                gc->setFillClearColor();
+                gc->fillRect(bounds_rect);
             }
         }
 
-
         callDrawFunction(gc);
     }
-
-
 } // End of namespace Grain

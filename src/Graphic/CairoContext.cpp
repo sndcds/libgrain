@@ -8,9 +8,10 @@
 //
 
 #include "Graphic/CairoContext.hpp"
-#include "Image/Image.hpp"
-#include "Color/Gradient.hpp"
 #include "Core/Log.hpp"
+#include "GUI/Components/Component.hpp"
+#include "Color/Gradient.hpp"
+#include "Image/Image.hpp"
 
 
 namespace Grain {
@@ -93,6 +94,12 @@ namespace Grain {
                 << cairo_status_to_string(cairo_status(m_cairo_cr))
                 << l.endl;
         }
+    }
+
+
+    void CairoContext::setComponent(Component* component) noexcept {
+        std::cout << "CairoContext::setComponent(): " << (int)component->componentType() << std::endl;
+
     }
 
 
@@ -446,33 +453,29 @@ namespace Grain {
 
 
     void CairoContext::fillRect(double x, double y, double width, double height) noexcept {
-        if (width > 0 && height > 0) {
-            _cairoSetFillColor();
-            cairo_rectangle(m_cairo_cr, x, y, width, height);
-            cairo_fill(m_cairo_cr);
-        }
+        if (width <= 0.0 && height <= 0.0) return;
+        _cairoSetFillColor();
+        cairo_rectangle(m_cairo_cr, x, y, width, height);
+        cairo_fill(m_cairo_cr);
     }
 
 
     void CairoContext::strokeRect(double x, double y, double width, double height) noexcept {
-        if (width > 0 && height > 0) {
-            _cairoSetStrokeColor();
-            cairo_rectangle(m_cairo_cr, x, y, width, height);
-            cairo_stroke(m_cairo_cr);
-        }
+        if (width <= 0.0 && height <= 0.0) return;
+        _cairoSetStrokeColor();
+        cairo_rectangle(m_cairo_cr, x, y, width, height);
+        cairo_stroke(m_cairo_cr);
     }
 
 
     void CairoContext::fillEllipse(double x, double y, double rh, double rv) noexcept {
         if (rh <= 0.0 || rv <= 0.0) return;
-
         _cairoSetFillColor();
         cairo_save(m_cairo_cr);
         cairo_translate(m_cairo_cr, x, y);
         cairo_scale(m_cairo_cr, rh, rv);
         cairo_arc(m_cairo_cr, 0.0, 0.0, 1.0, 0.0, 2.0 * M_PI);
         cairo_restore(m_cairo_cr);
-
         cairo_fill(m_cairo_cr);
     }
 

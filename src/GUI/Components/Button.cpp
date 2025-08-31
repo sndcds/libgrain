@@ -48,11 +48,7 @@ namespace Grain {
 
 
     void Button::draw(const Rectd& dirty_rect) noexcept {
-#if defined(__APPLE__) && defined(__MACH__)
-        MacCGContext gc(this);
-#else
-        GraphicContext gc(this);
-#endif
+        auto gc = graphicContextPtr();
 
         auto style = guiStyle();
         if (!style) {
@@ -60,16 +56,16 @@ namespace Grain {
             return;
         }
 
-        gc.setFillRGBA(style->backgroundColor());
+        gc->setFillRGBA(style->backgroundColor());
         switch (style->cornerRadiusMode()) {
             case GUIStyle::CornerRadiusMode::No:
-                gc.fillRect(boundsRect());
+                gc->fillRect(boundsRect());
                 break;
             case GUIStyle::CornerRadiusMode::Same:
-                gc.fillRoundRect(boundsRect(), style->cornerRadius(0));
+                gc->fillRoundRect(boundsRect(), style->cornerRadius(0));
                 break;
             case GUIStyle::CornerRadiusMode::Different:
-                gc.fillRoundRect(
+                gc->fillRoundRect(
                         boundsRect(),
                         style->cornerRadius(0),
                         style->cornerRadius(1),
@@ -81,7 +77,7 @@ namespace Grain {
         if (hasText()) {
             Rectd text_rect = boundsRect();
             text_rect.inset(style->padding(0), style->padding(1), style->padding(2), style->padding(3));
-            gc.drawTextInRect(m_text->utf8(), text_rect, style->textAlignment(), style->font(), style->foregroundColor());
+            gc->drawTextInRect(m_text->utf8(), text_rect, style->textAlignment(), style->font(), style->foregroundColor());
         }
     }
 

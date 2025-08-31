@@ -45,23 +45,23 @@ namespace Grain {
     }
 
 
-    GraphicPath *GraphicCompoundPath::pathPtrAtIndex(int32_t index) noexcept {
+    GraphicPath* GraphicCompoundPath::pathPtrAtIndex(int32_t index) noexcept {
         return m_paths.elementAtIndex(index);
     }
 
 
-    GraphicPath *GraphicCompoundPath::lastPathPtr() noexcept {
+    GraphicPath* GraphicCompoundPath::lastPathPtr() noexcept {
         return m_paths.lastElement();
     }
 
 
-    bool GraphicCompoundPath::boundsRect(Rectd &out_bounds_rect) const noexcept {
+    bool GraphicCompoundPath::boundsRect(Rectd& out_bounds_rect) const noexcept {
         #pragma message("GraphicCompoundPath::boundsRect() must be implemented!")
         return false;
     }
 
 
-    double GraphicCompoundPath::polygonCentroid(Vec2d &out_centroid) const noexcept {
+    double GraphicCompoundPath::polygonCentroid(Vec2d& out_centroid) const noexcept {
         double total_area = 0;
         Vec2d compound_c;
 
@@ -95,7 +95,7 @@ namespace Grain {
             m_paths.push(path);
             m_must_add_path = false;
         }
-        catch (const std::exception &e) {
+        catch (const std::exception& e) {
             result = ErrorCode::StdCppException;
         }
 
@@ -104,24 +104,24 @@ namespace Grain {
 
 
 /* TODO: Implement!
-    void _CGPathEnumerationCallback(void *info, const CGPathElement *element) {
+    void _CGPathEnumerationCallback(void* info, const CGPathElement* element) {
         if (info) {
             ((GraphicCompoundPath*)info)->_addCGPathElement(element);
         }
     }
 */
 
-    Rectd GraphicCompoundPath::buildFromText(const Font &font, const char *text) noexcept {
+    Rectd GraphicCompoundPath::buildFromText(const Font& font, const char* text) noexcept {
         #pragma message("GraphicCompoundPath::buildFromText() must be implemented!")
         return { 0, 0, 0, 0 };
     }
 
 /*
-    Rectd GraphicCompoundPath::buildFromText(const Font &font, const char *text) noexcept {
+    Rectd GraphicCompoundPath::buildFromText(const Font& font, const char* text) noexcept {
 
         Rectd bounds_rect;
 
-        NSString *ns_string = nullptr;
+        NSString* ns_string = nullptr;
 
         try {
             if (!text) {
@@ -204,12 +204,12 @@ namespace Grain {
     }
 */
 
-    Rectd GraphicCompoundPath::buildFromText(const Font &font, const String &text) noexcept {
+    Rectd GraphicCompoundPath::buildFromText(const Font& font, const String& text) noexcept {
         return buildFromText(font, text.utf8());
     }
 
 
-    Rectd GraphicCompoundPath::buildFromWKB(WKBParser &wkb_parser, RemapRectd &remap_rect) noexcept {
+    Rectd GraphicCompoundPath::buildFromWKB(WKBParser& wkb_parser, RemapRectd& remap_rect) noexcept {
         Rectd result_rect;
         result_rect.zero();
 
@@ -247,7 +247,7 @@ namespace Grain {
                         auto err = addEmptyPath();
                         Exception::throwStandard(err);
 
-                        auto *graphic_path = lastPathPtr();
+                        auto* graphic_path = lastPathPtr();
                         if (!graphic_path) {
                             throw ErrorCode::NullData;
                         }
@@ -292,7 +292,7 @@ namespace Grain {
                     auto err = addEmptyPath();
                     Exception::throwStandard(err);
 
-                    auto *graphic_path = lastPathPtr();
+                    auto* graphic_path = lastPathPtr();
                     if (!graphic_path) {
                         throw ErrorCode::NullData;
                     }
@@ -325,7 +325,7 @@ namespace Grain {
 
 
 /* TODO: Implement!
-    void GraphicCompoundPath::_addCGPathElement(const CGPathElement *element) noexcept {
+    void GraphicCompoundPath::_addCGPathElement(const CGPathElement* element) noexcept {
         if (m_must_add_path) {
             addEmptyPath();
         }
@@ -388,51 +388,51 @@ namespace Grain {
     }
 
 
-    void GraphicCompoundPath::projectToQuadrilateral(const Quadrilateral &quadrilateral, const Mat3d *matrix) noexcept {
+    void GraphicCompoundPath::projectToQuadrilateral(const Quadrilateral& quadrilateral, const Mat3d* matrix) noexcept {
         for (auto& path : m_paths) {
             path->projectToQuadrilateral(quadrilateral, matrix);
         }
     }
 
 
-    void GraphicCompoundPath::addAllPaths(GraphicContext &gc) noexcept {
+    void GraphicCompoundPath::addAllPaths(GraphicContext* gc) noexcept {
         for (auto& path : m_paths) {
-            gc.addPath((GraphicPath*)path);
+            gc->addPath(path);
         }
     }
 
 
-    void GraphicCompoundPath::fill(GraphicContext &gc) noexcept {
+    void GraphicCompoundPath::fill(GraphicContext* gc) noexcept {
         addAllPaths(gc);
-        gc.fillPath();
+        gc->fillPath();
     }
 
 
-    void GraphicCompoundPath::fillOuter(GraphicContext &gc) noexcept {
+    void GraphicCompoundPath::fillOuter(GraphicContext* gc) noexcept {
         // TODO: Check!
         if (m_paths.size() > 1) {
-            gc.addPath(m_paths.elementAtIndex(0));
-            gc.fillPath();
+            gc->addPath(m_paths.elementAtIndex(0));
+            gc->fillPath();
         }
     }
 
 
-    void GraphicCompoundPath::fillEvenOdd(GraphicContext &gc) noexcept {
+    void GraphicCompoundPath::fillEvenOdd(GraphicContext* gc) noexcept {
         addAllPaths(gc);
-        gc.fillPathEvenOdd();
+        gc->fillPathEvenOdd();
     }
 
 
-    void GraphicCompoundPath::stroke(GraphicContext &gc, StrokeStyle *stroke_style) noexcept {
+    void GraphicCompoundPath::stroke(GraphicContext* gc, StrokeStyle* stroke_style) noexcept {
         // TODO: Use `stroke_style`!
         addAllPaths(gc);
-        gc.strokePath();
+        gc->strokePath();
     }
 
 
-    void GraphicCompoundPath::addClip(GraphicContext &gc) noexcept {
+    void GraphicCompoundPath::addClip(GraphicContext* gc) noexcept {
         addAllPaths(gc);
-        gc.clipPath();
+        gc->clipPath();
     }
 
 

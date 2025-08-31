@@ -216,10 +216,12 @@ namespace Grain {
 
         // Time measurement in nanoseconds
         int64_t m_total_data_access_time = 0;           ///< Database of File acccess time
+        int64_t m_total_data_query_time = 0;            ///< Database query time
         int64_t m_total_script_preparation_time = 0;    ///< Script (e.g. Lua) preparation time
         int64_t m_total_script_exec_time = 0;
         int64_t m_total_parse_time = 0;
         int64_t m_total_proj_time = 0;
+        int64_t m_total_drawing_time = 0;
         int64_t m_total_render_time = 0;
 
         int64_t m_total_db_rows_n = 0;      ///< Number of rows requested from the database
@@ -432,6 +434,11 @@ namespace Grain {
         String m_output_file_format_name;   ///< File format. Can be png, jpg, tiff ...
         String m_output_file_ext;           ///< File extension, "png", "jpg" ...
 
+        // Verbose
+        int32_t m_csv_layer_verbose_level = false;
+        int32_t m_shape_layer_verbose_level = false;
+        int32_t m_psql_layer_verbose_level = 10;
+
         // Statistics
         int64_t m_config_time = 0;          ///< Total time for parsing config file
         int64_t m_db_connection_time = 0;   ///< Total time for connecting to databases
@@ -520,7 +527,7 @@ namespace Grain {
         void setRenderBoundsWGS84(const Vec2d& top_left, const Vec2d& bottom_right) noexcept;
         ErrorCode render() noexcept;
         void _updateMeterPerPixel() noexcept;
-        void _renderLayers(GraphicContext& gc, RemapRectd& remap_rect);
+        void _renderLayers(GraphicContext* gc, RemapRectd& remap_rect);
 
         void _handleLuaError(int status, ErrorCode err);
         void _prepareLuaScriptForLayer(GeoTileRendererLayer* layer, GeoTileRendererDrawSettings* draw_settings, int64_t element_count);
@@ -528,17 +535,17 @@ namespace Grain {
         void _setLuaValueByPSQLProperty(const PSQLProperty* property);
 
         PSQLConnection* _psqlConnForLayer(GeoTileRendererLayer* layer) noexcept;
-        void _renderPSQLLayer(GeoTileRendererLayer* layer, GraphicContext& gc, RemapRectd& remap_rect);
+        void _renderPSQLLayer(GeoTileRendererLayer* layer, GraphicContext* gc, RemapRectd& remap_rect);
 
-        void _renderShapeLayer(GeoTileRendererLayer* layer, GraphicContext& gc, RemapRectd& remap_rect);
+        void _renderShapeLayer(GeoTileRendererLayer* layer, GraphicContext* gc, RemapRectd& remap_rect);
 
-        void _renderPolygonLayer(GeoTileRendererLayer* layer, GraphicContext& gc, RemapRectd& remap_rect);
+        void _renderPolygonLayer(GeoTileRendererLayer* layer, GraphicContext* gc, RemapRectd& remap_rect);
         void _releasePolygonLayerResouces(GeoTileRendererLayer* layer);
 
-        void _renderCSVLayer(GeoTileRendererLayer* layer, GraphicContext& gc, RemapRectd& remap_rect);
+        void _renderCSVLayer(GeoTileRendererLayer* layer, GraphicContext* gc, RemapRectd& remap_rect);
 
 
-        void _setupGCDrawing(GraphicContext& gc, GeoTileRendererDrawSettings& draw_settings);
+        void _setupGCDrawing(GraphicContext* gc, GeoTileRendererDrawSettings& draw_settings);
 
 
         GeoTileRendererLayer* addLayer() noexcept;

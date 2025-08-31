@@ -23,7 +23,7 @@
 namespace Grain {
 
     class Font;
-
+    class GraphicContext;
 
     enum {
         kMaxScreenCount = 32    ///< Maximum number of screens
@@ -77,6 +77,9 @@ namespace Grain {
         int32_t m_logical_core_count = 0;
         size_t m_mem_size = 0;
 
+        // GraphicContext
+        GraphicContextType m_gc_type = GraphicContextType::AppleMac;
+
         // Screens
         ObjectList<Screen*> m_screens;          ///< Pointers to screens
         int32_t m_smallest_screen_index = -1;   ///< Index of smalles screen
@@ -98,7 +101,8 @@ namespace Grain {
         GUIStyleSet m_gui_styles_set;
 
         // GUI
-        float m_default_corner_radius = 5.0f;   // !!!!!!!!!!
+        float m_default_corner_radius = 5.0f;   // TODO: !!!!!
+
 
         timestamp_t m_double_click_ms = 250;    ///< Maximum time for detecting double clicks, default 250 msec ~ 1/4 sec
         float m_scroll_wheel_speed = 4;
@@ -129,13 +133,18 @@ namespace Grain {
         static void addMenu();
         static void start();
 
-        static App* instance() noexcept { return g_instance; }
+        [[nodiscard]] static App* instance() noexcept { return g_instance; }
         static void beep() noexcept;
 
 
-        static String& confFilePath() {
+        [[nodiscard]] static const String& confFilePath() {
             return g_instance->m_conf_file_path;
         }
+
+
+        // GraphicContext
+        static GraphicContextType graphicContextType() noexcept { return g_instance->m_gc_type; }
+        [[nodiscard]] static GraphicContext* createGUIGraphicContext() noexcept;
 
 
         // Screen
@@ -143,42 +152,44 @@ namespace Grain {
         static int32_t screenCount() noexcept {
             return static_cast<int32_t>(g_instance->m_screens.size());
         }
-        static Screen* mainScreen() noexcept {
+        [[nodiscard]] static Screen* mainScreen() noexcept {
             return App::screenAtIndex(0);
         }
-        static Screen* smallestScreen() noexcept {
+        [[nodiscard]] static Screen* smallestScreen() noexcept {
             return App::screenAtIndex(g_instance->m_smallest_screen_index);
         }
-        static Screen* largestScreen() noexcept {
+        [[nodiscard]] static Screen* largestScreen() noexcept {
             return App::screenAtIndex(g_instance->m_largest_screen_index);
         }
-        static Screen* screenAtIndex(int32_t index) noexcept {
+        [[nodiscard]] static Screen* screenAtIndex(int32_t index) noexcept {
             return g_instance->m_screens.elementAtIndex(index);
         }
-        static int32_t totalScreenPixelCount() noexcept {
+        [[nodiscard]] static int32_t totalScreenPixelCount() noexcept {
             return g_instance->m_total_screen_pixel_count;
         }
-        static Rectd mainScreenRect() noexcept;
+        [[nodiscard]] static Rectd mainScreenRect() noexcept;
 
         // Window
         Window* addWindow(const char* title, const Rectd& rect, Window::Style window_style = Window::Style::Default, Screen* screen = nullptr) noexcept;
         [[nodiscard]] int32_t windowCount() const noexcept { return static_cast<int32_t>(m_windows.size()); }
-        static Window *keyWindow() noexcept { return g_instance->m_key_window; }
+        [[nodiscard]] static Window *keyWindow() noexcept { return g_instance->m_key_window; }
 
         // Font
-        static Font* uiFont() noexcept { return g_instance->m_ui_font; }
-        static Font* uiSmallFont() noexcept { return g_instance->m_small_ui_font; }
-        static Font* uiTitleFont() noexcept { return g_instance->m_title_ui_font; }
-        static Font* monoFont() noexcept { return g_instance->m_mono_font; }
+        [[nodiscard]] static Font* uiFont() noexcept { return g_instance->m_ui_font; }
+        [[nodiscard]] static Font* uiSmallFont() noexcept { return g_instance->m_small_ui_font; }
+        [[nodiscard]] static Font* uiTitleFont() noexcept { return g_instance->m_title_ui_font; }
+        [[nodiscard]] static Font* monoFont() noexcept { return g_instance->m_mono_font; }
 
         // GUI
-        static float defaultCornerRadius() noexcept { return g_instance->m_default_corner_radius; }
+        [[nodiscard]] static float defaultCornerRadius() noexcept { return g_instance->m_default_corner_radius; }
+        [[nodiscard]] static timestamp_t doubleClickMillis() noexcept { return g_instance->m_double_click_ms; }
+
 
         // Hardware
         [[nodiscard]] static float scrollWheelSpeed() { return 1.0f; }
 
         // Style
-        static GUIStyle* guiStyleAtIndex(int32_t index) noexcept {
+        [[nodiscard]] static GUIStyle* guiStyleAtIndex(int32_t index) noexcept {
             return g_instance->m_gui_styles_set.styleAtIndex(index);
         }
         static int32_t addGUIStyle() {
@@ -191,8 +202,6 @@ namespace Grain {
 
         static void setKeyWindow(Window* window) noexcept;
         static void allWindowsNeedsDisplay() noexcept;
-
-        static timestamp_t doubleClickMillis() noexcept { return g_instance->m_double_click_ms; }
     };
 
 } // End of namespace Grain

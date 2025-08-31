@@ -33,7 +33,7 @@ namespace Grain {
 
 
     void SplitView::draw(const Rectd& dirty_rect) noexcept {
-        GraphicContext gc(this);
+        auto gc = graphicContextPtr();
 
         if (m_must_init == true) {
             initLayout();
@@ -43,8 +43,8 @@ namespace Grain {
         Rectd bounds_rect = boundsRect();
         RGB bg_color = { 1, 0, 0 }; // TODO: !!!!!
 
-        gc.setFillRGB(bg_color);
-        gc.fillRect(bounds_rect);
+        gc->setFillRGB(bg_color);
+        gc->fillRect(bounds_rect);
 
         float divider_size = dividerSize();
         Rectd split_rect;

@@ -55,6 +55,7 @@ namespace Grain {
         void _cairoSetStrokeColor() noexcept;
 
 
+        void setComponent(Component* component) noexcept override;
         void setImage(Image* image) noexcept override;
 
         bool isValid() noexcept override;
@@ -127,7 +128,7 @@ namespace Grain {
 
         Rectd textRect(const char* text, const Font* font) noexcept override { return Rectd(); /* Implement! */ }
         void drawText(const char* text, const Vec2d& pos, const Font* font, const RGB& color, float alpha = 1.0f) noexcept override { /* Implement! */ }
-        double drawTextLineByLine(const char* text, const Rectd& bounds_rect, const Rectd& rect, double line_gap, const Font* font, const RGB& color, float alpha = 1.0f) noexcept override { return 0.0; /* Implement! */ }
+        double drawWrappedText(const char* text, const Rectd& bounds_rect, const Rectd& rect, TextAlignment alignment, double line_gap, const Font* font, const RGB& color, float alpha = 1.0f) noexcept override { return 0.0; /* Implement! */ }
         void addTextPath(const char* text, const Font* font) noexcept override { /* Implement! */ }
 
         void clipPath() noexcept override { /* Implement! */ }

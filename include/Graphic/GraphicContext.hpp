@@ -55,14 +55,6 @@ namespace Grain {
         friend class Image;
 
     public:
-        /*
-        enum class Engine {
-            Undefined = -1,
-            Cairo = 0,
-            CoreGraphics = 1,
-            Default = Cairo
-        };
-*/
         enum class BlendMode {
             Undefined = -1,
             Normal = 0,
@@ -144,6 +136,7 @@ namespace Grain {
         void setDebugFgColor(const RGBA& color) noexcept { m_debug_fg_color = color; }
         void setDebugBgColor(const RGBA& color) noexcept { m_debug_bg_color = color; }
 
+        virtual void setComponent(Component* component) noexcept {}
         virtual void setImage(Image* image) noexcept;
 
         virtual bool isValid() noexcept { return false; }
@@ -384,7 +377,7 @@ namespace Grain {
         virtual double drawTextInRect(const String& string, const Rectd& rect, Alignment alignment, const Font* font, const RGB& color, float alpha = 1.0f) noexcept;
         virtual double drawTextInRect(const char* text, const Rectd& rect, Alignment alignment, const Font* font, const RGB& color, float alpha = 1.0f) noexcept { return 0.0; }
         virtual double drawTextIntInRect(int64_t value, const Rectd& rect, Alignment alignment, const Font* font, const RGB& color, float alpha = 1.0f) noexcept;
-        virtual double drawTextLineByLine(const char* text, const Rectd& bounds_rect, const Rectd& rect, double line_gap, const Font* font, const RGB& color, float alpha = 1.0f) noexcept { return 0.0; }
+        virtual double drawWrappedText(const char* text, const Rectd& bounds_rect, const Rectd& rect, TextAlignment alignment, double line_gap, const Font* font, const RGB& color, float alpha = 1.0f) noexcept { return 0.0; }
 
         virtual void drawDebugText(const char* text, Vec2d& pos, int32_t spacing = 2) noexcept;
         virtual void drawDebugBool(const char* label, bool value, Vec2d& pos, int32_t spacing = 2) noexcept;

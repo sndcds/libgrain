@@ -368,7 +368,6 @@ namespace Grain {
 
         layer->m_csv_ignore_header = layer_table.booleanOr("ignore-header", false);
 
-
         layer->m_char_set = layer_table.stringOr("char-set", "UTF-8");
 
         // TODO: Check, if m_char_set is known! char-set
@@ -476,7 +475,6 @@ namespace Grain {
         layer->m_has_lua_script = layer->m_lua_script.length() > 0;
 
         // Custom fields
-
         if (layer_table.hasItem("custom-fields")) {
             TomlArray custom_fields;
             layer_table.arrayOrThrow("custom-fields", custom_fields);
@@ -809,10 +807,16 @@ namespace Grain {
             l << index << ": " << layer->m_name << l.endl;
             l++;
             l << "access: " << (1e-9 * layer->m_total_data_access_time) << " sec." << l.endl;
+            l << "query: " << (1e-9 * layer->m_total_data_query_time) << " sec." << l.endl;
             l << "parse: " << (1e-9 * layer->m_total_parse_time) << " sec." << l.endl;
             l << "script preparation: " << (1e-9 * layer->m_total_script_preparation_time) << " sec." << l.endl;
             l << "script execution: " << (1e-9 * layer->m_total_script_exec_time) << " sec." << l.endl;
+            l << "drawing: " << (1e-9 * layer->m_total_drawing_time) << " sec." << l.endl;
             l << "render: " << (1e-9 * layer->m_total_render_time) << " sec." << l.endl;
+            l << "database rows queried: " << layer->m_total_db_rows_n << l.endl;
+            l << "points: " << layer->m_total_point_n << l.endl;
+            l << "strokes: " << layer->m_total_stroke_n << l.endl;
+            l << "fills: " << layer->m_total_fill_n << l.endl;
             l--;
             index++;
 
@@ -988,6 +992,7 @@ namespace Grain {
 
                                     switch (m_output_file_type) {
                                         case Image::FileType::PNG:
+                                            tile_image->pixelType();
                                             err = tile_image->writePng(file_path, m_image_quality, m_image_use_alpha);
                                             break;
 
@@ -1240,7 +1245,7 @@ namespace Grain {
                 }
 
                 gc->setImage(m_render_image);
-                _renderLayers(*gc, remap_rect);
+                _renderLayers(gc, remap_rect);
 
                 m_render_image->endDraw();
             }
@@ -1272,7 +1277,7 @@ namespace Grain {
      *                   - file access or format errors (Shape/CSV layers),
      *                   - invalid geometry (Polygon layers).
      */
-     void GeoTileRenderer::_renderLayers(GraphicContext& gc, RemapRectd& remap_rect) {
+     void GeoTileRenderer::_renderLayers(GraphicContext* gc, RemapRectd& remap_rect) {
         m_current_layer_index = 0;
 
         for (auto& layer : m_layers) {
@@ -1469,16 +1474,28 @@ namespace Grain {
      */
     void GeoTileRenderer::_renderPSQLLayer(
             GeoTileRendererLayer* layer,
-            GraphicContext& gc,
+            GraphicContext* gc,
             RemapRectd& remap_rect) {
 
         auto result = ErrorCode::None;
+
+        Log l;
+
+        if (m_psql_layer_verbose_level > 0) {
+            l << "Rendering PSQL layer: " << layer->m_name << l.endl;
+            l++;
+        }
 
         layer->checkProj(m_dst_srid);
 
         // Replace variables in SQL query
         String sql = layer->m_sql_query;
         if (layer->m_sql_query.find("{{") >= 0) {
+            char buffer[32];
+            if (m_psql_layer_verbose_level > 1) {
+                l << "Replace variables in SQL query: " << l.endl;
+            }
+
             if (layer->m_srid == m_dst_srid) {
                 sql.replace("{{clipping}}", "ST_Intersects({{geometry-field}}, ST_MakeEnvelope({{min-x}}, {{min-y}}, {{max-x}}, {{max-y}}, {{destination-srid}}))");
             }
@@ -1493,11 +1510,18 @@ namespace Grain {
             sql.replace("{{min-y}}", m_render_top_string);
             sql.replace("{{max-y}}", m_render_bottom_string);
 
-            char dst_srid_str[20];
-            std::snprintf(dst_srid_str, 20, "%d", m_dst_srid);
-            sql.replace("{{destination-srid}}", dst_srid_str);
+            std::snprintf(buffer, 32, "%d", m_dst_srid);
+            sql.replace("{{destination-srid}}", buffer);
 
-            // TODO: Replace other variables?
+            std::snprintf(buffer, 32, "%d", m_current_zoom);
+            sql.replace("{{zoom-level}}", buffer);
+
+            if (m_psql_layer_verbose_level > 2) {
+                l << "PSQL query: " << l.endl;
+                l++;
+                l << sql << l.endl;
+                l--;
+            }
         }
 
 
@@ -1506,6 +1530,10 @@ namespace Grain {
 
         try {
             TimeMeasure tm_data_access;
+
+            if (m_psql_layer_verbose_level > 1) {
+                l << "Connect to database" << l.endl;
+            }
 
             // Execute SQL query, binary result
             psql_connection = _psqlConnForLayer(layer);
@@ -1525,16 +1553,17 @@ namespace Grain {
                         layer->sqlIdendifierStr());
             }
 
-            /*
+            /* TODO: Set timeout
             err = psql_connection->useTimeout();
             Exception::throwStandard(err);
             */
 
-            // Access the underlying raw libpq connection handle (PGconn*).
-            // This allows calling libpq functions directly on the PostgreSQL connection.
-            // NOTE: Prefer higher-level abstractions if available; only use this when
-            // direct libpq access is necessary.
-            // auto pg_conn = (PGconn*)psql_connection->_m_pg_conn_ptr;
+            if (m_psql_layer_verbose_level > 1) {
+                l << "Database query" << l.endl;
+            }
+
+            layer->m_total_data_access_time += tm_data_access.elapsedNanos();
+            TimeMeasure tm_query;
 
             auto psql_result = psql_connection->query(sql, PSQLResult::Format::Binary);
             if (!psql_result.areTuplesOK()) {
@@ -1550,9 +1579,15 @@ namespace Grain {
             auto row_count = psql_result.tupleCount();
             int32_t field_count = psql_result.fieldCount();
 
-            layer->m_total_data_access_time += tm_data_access.elapsedNanos();
+            layer->m_total_data_query_time += tm_query.elapsedNanos();
+
+
 
             if (!layer->m_db_field_names_scanned) {
+                if (m_psql_layer_verbose_level > 1) {
+                    l << "Scan field names" << l.endl;
+                }
+
                 TimeMeasure tm_script_preparation;
 
                 // Scan all field names for accessing them in Lua scripts
@@ -1591,10 +1626,14 @@ namespace Grain {
             // Load Lua script, preparation, setup and process
             GeoTileRendererDrawSettings draw_settings;
 
+            if (m_psql_layer_verbose_level > 1) {
+                l << "Prepare Lua script" << l.endl;
+            }
+
             _prepareLuaScriptForLayer(layer, &draw_settings, row_count);
 
             // Rendering
-            gc.save();
+            gc->save();
             gc_saved_flag = true;
 
             // Process each row
@@ -1610,7 +1649,26 @@ namespace Grain {
             double fill_extend_width = meterToPixel(layer->m_draw_settings.m_fill_extend_width, layer->m_draw_settings.m_fill_extend_px_fix, 0.0, 1000.0);
             bool fill_extend_flag =  fill_extend_width > 0.005;
 
-            for (int row_index = 0; row_index < row_count; row_index++) {
+            GraphicCompoundPath compound_path;
+
+            if (m_psql_layer_verbose_level > 1) {
+                l << "row_count: " << row_count << std::endl;
+                l << "Render layer items" << l.endl;
+            }
+
+            int64_t drawing_time = 0;
+            int64_t wkb_parsing_time = 0;
+            int64_t script_execution_time = 0;
+
+            TimeMeasure tm_drawing;
+
+            for (int32_t row_index = 0; row_index < row_count; row_index++) {
+                if (m_psql_layer_verbose_level > 2) {
+                    if ((row_index % 10000) == 0) {
+                        l << "row_index: " << row_index << l.endl;
+                    }
+                }
+
                 // Initial draw settings from layer
                 draw_settings = layer->m_draw_settings;
 
@@ -1656,7 +1714,7 @@ namespace Grain {
 
                     auto process_result = m_lua->callFunction("process");
 
-                    layer->m_total_script_exec_time += tm_script_execution.elapsedNanos();
+                    script_execution_time += tm_script_execution.elapsedNanos();
 
                     if (process_result == 0) {
                         continue;  // This row doesn´t render, go to next row in loop
@@ -1668,7 +1726,6 @@ namespace Grain {
                 bool render_as_point = false;
                 bool render_as_path = false;
 
-                GraphicCompoundPath compound_path;
                 Vec2d point;
 
                 {
@@ -1693,7 +1750,7 @@ namespace Grain {
                         Exception::throwSpecific(kErrUnsupportedWKBType);
                     }
 
-                    layer->m_total_parse_time += tm_wkb_parsing.elapsedNanos();
+                    wkb_parsing_time += tm_wkb_parsing.elapsedNanos();
                 }
 
                 if (render_flag) {
@@ -1705,25 +1762,25 @@ namespace Grain {
                     if (render_as_point) {
                         switch (draw_settings.m_draw_mode) {
                             case GeoTileDrawMode::Fill:
-                                gc.fillCircle(point, draw_settings.m_radius_px);
+                                gc->fillCircle(point, draw_settings.m_radius_px);
                                 fill_n = 1;
                                 break;
 
                             case GeoTileDrawMode::Stroke:
-                                gc.strokeCircle(point, draw_settings.m_radius_px);
+                                gc->strokeCircle(point, draw_settings.m_radius_px);
                                 stroke_n = 1;
                                 break;
 
                             case GeoTileDrawMode::FillStroke:
-                                gc.fillCircle(point, draw_settings.m_radius_px);
-                                gc.strokeCircle(point, draw_settings.m_radius_px);
+                                gc->fillCircle(point, draw_settings.m_radius_px);
+                                gc->strokeCircle(point, draw_settings.m_radius_px);
                                 fill_n = 1;
                                 stroke_n = 1;
                                 break;
 
                             case GeoTileDrawMode::StrokeFill:
-                                gc.strokeCircle(point, draw_settings.m_radius_px);
-                                gc.fillCircle(point, draw_settings.m_radius_px);
+                                gc->strokeCircle(point, draw_settings.m_radius_px);
+                                gc->fillCircle(point, draw_settings.m_radius_px);
                                 fill_n = 1;
                                 stroke_n = 1;
                                 break;
@@ -1731,7 +1788,7 @@ namespace Grain {
                             case GeoTileDrawMode::TextAtPoint: {
                                 const char* str = layer->m_data_property_list->stringFromPropertyAtIndex(0);
                                 if (str) {
-                                    gc.drawText(str, point, layer->m_draw_settings.font(this), layer->m_draw_settings.m_text_color);
+                                    gc->drawText(str, point, layer->m_draw_settings.font(this), layer->m_draw_settings.m_text_color);
                                 }
                                 break;
                             }
@@ -1750,8 +1807,8 @@ namespace Grain {
                                 compound_path.fill(gc);
                                 if (fill_extend_flag) {
                                     // Workaround to close gaps between polygons
-                                    gc.setStrokeRGBAndAlpha(draw_settings.m_fill_color, draw_settings.m_fill_opacity);
-                                    gc.setStrokeWidth(fill_extend_width);
+                                    gc->setStrokeRGBAndAlpha(draw_settings.m_fill_color, draw_settings.m_fill_opacity);
+                                    gc->setStrokeWidth(fill_extend_width);
                                     compound_path.stroke(gc);
                                 }
                                 fill_n = 1;
@@ -1779,6 +1836,8 @@ namespace Grain {
                             default:
                                 break;
                         }
+
+                        compound_path.clear();
                     }
 
                     layer->m_total_fill_n += fill_n;
@@ -1788,6 +1847,12 @@ namespace Grain {
                     m_total_stroke_n += stroke_n;
                 }
             }
+
+            drawing_time += tm_drawing.elapsedNanos();
+
+            layer->m_total_drawing_time = tm_drawing.elapsedNanos() - (wkb_parsing_time + script_execution_time);
+            layer->m_total_parse_time += wkb_parsing_time;
+            layer->m_total_script_exec_time += script_execution_time;
 
             psql_result.clear();
         }
@@ -1799,9 +1864,11 @@ namespace Grain {
             result = ErrorCode::Unknown;
         }
 
+
+
         // Cleanup
         if (gc_saved_flag) {
-            gc.restore();
+            gc->restore();
         }
 
         if (psql_connection) {
@@ -1823,7 +1890,7 @@ namespace Grain {
      */
     void GeoTileRenderer::_renderShapeLayer(
             GeoTileRendererLayer* layer,
-            GraphicContext& gc,
+            GraphicContext* gc,
             RemapRectd& remap_rect) {
 
         // Check if shape must be loaded
@@ -1867,20 +1934,20 @@ namespace Grain {
         RGB stroke_color = layer->m_draw_settings.m_stroke_color;
 
         if (drawModeHasFill(layer->m_draw_settings.m_draw_mode)) {
-            gc.setFillRGBAndAlpha(layer->m_draw_settings.m_fill_color, 1.0f);
+            gc->setFillRGBAndAlpha(layer->m_draw_settings.m_fill_color, 1.0f);
         }
 
         _setupGCDrawing(gc, layer->m_draw_settings);
 
-        gc.save();
+        gc->save();
 
-        gc.setBlendMode(layer->m_draw_settings.m_blend_mode);
+        gc->setBlendMode(layer->m_draw_settings.m_blend_mode);
         shape->setPointRadius(layer->m_draw_settings.m_radius_px);
         shape->drawAll(gc, remap_rect);
 
         // TODO: Statistics!
 
-        gc.restore();
+        gc->restore();
     }
 
 
@@ -1889,12 +1956,11 @@ namespace Grain {
      */
     void GeoTileRenderer::_renderPolygonLayer(
             GeoTileRendererLayer* layer,
-            GraphicContext& gc,
+            GraphicContext* gc,
             RemapRectd& remap_rect) {
 
         // TODO: Check SRID/CRS ... what to do, if destination is different from polygon files SRID?
         // Check if polygon must be loaded
-
         if (!layer->m_polygons_file) {
             TimeMeasure tm_data_access;
 
@@ -1930,7 +1996,6 @@ namespace Grain {
             }
 
             bool overlaps = m_render_dst_bounding_box.overlaps(entry->m_bounding_box);
-
             if (overlaps) {
                 polygons_file->setPos(entry->m_file_pos);
 
@@ -1952,7 +2017,7 @@ namespace Grain {
                         point_count = part_indices[part_index + 1] - part_indices[part_index];
                     }
 
-                    gc.beginPath();
+                    gc->beginPath();
                     for (int32_t point_index = 0; point_index < point_count; point_index++) {
 
                         Vec2d point;
@@ -1963,14 +2028,14 @@ namespace Grain {
                         remap_rect.mapVec2(point);
 
                         if (point_index == 0) {
-                            gc.moveTo(point);
+                            gc->moveTo(point);
                         }
                         else {
-                            gc.lineTo(point);
+                            gc->lineTo(point);
                         }
                     }
-                    gc.closePath();
-                    gc.fillPath();  // TODO: fill, stroke, fill-stroke, stroke-fill, pattern, gradient ...
+                    gc->closePath();
+                    gc->fillPath();  // TODO: fill, stroke, fill-stroke, stroke-fill, pattern, gradient ...
                 }
 
                 layer->m_total_fill_n++;
@@ -1996,7 +2061,11 @@ namespace Grain {
     /**
      *  @brief Render a layer from CSV data.
      */
-    void GeoTileRenderer::_renderCSVLayer(GeoTileRendererLayer* layer, GraphicContext& gc, RemapRectd& remap_rect) {
+    void GeoTileRenderer::_renderCSVLayer(
+            GeoTileRendererLayer* layer,
+            GraphicContext* gc,
+            RemapRectd& remap_rect)
+    {
 
         // TODO: How can data be defined and become a property? Color, Size, ...
         // TODO: Statistics!
@@ -2024,7 +2093,7 @@ namespace Grain {
             layer->m_csv_must_read = false;
         }
 
-        gc.save();
+        gc->save();
 
         RGB color;  // TODO: ...
         color.set24bit(0xFF5A08);  // TODO: ...
@@ -2254,25 +2323,25 @@ namespace Grain {
 
                 switch (draw_settings.m_draw_mode) {
                     case GeoTileDrawMode::Stroke:
-                        gc.strokeCircle(pos, draw_settings.m_radius_px);
+                        gc->strokeCircle(pos, draw_settings.m_radius_px);
                         stroke_n += 1;
                         break;
 
                     case GeoTileDrawMode::Fill:
-                        gc.fillCircle(pos, draw_settings.m_radius_px);
+                        gc->fillCircle(pos, draw_settings.m_radius_px);
                         fill_n += 1;
                         break;
 
                     case GeoTileDrawMode::FillStroke:
-                        gc.fillCircle(pos, draw_settings.m_radius_px);
-                        gc.strokeCircle(pos, draw_settings.m_radius_px);
+                        gc->fillCircle(pos, draw_settings.m_radius_px);
+                        gc->strokeCircle(pos, draw_settings.m_radius_px);
                         fill_n += 1;
                         stroke_n += 1;
                         break;
 
                     case GeoTileDrawMode::StrokeFill:
-                        gc.strokeCircle(pos, draw_settings.m_radius_px);
-                        gc.fillCircle(pos, draw_settings.m_radius_px);
+                        gc->strokeCircle(pos, draw_settings.m_radius_px);
+                        gc->fillCircle(pos, draw_settings.m_radius_px);
                         fill_n += 1;
                         stroke_n += 1;
                         break;
@@ -2281,7 +2350,7 @@ namespace Grain {
                         break;
                 }
 
-                // gc.drawTextInt((int32_t)row_index, pos, App::uiFont(), RGB(0, 0, 0));
+                // gc->drawTextInt((int32_t)row_index, pos, App::uiFont(), RGB(0, 0, 0));
             }
         }
 
@@ -2292,30 +2361,30 @@ namespace Grain {
         m_total_fill_n += fill_n;
         m_total_stroke_n += stroke_n;
 
-        gc.setBlendMode(GraphicContext::BlendMode::Normal);
-        gc.restore();
+        gc->setBlendMode(GraphicContext::BlendMode::Normal);
+        gc->restore();
     }
 
 
-    void GeoTileRenderer::_setupGCDrawing(GraphicContext& gc, GeoTileRendererDrawSettings& draw_settings) {
+    void GeoTileRenderer::_setupGCDrawing(GraphicContext* gc, GeoTileRendererDrawSettings& draw_settings) {
         draw_settings.m_radius_px = meterToPixel(draw_settings.m_radius, draw_settings.m_radius_px_fix, draw_settings.m_radius_px_min, draw_settings.m_radius_px_max);
 
         if (drawModeHasFill(draw_settings.m_draw_mode)) {
-            gc.setFillRGBAndAlpha(draw_settings.m_fill_color, draw_settings.m_fill_opacity);
+            gc->setFillRGBAndAlpha(draw_settings.m_fill_color, draw_settings.m_fill_opacity);
         }
 
         if (drawModeHasStroke(draw_settings.m_draw_mode)) {
             draw_settings.m_stroke_width_px = meterToPixel(draw_settings.m_stroke_width, draw_settings.m_stroke_px_fix, draw_settings.m_stroke_px_min, draw_settings.m_stroke_px_max);
 
-            gc.setStrokeRGBAndAlpha(draw_settings.m_stroke_color, draw_settings.m_stroke_opacity);
-            gc.setStrokeWidth(draw_settings.m_stroke_width_px);
-            gc.setStrokeCapStyle(draw_settings.m_stroke_cap_style);
-            gc.setStrokeJoinStyle(draw_settings.m_stroke_join_style);
-            gc.setStrokeMiterLimit(draw_settings.m_stroke_miter_limit);
-            gc.setStrokeDash(draw_settings.m_stroke_dash_length, draw_settings.m_stroke_dash_array, draw_settings.m_stroke_width_px);
+            gc->setStrokeRGBAndAlpha(draw_settings.m_stroke_color, draw_settings.m_stroke_opacity);
+            gc->setStrokeWidth(draw_settings.m_stroke_width_px);
+            gc->setStrokeCapStyle(draw_settings.m_stroke_cap_style);
+            gc->setStrokeJoinStyle(draw_settings.m_stroke_join_style);
+            gc->setStrokeMiterLimit(draw_settings.m_stroke_miter_limit);
+            gc->setStrokeDash(draw_settings.m_stroke_dash_length, draw_settings.m_stroke_dash_array, draw_settings.m_stroke_width_px);
         }
 
-        gc.setBlendMode(draw_settings.m_blend_mode);
+        gc->setBlendMode(draw_settings.m_blend_mode);
     }
 
 

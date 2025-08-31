@@ -137,16 +137,16 @@ namespace Grain {
     }
 
 
-    void GeoShape::buildPolyCompoundPath(GraphicContext& gc, int32_t index, const RemapRectd& remap_rect, GraphicCompoundPath& out_path) noexcept {
+    void GeoShape::buildPolyCompoundPath(GraphicContext* gc, int32_t index, const RemapRectd& remap_rect, GraphicCompoundPath& out_path) noexcept {
         #pragma message("GeoShape::buildPolyCompoundPath() must be implemented!")
     }
 
 
-    void GeoShape::buildPolyGCPath(GraphicContext& gc, int32_t index, const RemapRectd& remap_rect) noexcept {
+    void GeoShape::buildPolyGCPath(GraphicContext* gc, int32_t index, const RemapRectd& remap_rect) noexcept {
         if (auto poly = polyPtrAtIndex(index)) {
             Vec2d point;
 
-            gc.beginPath();
+            gc->beginPath();
             for (int32_t part_index = 0; part_index < poly->m_part_count; part_index++) {
                 int32_t point_count = poly->pointCountOfPartAtIndex(part_index);
 
@@ -155,15 +155,15 @@ namespace Grain {
                     remap_rect.mapVec2(point);
 
                     if (point_index == 0) {
-                        gc.moveTo(point);
+                        gc->moveTo(point);
                     }
                     else {
-                        gc.lineTo(point);
+                        gc->lineTo(point);
                     }
                 }
 
                 if (closedPathDrawing()) {
-                    gc.closePath();
+                    gc->closePath();
                 }
             }
         }
@@ -204,7 +204,7 @@ namespace Grain {
      *
      *  @param gc The graphic context to prepare.
      */
-    void GeoShape::applyDrawStyle(GraphicContext& gc) {
+    void GeoShape::applyDrawStyle(GraphicContext* gc) {
         bool fill_flag = false;
         bool stroke_flag = false;
 
@@ -228,26 +228,26 @@ namespace Grain {
         }
 
         if (fill_flag) {
-            gc.setFillRGBA(m_fill_color);
+            gc->setFillRGBA(m_fill_color);
         }
 
         if (stroke_flag) {
-            gc.setStrokeRGBA(m_stroke_color);
-            gc.setStrokeWidth(m_stroke_width);
-            gc.setStrokeJoinStyle(m_stroke_join_style);
-            gc.setStrokeCapStyle(m_stroke_cap_style);
+            gc->setStrokeRGBA(m_stroke_color);
+            gc->setStrokeWidth(m_stroke_width);
+            gc->setStrokeJoinStyle(m_stroke_join_style);
+            gc->setStrokeCapStyle(m_stroke_cap_style);
         }
     }
 
 
-    void GeoShape::drawAll(GraphicContext& gc, const RemapRectd& remap_rect, DrawMode draw_mode) noexcept {
+    void GeoShape::drawAll(GraphicContext* gc, const RemapRectd& remap_rect, DrawMode draw_mode) noexcept {
         if (shouldDrawAsPoints()) {
             for (int32_t point_index = 0; point_index < m_points.size(); point_index++) {
                 Vec2d point;
 
                 pointAtIndex(point_index, point);
                 remap_rect.mapVec2(point);
-                gc.fillCircle(point, m_point_radius);
+                gc->fillCircle(point, m_point_radius);
             }
         }
         else if (shouldDrawAsLines()) {
@@ -269,7 +269,7 @@ namespace Grain {
      *  @param remap_rect The information about remapping.
      *  @param draw_mode The draw mode.
      */
-    void GeoShape::drawPoly(GraphicContext& gc, int32_t index, const RemapRectd& remap_rect, DrawMode draw_mode) noexcept {
+    void GeoShape::drawPoly(GraphicContext* gc, int32_t index, const RemapRectd& remap_rect, DrawMode draw_mode) noexcept {
         if (auto poly = polyPtrAtIndex(index)) {
             buildPolyGCPath(gc, index, remap_rect);
 
@@ -283,29 +283,29 @@ namespace Grain {
             switch (draw_mode) {
                 case DrawMode::Undefined:
                 case DrawMode::Fill:
-                    gc.fillPath();
+                    gc->fillPath();
                     break;
 
                 case DrawMode::Stroke:
-                    gc.strokePath();
+                    gc->strokePath();
                     break;
 
                 case DrawMode::FillStroke:
-                    gc.drawPath();
+                    gc->drawPath();
                     break;
 
                 case DrawMode::StrokeFill:
-                    gc.strokePath();
+                    gc->strokePath();
                     // Note: buildPolyGCPath must be called a second time here
                     buildPolyGCPath(gc, index, remap_rect);
-                    gc.fillPath();
+                    gc->fillPath();
                     break;
             }
         }
     }
 
 
-    void GeoShape::drawPolys(GraphicContext& gc, int32_t startIndex, int32_t endIndex, const RemapRectd& remap_rect, DrawMode draw_mode) noexcept {
+    void GeoShape::drawPolys(GraphicContext* gc, int32_t startIndex, int32_t endIndex, const RemapRectd& remap_rect, DrawMode draw_mode) noexcept {
         if (startIndex < 0) {
             startIndex = 0;
         }
@@ -321,7 +321,7 @@ namespace Grain {
     }
 
 
-    void GeoShape::drawPolys(GraphicContext& gc, const RemapRectd& remap_rect, DrawMode draw_mode) noexcept {
+    void GeoShape::drawPolys(GraphicContext* gc, const RemapRectd& remap_rect, DrawMode draw_mode) noexcept {
         for (int32_t i = 0; i < polyCount(); i++) {
             drawPoly(gc, i, remap_rect, draw_mode);
         }

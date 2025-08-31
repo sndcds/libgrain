@@ -1033,6 +1033,7 @@ namespace Grain {
         return drawTextInRect(string.utf8(), rect, alignment, font, color, alpha);
     }
 
+
     double GraphicContext::drawTextIntInRect(int64_t value, const Rectd& rect, Alignment alignment, const Font* font, const RGB& color, float alpha) noexcept {
         char buffer[100];
         std::snprintf(buffer, 100, "%" PRId64, value);

@@ -2545,12 +2545,12 @@ namespace Grain {
                 use_color_model = Color::Model::RGB;
             }
 
-            if (use_color_model == m_color_model && m_png_fallback_pixel_type == m_pixel_type) {
+            if (use_color_model == m_color_model && m_fallback_pixel_type == m_pixel_type) {
                 // Nothing changed, this is unexpected behaviour!
                 return ErrorCode::UnexpectedBehaviour;
             }
 
-            Image* temp_image = copyWithNewSettings(use_color_model, m_png_fallback_pixel_type);
+            Image* temp_image = copyWithNewSettings(use_color_model, m_fallback_pixel_type);
             if (!temp_image) { return Error::specific(10); }
 
             result = temp_image->writePng(file_path, compression_level, use_alpha);
@@ -3036,7 +3036,7 @@ namespace Grain {
             image->m_raw_linear_black[i] = lr.imgdata.color.cblack[i];
         }
 
-        image->m_png_fallback_pixel_type = Image::PixelType::UInt16;
+        image->m_fallback_pixel_type = Image::PixelType::UInt16;
 
         // ushort* s = &RawProcessor.imgdata.image[0][0];
 

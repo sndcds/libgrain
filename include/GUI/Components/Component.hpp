@@ -33,7 +33,7 @@ namespace Grain {
 
 
     typedef void (*ComponentAction)(Component* component);
-    typedef void (*ComponentDrawFunc)(GraphicContext& gc, Component* component, void* ref);
+    typedef void (*ComponentDrawFunc)(GraphicContext* gc, Component* component, void* ref);
     typedef bool (*ComponentHandleEventFunc)(Component* component, const Event& event, void* ref);
     typedef bool (*ComponentHandleMessageFunc)(Component* component, const char* message, void* ref, void* data);
 
@@ -301,7 +301,7 @@ namespace Grain {
         // Custom draw function
         [[nodiscard]] bool hasDrawFunction() const noexcept { return _m_draw_func != nullptr; }
         void setDrawFunction(ComponentDrawFunc func, void* ref = nullptr) noexcept;
-        void callDrawFunction(GraphicContext& gc) noexcept;
+        void callDrawFunction(GraphicContext* gc) noexcept;
 
         // Dragging
         virtual void handleDraggingEntered() noexcept {}
@@ -355,12 +355,16 @@ namespace Grain {
         virtual bool hit(const Event& event) noexcept;
 
         // Drawing
-        void drawDummy(GraphicContext& gc) const noexcept;
-        void drawRect(GraphicContext& gc, const Rectd& rect) const noexcept;
+        void drawDummy(GraphicContext* gc) const noexcept;
+        void drawRect(GraphicContext* gc, const Rectd& rect) const noexcept;
 
         // Utils
         static Component* addComponentToView(Component* component, View* view, AddFlags flags) noexcept;
         void _setParent(Component* parent) noexcept { m_parent = parent; }
+        [[nodiscard]] View* parentView() const noexcept { return reinterpret_cast<View*>(m_parent); }
+
+        virtual GraphicContext* graphicContextPtr() noexcept;
+
 
     protected:
         ComponentType m_type = ComponentType::Undefined;  ///< What type of component it is
@@ -370,6 +374,8 @@ namespace Grain {
         #if defined(__APPLE__) && defined(__MACH__)
             void* m_ns_view = nullptr;   ///< The related NSView on macOS
         #endif
+
+        GraphicContext* m_gc_ptr = nullptr;
 
         // Flags
         bool m_view_is_flipped = true;
@@ -393,16 +399,16 @@ namespace Grain {
         bool m_draws_as_button = false;
         bool m_shows_debug_info = false;
 
-        Component* m_parent = nullptr;          ///< The parent component, root views don´t have a parent
-        Rectd m_rect = Rectd(100.0, 100.0);     ///< Position and size of component in view
+        Component* m_parent = nullptr;        ///< Target view that this component renders into
+        Rectd m_rect = Rectd(100.0, 100.0);   ///< Position and size of component in view
         Alignment m_edge_alignment = Alignment::No;
         RectEdgesf m_margin{};
 
         // Style
-        int32_t m_style_index = 0;              ///<
+        int32_t m_style_index = 0;            ///<
 
         // Text
-        String* m_text = nullptr;               ///< Optional text
+        String* m_text = nullptr;             ///< Optional text
 
         // Mouse
         int32_t m_mouse_mode = 0;

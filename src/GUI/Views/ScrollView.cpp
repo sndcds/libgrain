@@ -69,9 +69,7 @@ namespace Grain {
 
 
     void ScrollView::setContentView(View* content_view) noexcept {
-        std::cout << "setContentView 1\n";
         if (m_scroll_area_view != nullptr && content_view != m_content_view) {
-            std::cout << "setContentView 2\n";
             bool view_in_array_flag = false;
 
             for (auto view : m_views) {
@@ -85,14 +83,12 @@ namespace Grain {
             }
 
             if (!view_in_array_flag) {
-                std::cout << "setContentView 3\n";
                 m_views.push(content_view);
                 m_scroll_area_view->addComponent(content_view, AddFlags::kWantsLayer);
             }
 
             m_content_view = content_view;
             if (content_view) {
-                std::cout << "setContentView 4\n";
                 content_view->setPosition(0.0, 0.0);
                 m_content_width = content_view->width();
                 m_content_height = content_view->height();
@@ -101,7 +97,6 @@ namespace Grain {
             }
         }
 
-        std::cout << "setContentView 5\n";
         setScrollPosition(0, 0);
     }
 
