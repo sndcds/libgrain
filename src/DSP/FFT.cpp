@@ -157,9 +157,28 @@ namespace Grain {
     }
 #else
     ErrorCode FFT::fft(float* data, Partials* out_partials) noexcept {
-        // TODO: Implement linux version
-        auto result = ErrorCode::None;
-        return result;
+        // TODO: Reuse settings and memory!
+        int32_t N = m_length;
+        int32_t halfN = N / 2;
+
+        // Create FFTW plan (real -> complex)
+        fftwf_complex* out = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * (halfN + 1));
+        fftwf_plan plan = fftwf_plan_dft_r2c_1d(N, data, out, FFTW_ESTIMATE);
+
+        fftwf_execute(plan);
+
+        // Fill Partials
+        for (int k = 0; k <= halfN; ++k) {
+            float re = out[k][0];
+            float im = out[k][1];
+            out_partials->amplitudes[k] = std::sqrt(re*re + im*im);
+            out_partials->phases[k] = std::atan2(im, re);
+        }
+
+        fftwf_destroy_plan(plan);
+        fftwf_free(out);
+
+        return ErrorCode::None;
     }
 #endif
 
@@ -222,9 +241,34 @@ namespace Grain {
     }
 #else
     ErrorCode FFT::ifft(Partials* partials, float* out_data) noexcept {
-        // TODO: Implement linux version
-        auto result = ErrorCode::None;
-        return result;
+        // TODO: Reuse settings and memory!
+        int32_t N = m_length;
+        int32_t halfN = N / 2;
+
+        fftwf_complex* in = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * (halfN + 1));
+
+        // Convert amplitudes + phases back to complex numbers
+        for (int k = 0; k <= halfN; ++k) {
+            float amp = partials->amplitudes[k];
+            float phase = partials->phases[k];
+            in[k][0] = amp * std::cosf(phase); // real
+            in[k][1] = amp * std::sinf(phase); // imaginary
+        }
+
+        // Create FFTW plan (complex -> real)
+        fftwf_plan plan = fftwf_plan_dft_c2r_1d(N, in, out_data, FFTW_ESTIMATE);
+
+        fftwf_execute(plan);
+
+        // Normalize output
+        for (int i = 0; i < N; ++i) {
+            out_data[i] /= N;
+        }
+
+        fftwf_destroy_plan(plan);
+        fftwf_free(in);
+
+        return ErrorCode::OK;
     }
 #endif
 

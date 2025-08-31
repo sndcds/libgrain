@@ -28,7 +28,7 @@ namespace Grain {
 
     class RGBLUT1;
     class GraphicContext;
-    class MacCGContext;
+    class AppleCGContext;
 
 
     /**

@@ -18,7 +18,7 @@
 #include "String/CSVString.hpp"
 #include "Math/Math.hpp"
 #include "Graphic/GraphicContext.hpp"
-#include "Graphic/MacCGContext.hpp"
+#include "Graphic/AppleCGContext.hpp"
 
 
 namespace Grain {
@@ -876,7 +876,7 @@ namespace Grain {
             return nullptr;
         }
 
-        auto mac_cg = static_cast<MacCGContext*>(gc);
+        auto mac_cg = static_cast<AppleCGContext*>(gc);
 
         int32_t cg_color_count = macos_cgColorCount();
         if (cg_color_count > kMaxColorStops) {

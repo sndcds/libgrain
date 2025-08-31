@@ -16,7 +16,7 @@
 #include "App/App.hpp"
 
 #if defined(__APPLE__) && defined(__MACH__)
-#include "Graphic/MacCGContext.hpp"
+#include "Graphic/AppleCGContext.hpp"
 #endif
 
 
@@ -74,7 +74,7 @@ namespace Grain {
 
 #if defined(__APPLE__) && defined(__MACH__)
     void TextField::draw(const Rectd& dirty_rect) noexcept {
-        auto gc = static_cast<MacCGContext*>(graphicContextPtr());
+        auto gc = static_cast<AppleCGContext*>(graphicContextPtr());
 
         gc->disableFontSubpixelQuantization();
 

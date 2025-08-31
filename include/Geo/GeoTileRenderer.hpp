@@ -427,7 +427,7 @@ namespace Grain {
         String m_last_failed_sql_query;     ///< Last failed SQL query
         String m_last_sql_err;              ///< Last error from a SQL query
 
-        String m_renderer_name;             ///< Renderer to use, e.g. 'Cairo", 'MacCG"
+        String m_renderer_name;             ///< Renderer to use, e.g. 'Cairo", 'AppleCG"
 
         Image::FileType m_output_file_type;
         String m_output_file_name;          ///< File name without extension

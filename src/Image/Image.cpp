@@ -30,7 +30,7 @@
 
 
 #if defined(__APPLE__) && defined(__MACH__)
-#include "Graphic/MacCGContext.hpp"
+#include "Graphic/AppleCGContext.hpp"
 #include <CoreImage/CoreImage.h>
 #include <CoreGraphics/CoreGraphics.h>
 
@@ -1210,7 +1210,7 @@ namespace Grain {
                 Exception::throwStandard(ErrorCode::BadArgs);
             }
 
-            auto mac_gc = static_cast<MacCGContext*>(out_gc);
+            auto mac_gc = static_cast<AppleCGContext*>(out_gc);
 
             if (bitsPerComponent() > 32) {
                 Exception::throwSpecific(kErrUnsupportedBitDepth);

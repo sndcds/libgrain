@@ -1,5 +1,5 @@
 //
-//  MacCGContext.cpp
+//  AppleCGContext.cpp
 //
 //  Created by Roald Christesen on from 24.08.2025
 //  Copyright (C) 2025 Roald Christesen. All rights reserved.
@@ -9,7 +9,7 @@
 //  LastChecked: 24.08.2025
 //
 
-#include "Graphic/MacCGContext.hpp"
+#include "Graphic/AppleCGContext.hpp"
 #include "Image/Image.hpp"
 #include "Core/Log.hpp"
 #include "Graphic/Font.hpp"
@@ -22,26 +22,26 @@
 
 namespace Grain {
 
-    void _macosView_setContextByComponent(MacCGContext* gc, Component* component);
+    void _macosView_setContextByComponent(AppleCGContext* gc, Component* component);
 
 
-    MacCGContext::MacCGContext() noexcept : GraphicContext() {
+    AppleCGContext::AppleCGContext() noexcept : GraphicContext() {
         _macGCInit();
     }
 
 
-    MacCGContext::MacCGContext(Component* component) noexcept {
+    AppleCGContext::AppleCGContext(Component* component) noexcept {
         _macGCInit();
         _macosView_setContextByComponent(this, component);
     }
 
 
-    MacCGContext::~MacCGContext() noexcept {
+    AppleCGContext::~AppleCGContext() noexcept {
         _macCGFreeResources();
     }
 
 
-    void MacCGContext::setCGContextByComponent(CGContextRef context, Component* component) noexcept {
+    void AppleCGContext::setCGContextByComponent(CGContextRef context, Component* component) noexcept {
         m_cg_context = context;
         m_cg_color_space = CGColorSpaceCreateDeviceRGB();
         // m_cg_color_space = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);  // TODO: An alternative?
@@ -55,27 +55,27 @@ namespace Grain {
     }
 
 
-    void MacCGContext::log(Log& l) const noexcept {
+    void AppleCGContext::log(Log& l) const noexcept {
     }
 
 
-    void MacCGContext::_macGCInit() noexcept {
+    void AppleCGContext::_macGCInit() noexcept {
         m_magic = Type::fourcc('m', 'a', 'c', ' ');
     }
 
 
-    void MacCGContext::_macCGFreeResources() noexcept {
+    void AppleCGContext::_macCGFreeResources() noexcept {
         CGColorSpaceRelease(m_cg_color_space);
         m_cg_color_space = nullptr;
     }
 
 
-    void MacCGContext::setComponent(Component* component) noexcept {
+    void AppleCGContext::setComponent(Component* component) noexcept {
         _macosView_setContextByComponent(this, component);
     }
 
 
-    void MacCGContext::setImage(Image* image) noexcept {
+    void AppleCGContext::setImage(Image* image) noexcept {
         GraphicContext::setImage(image);
 
         if (image != nullptr) {
@@ -123,65 +123,65 @@ namespace Grain {
     }
 
 
-    bool MacCGContext::isValid() noexcept {
+    bool AppleCGContext::isValid() noexcept {
         return m_cg_context != nullptr;
     }
 
 
-    void MacCGContext::save() noexcept {
+    void AppleCGContext::save() noexcept {
         CGContextSaveGState(m_cg_context);
         m_state_depth++;
     }
 
 
-    void MacCGContext::restore() noexcept {
+    void AppleCGContext::restore() noexcept {
         if (m_state_depth > 0) {
             CGContextRestoreGState(m_cg_context);
             m_state_depth--;
         }
     }
 
-    void MacCGContext::setAlpha(float alpha) noexcept {
+    void AppleCGContext::setAlpha(float alpha) noexcept {
         m_alpha = alpha;
         CGContextSetAlpha(m_cg_context, alpha);
     }
 
 
-    void MacCGContext::setFillColor(float r, float g, float b, float alpha) noexcept {
+    void AppleCGContext::setFillColor(float r, float g, float b, float alpha) noexcept {
         m_fill_color.setRGBA(r, g, b, alpha);
         CGContextSetRGBFillColor(m_cg_context, r, g, b, alpha);
     }
 
 
-    void MacCGContext::setStrokeColor(float r, float g, float b, float alpha) noexcept {
+    void AppleCGContext::setStrokeColor(float r, float g, float b, float alpha) noexcept {
         m_stroke_color.setRGBA(r, g, b, alpha);
         CGContextSetRGBStrokeColor(m_cg_context, r, g, b, alpha);
     }
 
 
-    void MacCGContext::setStrokeWidth(double width) noexcept {
+    void AppleCGContext::setStrokeWidth(double width) noexcept {
         CGContextSetLineWidth(m_cg_context, width);
     }
 
 
-    void MacCGContext::setStrokeMiterLimit(double limit) noexcept {
+    void AppleCGContext::setStrokeMiterLimit(double limit) noexcept {
         CGContextSetMiterLimit(m_cg_context, limit);
     }
 
-    void MacCGContext::setStrokeJoinStyle(StrokeJoinStyle join) noexcept {
+    void AppleCGContext::setStrokeJoinStyle(StrokeJoinStyle join) noexcept {
         CGContextSetLineJoin(m_cg_context, (CGLineJoin)join);
     }
 
-    void MacCGContext::setStrokeCapStyle(StrokeCapStyle cap) noexcept {
+    void AppleCGContext::setStrokeCapStyle(StrokeCapStyle cap) noexcept {
         CGContextSetLineCap(m_cg_context, (CGLineCap)cap);
     }
 
-    void MacCGContext::setStrokeDash(double dash_length, double gap_length) noexcept {
+    void AppleCGContext::setStrokeDash(double dash_length, double gap_length) noexcept {
         CGFloat l[2] = { dash_length, gap_length };
         CGContextSetLineDash(m_cg_context, 0.0, l, 2);
     }
 
-    void MacCGContext::setStrokeDash(int32_t array_length, const double* array, double scale) noexcept {
+    void AppleCGContext::setStrokeDash(int32_t array_length, const double* array, double scale) noexcept {
         if (array_length < 0 || array == nullptr) {
             CGContextSetLineDash(m_cg_context, 0, nullptr, 0);
         }
@@ -197,11 +197,11 @@ namespace Grain {
         }
     }
 
-    void MacCGContext::setStrokeSolid() noexcept {
+    void AppleCGContext::setStrokeSolid() noexcept {
         CGContextSetLineDash(m_cg_context, 0, nullptr, 0);
     }
 
-    void MacCGContext::setBlendMode(BlendMode blend_mode) noexcept {
+    void AppleCGContext::setBlendMode(BlendMode blend_mode) noexcept {
         static CGBlendMode cg_blend_modes[] = {
                 kCGBlendModeNormal,
                 kCGBlendModeMultiply,
@@ -241,47 +241,47 @@ namespace Grain {
     }
 
 
-    void MacCGContext::setBlendModeNormal() noexcept {
+    void AppleCGContext::setBlendModeNormal() noexcept {
         CGContextSetBlendMode(m_cg_context, kCGBlendModeNormal);
     }
 
 
-    void MacCGContext::setBlendModeMultiply() noexcept {
+    void AppleCGContext::setBlendModeMultiply() noexcept {
         CGContextSetBlendMode(m_cg_context, kCGBlendModeMultiply);
     }
 
 
-    void MacCGContext::enableAliasing() noexcept {
+    void AppleCGContext::enableAliasing() noexcept {
         CGContextSetAllowsAntialiasing(m_cg_context, true);
     }
 
 
-    void MacCGContext::disableAliasing() noexcept {
+    void AppleCGContext::disableAliasing() noexcept {
         CGContextSetAllowsAntialiasing(m_cg_context, false);
     }
 
 
-    void MacCGContext::enableFontSmoothing() noexcept {
+    void AppleCGContext::enableFontSmoothing() noexcept {
         CGContextSetShouldSmoothFonts(m_cg_context, true);
     }
 
 
-    void MacCGContext::disableFontSmoothing() noexcept {
+    void AppleCGContext::disableFontSmoothing() noexcept {
         CGContextSetShouldSmoothFonts(m_cg_context, false);
     }
 
 
-    void MacCGContext::enableFontSubpixelQuantization() noexcept {
+    void AppleCGContext::enableFontSubpixelQuantization() noexcept {
         CGContextSetShouldSubpixelQuantizeFonts(m_cg_context, true);
     }
 
 
-    void MacCGContext::disableFontSubpixelQuantization() noexcept {
+    void AppleCGContext::disableFontSubpixelQuantization() noexcept {
         CGContextSetShouldSubpixelQuantizeFonts(m_cg_context, false);
     }
 
 
-    void MacCGContext::setTextMatrix(double a, double b, double c, double d, double tx, double ty) noexcept {
+    void AppleCGContext::setTextMatrix(double a, double b, double c, double d, double tx, double ty) noexcept {
         if (!m_flipped_y) {
             d = -d;
         }
@@ -289,32 +289,32 @@ namespace Grain {
     }
 
 
-    void MacCGContext::beginPath() noexcept {
+    void AppleCGContext::beginPath() noexcept {
         CGContextBeginPath(m_cg_context);
     }
 
 
-    void MacCGContext::moveTo(double x, double y) noexcept {
+    void AppleCGContext::moveTo(double x, double y) noexcept {
         CGContextMoveToPoint(m_cg_context, x, y);
         m_last_pos.m_x = x;
         m_last_pos.m_y = y;
     }
 
 
-    void MacCGContext::moveTo(const Vec2d& point) noexcept {
+    void AppleCGContext::moveTo(const Vec2d& point) noexcept {
         CGContextMoveToPoint(m_cg_context, point.m_x, point.m_y);
         m_last_pos = point;
     }
 
 
-    void MacCGContext::lineTo(double x, double y) noexcept {
+    void AppleCGContext::lineTo(double x, double y) noexcept {
         CGContextAddLineToPoint(m_cg_context, x, y);
         m_last_pos.m_x = x;
         m_last_pos.m_y = y;
     }
 
 
-    void MacCGContext::lineTo(double x, double y, bool start_flag) noexcept {
+    void AppleCGContext::lineTo(double x, double y, bool start_flag) noexcept {
         if (start_flag) {
             CGContextMoveToPoint(m_cg_context, x, y);
         }
@@ -326,12 +326,12 @@ namespace Grain {
     }
 
 
-    void MacCGContext::lineTo(const Vec2d& point) noexcept {
+    void AppleCGContext::lineTo(const Vec2d& point) noexcept {
         CGContextAddLineToPoint(m_cg_context, point.m_x, point.m_y);
         m_last_pos = point;
     }
 
-    void MacCGContext::lineTo(const Vec2d& point, bool start_flag) noexcept {
+    void AppleCGContext::lineTo(const Vec2d& point, bool start_flag) noexcept {
         if (start_flag) {
             CGContextMoveToPoint(m_cg_context, point.m_x, point.m_y);
         }
@@ -342,20 +342,20 @@ namespace Grain {
     }
 
 
-    void MacCGContext::curveTo(double c1x, double c1y, double c2x, double c2y, double x, double y) noexcept {
+    void AppleCGContext::curveTo(double c1x, double c1y, double c2x, double c2y, double x, double y) noexcept {
         CGContextAddCurveToPoint(m_cg_context, c1x, c1y, c2x, c2y, x, y);
         m_last_pos.m_x = x;
         m_last_pos.m_y = y;
     }
 
 
-    void MacCGContext::curveTo(const Vec2d& control1, const Vec2d& control2, const Vec2d& point) noexcept {
+    void AppleCGContext::curveTo(const Vec2d& control1, const Vec2d& control2, const Vec2d& point) noexcept {
         CGContextAddCurveToPoint(m_cg_context, control1.m_x, control1.m_y, control2.m_x, control2.m_y, point.m_x, point.m_y);
         m_last_pos = point;
     }
 
 
-    void MacCGContext::curveTo(double cx, double cy, double x, double y) noexcept {
+    void AppleCGContext::curveTo(double cx, double cy, double x, double y) noexcept {
         double c1x = m_last_pos.m_x + 2.0 / 3.0 * (cx - m_last_pos.m_x);
         double c2x = x + 2.0 / 3.0 * (cx - x);
         double c1y = m_last_pos.m_y + 2.0 / 3.0 * (cy - m_last_pos.m_y);
@@ -366,48 +366,48 @@ namespace Grain {
     }
 
 
-    void MacCGContext::closePath() noexcept {
+    void AppleCGContext::closePath() noexcept {
         CGContextClosePath(m_cg_context);
     }
 
 
-    void MacCGContext::fillPath() noexcept {
+    void AppleCGContext::fillPath() noexcept {
         CGContextFillPath(m_cg_context);
     }
 
 
-    void MacCGContext::fillPathEvenOdd() noexcept {
+    void AppleCGContext::fillPathEvenOdd() noexcept {
         CGContextEOFillPath(m_cg_context);
     }
 
 
-    void MacCGContext::strokePath() noexcept {
+    void AppleCGContext::strokePath() noexcept {
         CGContextStrokePath(m_cg_context);
     }
 
 
-    void MacCGContext::drawPath() noexcept {
+    void AppleCGContext::drawPath() noexcept {
         CGContextDrawPath(m_cg_context, kCGPathFillStroke);
     }
 
 
-    void MacCGContext::addRectPath(double x, double y, double width, double height) noexcept {
+    void AppleCGContext::addRectPath(double x, double y, double width, double height) noexcept {
         CGContextAddRect(m_cg_context, CGRectMake(x, y, width, height));
     }
 
 
-    void MacCGContext::addEllipsePath(const Rectd& rect) noexcept {
+    void AppleCGContext::addEllipsePath(const Rectd& rect) noexcept {
         CGContextAddEllipseInRect(m_cg_context, rect.cgRect());
     }
 
 
-    void MacCGContext::addCirclePath(double x, double y, double radius) noexcept {
+    void AppleCGContext::addCirclePath(double x, double y, double radius) noexcept {
         double d = radius + radius;
         CGContextAddEllipseInRect(m_cg_context, CGRectMake(x - radius, y - radius, d, d));
     }
 
 
-    void MacCGContext::addRingPath(
+    void AppleCGContext::addRingPath(
             const Vec2d& center,
             double inner_radius,
             double outer_radius,
@@ -425,42 +425,42 @@ namespace Grain {
     }
 
 
-    void MacCGContext::fillRect(double x, double y, double width, double height) noexcept {
+    void AppleCGContext::fillRect(double x, double y, double width, double height) noexcept {
         if (width <= 0.0 && height <= 0.0) return;
         CGContextFillRect(m_cg_context, CGRectMake(x, y, width, height));
     }
 
 
-    void MacCGContext::strokeRect(double x, double y, double width, double height) noexcept {
+    void AppleCGContext::strokeRect(double x, double y, double width, double height) noexcept {
         CGContextStrokeRect(m_cg_context, CGRectMake(x, y, width, height));
     }
 
 
-    void MacCGContext::fillEllipse(double x, double y, double rh, double rv) noexcept {
+    void AppleCGContext::fillEllipse(double x, double y, double rh, double rv) noexcept {
         CGContextFillEllipseInRect(m_cg_context, CGRectMake(x - rh, y - rv, rh * 2, rv * 2));
     }
 
 
-    void MacCGContext::strokeEllipse(double x, double y, double rh, double rv) noexcept {
+    void AppleCGContext::strokeEllipse(double x, double y, double rh, double rv) noexcept {
         CGContextStrokeEllipseInRect(m_cg_context, CGRectMake(x - rh, y - rv, rh * 2, rv * 2));
     }
 
 
-    void MacCGContext::fillCircle(double x, double y, double radius) noexcept {
+    void AppleCGContext::fillCircle(double x, double y, double radius) noexcept {
         if (radius <= std::numeric_limits<float>::epsilon()) return;
         double diameter = radius + radius;
         CGContextFillEllipseInRect(m_cg_context, CGRectMake(x - radius, y - radius, diameter, diameter));
     }
 
 
-    void MacCGContext::strokeCircle(double x, double y, double radius) noexcept {
+    void AppleCGContext::strokeCircle(double x, double y, double radius) noexcept {
         if (radius <= std::numeric_limits<float>::epsilon()) return;
         double diameter = radius + radius;
         CGContextStrokeEllipseInRect(m_cg_context, CGRectMake(x - radius, y - radius, diameter, diameter));
     }
 
 
-    void MacCGContext::drawGradient(
+    void AppleCGContext::drawGradient(
             Gradient* gradient,
             const Vec2d& start_pos,
             const Vec2d& end_pos,
@@ -491,7 +491,7 @@ namespace Grain {
     }
 
 
-    void MacCGContext::drawRadialGradient(
+    void AppleCGContext::drawRadialGradient(
             Gradient* gradient,
             const Vec2d& pos,
             double radius,
@@ -519,7 +519,7 @@ namespace Grain {
     }
 
 
-    void MacCGContext::drawImage(Image* image, const Rectd& rect, float alpha) noexcept {
+    void AppleCGContext::drawImage(Image* image, const Rectd& rect, float alpha) noexcept {
         if (!image || !image->hasPixel()) return;
         if (CGImageRef cg_image = image->macos_cgImageRef()) {
             CGContextSaveGState(m_cg_context);
@@ -536,7 +536,7 @@ namespace Grain {
     }
 
 
-    ErrorCode MacCGContext::drawQuadrilateralImage(Image* image, const Quadrilateral& quadrilateral) noexcept {
+    ErrorCode AppleCGContext::drawQuadrilateralImage(Image* image, const Quadrilateral& quadrilateral) noexcept {
         /* TODO !!!!!!
         auto result = ErrorCode::None;
 
@@ -598,7 +598,7 @@ namespace Grain {
     }
 
 
-    ErrorCode MacCGContext::drawQuadrilateralImage(Image* image, const Quadrilateral& quadrilateral, float alpha) noexcept {
+    ErrorCode AppleCGContext::drawQuadrilateralImage(Image* image, const Quadrilateral& quadrilateral, float alpha) noexcept {
         /* TODO !!!!!!
         // TODO: Combine the two methods GraphicContext::drawQuadrilateralImage into one.
 
@@ -661,7 +661,7 @@ namespace Grain {
     }
 
 
-    void MacCGContext::drawIcon(const Icon* icon, const Rectd& rect, float alpha) noexcept {
+    void AppleCGContext::drawIcon(const Icon* icon, const Rectd& rect, float alpha) noexcept {
         /* TODO !!!!!!
         if (icon != nullptr) {
 
@@ -680,7 +680,7 @@ namespace Grain {
     }
 
 
-    void MacCGContext::drawIcon(const Icon* icon, const Rectd& rect, const RGB& color, float alpha) noexcept {
+    void AppleCGContext::drawIcon(const Icon* icon, const Rectd& rect, const RGB& color, float alpha) noexcept {
         /* TODO !!!!!!
         if (icon != nullptr) {
 
@@ -701,7 +701,7 @@ namespace Grain {
     }
 
 
-    void MacCGContext::drawIconInCircle(const Icon* icon, const Vec2d& center, double radius, const RGB& bg_color, const RGB& icon_color, const RGB& border_color, double border_width, float bg_alpha, float border_alpha, float icon_alpha) noexcept {
+    void AppleCGContext::drawIconInCircle(const Icon* icon, const Vec2d& center, double radius, const RGB& bg_color, const RGB& icon_color, const RGB& border_color, double border_width, float bg_alpha, float border_alpha, float icon_alpha) noexcept {
         /* TODO: ...
 
         Rectd rect(center.m_x - radius, center.m_y - radius, radius * 2, radius * 2);
@@ -728,7 +728,7 @@ namespace Grain {
     }
 
 
-    Rectd MacCGContext::textRect(const char* text, const Font* font) noexcept {
+    Rectd AppleCGContext::textRect(const char* text, const Font* font) noexcept {
         Rectd text_rect;
         text_rect.zero();
 
@@ -762,7 +762,7 @@ namespace Grain {
     }
 
 
-    void MacCGContext::drawText(
+    void AppleCGContext::drawText(
             const char* text,
             const Vec2d& pos,
             const Font* font,
@@ -801,7 +801,7 @@ namespace Grain {
     }
 
 
-    double MacCGContext::drawTextInRect(
+    double AppleCGContext::drawTextInRect(
             const char* text,
             const Rectd& rect,
             Alignment alignment,
@@ -905,7 +905,7 @@ namespace Grain {
     }
 
 
-    double MacCGContext::drawWrappedText(
+    double AppleCGContext::drawWrappedText(
             const char* text,
             const Rectd& bounds_rect,
             const Rectd& rect,
@@ -1009,7 +1009,7 @@ namespace Grain {
     }
 
 
-    void MacCGContext::addTextPath(const char* text, const Font* font) noexcept {
+    void AppleCGContext::addTextPath(const char* text, const Font* font) noexcept {
         /* TODO: !!!!!! Implement!
         if (text == nullptr || font == nullptr) {
             return;
@@ -1061,42 +1061,42 @@ namespace Grain {
     }
 
 
-    void MacCGContext::clipPath() noexcept {
+    void AppleCGContext::clipPath() noexcept {
         CGContextClip(m_cg_context);
     }
 
 
-    void MacCGContext:: clipPathEvenOdd() noexcept {
+    void AppleCGContext:: clipPathEvenOdd() noexcept {
         CGContextEOClip(m_cg_context);
     }
 
 
-    Rectd MacCGContext::clipBoundsRect() noexcept {
+    Rectd AppleCGContext::clipBoundsRect() noexcept {
         return Rectd(CGContextGetClipBoundingBox(m_cg_context));
     }
 
 
-    void MacCGContext::resetClip() noexcept {
+    void AppleCGContext::resetClip() noexcept {
         CGContextResetClip(m_cg_context);
     }
 
 
-    void MacCGContext::translate(double tx, double ty) noexcept {
+    void AppleCGContext::translate(double tx, double ty) noexcept {
         CGContextTranslateCTM(m_cg_context, tx, ty);
     }
 
 
-    void MacCGContext::scale(double sx, double sy) noexcept {
+    void AppleCGContext::scale(double sx, double sy) noexcept {
         CGContextScaleCTM(m_cg_context, sx, sy);
     }
 
 
-    void MacCGContext::rotate(double angle) noexcept {
+    void AppleCGContext::rotate(double angle) noexcept {
         CGContextRotateCTM(m_cg_context, angle * std::numbers::pi / 180.0);
     }
 
 
-    void MacCGContext::affineTransform(const Mat3d& matrix) noexcept {
+    void AppleCGContext::affineTransform(const Mat3d& matrix) noexcept {
         CGAffineTransform m;
         const double* p = matrix.dataPtr();
         m.a = p[0];

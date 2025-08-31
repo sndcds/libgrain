@@ -19,9 +19,11 @@
 #include <complex>
 
 #if defined(__APPLE__) && defined(__MACH__)
-    #define ACCELERATE_NEW_LAPACK   // Use the updated LAPACK version in Accelerate
-    #define ACCELERATE_LAPACK_ILP64 // Use 64-bit integers in LAPACK functions
-    #include <Accelerate/Accelerate.h>
+#define ACCELERATE_NEW_LAPACK   // Use the updated LAPACK version in Accelerate
+#define ACCELERATE_LAPACK_ILP64 // Use 64-bit integers in LAPACK functions
+#include <Accelerate/Accelerate.h>
+#else
+#include <fftw3.h>
 #endif
 
 

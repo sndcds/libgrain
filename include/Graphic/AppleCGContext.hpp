@@ -1,5 +1,5 @@
 //
-//  MacCGContext.hpp
+//  AppleCGContext.hpp
 //
 //  Created by Roald Christesen on from 24.08.2025
 //  Copyright (C) 2025 Roald Christesen. All rights reserved.
@@ -9,8 +9,8 @@
 //  LastChecked: 24.08.2025
 //
 
-#ifndef GrainMacCGContext_hpp
-#define GrainMacCGContext_hpp
+#ifndef GrainAppleCGContext_hpp
+#define GrainAppleCGContext_hpp
 
 #if defined(__APPLE__) && defined(__MACH__)
 
@@ -19,7 +19,7 @@
 
 namespace Grain {
 
-    class MacCGContext : public GraphicContext {
+    class AppleCGContext : public GraphicContext {
 
     protected:
         CGContextRef m_cg_context = nullptr;            ///< Core Graphics Context
@@ -33,13 +33,13 @@ namespace Grain {
         using GraphicContext::fillCircle;
         using GraphicContext::drawTextInRect;
 
-        MacCGContext() noexcept;
-        explicit MacCGContext(Component* component) noexcept;
-        explicit MacCGContext(PDFWriter* pdf_writer) noexcept;
+        AppleCGContext() noexcept;
+        explicit AppleCGContext(Component* component) noexcept;
+        explicit AppleCGContext(PDFWriter* pdf_writer) noexcept;
 
-        virtual ~MacCGContext() noexcept;
+        virtual ~AppleCGContext() noexcept;
 
-        [[nodiscard]] const char* className() const noexcept override { return "MacCGContext"; }
+        [[nodiscard]] const char* className() const noexcept override { return "AppleCGContext"; }
         void log(Log& l) const noexcept override;
 
 
@@ -149,6 +149,6 @@ namespace Grain {
 
 } // End of namespace Grain
 
-#endif // GrainMacCGContext_hpp
+#endif // GrainAppleCGContext_hpp
 
 #endif // (__APPLE__) && defined(__MACH__)

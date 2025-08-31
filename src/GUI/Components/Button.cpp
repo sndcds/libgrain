@@ -13,7 +13,7 @@
 #include "Graphic/GraphicContext.hpp"
 
 #if defined(__APPLE__) && defined(__MACH__)
-#include "Graphic/MacCGContext.hpp"
+#include "Graphic/AppleCGContext.hpp"
 #endif
 
 

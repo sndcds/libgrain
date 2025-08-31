@@ -15,7 +15,7 @@
 #include "Graphic/CairoContext.hpp"
 
 #if defined(__APPLE__) && defined(__MACH__)
-#include "Graphic/MacCGContext.hpp"
+#include "Graphic/AppleCGContext.hpp"
 #endif
 
 
@@ -113,7 +113,7 @@ namespace Grain {
     GraphicContext* App::createGUIGraphicContext() noexcept {
 #if defined(__APPLE__) && defined(__MACH__)
         if (g_instance->m_gc_type == GraphicContextType::AppleMac) {
-            return new (std::nothrow) MacCGContext();
+            return new (std::nothrow) AppleCGContext();
         }
         else {
             return new (std::nothrow) CairoContext();

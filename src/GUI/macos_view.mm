@@ -11,7 +11,7 @@
 #include "GUI/Event.hpp"
 #include "2d/Rect.hpp"
 #include "String/StringList.hpp"
-#include "Graphic/MacCGContext.hpp"
+#include "Graphic/AppleCGContext.hpp"
 
 
 namespace Grain {
@@ -104,7 +104,7 @@ namespace Grain {
         [(NSView*)component->nsView() setFrameSize:NSMakeSize(width, height)];
     }
 
-    void _macosView_setContextByComponent(MacCGContext* gc, Component* component) {
+    void _macosView_setContextByComponent(AppleCGContext* gc, Component* component) {
         gc->setCGContextByComponent([[NSGraphicsContext currentContext] CGContext], component);
     }
 }

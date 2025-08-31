@@ -26,7 +26,7 @@
 #include "Geo/GeoTileRenderer.hpp"
 #include "Geo/WKBParser.hpp"
 #include "Graphic/GraphicContext.hpp"
-#include "Graphic/MacCGContext.hpp"
+#include "Graphic/AppleCGContext.hpp"
 #include "Graphic/CairoContext.hpp"
 #include "2d/GraphicCompoundPath.hpp"
 #include "File/File.hpp"
@@ -1237,7 +1237,7 @@ namespace Grain {
                 }
 #if defined(__APPLE__) && defined(__MACH__)
                 else {
-                    gc = new MacCGContext();
+                    gc = new AppleCGContext();
                 }
 #endif
                 if (!gc) {

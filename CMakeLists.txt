@@ -196,7 +196,7 @@ target_compile_options(libgrain PRIVATE
 
 if (APPLE)
     target_sources(libgrain PRIVATE
-            src/Graphic/MacCGContext.cpp
+            src/Graphic/AppleCGContext.cpp
             src/App/macos_app.mm
             src/GUI/macos_window.mm
             src/GUI/macos_view.mm
