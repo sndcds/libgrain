@@ -28,13 +28,14 @@ namespace Grain {
 
 
     FFT::FFT(int32_t log_n) noexcept {
-
         if (log_n >= kLogNResolutionFirst && log_n <= kLogNResolutionLast) {
             m_log_n = log_n;
             m_length = 1 << log_n;
             m_half_length = m_length / 2;
-            m_data = (float*)std::malloc(sizeof(float) * m_length * 4);
 
+
+#if defined(__APPLE__) && defined(__MACH__)
+            m_data = static_cast<float*>(std::malloc(sizeof(float) * m_length * 4));
 
             // Buffers for real (time-domain) input and output signals
             int32_t offset = 0;
@@ -45,23 +46,33 @@ namespace Grain {
             m_mag = &m_data[offset]; offset += m_half_length;
             m_phase = &m_data[offset]; offset += m_half_length;
 
-            #if defined(__APPLE__) && defined(__MACH__)
-                m_fft_setup = _macos_fftSetup(log_n);
-                // We need complex buffers in two different formats!
-                m_temp_complex = (DSPComplex*)std::malloc(sizeof(DSPComplex) * m_half_length);
-                m_valid = m_fft_setup && m_data && m_temp_complex;
-            #endif
+            m_fft_setup = _macos_fftSetup(log_n);
+            // We need complex buffers in two different formats!
+            m_temp_complex = (DSPComplex*)std::malloc(sizeof(DSPComplex) * m_half_length);
+            m_valid = m_fft_setup && m_data && m_temp_complex;
+#else
+            // Allocate FFTW output once
+            m_out = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * (m_half_length + 1));
+
+            // Create plan once
+            m_plan = fftwf_plan_dft_r2c_1d(m_length, m_x_buffer, m_out, FFTW_ESTIMATE);
+#endif
         }
     }
 
 
     FFT::~FFT() noexcept {
-
         std::free(m_data);
 
-        #if defined(__APPLE__) && defined(__MACH__)
-            std::free(m_temp_complex);
-        #endif
+#if defined(__APPLE__) && defined(__MACH__)
+        std::free(m_temp_complex);
+#else
+        fftwf_destroy_plan(m_plan);
+        fftwf_free(m_out);
+        delete[] m_x_buffer;
+        delete[] m_mag;
+        delete[] m_phase;
+#endif
     }
 
 
@@ -159,27 +170,27 @@ namespace Grain {
     }
 #else
     ErrorCode FFT::fft(float* data, Partials* out_partials) noexcept {
-        // TODO: Reuse settings and memory!
-        int32_t N = m_length;
-        int32_t half_n = N / 2;
+        if (!data || !out_partials) return ErrorCode::NullData;
 
-        // Create FFTW plan (real -> complex)
-        fftwf_complex* out = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * (half_n + 1));
-        fftwf_plan plan = fftwf_plan_dft_r2c_1d(N, data, out, FFTW_ESTIMATE);
+        // Copy input to internal buffer
+        std::memcpy(m_x_buffer, data, sizeof(float) * m_length);
 
-        fftwf_execute(plan);
+        // Execute FFT
+        fftwf_execute(m_plan);
+
+        // Normalize factor (same as vDSP)
+        float fft_norm_factor = 1.0f / m_length;
 
         // Fill Partials
-        for (int k = 0; k <= half_n; ++k) {
-            float re = out[k][0];
-            float im = out[k][1];
-            for (int32_t i = 0; i < m_half_length; i++) {
-                out_partials->setPartialAtIndex(i, std::sqrt(re * re + im * im), std::atan2(im, re));
-            }
-        }
+        for (int32_t k = 0; k <= m_half_length; ++k) {
+            float re = m_out[k][0];
+            float im = m_out[k][1];
 
-        fftwf_destroy_plan(plan);
-        fftwf_free(out);
+            float mag = std::sqrt(re*re + im*im) * fft_norm_factor;
+            float phase = std::atan2(im, re);
+
+            out_partials->setPartialAtIndex(k, mag, phase);
+        }
 
         return ErrorCode::None;
     }
@@ -244,33 +255,24 @@ namespace Grain {
     }
 #else
     ErrorCode FFT::ifft(Partials* partials, float* out_data) noexcept {
-        // TODO: Reuse settings and memory!
-        int32_t N = m_length;
-        int32_t half_n = N / 2;
+        if (!partials || !out_data) return ErrorCode::NullData;
 
-        fftwf_complex* in = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * (half_n + 1));
+        // Fill FFTW input buffer from Partials
+        for (int32_t k = 0; k <= m_half_length; ++k) {
+            float mag = partials->magnitudeAtIndex(k);
+            float phase = partials->phaseAtIndex(k);
 
-        // Convert amplitudes + phases back to complex numbers
-        for (int k = 0; k <= half_n; ++k) {
-            float amp;
-            float phase;
-            partials->partialAtIndex(k, amp, phase);
-            in[k][0] = amp * ::cosf(phase); // real
-            in[k][1] = amp * ::sinf(phase); // imaginary
+            m_out[k][0] = mag * std::cos(phase) * m_length; // scale back
+            m_out[k][1] = mag * std::sin(phase) * m_length;
         }
 
-        // Create FFTW plan (complex -> real)
-        fftwf_plan plan = fftwf_plan_dft_c2r_1d(N, in, out_data, FFTW_ESTIMATE);
+        // Create inverse plan on the fly or reuse one if needed
+        fftwf_plan plan_inv = fftwf_plan_dft_c2r_1d(m_length, m_out, m_x_buffer, FFTW_ESTIMATE);
+        fftwf_execute(plan_inv);
+        fftwf_destroy_plan(plan_inv);
 
-        fftwf_execute(plan);
-
-        // Normalize output
-        for (int i = 0; i < N; ++i) {
-            out_data[i] /= N;
-        }
-
-        fftwf_destroy_plan(plan);
-        fftwf_free(in);
+        // Copy result
+        std::memcpy(out_data, m_x_buffer, sizeof(float) * m_length);
 
         return ErrorCode::None;
     }

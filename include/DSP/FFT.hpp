@@ -80,6 +80,8 @@ namespace Grain {
         int32_t m_log_n;
         int32_t m_length;
         int32_t m_half_length;
+
+#if defined(__APPLE__) && defined(__MACH__)
         float* m_data;
         float* m_x_buffer;
         float* m_y_buffer;
@@ -87,11 +89,12 @@ namespace Grain {
         float* m_imag_part;
         float* m_mag;
         float* m_phase;
-
-        #if defined(__APPLE__) && defined(__MACH__)
-            FFTSetup m_fft_setup;
-            DSPComplex* m_temp_complex;
-        #endif
+        FFTSetup m_fft_setup;
+        DSPComplex* m_temp_complex;
+#else
+        fftwf_complex* m_out{};
+        fftwf_plan m_plan{};
+#endif
 
     public:
         explicit FFT(int32_t log_n) noexcept;
