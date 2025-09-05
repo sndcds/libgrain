@@ -134,6 +134,7 @@ namespace Grain {
 #else
         bool send(const uint8_t* bytes, int32_t length) noexcept {
             #pragma message("MidiOut::send() must be implemented!")
+            return false;
         }
 #endif
 
