@@ -148,7 +148,7 @@ namespace Grain {
             MIDISend(m_port, m_endpoint, &packetList);
         }
 
-        void sendBytesAtAbsoluteTime(const uint8_t* bytes, size_t length, MIDITimeStamp timestamp) noexcept {
+        void sendBytesAtAbsoluteTime(const uint8_t* bytes, size_t length, timestamp_t timestamp) noexcept {
             if (!m_port || !m_endpoint || !bytes || length == 0) return;
             MIDIPacketList packetList;
             MIDIPacket* packet = MIDIPacketListInit(&packetList);
@@ -165,12 +165,12 @@ namespace Grain {
         }
 #endif
 
-        void sendNoteOnAtAbsoluteTime(uint8_t channel, uint8_t note, uint8_t velocity, MIDITimeStamp timestamp) noexcept {
+        void sendNoteOnAtAbsoluteTime(uint8_t channel, uint8_t note, uint8_t velocity, timestamp_t timestamp) noexcept {
             uint8_t data[3] = { static_cast<uint8_t>(0x90 | (channel & 0x0F)), note, velocity };
             sendBytesAtAbsoluteTime(data, 3, timestamp);
         }
 
-        void sendNoteOffAtAbsoluteTime(uint8_t channel, uint8_t note, uint8_t velocity, MIDITimeStamp timestamp) noexcept {
+        void sendNoteOffAtAbsoluteTime(uint8_t channel, uint8_t note, uint8_t velocity, timestamp_t timestamp) noexcept {
             uint8_t data[3] = { static_cast<uint8_t>(0x80 | (channel & 0x0F)), note, velocity };
             sendBytesAtAbsoluteTime(data, 3, timestamp);
         }
