@@ -295,13 +295,14 @@ namespace Grain {
         m_fft_length = static_cast<int32_t>(Math::next_pow2(m_signal_length));  // TODO: next_pow2 or pad_two?
         m_fft_half_length = m_fft_length / 2;
 
-#if defined(__APPLE__) && defined(__MACH__)
         m_filter_samples = (float*)std::malloc(sizeof(float) * m_filter_length);
         m_signal_samples = (float*)std::malloc(sizeof(float) * m_signal_length);
         m_convolved_samples = (float*)std::malloc(sizeof(float) * m_signal_length);
         m_filter_padded = (float*)std::malloc(sizeof(float) * m_fft_length);
         m_signal_padded = (float*)std::malloc(sizeof(float) * m_fft_length);
         m_filter_result = (float*)std::malloc(sizeof(float) * m_fft_length);
+
+#if defined(__APPLE__) && defined(__MACH__)
         m_signal_real = (float*)std::malloc(sizeof(float) * m_fft_half_length);
         m_signal_imag = (float*)std::malloc(sizeof(float) * m_fft_half_length);
 
@@ -345,14 +346,15 @@ namespace Grain {
 
 
     FFT_FIR::~FFT_FIR() noexcept {
-#if defined(__APPLE__) && defined(__MACH__)
-        std::free(m_filter_real);
         std::free(m_filter_samples);
         std::free(m_signal_samples);
         std::free(m_convolved_samples);
         std::free(m_filter_padded);
         std::free(m_signal_padded);
         std::free(m_filter_result);
+
+#if defined(__APPLE__) && defined(__MACH__)
+        std::free(m_filter_real);
         std::free(m_signal_real);
         std::free(m_signal_imag);
 #else
