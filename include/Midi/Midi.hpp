@@ -183,7 +183,7 @@ namespace Grain {
         }
 #else
         void sendBytesAtAbsoluteTime(const uint8_t* bytes, size_t length, timestamp_t timestamp) noexcept {
-            #pragma message("MidiOut::send() must be implemented!")
+           #pragma message("MidiOut::sendBytesAtAbsoluteTime() must be implemented on this platform!")
         }
 #endif
 
