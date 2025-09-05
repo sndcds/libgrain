@@ -380,7 +380,7 @@ namespace Grain {
         cblas_scopy(m_filter_length, m_filter_samples, 1, m_filter_padded, 1);
 
         // Compute H[k] = FFT{h[n]} into m_filter_fft
-     fftwf_execute(m_plan_fwd_filter);
+        fftwf_execute(m_plan_fwd_filter);
     }
 #endif
 

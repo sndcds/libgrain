@@ -142,12 +142,13 @@ namespace Grain {
         int32_t m_fft_half_length;
         int32_t m_overlap_length;
 
-#if defined(__APPLE__) && defined(__MACH__)
-        float* m_filter_real;
-        float* m_filter_imag;
         float* m_filter_samples = nullptr;
         float* m_signal_samples = nullptr;
         float* m_convolved_samples = nullptr;
+
+#if defined(__APPLE__) && defined(__MACH__)
+        float* m_filter_real;
+        float* m_filter_imag;
         float* m_filter_padded = nullptr;
         float* m_signal_padded = nullptr;
         float* m_filter_result = nullptr;
