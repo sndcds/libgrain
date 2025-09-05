@@ -131,7 +131,13 @@ namespace Grain {
             }
             return true;
         }
+#else
+        bool send(const uint8_t* bytes, int32_t length) noexcept {
+            #pragma message("MidiOut::send() must be implemented!")
+        }
+#endif
 
+#if defined(__APPLE__) && defined(__MACH__)
         void sendNoteOn(uint8_t channel, uint8_t note, uint8_t velocity) noexcept {
             uint8_t packetData[3] = { static_cast<uint8_t>(0x90 | (channel & 0x0F)), note, velocity };
             MIDIPacketList packetList;
@@ -139,7 +145,13 @@ namespace Grain {
             packet = MIDIPacketListAdd(&packetList, sizeof(packetList), packet, 0, 3, packetData);
             MIDISend(m_port, m_endpoint, &packetList);
         }
+#else
+        void sendNoteOn(uint8_t channel, uint8_t note, uint8_t velocity) noexcept {
+            #pragma message("MidiOut::sendNoteOn() must be implemented!")
+        }
+#endif
 
+#if defined(__APPLE__) && defined(__MACH__)
         void sendNoteOff(uint8_t channel, uint8_t note, uint8_t velocity) noexcept {
             uint8_t packetData[3] = { static_cast<uint8_t>(0x80 | (channel & 0x0F)), note, velocity };
             MIDIPacketList packetList;
@@ -147,7 +159,13 @@ namespace Grain {
             packet = MIDIPacketListAdd(&packetList, sizeof(packetList), packet, 0, 3, packetData);
             MIDISend(m_port, m_endpoint, &packetList);
         }
+#else
+        void sendNoteOff(uint8_t channel, uint8_t note, uint8_t velocity) noexcept {
+            #pragma message("MidiOut::sendNoteOff() must be implemented!")
+        }
+#endif
 
+#if defined(__APPLE__) && defined(__MACH__)
         void sendBytesAtAbsoluteTime(const uint8_t* bytes, size_t length, timestamp_t timestamp) noexcept {
             if (!m_port || !m_endpoint || !bytes || length == 0) return;
             MIDIPacketList packetList;
@@ -162,6 +180,10 @@ namespace Grain {
             if (packet) {
                 MIDISend(m_port, m_endpoint, &packetList);
             }
+        }
+#else
+        void sendBytesAtAbsoluteTime(const uint8_t* bytes, size_t length, timestamp_t timestamp) noexcept {
+            #pragma message("MidiOut::send() must be implemented!")
         }
 #endif
 
