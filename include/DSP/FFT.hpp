@@ -186,7 +186,7 @@ namespace Grain {
 #if defined(__APPLE__) && defined(__MACH__)
             return m_filter_real && m_fft_setup;
 #else
-            return m_filter_real && m_filter_fft && m_plan_fwd_filter && m_plan_fwd_signal && m_plan_inv_signal;
+            return m_plan_fwd_filter && m_plan_fwd_signal && m_plan_inv_signal && m_filter_fft;
 #endif
         }
 
