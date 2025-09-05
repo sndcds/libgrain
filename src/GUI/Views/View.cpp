@@ -14,10 +14,10 @@
 
 namespace Grain {
 
-    #if defined(__APPLE__) && defined(__MACH__)
-        void _macosView_addComponent(Component* paren, Component* component, Component::AddFlags flags);
-        void _macosView_removeFromSuperview(Component* component);
-    #endif
+#if defined(__APPLE__) && defined(__MACH__)
+    void _macosView_addComponent(Component* paren, Component* component, Component::AddFlags flags);
+    void _macosView_removeFromSuperview(Component* component);
+#endif
 
 
     View::View(int32_t tag) noexcept : Component(tag) {
@@ -81,9 +81,9 @@ namespace Grain {
                 }
             }
 
-            #if defined(__APPLE__) && defined(__MACH__)
-                _macosView_addComponent(this, component, flags);
-            #endif
+#if defined(__APPLE__) && defined(__MACH__)
+            _macosView_addComponent(this, component, flags);
+#endif
         }
 
         return component;
@@ -105,9 +105,9 @@ namespace Grain {
                 index++;
             }
 
-            #if defined(__APPLE__) && defined(__MACH__)
-                _macosView_removeFromSuperview(component);
-            #endif
+#if defined(__APPLE__) && defined(__MACH__)
+            _macosView_removeFromSuperview(component);
+#endif
         }
     }
 

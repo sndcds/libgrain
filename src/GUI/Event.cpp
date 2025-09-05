@@ -22,15 +22,15 @@ namespace Grain {
     int32_t Event::g_mouse_drag_count = 0;
 
 
-    #if defined(__APPLE__) && defined(__MACH__)
-        void _macosEvent_release(Event* event);
-    #endif
+#if defined(__APPLE__) && defined(__MACH__)
+    void _macosEvent_release(Event* event);
+#endif
 
 
     Event::~Event() noexcept {
-        #if defined(__APPLE__) && defined(__MACH__)
-            _macosEvent_release(this);
-        #endif
+#if defined(__APPLE__) && defined(__MACH__)
+        _macosEvent_release(this);
+#endif
     }
 
 

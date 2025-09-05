@@ -17,19 +17,19 @@
 
 namespace Grain {
 
-    #if defined(__APPLE__) && defined(__MACH__)
-        void _macosWindow_init(Window* window, const char* title, const Rectd& rect, Window::Style style, Screen* screen);
-        void _macosWindow_setFrame(const Window* window, const Rectd& rect);
-        void _macosWindow_setTitle(const Window* window, const String& title);
-        void _macosWindow_release(Window* window);
-        void _macosWindow_orderFront(Window* window);
-        void _macosWindow_makeKeyWindow(Window* window);
-        void _macosWindow_makeKeyAndOrderFront(Window* window);
-        void _macosWindow_setFirstResponder(Window* window, Component* component);
-        void _macosWindow_makeFirstResponder(Window* window, Component* component);
-        void _macosWindow_close(Window* window);
-        Rectd _macosWindow_bounds(const Window* window);
-    #endif
+#if defined(__APPLE__) && defined(__MACH__)
+    void _macosWindow_init(Window* window, const char* title, const Rectd& rect, Window::Style style, Screen* screen);
+    void _macosWindow_setFrame(const Window* window, const Rectd& rect);
+    void _macosWindow_setTitle(const Window* window, const String& title);
+    void _macosWindow_release(Window* window);
+    void _macosWindow_orderFront(Window* window);
+    void _macosWindow_makeKeyWindow(Window* window);
+    void _macosWindow_makeKeyAndOrderFront(Window* window);
+    void _macosWindow_setFirstResponder(Window* window, Component* component);
+    void _macosWindow_makeFirstResponder(Window* window, Component* component);
+    void _macosWindow_close(Window* window);
+    Rectd _macosWindow_bounds(const Window* window);
+#endif
 
 
     Window::Window(const char* title, const Rectd& rect, Window::Style style, Screen* screen) noexcept : Object() {
@@ -41,9 +41,9 @@ namespace Grain {
 
 
     Window::~Window() noexcept {
-        #if defined(__APPLE__) && defined(__MACH__)
-            _macosWindow_release(this);
-        #endif
+#if defined(__APPLE__) && defined(__MACH__)
+        _macosWindow_release(this);
+#endif
     }
 
 
@@ -53,61 +53,61 @@ namespace Grain {
 
 
     void Window::_init(const char* title, const Rectd& rect, Window::Style style, Screen* screen) noexcept {
-        #if defined(__APPLE__) && defined(__MACH__)
-            _macosWindow_init(this, title, rect, style, screen);
-        #endif
+#if defined(__APPLE__) && defined(__MACH__)
+        _macosWindow_init(this, title, rect, style, screen);
+#endif
     }
 
 
     Rectd Window::boundsRect() const noexcept {
-        #if defined(__APPLE__) && defined(__MACH__)
-            return _macosWindow_bounds(this);
-        #else
-            return Rectd();
-        #endif
+#if defined(__APPLE__) && defined(__MACH__)
+        return _macosWindow_bounds(this);
+#else
+        return Rectd();
+#endif
     }
 
 
     void Window::setBoundsRect(const Rectd& bounds_rect) noexcept {
-        #if defined(__APPLE__) && defined(__MACH__)
-            _macosWindow_setFrame(this, bounds_rect);
-        #endif
+#if defined(__APPLE__) && defined(__MACH__)
+        _macosWindow_setFrame(this, bounds_rect);
+#endif
     }
 
 
     void Window::setTitle(const String& title) noexcept {
         m_title = title;
-        #if defined(__APPLE__) && defined(__MACH__)
-            _macosWindow_setTitle(this, title);
-        #endif
+#if defined(__APPLE__) && defined(__MACH__)
+        _macosWindow_setTitle(this, title);
+#endif
     }
 
 
     void Window::orderFront() noexcept {
-        #if defined(__APPLE__) && defined(__MACH__)
-            _macosWindow_orderFront(this);
-        #endif
+#if defined(__APPLE__) && defined(__MACH__)
+        _macosWindow_orderFront(this);
+#endif
     }
 
 
     void Window::makeKeyWindow() noexcept {
-        #if defined(__APPLE__) && defined(__MACH__)
-            _macosWindow_makeKeyWindow(this);
-        #endif
+#if defined(__APPLE__) && defined(__MACH__)
+        _macosWindow_makeKeyWindow(this);
+#endif
     }
 
 
     void Window::makeKeyAndOrderFront() noexcept {
-        #if defined(__APPLE__) && defined(__MACH__)
-            _macosWindow_makeKeyAndOrderFront(this);
-        #endif
+#if defined(__APPLE__) && defined(__MACH__)
+        _macosWindow_makeKeyAndOrderFront(this);
+#endif
     }
 
 
     void Window::close() noexcept {
-        #if defined(__APPLE__) && defined(__MACH__)
-            _macosWindow_close(this);
-        #endif
+#if defined(__APPLE__) && defined(__MACH__)
+        _macosWindow_close(this);
+#endif
     }
 
 

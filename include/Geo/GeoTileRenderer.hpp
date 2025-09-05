@@ -40,7 +40,7 @@
 #include "Database/PostgreSQL.hpp"
 
 // #include "LuaBridge.h" // TODO: !!!!!
-#include <libpq-fe.h>
+// #include <libpq-fe.h>
 
 
 namespace Grain {
@@ -637,7 +637,7 @@ namespace Grain {
         }
 
 
-        static const char* rendererErrorString(int32_t errorCode) noexcept;
+        static const char* rendererErrorString(int32_t err) noexcept;
     };
 
 

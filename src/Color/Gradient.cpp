@@ -69,11 +69,11 @@ namespace Grain {
     Gradient::~Gradient() noexcept {
         delete m_lut;
 
-        #if defined(__APPLE__) && defined(__MACH__)
-            if (m_cg_gradient) {
-                CGGradientRelease(m_cg_gradient);
-            }
-        #endif
+#if defined(__APPLE__) && defined(__MACH__)
+        if (m_cg_gradient) {
+            CGGradientRelease(m_cg_gradient);
+        }
+#endif
     }
 
 

@@ -22,34 +22,34 @@
 
 namespace Grain {
 
-    #if defined(__APPLE__) && defined(__MACH__)
-        void _macosView_initForUI(Component* component, const Grain::Rectd& rect);
-        void _macosView_releaseView(Component* component);
-        void _macosView_setNeedsDisplay(const Component* component);
-        void _macosView_forcedDisplay(const Component* component);
-        void _macosView_selectNextKeyView(Component* component);
-        void _macosView_interpretKeyEvent(Component* component, const Event& event);
-        void _macosView_setOpacity(Component* component, float opacity);
-        void _macosView_setHidden(Component* component, bool hidden);
-        bool _macosView_isKeyView(const Component* component);
-        bool _macosView_gotoView(Component* component);
-        void _macosView_setFrame(Component* component, Rectd& rect);
-        void _macosView_setFrameOrigin(Component* component, double x, double y);
-        void _macosView_setFrameSize(Component* component, double width, double height);
-    #endif
+#if defined(__APPLE__) && defined(__MACH__)
+    void _macosView_initForUI(Component* component, const Grain::Rectd& rect);
+    void _macosView_releaseView(Component* component);
+    void _macosView_setNeedsDisplay(const Component* component);
+    void _macosView_forcedDisplay(const Component* component);
+    void _macosView_selectNextKeyView(Component* component);
+    void _macosView_interpretKeyEvent(Component* component, const Event& event);
+    void _macosView_setOpacity(Component* component, float opacity);
+    void _macosView_setHidden(Component* component, bool hidden);
+    bool _macosView_isKeyView(const Component* component);
+    bool _macosView_gotoView(Component* component);
+    void _macosView_setFrame(Component* component, Rectd& rect);
+    void _macosView_setFrameOrigin(Component* component, double x, double y);
+    void _macosView_setFrameSize(Component* component, double width, double height);
+#endif
 
 
     Component::Component(const Rectd& rect, int32_t tag) noexcept : m_tag(tag), m_rect(rect) {
-        #if defined(__APPLE__) && defined(__MACH__)
-            _macosView_initForUI(this, rect);
-        #endif
+#if defined(__APPLE__) && defined(__MACH__)
+        _macosView_initForUI(this, rect);
+#endif
     }
 
 
     Component::~Component() noexcept {
-        #if defined(__APPLE__) && defined(__MACH__)
-            _macosView_releaseView(this);
-        #endif
+#if defined(__APPLE__) && defined(__MACH__)
+        _macosView_releaseView(this);
+#endif
 
         delete m_text;
     }
@@ -76,9 +76,9 @@ namespace Grain {
         if (enabled != m_is_enabled) {
             m_is_enabled = enabled;
 
-            #if defined(__APPLE__) && defined(__MACH__)
-                _macosView_selectNextKeyView(this);
-            #endif
+#if defined(__APPLE__) && defined(__MACH__)
+            _macosView_selectNextKeyView(this);
+#endif
 
             if (componentType() == ComponentType::PopUpButton) {
                 /* TODO: macOS...
@@ -112,9 +112,9 @@ namespace Grain {
         }
 
         m_is_visible = visibility;
-        #if defined(__APPLE__) && defined(__MACH__)
-            _macosView_setHidden(this, !m_is_visible);
-        #endif
+#if defined(__APPLE__) && defined(__MACH__)
+        _macosView_setHidden(this, !m_is_visible);
+#endif
     }
 
 
@@ -155,23 +155,23 @@ namespace Grain {
 
 
     bool Component::isKeyComponent() const noexcept {
-        #if defined(__APPLE__) && defined(__MACH__)
-            return _macosView_isKeyView(this);
-        #else
-            // TODO: Implement linux version
-            return false;
-        #endif
+#if defined(__APPLE__) && defined(__MACH__)
+        return _macosView_isKeyView(this);
+#else
+        // TODO: Implement linux version
+        return false;
+#endif
     }
 
 
     bool Component::gotoComponent(Component* component) noexcept {
         if (component) {
-            #if defined(__APPLE__) && defined(__MACH__)
-                return _macosView_gotoView(component);
-            #else
-                // TODO: Implement linux version
-                return false;
-            #endif
+#if defined(__APPLE__) && defined(__MACH__)
+            return _macosView_gotoView(component);
+#else
+            // TODO: Implement linux version
+            return false;
+#endif
         }
         else {
             return false;
@@ -226,9 +226,9 @@ namespace Grain {
             m_rect = new_rect;
             geometryChanged();
 
-            #if defined(__APPLE__) && defined(__MACH__)
-                _macosView_setFrame(this, m_rect);
-            #endif
+#if defined(__APPLE__) && defined(__MACH__)
+            _macosView_setFrame(this, m_rect);
+#endif
 
             needsDisplay();
         }
@@ -239,9 +239,9 @@ namespace Grain {
             m_rect.m_x = x;
             m_rect.m_y = y;
 
-            #if defined(__APPLE__) && defined(__MACH__)
-                _macosView_setFrameOrigin(this, x, y);
-            #endif
+#if defined(__APPLE__) && defined(__MACH__)
+            _macosView_setFrameOrigin(this, x, y);
+#endif
 
             needsDisplay();
         }
@@ -259,9 +259,9 @@ namespace Grain {
             m_rect.m_width = width;
             m_rect.m_height = height;
 
-            #if defined(__APPLE__) && defined(__MACH__)
-                _macosView_setFrameSize(this, width, height);
-            #endif
+#if defined(__APPLE__) && defined(__MACH__)
+            _macosView_setFrameSize(this, width, height);
+#endif
 
             geometryChanged();
             needsDisplay();
@@ -400,11 +400,11 @@ namespace Grain {
     }
 
     void Component::_interpretKeyEvents(const Event& event) noexcept {
-        #if defined(__APPLE__) && defined(__MACH__)
-            _macosView_interpretKeyEvent(this, event);
-        #else
-            // TODO: Implement for Linux
-        #endif
+#if defined(__APPLE__) && defined(__MACH__)
+        _macosView_interpretKeyEvent(this, event);
+#else
+        // TODO: Implement for Linux
+#endif
     }
 
 
@@ -424,15 +424,15 @@ namespace Grain {
 
 
     void Component::needsDisplay() const noexcept {
-        #if defined(__APPLE__) && defined(__MACH__)
-            _macosView_setNeedsDisplay(this);
-        #endif
+#if defined(__APPLE__) && defined(__MACH__)
+        _macosView_setNeedsDisplay(this);
+#endif
     }
 
     void Component::forcedDisplay() const noexcept {
-        #if defined(__APPLE__) && defined(__MACH__)
-            _macosView_forcedDisplay(this);
-        #endif
+#if defined(__APPLE__) && defined(__MACH__)
+        _macosView_forcedDisplay(this);
+#endif
     }
 
 

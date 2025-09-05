@@ -32,7 +32,7 @@
 #include "DSP/RingBuffer.hpp"
 
 #if defined(__APPLE__) && defined(__MACH__)
-    #include <AudioToolbox/AudioToolbox.h>
+#include <AudioToolbox/AudioToolbox.h>
 #endif
 
 
@@ -234,12 +234,33 @@ namespace Grain {
         // friend class SignalFile;
 
     public:
-        enum CodecFourCC : fourcc_t {
-            AIFF       = ('a' << 24) | ('i' << 16) | ('f' << 8) | 'f',  ///< 'aiff'
-            AIFC       = ('a' << 24) | ('i' << 16) | ('f' << 8) | 'c',  ///< 'aifc'
-            WAVE       = ('w' << 24) | ('a' << 16) | ('v' << 8) | 'e',  ///< 'wave'
-            APPLE_CAF  = ('a' << 24) | ('c' << 16) | ('a' << 8) | 'f',  ///< 'acaf'
-            APPLE_AAC  = ('a' << 24) | ('a' << 16) | ('c' << 8) | ' '   ///< 'aac '
+        enum {
+            kErr_InvalidWriteSetting = 0,
+            kErr_NothingToWrite,
+            kErr_UnsupportedDataType,
+            kErr_UnsupportedContainerFormat,
+            kErr_ReadAllSamplesFailed
+        };
+
+        enum class FileContainerFormat {
+            AIFF,
+            AIFC,
+            WAV,
+            APPLE_CAF,      ///< macOS specific format
+            APPLE_AAC       ///< macOS specific format
+        };
+
+        enum class FileSampleEncoding {
+            Original,       ///< use internal sample type
+            Int8,
+            Int16,
+            Int24,
+            Int32,
+            Float,
+            ALAW,
+            ULAW,
+            IMA_ADPCM,
+            MS_ADPCM
         };
 
         enum class CombineMode {
@@ -298,7 +319,7 @@ namespace Grain {
         [[nodiscard]] int32_t bytesPerSample() const noexcept { return m_bytes_per_sample; }
         [[nodiscard]] size_t dataSize() const noexcept { return m_data_byte_size; }
         [[nodiscard]] int32_t sampleStep() const noexcept { return m_channel_count; }
-        [[nodiscard]] double duration() const noexcept;
+        [[nodiscard]] double seconds() const noexcept;
 
         [[nodiscard]] inline const void* dataPtr() const noexcept { return m_data.raw; }
         [[nodiscard]] const void* dataPtr(int32_t channel, int64_t index = 0) const noexcept;
@@ -376,9 +397,6 @@ namespace Grain {
 
         // Set
         void setSampleRate(int32_t sample_rate) noexcept { m_sample_rate = sample_rate; }
-        // void setFileWriteSettings(SignalFileType type, int32_t bits_per_sample, bool floating_point) noexcept;
-        // void setFileWriteSettings(const SignalFileWriteSettings& settings) noexcept;
-        //void setFileWriteSettings(SignalFilePreset preset) noexcept;
 
         // Compare
         [[nodiscard]] bool hasSameSettingAs(const Signal* signal) const noexcept;
@@ -421,7 +439,6 @@ namespace Grain {
 
 
         [[nodiscard]] SimplifiedSignal* simplifiedSignalByChannel(int32_t channel) noexcept;
-        // [[nodiscard]] SignalFileWriteSettings fileWriteSettings() const noexcept { return m_file_write_settings; }
 
         // Utilities
         [[nodiscard]] int64_t samplesNeededForMilliseconds(int64_t milliseconds) const noexcept;
@@ -553,7 +570,6 @@ namespace Grain {
         ErrorCode applyFilterFFTToChannel(const Partials* partials, int32_t channel) noexcept;
         ErrorCode applyFilterFFTToChannel(const Partials* partials, int32_t channel, int64_t length) noexcept;
 
-        ErrorCode _applyFilterFFTToChannel(const Partials* partials, int32_t channel, int64_t length) noexcept;
         void releaseFilterFFTResources();
 
         ErrorCode convolveChannel(int32_t a_channel, int64_t a_offset, int64_t a_length, const Signal* b_signal, int32_t b_channel, int64_t b_offset, int64_t b_length, Signal* result_signal, int32_t result_channel) const noexcept;
@@ -571,18 +587,33 @@ namespace Grain {
 
 
         // File
-        ErrorCode writeToFile(const String& file_path, CanOverwrite can_overwrite) const noexcept;
-        ErrorCode writeToFile(const String& file_path, CanOverwrite can_overwrite, int64_t offset, int64_t length) const noexcept;
-        ErrorCode writeRegionToFile(const String& file_path, int32_t region_index, CanOverwrite can_overwrite) const noexcept;
+        [[nodiscard]] ErrorCode writeToFile(
+                const String& file_path,
+                FileContainerFormat container_format,
+                FileSampleEncoding sample_encoding,
+                int64_t offset,
+                int64_t length) const noexcept;
+        [[nodiscard]] ErrorCode writeToFile(
+                const String& file_path,
+                FileContainerFormat container_format,
+                FileSampleEncoding sample_encoding) const noexcept;
+        [[nodiscard]] ErrorCode writeRegionToFile(
+                const String& file_path,
+                FileContainerFormat container_format,
+                FileSampleEncoding sample_encoding,
+                int32_t region_index) const noexcept;
 
-        [[nodiscard]] static Signal* createFromFile(const String& file_path, DataType data_type = DataType::Float) noexcept;
+        [[nodiscard]] static Signal* createFromFile(
+                const String& file_path,
+                DataType data_type,
+                ErrorCode& out_err) noexcept;
 
-        #if defined(__APPLE__) && defined(__MACH__)
-            [[nodiscard]] static Signal* createFromMainBundle(String& file_name, const char* type) noexcept;
-            /* TODO: !!!!! Move to a separate mm file
-            [[nodiscard]] static Signal* createFromBundle(NSBundle* bundle, String& fileName, const char* type) noexcept;
-            */
-        #endif
+#if defined(__APPLE__) && defined(__MACH__)
+        [[nodiscard]] static Signal* createFromMainBundle(String& file_name, const char* type) noexcept;
+        /* TODO: !!!!! Move to a separate mm file
+        [[nodiscard]] static Signal* createFromBundle(NSBundle* bundle, String& fileName, const char* type) noexcept;
+        */
+#endif
 
         bool waveformValues(int32_t channel, int64_t offset, int64_t length, int64_t values_length, float* out_values) const noexcept;
         bool waveformValues(int64_t offset, int64_t length, int64_t values_length, float* out_values) const noexcept;
@@ -621,8 +652,6 @@ namespace Grain {
             return (k + 1) * value / (1.0f + k * std::fabs(value));
         }
 
-        // [[nodiscard]] const char* fileExt() const noexcept { return m_file_write_settings.fileExt(); }
-
         int64_t _updateSimplified() noexcept;
 
     private:
@@ -653,9 +682,6 @@ namespace Grain {
         bool m_regions_must_sort = false;           ///< If set to true, regions have to be sorted before usage
         SignalRegion** m_sort_region_ptr_array = nullptr;   ///< Used for sorting
         int32_t m_sort_region_ptr_array_capacity = 0;       ///< Capacity of the arry for sorting
-
-        //
-        // WriteSettings m_file_write_settings;    ///< Settings for writing to file
 
         // Memory and Resources used for computations
         FFT* m_fft = nullptr;

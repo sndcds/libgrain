@@ -25,7 +25,7 @@
 #include "Math/Random.hpp"
 
 #if defined(__APPLE__) && defined(__MACH__)
-    #include <CoreGraphics/CoreGraphics.h>
+#include <CoreGraphics/CoreGraphics.h>
 #endif
 
 
@@ -102,17 +102,17 @@ namespace Grain {
             m_height = height;
         }
 
-        #if defined(__APPLE__) && defined(__MACH__)
-            /**
-             *  @brief Converts a Core Graphics CGRect to a Rect instance.
-             */
-            explicit Rect(const CGRect& r) noexcept {
-                m_x = r.origin.x;
-                m_y = r.origin.y;
-                m_width = r.size.width;
-                m_height = r.size.height;
-            }
-        #endif
+#if defined(__APPLE__) && defined(__MACH__)
+        /**
+         *  @brief Converts a Core Graphics CGRect to a Rect instance.
+         */
+        explicit Rect(const CGRect& r) noexcept {
+            m_x = r.origin.x;
+            m_y = r.origin.y;
+            m_width = r.size.width;
+            m_height = r.size.height;
+        }
+#endif
 
         [[nodiscard]] virtual const char* className() const noexcept { return "Rect"; }
 
@@ -139,11 +139,11 @@ namespace Grain {
             return *this;
         }
 
-        #if defined(__APPLE__) && defined(__MACH__)
-            Rect& operator = (const CGRect& r) {
-                m_x = r.origin.x; m_y = r.origin.y; m_width = r.size.width; m_height = r.size.height; return *this;
-            }
-        #endif
+#if defined(__APPLE__) && defined(__MACH__)
+        Rect& operator = (const CGRect& r) {
+            m_x = r.origin.x; m_y = r.origin.y; m_width = r.size.width; m_height = r.size.height; return *this;
+        }
+#endif
 
 
         bool operator == (const Rect& other) const {
@@ -1279,13 +1279,13 @@ namespace Grain {
         }
 
 
-        #if defined(__APPLE__) && defined(__MACH__)
-            [[nodiscard]] CGRect cgRect() const noexcept {
-                double rx = m_width < 0 ? m_x + m_width : m_x;
-                double ry = m_height < 0 ? m_y + m_height : m_y;
-                return CGRectMake(rx, ry, std::fabs(m_width), std::fabs(m_height));
-            }
-        #endif
+#if defined(__APPLE__) && defined(__MACH__)
+        [[nodiscard]] CGRect cgRect() const noexcept {
+            double rx = m_width < 0 ? m_x + m_width : m_x;
+            double ry = m_height < 0 ? m_y + m_height : m_y;
+            return CGRectMake(rx, ry, std::fabs(m_width), std::fabs(m_height));
+        }
+#endif
 
     };
 

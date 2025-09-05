@@ -18,6 +18,8 @@
 #include "Graphic/AppleCGContext.hpp"
 #endif
 
+#include <SDL2/SDL.h>
+
 
 namespace Grain {
 
@@ -40,18 +42,12 @@ namespace Grain {
     String App::g_app_test_data_dir_path;
 
 
-    App::App() {
+    App::App(uint32_t flags) {
         if (App::g_instance) { // Prevent multiple instantiation
             return;
         }
 
         g_instance = this;
-
-#if defined(__APPLE__) && defined(__MACH__)
-        m_gc_type =  GraphicContextType::AppleMac;
-#else
-        m_gc_type =  GraphicContextType::Cairo;
-#endif
 
         m_start_time.now();
 
@@ -61,9 +57,25 @@ namespace Grain {
         m_logical_core_count = Hardware::logicalCores();
         m_mem_size = Hardware::memSize();
 
+        m_use_sdl2 = flags & kAppFlag_SDL2;
+        m_use_cairo = flags & kAppFlag_Cairo;
+        m_use_fftw = flags & kAppFlag_FFTW;
+
+
+#if defined(__APPLE__) && defined(__MACH__)
+        if (m_use_cairo) {
+            m_gc_type = GraphicContextType::Cairo;
+        }
+        else {
+            m_gc_type = GraphicContextType::AppleMac;
+        }
+#else
+        m_gc_type =  GraphicContextType::Cairo;
+#endif
+
         updateScreenInfos();
 
-        // Fonts
+        // Init App fonts
         m_ui_font = new (std::nothrow) Font(16);
         m_small_ui_font = new (std::nothrow) Font(12);
         m_title_ui_font = new (std::nothrow) Font(22);

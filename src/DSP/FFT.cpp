@@ -22,9 +22,9 @@
 
 namespace Grain {
 
-    #if defined(__APPLE__) && defined(__MACH__)
-        FFTSetup FFT::g_fft_setups[kLogNResolutionCount] = { nullptr };
-    #endif
+#if defined(__APPLE__) && defined(__MACH__)
+    FFTSetup FFT::g_fft_setups[kLogNResolutionCount] = { nullptr };
+#endif
 
 
     FFT::FFT(int32_t log_n) noexcept {
@@ -306,13 +306,13 @@ namespace Grain {
 
         // TODO: Check all buffers againt nullptr
 
-        #if defined(__APPLE__) && defined(__MACH__)
-            m_fft_setup = FFT::_macos_fftSetup(std::log2(static_cast<float>(m_fft_length)));
-            m_filter_real = (float*)std::malloc(sizeof(float) * m_fft_length);
-            m_filter_imag = &m_filter_real[m_fft_half_length];
-            m_filter_split_complex.realp = m_filter_real;
-            m_filter_split_complex.imagp = m_filter_imag;
-        #endif
+#if defined(__APPLE__) && defined(__MACH__)
+        m_fft_setup = FFT::_macos_fftSetup(std::log2(static_cast<float>(m_fft_length)));
+        m_filter_real = (float*)std::malloc(sizeof(float) * m_fft_length);
+        m_filter_imag = &m_filter_real[m_fft_half_length];
+        m_filter_split_complex.realp = m_filter_real;
+        m_filter_split_complex.imagp = m_filter_imag;
+#endif
     }
 
 

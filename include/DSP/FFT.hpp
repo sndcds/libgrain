@@ -41,10 +41,10 @@ namespace Grain {
         float* m_imagp;
         float* m_mag;
         float *m_phase;
-        #if defined(__APPLE__) && defined(__MACH__)
-            FFTSetup m_fft_setup;
-            DSPComplex* m_temp_complex;
-        #endif
+#if defined(__APPLE__) && defined(__MACH__)
+        FFTSetup m_fft_setup;
+        DSPComplex* m_temp_complex;
+#endif
     } FFTConfig;
 
 
@@ -115,9 +115,9 @@ namespace Grain {
             return os;
         }
 
-        #if defined(__APPLE__) && defined(__MACH__)
-            static FFTSetup _macos_fftSetup(int32_t log_n) noexcept;
-        #endif
+#if defined(__APPLE__) && defined(__MACH__)
+        static FFTSetup _macos_fftSetup(int32_t log_n) noexcept;
+#endif
 
         static bool isValidResolution(int32_t resolution) noexcept;
         static int32_t logNFromResolution(int32_t resolution) noexcept;
@@ -154,9 +154,9 @@ namespace Grain {
         float* m_signal_imag = nullptr;
 
 #if defined(__APPLE__) && defined(__MACH__)
-            FFTSetup m_fft_setup;
-            DSPSplitComplex m_filter_split_complex;
-        #endif
+        FFTSetup m_fft_setup;
+        DSPSplitComplex m_filter_split_complex;
+#endif
 
     public:
         explicit FFT_FIR(int32_t log_n) noexcept;
@@ -175,11 +175,11 @@ namespace Grain {
         }
 
         [[nodiscard]] bool isValid() const noexcept {
-            #if defined(__APPLE__) && defined(__MACH__)
-                return m_filter_real && m_fft_setup;
-            #else
-                return m_filter_real;
-            #endif
+#if defined(__APPLE__) && defined(__MACH__)
+            return m_filter_real && m_fft_setup;
+#else
+            return m_filter_real;
+#endif
         }
 
         void setFilter() noexcept;

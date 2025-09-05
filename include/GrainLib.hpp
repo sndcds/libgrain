@@ -126,6 +126,8 @@
 #include "Math/Vec3.hpp"
 #include "Math/Vec3Fix.hpp"
 
+#include "Midi/Midi.hpp"
+
 #include "Scripting/Lua.hpp"
 #include "Scripting/Toml.hpp"
 

@@ -61,9 +61,6 @@ namespace Grain {
      *           called judiciously to avoid memory fragmentation or leaks.
      */
     void SimplifiedSignal::update(Signal* signal, int32_t channel) noexcept {
-
-        // TODO: Implement custom, context specific divisor instead of using hard coded 4096.
-
         int64_t new_length = 0;
 
         if (!signal) {
@@ -74,6 +71,7 @@ namespace Grain {
             return;
         }
 
+        // TODO: Implement custom, context specific divisor instead of using hard coded 4096.
         new_length = signal->length() / 4096;
         if (new_length < 1) {
             return;
@@ -96,6 +94,7 @@ namespace Grain {
         if (min_step < ms) {
             min_step = ms;
         }
+
         int64_t step = m_length;
         if (step < min_step) {
             step = min_step;
@@ -119,7 +118,6 @@ namespace Grain {
 
 
     Signal::Signal(int32_t sample_rate, int64_t sample_count) noexcept {
-
         auto err = configure(1, sample_rate, sample_count, DataType::Float);
         if (err != ErrorCode::None) {
             clearAll();
@@ -128,16 +126,20 @@ namespace Grain {
 
 
     Signal::Signal(int32_t channel_count, int32_t sample_rate, int64_t sample_count) noexcept {
-
-        auto err = configure(channel_count, sample_rate, sample_count, DataType::Float);
+    auto err = configure(channel_count, sample_rate, sample_count, DataType::Float);
         if (err != ErrorCode::None) {
             clearAll();
         }
     }
 
 
-    Signal::Signal(int32_t channel_count, int32_t sample_rate, int64_t sample_count, DataType data_type, bool weights_mode) noexcept : Object() {
-
+    Signal::Signal(
+            int32_t channel_count,
+            int32_t sample_rate,
+            int64_t sample_count,
+            DataType data_type,
+            bool weights_mode) noexcept : Object()
+    {
         auto err = configure(channel_count, sample_rate, sample_count, data_type, weights_mode);
         if (err != ErrorCode::None) {
             clearAll();
@@ -186,8 +188,13 @@ namespace Grain {
      *  - ErrorCode::UnsupportedDataType if the data type is unsupported.
      *  - ErrorCode::MemCantAllocate if memory allocation fails.
      */
-    ErrorCode Signal::configure(int32_t channel_count, int32_t sample_rate, int64_t sample_count, DataType data_type, bool weights_mode) noexcept {
-
+    ErrorCode Signal::configure(
+            int32_t channel_count,
+            int32_t sample_rate,
+            int64_t sample_count,
+            DataType data_type,
+            bool weights_mode) noexcept
+    {
         if (channel_count <= 0 || channel_count > kMaxChannelCount) {
             return ErrorCode::UnsupportedChannelCount;
         }
@@ -275,8 +282,14 @@ namespace Grain {
      *
      *  @see Signal::configure()
      */
-    ErrorCode Signal::checkConfiguration(Signal** signal_ptr, int32_t channel_count, int32_t sample_rate, int64_t sample_count, DataType data_type, bool weights_mode) noexcept {
-
+    ErrorCode Signal::checkConfiguration(
+            Signal** signal_ptr,
+            int32_t channel_count,
+            int32_t sample_rate,
+            int64_t sample_count,
+            DataType data_type,
+            bool weights_mode) noexcept
+    {
         if (!signal_ptr) {
             return ErrorCode::NullData;
         }
@@ -307,7 +320,6 @@ namespace Grain {
      *  and can be reused or reinitialized later.
      */
     void Signal::freeMem() noexcept {
-
         std::free(m_data.raw);
         m_data.raw = nullptr;
 
@@ -336,7 +348,6 @@ namespace Grain {
      *  @note This function does not shrink the buffer—only grows it when needed.
      */
     ErrorCode Signal::growIfNeeded(int64_t sample_count) noexcept {
-
         if (sample_count > m_sample_count) {
             return configure(m_channel_count, m_sample_rate, sample_count, m_data_type);
         }
@@ -375,7 +386,7 @@ namespace Grain {
             return nullptr;
         }
 
-        // Create a signal with same sample rate, data type ...
+        // Create a signal with same sample rate, data type
         auto signal = new (std::nothrow) Signal(m_channel_count, m_sample_rate, length, m_data_type, weights_mode);
         if (signal) {
             signal->copySamples(this, length, offset, 0);
@@ -398,7 +409,6 @@ namespace Grain {
      *                If nullptr, the setup error code is set to ErrorCode::NullData.
      */
     Signal* Signal::createSignalWithSameSetting() const noexcept {
-
         auto signal = new (std::nothrow) Signal(m_channel_count, m_sample_rate, m_sample_count, m_data_type, m_weights_mode);
         return signal;
     }
@@ -410,8 +420,7 @@ namespace Grain {
      *  @return The duration of the signal in seconds. If the sample rate is not
      *          positive, -1 is returned.
      */
-    double Signal::duration() const noexcept {
-
+    double Signal::seconds() const noexcept {
         if (m_sample_rate > 0) {
             return static_cast<double>(m_sample_count) / m_sample_rate;
         }
@@ -422,7 +431,6 @@ namespace Grain {
 
 
     const void* Signal::dataPtr(int32_t channel, int64_t index) const noexcept {
-
         return mutDataPtr(channel, index);
     }
 
@@ -442,7 +450,6 @@ namespace Grain {
      *          the validation checks fail, nullptr is returned.
      */
     void* Signal::mutDataPtr(int32_t channel, int64_t index) const noexcept {
-
         // Basic bounds checking
         if (!m_data.raw ||
             channel < 0 || channel >= m_channel_count ||
@@ -464,32 +471,9 @@ namespace Grain {
 
 
     SimplifiedSignal* Signal::simplifiedSignalByChannel(int32_t channel) noexcept {
-
         return m_simplified_signals.elementAtIndex(channel);
     }
 
-/*
-    void Signal::setFileWriteSettings(SignalFileType file_type, int32_t bits_per_sample, bool floating_point) noexcept {
-
-        m_file_write_settings.m_file_type = file_type;
-        m_file_write_settings.m_bits_per_sample = bits_per_sample;
-        m_file_write_settings.m_floating_point = floating_point;
-    }
-
-
-    void Signal::setFileWriteSettings(const SignalFileWriteSettings& settings) noexcept {
-
-        m_file_write_settings = settings;
-    }
-
-
-    void Signal::setFileWriteSettings(SignalFilePreset preset) noexcept {
-
-        SignalFileWriteSettings settings;
-        SignalFile::writeSettingByPreset(preset, settings);
-        setFileWriteSettings(settings);
-    }
-*/
 
     /**
      *  @brief Checks if the signal uses 32-bit floats and a specified channel
@@ -500,13 +484,11 @@ namespace Grain {
      *          otherwise, `false`.
      */
     bool Signal::canAccessFloatInChannel(int32_t channel) const noexcept {
-
-        return m_data.raw && m_data_type == DataType::Float && hasChannelAndData(channel);
+        return hasChannelAndData(channel) && m_data_type == DataType::Float;
     }
 
 
     bool Signal::canAccessFloatInChannelByMask(uint32_t channel_mask) const noexcept {
-
         if (!hasData() || m_data_type != DataType::Float) {
             return false;
         }
@@ -533,7 +515,6 @@ namespace Grain {
      *  @return `true` if the settings match and `signal` is not `nullptr`, otherwise `false`.
      */
     bool Signal::hasSameSettingAs(const Signal* signal) const noexcept {
-
         return
                 signal &&
                 signal->m_channel_count == m_channel_count &&
@@ -568,8 +549,13 @@ namespace Grain {
      *  @note The sample pointer passed to the callback points to the current sample at the given index.
      *  Use the `sampleStep()` and `bytesPerSample()` methods to understand sample layout in memory.
      */
-    ErrorCode Signal::forEachSample(const SignalSampleFunc func, SignalSampleFuncInfo& info_ref, int32_t channel, int64_t offset, int64_t length, int64_t stride) const {
-
+    ErrorCode Signal::forEachSample(
+            const SignalSampleFunc func,
+            SignalSampleFuncInfo& info_ref,
+            int32_t channel, int64_t offset,
+            int64_t length,
+            int64_t stride) const
+    {
         if (!func) {
             return ErrorCode::NullPointer;
         }
@@ -612,8 +598,14 @@ namespace Grain {
     }
 
 
-    ErrorCode Signal::forEachSampleOfType(DataType data_type, SignalSampleFunc func, SignalSampleFuncInfo& info_ref, int64_t offset, int64_t length, int64_t stride) const {
-
+    ErrorCode Signal::forEachSampleOfType(
+            DataType data_type,
+            SignalSampleFunc func,
+            SignalSampleFuncInfo& info_ref,
+            int64_t offset,
+            int64_t length,
+            int64_t stride) const
+    {
         for (int32_t channel = 0; channel < m_channel_count; channel++) {
             auto err = forEachSampleOfType(data_type, func, info_ref, channel, offset, length, stride);
             if (err != ErrorCode::None) {
@@ -626,7 +618,6 @@ namespace Grain {
 
 
     ErrorCode Signal::forEachSampleOfType(DataType data_type, SignalSampleFunc func, SignalSampleFuncInfo& info_ref, int32_t channel, int64_t offset, int64_t length, int64_t stride) const {
-
         if (data_type != m_data_type) {
             return ErrorCode::UnsupportedDataType;
         }
@@ -642,8 +633,8 @@ namespace Grain {
         if (v > info.m_value.f64) { info.m_value.f64 = v; }
     }
 
-    double Signal::absMax(int32_t channel, int64_t offset, int64_t length, int64_t stride) const noexcept {
 
+    double Signal::absMax(int32_t channel, int64_t offset, int64_t length, int64_t stride) const noexcept {
         SignalSampleFuncInfo info{};
         info.m_value.f64 = 0.0;
 
@@ -671,7 +662,6 @@ namespace Grain {
     }
 
     double Signal::absMax() const noexcept {
-
         double max = 0.0;
 
         for (int32_t channel = 0; channel < m_channel_count; channel++) {
@@ -685,15 +675,14 @@ namespace Grain {
     }
 
 
-
     template <typename T>
     void Signal::_averageFunc(SignalSampleFuncInfo& info) {
         auto v = static_cast<double>(*reinterpret_cast<T*>(info.m_sample_ptr.raw));
         info.m_value.f64 += v;
     }
 
-    double Signal::average(int32_t channel, int64_t offset, int64_t length, int64_t stride) const noexcept {
 
+    double Signal::average(int32_t channel, int64_t offset, int64_t length, int64_t stride) const noexcept {
         SignalSampleFuncInfo info{};
         info.m_value.f64 = 0.0;
 
@@ -717,7 +706,7 @@ namespace Grain {
                 break;
         }
 
-        return info.m_value.f64 / info.m_processed_n;
+        return info.m_value.f64 / static_cast<double>(info.m_processed_n);
     }
 
 
@@ -728,8 +717,8 @@ namespace Grain {
         info.m_value.f64 += v;
     }
 
-    double Signal::absAverage(int32_t channel, int64_t offset, int64_t length, int64_t stride) const noexcept {
 
+    double Signal::absAverage(int32_t channel, int64_t offset, int64_t length, int64_t stride) const noexcept {
         SignalSampleFuncInfo info{};
         info.m_value.f64 = 0.0;
 
@@ -763,8 +752,8 @@ namespace Grain {
         info.m_value.f64 += v * v; // Accumulate square
     }
 
-    double Signal::rms(int32_t channel, int64_t offset, int64_t length, int64_t stride) const noexcept {
 
+    double Signal::rms(int32_t channel, int64_t offset, int64_t length, int64_t stride) const noexcept {
         SignalSampleFuncInfo info{};
         info.m_value.f64 = 0.0;
 
@@ -806,7 +795,6 @@ namespace Grain {
 
 
     void Signal::scale(float scale_factor) const noexcept {
-
         for (int32_t channel = 0; channel < m_channel_count; channel++) {
             scale(channel, 0, -1, scale_factor);
         }
@@ -814,7 +802,6 @@ namespace Grain {
 
 
     void Signal::scale(int32_t channel, int64_t offset, int64_t length, float scale_factor) const noexcept {
-
         SignalSampleFuncInfo info{};
 
         switch (m_data_type) {
@@ -831,8 +818,8 @@ namespace Grain {
         }
     }
 
-    void Signal::normalize(float target_level) noexcept {
 
+    void Signal::normalize(float target_level) noexcept {
         auto max = static_cast<float>(absMax());
         if (Safe::canSafelyDivideBy(max)) {
             scale(1.0f / max * target_level);
@@ -841,7 +828,6 @@ namespace Grain {
 
 
     void Signal::normalize(int32_t channel, int64_t offset, int64_t length, float target_level) noexcept {
-
         if (hasChannelAndData(channel) && clampOffsetAndLength(offset, length) > 0) {
             if (m_data_type == DataType::Float) {
                 double max = absMax(channel, offset, length, 1);
@@ -854,7 +840,6 @@ namespace Grain {
 
 
     void Signal::derivate() noexcept {
-
         for (int32_t channel = 0; channel < m_channel_count; channel++) {
             derivate(channel, 0, -1);
         }
@@ -862,12 +847,11 @@ namespace Grain {
 
 
     void Signal::derivate(int32_t channel, int64_t offset, int64_t length) noexcept {
-
-        // Todo: Test!
-
         if (length < 0) {
             length = m_sample_count;
         }
+
+        // TODO: Test!
 
         clampOffsetAndLength(offset, length);
 
@@ -901,7 +885,6 @@ namespace Grain {
     }
 
 
-
     /**
      *  @brief Calculates the number of samples needed for a specific duration.
      *
@@ -911,7 +894,6 @@ namespace Grain {
      *  @return The number of samples needed to achieve the specified duration.
      */
     int64_t Signal::samplesNeededForMilliseconds(int64_t milliseconds) const noexcept {
-
         return milliseconds < 0 ? 0 : static_cast<int64_t>(m_sample_rate) * milliseconds / 1000;
     }
 
@@ -925,7 +907,6 @@ namespace Grain {
      *  @return The number of samples needed to achieve the specified duration.
      */
     int64_t Signal::samplesNeededForSeconds(float seconds) const noexcept {
-
         return seconds <= 0.0f ? 0 : static_cast<int64_t>(std::round(static_cast<double>(m_sample_rate) * seconds));
     }
 
@@ -940,7 +921,6 @@ namespace Grain {
      *  @return The number of samples needed to represent the given music note.
      */
     int64_t Signal::samplesNeededForNote(float bpm, float length) const noexcept {
-
         if (bpm < std::numeric_limits<float>::epsilon()) {
             return 0;
         }
@@ -960,7 +940,6 @@ namespace Grain {
      *  @return The number of samples in the clamped range after any necessary adjustments.
      */
     int64_t Signal::clampOffsetAndLength(int64_t& offset, int64_t& length) const noexcept {
-
         int64_t end_index = offset + length - 1;
         int64_t n = clampStartEndIndex(offset, end_index);
         if (n < 1) {
@@ -981,7 +960,6 @@ namespace Grain {
      *  @return The number of samples in the clamped range after any necessary adjustments.
      */
     int64_t Signal::clampStartEndIndex(int64_t& start_index, int64_t& end_index) const noexcept {
-
         int64_t n = 0;
         if (start_index <= end_index && start_index <= m_last_sample_index && end_index >= 0) {
             start_index = std::clamp<int64_t>(start_index, 0, m_last_sample_index);
@@ -1002,13 +980,11 @@ namespace Grain {
      *  @return The converted index, which is always greater than or equal to 0 and less than the number of samples in the audio buffer.
      */
     int64_t Signal::ringBufferIndex(int64_t index) const noexcept {
-
         return index >= 0 ? index % m_sample_count : (m_sample_count - 1) + ((index + 1) % m_sample_count);
     }
 
 
     int64_t Signal::silentFrom(float threshold) noexcept {
-
         int64_t index = lastSampleIndex();
 
         if (m_data_type == DataType::Float) {
@@ -1037,7 +1013,6 @@ namespace Grain {
 
 
     int64_t Signal::silentTo(float threshold) noexcept {
-
         int64_t index = 0;
 
         if (m_data_type == DataType::Float) {
@@ -1153,7 +1128,6 @@ namespace Grain {
      *        Missing samples are treated as 0.0.
      */
     float Signal::readFloatLerp(int32_t channel, const HiResValue& sample_pos) const noexcept {
-
         if (!m_data.raw || channel < 0 || channel >= m_channel_count) {
             return 0.0f;
         }
@@ -1185,13 +1159,11 @@ namespace Grain {
 
 
     float Signal::ringBufferSample(int32_t channel, int64_t index) const noexcept {
-
         return readFloat(channel, ringBufferIndex(index));
     }
 
 
     void Signal::addSample(int32_t channel, int64_t index, float value) noexcept {
-
         if (hasSampleAtChannel(channel, index)) {
             int64_t data_index = index * m_channel_count + channel;
             float v = _m_reader_f32(m_data, data_index);
@@ -1201,7 +1173,6 @@ namespace Grain {
 
 
     void Signal::addSampleLerp(int32_t channel, const HiResValue& sample_pos, float value) noexcept {
-
         if (!m_data.raw || channel < 0 || channel >= m_channel_count) {
             return;
         }
@@ -1237,7 +1208,6 @@ namespace Grain {
 
 
     void Signal::scaleSample(int32_t channel, int64_t index, float scale_factor) noexcept {
-
         if (hasSampleAtChannel(channel, index)) {
             int64_t data_index = index * m_channel_count + channel;
             float v = _m_reader_f32(m_data, data_index);
@@ -1247,19 +1217,16 @@ namespace Grain {
 
 
     void Signal::setRingBufferSample(int32_t channel, int64_t index, float value) noexcept {
-
         writeFloat(channel, ringBufferIndex(index), value);
     }
 
 
     void Signal::addRingBufferSample(int32_t channel, int64_t index, float value) noexcept {
-
         addSample(channel, ringBufferIndex(index), value);
     }
 
 
     float Signal::ringBufferSampleInterpolated(int32_t channel, const HiResValue& sample_pos) const noexcept {
-
         int64_t si0 = sample_pos.m_i % m_sample_count;
         if (si0 < 0) {
             si0 += m_sample_count;
@@ -1280,13 +1247,11 @@ namespace Grain {
 
 
     void Signal::clearWeights() noexcept {
-
         clearWeights(m_sample_count);
     }
 
 
     void Signal::clearWeights(int64_t n) noexcept {
-
         if (m_weights_mode && m_weights) {
             Type::clearArray<float>(m_weights, std::min(n, m_sample_count));
         }
@@ -1297,7 +1262,6 @@ namespace Grain {
 
 
     bool Signal::addWeightedSample(int32_t channel, const HiResValue& sample_pos, float value) noexcept {
-
         if (m_data_type != DataType::Float || !m_weights || !m_weights_mode) {
             return false;
         }
@@ -1336,7 +1300,6 @@ namespace Grain {
 
 
     bool Signal::finishWeightedSamples(int32_t channel) noexcept {
-
         if (m_weighted_start >= m_sample_count || m_weighted_start > m_weighted_end) {
             return false;
         }
@@ -1404,7 +1367,6 @@ namespace Grain {
 
 
     int64_t Signal::copyAll(const Signal* src, int32_t src_channel, int64_t dst_offset, uint32_t dst_channel_mask) noexcept {
-
         if (!src) {
             return 0;
         }
@@ -1430,7 +1392,6 @@ namespace Grain {
 
 
     int64_t Signal::copySamples(const Signal* src, int64_t length, int64_t src_offset, int64_t dst_offset) noexcept {
-
         int64_t sn = 0;  // Number of copied samples
         int64_t cn = 0;  // Number of copied channels
 
@@ -1461,8 +1422,14 @@ namespace Grain {
     }
 
 
-    int64_t Signal::copySamples(const Signal* src, int64_t length, int32_t src_channel, int64_t src_offset, int32_t dst_channel, int64_t dst_offset) noexcept {
-
+    int64_t Signal::copySamples(
+            const Signal* src,
+            int64_t length,
+            int32_t src_channel,
+            int64_t src_offset,
+            int32_t dst_channel,
+            int64_t dst_offset) noexcept
+    {
         if (!src || length < 1) {
             return 0;
         }
@@ -1640,7 +1607,6 @@ namespace Grain {
 
 
     int64_t Signal::copyChannel(int32_t src_channel, int32_t dst_channel) noexcept {
-
         if (src_channel != dst_channel) {
             return copySamples(this, m_sample_count, src_channel, 0, dst_channel, 0);
         }
@@ -1651,7 +1617,6 @@ namespace Grain {
 
 
     int64_t Signal::copyChannel(int32_t src_channel, int32_t dst_channel, int64_t offset, int64_t length) noexcept {
-
         if (src_channel != dst_channel) {
             return copySamples(this, length, src_channel, offset, dst_channel, offset);
         }
@@ -1661,11 +1626,15 @@ namespace Grain {
     }
 
 
-/**
- *  @brief Read samples from Signal.
- */
-    int64_t Signal::readSamplesAsFloatWithZeroPadding(int32_t channel, int64_t offset, int64_t length, float* out_samples) const noexcept {
-
+    /**
+     *  @brief Read samples from Signal.
+     */
+    int64_t Signal::readSamplesAsFloatWithZeroPadding(
+            int32_t channel,
+            int64_t offset,
+            int64_t length,
+            float* out_samples) const noexcept
+    {
         if (!out_samples || !hasChannelAndData(channel)) {
             return 0;
         }
@@ -1735,8 +1704,13 @@ namespace Grain {
     }
 
 
-    int64_t Signal::readSamples(int32_t channel, int64_t offset, int64_t length, DataType data_type, void* out_samples) noexcept {
-
+    int64_t Signal::readSamples(
+            int32_t channel,
+            int64_t offset,
+            int64_t length,
+            DataType data_type,
+            void* out_samples) noexcept
+    {
         int64_t n = 0;
 
         try {
@@ -1802,8 +1776,13 @@ namespace Grain {
     }
 
 
-    int64_t Signal::writeSamples(int32_t channel, int64_t offset, int64_t length, const float* samples, CombineMode combine_mode) noexcept {
-
+    int64_t Signal::writeSamples(
+            int32_t channel,
+            int64_t offset,
+            int64_t length,
+            const float* samples,
+            CombineMode combine_mode) noexcept
+    {
         if (!samples || !hasChannelAndData(channel) || !isFloatType()) {
             return 0;
         }
@@ -1852,8 +1831,16 @@ namespace Grain {
     }
 
 
-    int64_t Signal::combineSamples(const Signal* src, int64_t length, int32_t src_channel, int64_t src_offset, int32_t dst_channel, int64_t dst_offset, CombineMode combine_mode, float amount) noexcept {
-
+    int64_t Signal::combineSamples(
+            const Signal* src,
+            int64_t length,
+            int32_t src_channel,
+            int64_t src_offset,
+            int32_t dst_channel,
+            int64_t dst_offset,
+            CombineMode combine_mode,
+            float amount) noexcept
+    {
         if (!src || length < 1) {
             return 0;
         }
@@ -2026,8 +2013,14 @@ namespace Grain {
     }
 
 
-    int64_t Signal::combineSamples(const Signal* src, int64_t length, int64_t src_offset, int64_t dst_offset, CombineMode combine_mode, float amount) noexcept {
-
+    int64_t Signal::combineSamples(
+            const Signal* src,
+            int64_t length,
+            int64_t src_offset,
+            int64_t dst_offset,
+            CombineMode combine_mode,
+            float amount) noexcept
+    {
         int64_t n = 0;
 
         if (!src) {
@@ -2188,7 +2181,6 @@ namespace Grain {
 
 
     void Signal::clearMaskedChannels(uint32_t channel_mask, int64_t offset, int64_t length) noexcept {
-
         for (int32_t channel = 0; channel < m_channel_count; channel++) {
             if (channel_mask & (0x1U << channel)) {
                 clearChannel(channel, offset, length);
@@ -2198,14 +2190,12 @@ namespace Grain {
 
 
     void Signal::clearAll() noexcept {
-
         clear();
         clearWeights();
     }
 
 
     void Signal::centerPowerOfChannel(int32_t channel, int64_t offset, int64_t length) noexcept {
-
         if (hasChannelAndData(channel) && clampOffsetAndLength(offset, length) > 0) {
             float average = this->average(channel, offset, length, 1);
             scale(channel, offset, length, 1.0f / average);
@@ -2223,7 +2213,6 @@ namespace Grain {
 
 
     void Signal::fadeIn(int64_t offset, int64_t length) noexcept {
-
         for (int32_t channel = 0; channel < m_channel_count; channel++) {
             fadeInChannel(channel, offset, length);
         }
@@ -2231,13 +2220,11 @@ namespace Grain {
 
 
     void Signal::fadeInChannel(int32_t channel, int64_t offset, int64_t length) noexcept {
-
         fadeChannel(channel, offset, length, false);
     }
 
 
     void Signal::fadeOut(int64_t offset, int64_t length) noexcept {
-
         for (int32_t channel = 0; channel < m_channel_count; channel++) {
             fadeOutChannel(channel, offset, length);
         }
@@ -2245,13 +2232,11 @@ namespace Grain {
 
 
     void Signal::fadeOutChannel(int32_t channel, int64_t offset, int64_t length) noexcept {
-
         fadeChannel(channel, offset, length, true);
     }
 
 
     void Signal::fadeChannel(int32_t channel, int64_t offset, int64_t length, bool fade_out_mode) noexcept {
-
         if (hasChannelAndData(channel)) {
             int64_t requested_offset = offset;
 
@@ -2417,7 +2402,6 @@ namespace Grain {
 
 
     void Signal::applyEnvelopeLUT(int32_t channel, int64_t offset, const LUT1* lut) noexcept {
-
         if (!hasChannelAndData(channel)  || !lut) {
             return;
         }
@@ -2426,7 +2410,6 @@ namespace Grain {
         if (offset > m_last_sample_index || offset + length < 0) {
             return;
         }
-
 
         int64_t s_index = 0;
         int64_t d_index = offset;
@@ -2453,7 +2436,6 @@ namespace Grain {
 
     template<typename T>
     void Signal::reverseTyped(T* left, T* right, int64_t count, int64_t step) {
-
         for (int64_t i = 0; i < count; ++i) {
             T temp = *left;
             *left = *right;
@@ -2465,13 +2447,11 @@ namespace Grain {
 
 
     void Signal::reverse() noexcept {
-
         reverse(0, m_last_sample_index);
     }
 
 
     void Signal::reverse(int64_t offset, int64_t length) noexcept {
-
         for (int32_t channel = 0; channel < m_channel_count; channel++) {
             reverseChannel(channel, offset, length);
         }
@@ -2479,7 +2459,6 @@ namespace Grain {
 
 
     void Signal::reverseChannel(int32_t channel, int64_t offset, int64_t length) noexcept {
-
         if (!hasChannelAndData(channel)) {
             return;
         }
@@ -2516,7 +2495,6 @@ namespace Grain {
 
 
     ErrorCode Signal::resample(int32_t channel, int32_t sample_rate, int64_t offset, int64_t length, float* out_ptr, int64_t step) noexcept {
-
         if (!hasChannel(channel)) {
             return ErrorCode::InvalidChannel;
         }
@@ -2563,15 +2541,14 @@ namespace Grain {
     }
 
 
-/**
- *  @brief Changes the sample rate of the audio processing.
- *
- *  This function is used to modify the sample rate of the signal. It involves resampling of the sample data.
- *
- *  @return Returns ErrorCode::None if the sample rate change is successful, or an appropriate error code if any error occurs during the process.
- */
+    /**
+     *  @brief Changes the sample rate of the audio processing.
+     *
+     *  This function is used to modify the sample rate of the signal. It involves resampling of the sample data.
+     *
+     *  @return Returns ErrorCode::None if the sample rate change is successful, or an appropriate error code if any error occurs during the process.
+     */
     ErrorCode Signal::changeSampleRate(int32_t sample_rate) noexcept {
-
         auto result = ErrorCode::None;
 
         try {
@@ -2589,17 +2566,14 @@ namespace Grain {
             }
 
             if (m_sample_rate != sample_rate) {
-
                 int64_t sample_count = static_cast<double>(m_sample_count) / m_sample_rate * sample_rate;
                 if (sample_count > 1) {
-
-                    Signal* signal = new (std::nothrow) Signal(m_channel_count, sample_rate, sample_count, DataType::Float, sample_rate < m_sample_rate);
+                    auto signal = new (std::nothrow) Signal(m_channel_count, sample_rate, sample_count, DataType::Float, sample_rate < m_sample_rate);
                     if (!signal) {
                         throw ErrorCode::MemCantAllocate;
                     }
 
                     for (int32_t channel = 0; channel < m_channel_count; channel++) {
-
                         HiResValue pos;
 
                         if (sample_rate > m_sample_rate) {
@@ -2627,7 +2601,6 @@ namespace Grain {
                         }
                     }
 
-
                     std::free(m_data.raw);
                     m_data.raw = signal->m_data.raw;
                     signal->m_data.raw = nullptr;
@@ -2645,23 +2618,18 @@ namespace Grain {
 
                     delete signal;
                 }
-
             }
-
         }
         catch (ErrorCode err) {
             result = err;
         }
-
 
         return result;
     }
 
 
     void Signal::distortChannel(int32_t channel, int64_t offset, int64_t length, float coef) noexcept {
-
         if (hasChannelAndData(channel) && clampOffsetAndLength(offset, length) > 0) {
-
             if (m_data_type == DataType::Float) {
                 auto s = reinterpret_cast<float*>(mutDataPtr(channel, offset));
                 int64_t s_step = sampleStep();
@@ -2676,7 +2644,6 @@ namespace Grain {
 
 
     ErrorCode Signal::applyFilter(SignalFilter* filter) noexcept {
-
         auto result = ErrorCode::None;
 
         for (int32_t channel = 0; channel < m_channel_count; channel++) {
@@ -2709,7 +2676,6 @@ namespace Grain {
 
 
     ErrorCode Signal::applyFilterToChannel(SignalFilter* filter, int32_t channel) noexcept {
-
         return applyFilterToChannel(filter, channel, 0, m_sample_count);
     }
 
@@ -2753,13 +2719,11 @@ namespace Grain {
 
 
     ErrorCode Signal::applyFilterFFT(const Partials* partials) noexcept {
-
         return applyFilterFFT(partials, m_sample_count);
     }
 
 
     ErrorCode Signal::applyFilterFFT(const Partials* partials, int64_t length) noexcept {
-
         auto result = ErrorCode::None;
 
         for (int32_t channel = 0; channel < channelCount(); channel++) {
@@ -2828,7 +2792,6 @@ namespace Grain {
 
 
     void Signal::releaseFilterFFTResources() {
-
         free(m_computation_mem);
         m_computation_mem = nullptr;
 
@@ -2971,146 +2934,22 @@ namespace Grain {
     }
 
 
-    ErrorCode Signal::_applyFilterFFTToChannel(const Partials* partials, int32_t channel, int64_t length) noexcept {
-
-        auto result = ErrorCode::None;
-
-        try {
-            length = std::clamp<int64_t>(length, 0, m_sample_count);
-            if (length < 1) {
-                return ErrorCode::None;
-            }
-
-            int64_t last_sample_index = length - 1;
-
-            if (!partials) {
-                Exception::throwMessage(ErrorCode::BadArgs, "Partials is null");
-            }
-
-            if (!hasData()) {
-                Exception::throwMessage(ErrorCode::NoData, "No data");
-            }
-
-            if (!hasChannelAndData(channel)) {
-                Exception::throwMessage(ErrorCode::BadArgs, "Invalid channel");
-            }
-
-            if (m_data_type != DataType::Float) {
-                Exception::throwMessage(ErrorCode::UnsupportedDataType, "Data type is not supported, must be 32 bit float");
-            }
-
-            int32_t fft_half_resolution = partials->resolution();
-            int32_t fft_resolution = fft_half_resolution * 2;
-            int32_t fft_log_n = FFT::logNFromResolution(fft_resolution);
-
-            if (fft_log_n < 1) {
-                Exception::throwMessage(ErrorCode::BadArgs, "Invalid FFT resolution");
-            }
-
-
-            _prepareFilterFFT(fft_resolution);
-
-            /// m_result_buffer->clear();
-
-            int64_t start_index = 0;
-            int64_t end_index = fft_resolution - 1;
-            // int64_t write_index = 0; // Unused
-            int32_t loop_index = 0;
-
-            while (start_index <= last_sample_index) {
-                if (loop_index >= 2) {
-                    // int64_t end_write_index = std::clamp<int64_t>(write_index + fft_half_resolution - 1, write_index, last_sample_index); // Unused
-                    // int64_t read_length = end_write_index - write_index + 1; // Unused
-                    /// m_result_buffer->read(read_length, sample_step, reinterpret_cast<float*>(mutDataPtr(channel, write_index)));
-                    // write_index += fft_half_resolution; // Unused
-                }
-
-                int64_t n = end_index > last_sample_index ? fft_resolution - (end_index - last_sample_index) : fft_resolution;
-                n = std::clamp<int64_t>(n, 0, fft_resolution);
-/*
-                Type::copyStrided<float>(
-                        m_block_data, // dst
-                        reinterpret_cast<const float*>(mutDataPtr(channel)), // src
-                        0, // dts_offset
-                        start_index, // src_offset
-                        1, //  dst_stride
-                        sample_step, // src_stride
-                        fft_resolution,
-                        m_sample_count, // dst_capacity
-                        n // count
-                    );
-*/
-/*
-                auto signal = new Signal(44100, fft_resolution);
-                if (signal) {
-                    memcpy(signal->mutDataPtr(), m_block_data, sizeof(float) * fft_resolution);
-                    String file_path = "/Users/roaldchristesen/Desktop/audio/fft/";
-                    file_path += loop_index;
-                    file_path += ".";
-                    file_path += signal->fileExt();
-                    signal->writeToFile(file_path, CanOverwrite::Yes);
-                    delete signal;
-                }
-*/
-/*
-                if (n < fft_resolution) {
-                    Type::clearArray<float>(&m_block_data[n], fft_resolution - n);
-                }
-
-                // Time domain → Frequency domain
-                err = m_fft->fft(m_block_data, m_partials);
-                if (err != ErrorCode::None) {
-                    Exception::throwMessage(ErrorCode::ComputationFailed, "FFT error");
-                }
-
-                // Modify Partials
-                m_partials->mul(partials);
-
-                // Frequency domain → Time domain
-                err = m_fft->ifft(m_partials, m_block_data);
-                if (err != ErrorCode::None) {
-                    Exception::throwMessage(ErrorCode::ComputationFailed, "FFT error");
-                }
-
-
-                float *d = m_block_data;
-                float *w = m_window_data;
-                for (int32_t i = 0; i < fft_resolution; i++) {
-                    *d++ *= *w++;
-                }
-
-                n = end_index > last_sample_index ? fft_resolution - (end_index - last_sample_index) : fft_resolution;
-
-                m_result_buffer->add(m_block_data, fft_resolution);
-                m_result_buffer->clear(fft_half_resolution);
-                m_result_buffer->shiftWritePos(-fft_half_resolution);
-
-                start_index += fft_half_resolution;
-                end_index += fft_half_resolution;
-
-                loop_index++;
-                */
-            }
-
-            // int64_t readLength = last_sample_index - write_index + 1;
-            // m_result_buffer->read(readLength, sample_step, reinterpret_cast<float*>(mutDataPtr(channel, write_index)));
-        }
-        catch (const Exception& e) {
-            result = e.code();
-        }
-        catch (...) {
-            result = ErrorCode::Unknown;
-        }
-
-
-        return result;
-    }
-
-
-    // FIR convolution, can be used for reverb, speaker/microphone simulation etc.
-    // Overlap save method
-    ErrorCode Signal::convolveChannel(int32_t a_channel, int64_t a_offset, int64_t a_length, const Signal* b_signal, int32_t b_channel, int64_t b_offset, int64_t b_length, Signal* result_signal, int32_t result_channel) const noexcept {
-
+    /**
+     *  @brief FIR convolution, can be used for reverb, speaker/microphone simulation etc.
+     *
+     *  Overlap save method.
+     */
+    ErrorCode Signal::convolveChannel(
+            int32_t a_channel,
+            int64_t a_offset,
+            int64_t a_length,
+            const Signal* b_signal,
+            int32_t b_channel,
+            int64_t b_offset,
+            int64_t b_length,
+            Signal* result_signal,
+            int32_t result_channel) const noexcept
+    {
         // TODO: possible optimization
         // vDSP_conv(Signal, SignalStride, Filter, FilterStride, Result, ResultStride, ResultLength, FilterLength);
 
@@ -3149,11 +2988,10 @@ namespace Grain {
 
         result_signal->clearChannel(result_channel, 0, result_length);
 
-
         int64_t f_offs = 0;
         int64_t f_rest = b_length;
 
-        FFT_FIR* fft_fir = new (std::nothrow) FFT_FIR(FFT::kLogNResolution16384);
+        auto fft_fir = new (std::nothrow) FFT_FIR(FFT::kLogNResolution16384);
         if (!fft_fir) {
             return ErrorCode::Fatal;
         }
@@ -3174,7 +3012,7 @@ namespace Grain {
             fft_fir->setFilter();
 
             int32_t o_offs = -overlap_width;
-            int32_t o_rest = a_length + overlap_width;
+            int32_t o_rest = static_cast<int32_t>(a_length) + overlap_width;
 
             while (o_rest > 0) {
                 int64_t n = a_length - o_offs;
@@ -3202,15 +3040,25 @@ namespace Grain {
     }
 
 
-    void Signal::addWhiteNoise(int64_t offset, int64_t length, float amount, float threshold) const noexcept {
-
+    void Signal::addWhiteNoise(
+            int64_t offset,
+            int64_t length,
+            float amount,
+            float threshold) const noexcept
+    {
         for (int32_t channel = 0; channel < m_channel_count; channel++) {
             addWhiteNoiseToChannel(channel, offset, length, amount, threshold);
         }
     }
 
-    void Signal::addWhiteNoiseToChannel(int32_t channel, int64_t offset, int64_t length, float amount, float threshold) const noexcept {
 
+    void Signal::addWhiteNoiseToChannel(
+            int32_t channel,
+            int64_t offset,
+            int64_t length,
+            float amount,
+            float threshold) const noexcept
+    {
         if (!isFloatType()) {    // TODO: Support other data types.
             return;
         }
@@ -3245,9 +3093,7 @@ namespace Grain {
 
 
     void Signal::generateSine(int32_t channel, int64_t offset, int64_t length, float freq) noexcept {
-
         if (clampOffsetAndLength(offset, length) > 0 && freq > std::numeric_limits<float>::epsilon()) {
-
             double t = 0.0;
             double t_step = std::numbers::pi * 2 / m_sample_rate * freq;
 
@@ -3260,8 +3106,17 @@ namespace Grain {
     }
 
 
-    void Signal::generateSineSweep(int32_t channel, float start, float duration, float freq_start, float freq_end, float db_start, float db_end, float fade_in_duration, float fade_out_duration) noexcept {
-
+    void Signal::generateSineSweep(
+            int32_t channel,
+            float start,
+            float duration,
+            float freq_start,
+            float freq_end,
+            float db_start,
+            float db_end,
+            float fade_in_duration,
+            float fade_out_duration) noexcept
+    {
         int64_t offset = sampleIndexAtSecond(start);
         int64_t length = sampleIndexAtSecond(duration);
         if (length < 1) {
@@ -3316,59 +3171,116 @@ namespace Grain {
     }
 
 
-    ErrorCode Signal::writeToFile(const String &file_path, CanOverwrite can_overwrite) const noexcept {
-
-        return writeToFile(file_path, can_overwrite, 0, -1);
-    }
-
-
     ErrorCode Signal::writeToFile(
             const String &file_path,
-            CanOverwrite can_overwrite,
+            FileContainerFormat container_format,
+            FileSampleEncoding sample_encoding,
             int64_t offset,
             int64_t length)
-            const noexcept {
+            const noexcept
+    {
+        std::cout << "Signal::writeToFile() offset: " << offset << ", length: " << length << std::endl;
+        if (clampOffsetAndLength(offset, length) < 1) {
+            std::cout << "    after clamp() offset: " << offset << ", length: " << length << std::endl;
+            return Error::specific(kErr_NothingToWrite);
+        }
 
-        std::cout << "Signal::writeToFile\n";
-        SF_INFO sf_info;
-        sf_info.frames = m_sample_count;
-        sf_info.samplerate = m_sample_rate;
-        sf_info.channels = m_channel_count;
-        sf_info.format = (SF_FORMAT_AIFF | SF_FORMAT_PCM_24);
+        SF_INFO sfinfo;
+        sfinfo.samplerate = m_sample_rate;
+        sfinfo.channels = m_channel_count;
 
-        SNDFILE* file = sf_open(file_path.utf8(), SFM_WRITE, &sf_info);
-        if (!file) {
-            std::cerr << "Error opening file: " << sf_strerror(nullptr) << std::endl;
+        int sf_encoding = 0;
+        switch (m_data_type) {
+            case DataType::Int16: sf_encoding = SF_FORMAT_PCM_16; break;
+            case DataType::Int32: sf_encoding = SF_FORMAT_PCM_32; break;
+            case DataType::Float: sf_encoding = SF_FORMAT_FLOAT;  break;
+            default:
+                return Error::specific(kErr_UnsupportedDataType);
+        }
+
+        if (sample_encoding != FileSampleEncoding::Original) {
+            switch (sample_encoding) {
+                case FileSampleEncoding::Int8: sf_encoding = SF_FORMAT_PCM_S8; break;
+                case FileSampleEncoding::Int16: sf_encoding = SF_FORMAT_PCM_16; break;
+                case FileSampleEncoding::Int24: sf_encoding = SF_FORMAT_PCM_24; break;
+                case FileSampleEncoding::Int32: sf_encoding = SF_FORMAT_PCM_32; break;
+                case FileSampleEncoding::Float: sf_encoding = SF_FORMAT_FLOAT;  break;
+                case FileSampleEncoding::ALAW: sf_encoding = SF_FORMAT_ALAW;  break;
+                case FileSampleEncoding::ULAW: sf_encoding = SF_FORMAT_ULAW;  break;
+                case FileSampleEncoding::IMA_ADPCM: sf_encoding = SF_FORMAT_IMA_ADPCM;  break;
+                case FileSampleEncoding::MS_ADPCM: sf_encoding = SF_FORMAT_MS_ADPCM;  break;
+                case FileSampleEncoding::Original: /* handled above */ break;
+            }
+        }
+
+        int sf_container_format = 0;
+        switch (container_format) {
+            case FileContainerFormat::AIFF: sf_container_format = SF_FORMAT_AIFF; break;
+            case FileContainerFormat::AIFC: sf_container_format = SF_FORMAT_AIFF; break;
+            case FileContainerFormat::WAV: sf_container_format = SF_FORMAT_WAV; break;
+            default:
+                return Error::specific(kErr_UnsupportedContainerFormat);
+        }
+
+        sfinfo.format = sf_container_format | sf_encoding;
+        if (!sf_format_check(&sfinfo)) {
+            return Error::specific(kErr_InvalidWriteSetting);
+        }
+
+        SNDFILE* out_file = sf_open(file_path.utf8(), SFM_WRITE, &sfinfo);
+        if (!out_file) {
             return ErrorCode::FileCantOpen;
         }
 
+        auto sample_ptr = mutDataPtr(0, offset);
+        sf_count_t frame_n = length;
+        sf_count_t written_frame_n = 0;
+
+        // Dispatch based on internal type
         switch (m_data_type) {
             case DataType::Int16:
-                sf_write_short(file, m_data.i16, allChannelSampleCount());
+                written_frame_n = sf_writef_short(out_file, static_cast<short*>(sample_ptr), frame_n);
                 break;
             case DataType::Int32:
-                sf_write_int(file, m_data.i32, allChannelSampleCount());
+                written_frame_n = sf_writef_int(out_file, static_cast<int*>(sample_ptr), frame_n);
                 break;
             case DataType::Float:
-                sf_write_float(file, m_data.f32, allChannelSampleCount());
+                written_frame_n = sf_writef_float(out_file, static_cast<float*>(sample_ptr), frame_n);
                 break;
             default:
-                return ErrorCode::UnsupportedDataType;
+                sf_close(out_file);
+                return Error::specific(kErr_UnsupportedDataType);
         }
-        sf_close(file);
 
-        std::cout << "AIFF file saved to " << file_path << std::endl;
+        sf_close(out_file);
+
+        if (written_frame_n != frame_n) {
+            return ErrorCode::FileCantWrite;
+        }
 
         return ErrorCode::None;
     }
 
 
-    ErrorCode Signal::writeRegionToFile(const String &file_path, int32_t region_index, CanOverwrite can_overwrite) const noexcept {
+    ErrorCode Signal::writeToFile(
+            const String &file_path,
+            FileContainerFormat container_format,
+            FileSampleEncoding sample_encoding) const noexcept
+    {
+        return writeToFile(file_path, container_format, sample_encoding, 0, m_sample_count);
+    }
 
+
+    ErrorCode Signal::writeRegionToFile(
+            const String &file_path,
+            FileContainerFormat container_format,
+            FileSampleEncoding sample_encoding,
+            int32_t region_index) const noexcept
+    {
         auto result = ErrorCode::None;
 
         if (auto region = regionPtrAtIndex(region_index)) {
-            result = writeToFile(file_path, can_overwrite, region->left(), region->length());
+            result = writeToFile(file_path, container_format, sample_encoding, region->left(), region->length());
         }
         else {
             result = ErrorCode::RegionOutOfRange;
@@ -3378,34 +3290,85 @@ namespace Grain {
     }
 
 
-    Signal* Signal::createFromFile(const String &file_path, DataType data_type) noexcept {
-        SF_INFO sf_info;
-        sf_info.format = 0;  // must be set to 0 before opening
-        SNDFILE* snd_file = sf_open(file_path.utf8(), SFM_READ, &sf_info);
-        if (!snd_file) {
-            std::cerr << "Error opening sound file: " << sf_strerror(snd_file) << std::endl;
-            return nullptr;
+    Signal* Signal::createFromFile(const String& file_path, DataType data_type, ErrorCode& out_err) noexcept {
+        out_err = ErrorCode::Unknown;
+        Signal* signal = nullptr;
+        SNDFILE *snd_file = nullptr;
+
+        try {
+            switch (data_type) {
+                case DataType::Int8:
+                case DataType::Int16:
+                case DataType::Int32:
+                case DataType::Float:
+                    break;
+                default:
+                    Exception::throwStandard(ErrorCode::UnsupportedDataType);
+            }
+
+            SF_INFO sf_info;
+            sf_info.format = 0; // required
+            snd_file = sf_open(file_path.utf8(), SFM_READ, &sf_info);
+            if (!snd_file) {
+                Exception::throwStandard(ErrorCode::FileCantOpen);
+            }
+
+            signal = new(std::nothrow) Signal(
+                    sf_info.channels,
+                    sf_info.samplerate,
+                    sf_info.frames,
+                    data_type);
+            if (!signal) {
+                Exception::throwStandard(ErrorCode::ClassInstantiationFailed);
+            }
+
+            sf_count_t n = 0;
+            void *sample_ptr = signal->mutDataPtr();
+
+            switch (data_type) {
+                case DataType::Int16:
+                    n = sf_readf_short(snd_file, static_cast<short *>(sample_ptr), sf_info.frames);
+                    break;
+                case DataType::Int32:
+                    n = sf_readf_int(snd_file, static_cast<int *>(sample_ptr), sf_info.frames);
+                    break;
+                case DataType::Float:
+                    n = sf_readf_float(snd_file, static_cast<float *>(sample_ptr), sf_info.frames);
+                    break;
+                case DataType::Int8: {
+                    auto buffer = static_cast<int16_t *>(malloc(sizeof(int8_t) * sf_info.frames * sf_info.channels));
+                    if (!buffer) {
+                        Exception::throwStandard(ErrorCode::MemCantAllocate);
+                    }
+                    n = sf_readf_short(snd_file, buffer, sf_info.frames);
+                    auto *out = static_cast<int8_t *>(sample_ptr);
+                    for (size_t i = 0; i < static_cast<size_t>(n * sf_info.channels); i++) {
+                        out[i] = static_cast<int8_t>(buffer[i] >> 8);
+                    }
+                    free(buffer);
+                    break;
+                }
+                default:
+                    Exception::throwSpecific(kErr_UnsupportedDataType);
+            }
+
+            if (n != sf_info.frames) {
+                Exception::throwSpecific(kErr_ReadAllSamplesFailed);
+            }
+        }
+        catch (const Exception& e) {
+            out_err = e.code();
+            if (signal) {
+                delete signal;
+                signal = nullptr;
+            }
         }
 
-        // std::cout << "Opened file: " << file_path << "\n";
-        // std::cout << "Sample rate: " << sf_info.samplerate << " Hz\n";
-        // std::cout << "Channels: " << sf_info.channels << "\n";
-        // std::cout << "Frames: " << sf_info.frames << "\n";
-
-        auto signal = new (std::nothrow) Signal(sf_info.channels, sf_info.samplerate, sf_info.frames, DataType::Float);
-        if (!signal) {
+        if (snd_file) {
             sf_close(snd_file);
-            return nullptr;
         }
 
-        // Read entire file into buffer (interleaved samples)
-        sf_count_t n = sf_readf_float(snd_file, static_cast<float*>(signal->mutDataPtr()), sf_info.frames);
-        if (n != sf_info.frames) {
-            std::cerr << "Warning: only read " << n << " frames.\n";
-        }
-
-        sf_close(snd_file);
-
+        out_err = ErrorCode::None;
         return signal;
     }
 
@@ -3476,7 +3439,6 @@ namespace Grain {
             return false;
         }
 
-
         Type::clearArray<float>(out_values, values_length);
 
         if (clampOffsetAndLength(offset, length) < 1) {
@@ -3509,7 +3471,6 @@ namespace Grain {
 
 
     SignalRegion *Signal::regionPtrAtIndex(int32_t index) const noexcept {
-
         if (index < 0 || index >= m_region_count) {
             return nullptr;
         }
@@ -3534,8 +3495,7 @@ namespace Grain {
             return nullptr;
         }
 
-        // Put the new region into the chain.
-
+        // Put the new region into the chain
         region->setNext(m_first_region);
         m_first_region = region;
         m_region_count++;
@@ -3550,9 +3510,7 @@ namespace Grain {
             return false;
         }
 
-
-        // Scan through the chain.
-
+        // Scan through the chain
         if (region == m_first_region) {
             m_first_region = region->next();
             m_region_count--;
@@ -3576,7 +3534,6 @@ namespace Grain {
 
 
     int Signal::_compareRegion(const void *region_ptr0, const void *region_ptr1) {
-
         SignalRegion *region0 = *(SignalRegion**)region_ptr0;
         SignalRegion *region1 = *(SignalRegion**)region_ptr1;
 
@@ -3635,7 +3592,6 @@ namespace Grain {
 
 
     SignalRegion::SignalRegion(Signal* signal, const String &name, int32_t channel, int64_t left, int64_t right) noexcept {
-
         m_signal = signal;
         m_name = name;
         m_channel = channel;
@@ -3650,13 +3606,11 @@ namespace Grain {
 
 
     int32_t SignalRegion::handleColorIndex(bool selected) const noexcept {
-
         return kColorIndexNormal + selected + static_cast<int32_t>(m_locked) * 2;
     }
 
 
     size_t SignalRegion::dataSize() const noexcept {
-
         if (m_signal != nullptr) {
             return length() * m_signal->bytesPerSample() * m_signal->channelCount();
         }
@@ -3666,7 +3620,6 @@ namespace Grain {
 
 
     size_t SignalRegion::monoDataSize() const noexcept {
-
         if (m_signal != nullptr) {
             return length() * m_signal->bytesPerSample();
         }
@@ -3676,7 +3629,6 @@ namespace Grain {
 
 
     const void* SignalRegion::dataPtr() const noexcept {
-
         if (m_signal != nullptr) {
             if (m_channel < 0) {
                 return m_signal->mutDataPtr(0, m_left);
@@ -3705,7 +3657,6 @@ namespace Grain {
 
 
     void SignalRegion::setLeftAndRight(int64_t left, int64_t right) noexcept {
-
         if (m_signal != nullptr) {
             left = std::clamp<int64_t>(left, 0, m_signal->lastSampleIndex());
             right = std::clamp<int64_t>(right, 0, m_signal->lastSampleIndex());
@@ -3719,7 +3670,6 @@ namespace Grain {
 
 
     void SignalRegion::setLeft(int64_t left) noexcept {
-
         if (m_signal != nullptr) {
             left = std::clamp<int64_t>(left, 0, m_signal->lastSampleIndex());
         }
@@ -3736,7 +3686,6 @@ namespace Grain {
 
 
     void SignalRegion::setRight(int64_t right) noexcept {
-
         if (m_signal != nullptr) {
             right = std::clamp<int64_t>(right, 0, m_signal->lastSampleIndex());
         }
@@ -3751,7 +3700,6 @@ namespace Grain {
 
 
     void SignalRegion::slipLeft() noexcept {
-
         int64_t n = length();
         if (m_left - n < 0) {
             m_left = 0;
@@ -3767,7 +3715,6 @@ namespace Grain {
 
 
     void SignalRegion::slipRight() noexcept {
-
         int64_t n = length();
         if (m_right + n > m_signal->lastSampleIndex()) {
             m_right = m_signal->lastSampleIndex();
@@ -3783,7 +3730,6 @@ namespace Grain {
 
 
     Signal* SignalRegion::extractSignal() noexcept {
-
         return extractSignal(false, m_signal->dataType());
     }
 
@@ -3795,7 +3741,7 @@ namespace Grain {
 
         int32_t channel_count = mono ? 1 : m_signal->channelCount();
 
-        Signal* extracted_signal = new (std::nothrow) Signal(channel_count, m_signal->sampleRate(), length(), data_type, false);
+        auto extracted_signal = new (std::nothrow) Signal(channel_count, m_signal->sampleRate(), length(), data_type, false);
         if (!extracted_signal) {
             return nullptr;
         }
@@ -3806,8 +3752,11 @@ namespace Grain {
     }
 
 
-    double Signal::findNearestFrequency(int32_t sample_rate, int64_t buffer_length, double freq) noexcept {
-
+    double Signal::findNearestFrequency(
+            int32_t sample_rate,
+            int64_t buffer_length,
+            double freq) noexcept
+    {
         double cycles = (freq * buffer_length) / sample_rate;
         double rounded_cycles = round(cycles);
         double nearest_freq = rounded_cycles * sample_rate / buffer_length;
@@ -3816,14 +3765,27 @@ namespace Grain {
     }
 
 
-    double Signal::releaseCoef(double start_level, double end_level, double min_level, int32_t sample_rate, double duration_seconds) noexcept {
-
-        return releaseCoef(start_level, end_level, min_level, static_cast<int64_t>(duration_seconds * sample_rate));
+    double Signal::releaseCoef(
+            double start_level,
+            double end_level,
+            double min_level,
+            int32_t sample_rate,
+            double duration_seconds) noexcept
+    {
+        return releaseCoef(
+                start_level,
+                end_level,
+                min_level,
+                static_cast<int64_t>(duration_seconds * sample_rate));
     }
 
 
-    double Signal::releaseCoef(double start_level, double end_level, double min_level, int64_t sample_count) noexcept {
-
+    double Signal::releaseCoef(
+            double start_level,
+            double end_level,
+            double min_level,
+            int64_t sample_count) noexcept
+    {
         if (sample_count < 1) {
             return 0.0;
         }
@@ -3840,8 +3802,12 @@ namespace Grain {
     }
 
 
-    double Signal::releaseLength(double start_level, double end_level, double min_level, double coef) noexcept {
-
+    double Signal::releaseLength(
+            double start_level,
+            double end_level,
+            double min_level,
+            double coef) noexcept
+    {
         if (start_level < min_level) {
             start_level = min_level;
         }
@@ -3856,13 +3822,11 @@ namespace Grain {
 
 
     double Signal::releaseValue(double start_level, double coef, int64_t t) noexcept {
-
         return start_level * std::pow(coef, t);
     }
 
 
     int64_t Signal::_updateSimplified() noexcept {
-
         int64_t length = 0;
 
         // Be sure there is a SimplifiedSignal for each channel in signal.
@@ -3943,7 +3907,6 @@ namespace Grain {
     void _writer_f64_as_f64(SignalSamplePtr data, int64_t index, double value) { data.f64[index] = value; }
 
     void Signal::_updateAccessors() {
-
         switch (m_data_type) {
             case DataType::Int8: {
                 _m_reader_i8 =  _read_i8_as_i8;
@@ -4016,4 +3979,4 @@ namespace Grain {
     }
 
 
-} // End of namespace Grain.
+} // End of namespace Grain

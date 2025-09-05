@@ -368,15 +368,15 @@ namespace Grain {
         void* m_info_ptr = nullptr;
         double _m_vars[kMaxVars]{};
         RGBA m_colors[kMaxColors];
-    #if defined(__APPLE__) && defined(__MACH__)
+#if defined(__APPLE__) && defined(__MACH__)
         GradientMacOSColorFunc _m_color_func = nullptr;
-    #endif
+#endif
 
     public:
         GradientFunction(StandardFunctionType function_type) noexcept;
-    #if defined(__APPLE__) && defined(__MACH__)
+#if defined(__APPLE__) && defined(__MACH__)
         GradientFunction(GradientMacOSColorFunc func) noexcept;
-    #endif
+#endif
 
         ~GradientFunction() noexcept;
 

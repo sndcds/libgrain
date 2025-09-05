@@ -111,10 +111,10 @@ namespace Grain {
 
 
 
-        #if defined(__APPLE__) && defined(__MACH__)
-            [[nodiscard]] virtual void* nsView() const noexcept { return m_ns_view; }
-            virtual void setNSView(void* ns_view) noexcept { m_ns_view = ns_view; }
-        #endif
+#if defined(__APPLE__) && defined(__MACH__)
+        [[nodiscard]] virtual void* nsView() const noexcept { return m_ns_view; }
+        virtual void setNSView(void* ns_view) noexcept { m_ns_view = ns_view; }
+#endif
 
         [[nodiscard]] ComponentType componentType() const noexcept { return m_type; }
 
@@ -371,9 +371,9 @@ namespace Grain {
         int32_t m_tag = 0;           ///< A tag, can be used to identify a component
         char* m_name = nullptr;      ///< An optional name
 
-        #if defined(__APPLE__) && defined(__MACH__)
-            void* m_ns_view = nullptr;   ///< The related NSView on macOS
-        #endif
+#if defined(__APPLE__) && defined(__MACH__)
+        void* m_ns_view = nullptr;   ///< The related NSView on macOS
+#endif
 
         GraphicContext* m_gc_ptr = nullptr;
 

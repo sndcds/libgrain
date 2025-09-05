@@ -304,13 +304,13 @@ namespace Grain {
         [[nodiscard]] double minSampleValue() const noexcept { return m_value_range.m_min; }
         [[nodiscard]] double maxSampleValue() const noexcept { return m_value_range.m_max; }
 
-        #if defined(__APPLE__) && defined(__MACH__)
-            [[nodiscard]] CGBitmapInfo macos_cgBitmapInfo() const noexcept;
-            CGImageRef macos_cgImageRef() noexcept {
-                macos_buildCGImageRef();
-                return _m_cg_image_ref;
-            }
-        #endif
+#if defined(__APPLE__) && defined(__MACH__)
+        [[nodiscard]] CGBitmapInfo macos_cgBitmapInfo() const noexcept;
+        CGImageRef macos_cgImageRef() noexcept {
+            macos_buildCGImageRef();
+            return _m_cg_image_ref;
+        }
+#endif
 
         [[nodiscard]] bool sameSize(const Image* image) const noexcept;
         [[nodiscard]] bool sameFormat(const Image* image) const noexcept;

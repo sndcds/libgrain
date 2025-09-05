@@ -558,7 +558,7 @@ namespace Grain {
 
 
     GeoTileRendererLayer* GeoTileRenderer::addLayer() noexcept {
-        auto layer = new(std::nothrow) GeoTileRendererLayer();
+        auto layer = new (std::nothrow) GeoTileRendererLayer();
         if (layer) {
             m_layers.push(layer);
         }
@@ -992,7 +992,6 @@ namespace Grain {
 
                                     switch (m_output_file_type) {
                                         case Image::FileType::PNG:
-                                            tile_image->pixelType();
                                             err = tile_image->writePng(file_path, m_image_quality, m_image_use_alpha);
                                             break;
 
@@ -1896,7 +1895,7 @@ namespace Grain {
         // Check if shape must be loaded
 
         if (!layer->m_shape) {
-            layer->m_shape = new(std::nothrow) GeoShape();
+            layer->m_shape = new (std::nothrow) GeoShape();
             if (!layer->m_shape) {
                 Exception::throwSpecific(kErrShapeInstantiationFailed);
             }
@@ -1966,7 +1965,7 @@ namespace Grain {
 
             // Load all polygon records
             String file_path = layer->m_dir_path + "/" + layer->m_file_name;
-            layer->m_polygons_file = new(std::nothrow) PolygonsFile(file_path);
+            layer->m_polygons_file = new (std::nothrow) PolygonsFile(file_path);
             if(!layer->m_polygons_file) {
                 Exception::throwSpecific(kErrPolygonsFileInstantiationFailed);
             }
@@ -2388,7 +2387,7 @@ namespace Grain {
     }
 
 
-    const char* GeoTileRenderer::rendererErrorString(int32_t errorCode) noexcept {
+    const char* GeoTileRenderer::rendererErrorString(int32_t err) noexcept {
         struct Message {
             int32_t code;
             const char* message;
@@ -2426,8 +2425,8 @@ namespace Grain {
                 { kErrUnknownRenderer, "" },
                 { kErrGraphicsContextFailed, "" },
         };
-        enum {
-        };
+
+        return "Some message";  // TODO: Implement!
     }
 
 

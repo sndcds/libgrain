@@ -26,6 +26,12 @@ namespace Grain {
     class GraphicContext;
 
     enum {
+        kAppFlag_SDL2 = 0x1,        // Windowing and Events by SDL2, https://www.libsdl.org/
+        kAppFlag_Cairo = 0x1 << 1,  // Render with Cairo, https://cairographics.org/
+        kAppFlag_FFTW = 0x1 << 2,   // Use FFTW, https://www.fftw.org/
+    };
+
+    enum {
         kMaxScreenCount = 32    ///< Maximum number of screens
     };
 
@@ -60,6 +66,10 @@ namespace Grain {
         bool m_verbose = false;     ///< Verbose flag
 
         String m_conf_file_path;    ///< Path to configuration file
+
+        bool m_use_sdl2 = false;
+        bool m_use_cairo = false;
+        bool m_use_fftw = false;
 
         // File System
         static String g_app_path;
@@ -108,10 +118,10 @@ namespace Grain {
         float m_scroll_wheel_speed = 4;
 
     public:
-        App();
+        explicit App(uint32_t flags = 0x0);
         ~App();
 
-        [[nodiscard]] const char* className() const noexcept { return "App"; }
+        [[nodiscard]] static const char* className() noexcept { return "App"; }
 
         void log(Log& l) const {
             l.header(className());
@@ -124,6 +134,9 @@ namespace Grain {
             l << "smallest_screen_index: " << m_smallest_screen_index << Log::endl;
             l << "largest_screen_index: " << m_largest_screen_index << Log::endl;
             l << "total_screen_pixel_count: " << m_total_screen_pixel_count << Log::endl;
+            l << "use DSL2: " << l.boolValue(m_use_sdl2) << l.endl;
+            l << "use Cairo: " << l.boolValue(m_use_cairo) << l.endl;
+            l << "use FFTW: " << l.boolValue(m_use_fftw) << l.endl;
             l--;
         }
 

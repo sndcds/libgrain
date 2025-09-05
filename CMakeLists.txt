@@ -148,6 +148,8 @@ add_library(libgrain STATIC
         src/Math/Vec3.cpp
         src/Math/Vec3Fix.cpp
 
+        src/Midi/Midi.cpp
+
         src/String/String.cpp
         src/String/StringList.cpp
         src/String/CSVString.cpp
