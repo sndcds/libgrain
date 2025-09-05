@@ -2812,7 +2812,6 @@ namespace Grain {
      * @return An error code, or ErrorCode::None if the operation succeeds.
      */
     ErrorCode Signal::applyFilterFFTToChannel(const Partials* partials, int32_t channel, int64_t length) noexcept {
-
         auto result = ErrorCode::None;
 
         try {
@@ -2834,41 +2833,33 @@ namespace Grain {
 
             checkProcessTypeChannelIndex(DataType::Float, channel, 0);
 
-
             int32_t buffer_width = fft_width;
             int32_t block_size = buffer_width / 4;
             int32_t ringbuffer_capacity = block_size * 7;
 
-            std::cout << "buffer_width: " << buffer_width << '\n';
-            std::cout << "advance: " << block_size << '\n';
-            std::cout << "ringbuffer_capacity: " << ringbuffer_capacity << '\n';
-            std::cout << "fft_log_n: " << fft_log_n << std::endl;
-            std::cout << "fft_width: " << fft_width << std::endl;
-            std::cout << "fft_half_width: " << fft_half_width << std::endl;
-
             // TODO: Error handling !!!!!
-            _prepareFilterFFT(fft_width);
 
+            _prepareFilterFFT(fft_width);
 
             auto my_fft_buffer = m_fft_buffer[0];
 
             int64_t sample_read_index = 0;
             int64_t signal_write_index = -block_size * 2;
 
-            // 1. Init ringbuffer
+            // Init ringbuffer
             RingBuffer<float> ringbuffer(ringbuffer_capacity);
             if (!ringbuffer.isUsable()) {
                 Exception::throwMessage(ErrorCode::ClassInstantiationFailed, "RingBuffer instantiation failed.");
             }
 
-            // 2. Write first two blocks to ringbuffer
+            // Write first two blocks to ringbuffer
             ringbuffer.setWritePos(2 * block_size); // Two empty blocs
             for (int64_t i = 0; i < block_size * 2; i++) {
                 ringbuffer.write(readFloat(channel, sample_read_index));
                 sample_read_index++;
             }
 
-            // 3. Clear two first blocks of signal
+            // Clear two first blocks of signal
             clearChannel(channel, 0, 2 * block_size);
 
             int64_t ri = 2;
@@ -2877,45 +2868,37 @@ namespace Grain {
             std::cout << "ri_end: " << ri_end << '\n';
 
             for (;;) {
-
-                std::cout << "ri: " << ri << '\n';
-
-                // 4. ring_buffer to fft_buffer with windowing applied
+                // ring_buffer to fft_buffer with windowing applied
                 for (int64_t i = 0; i < fft_width; i++) {
                     my_fft_buffer[i] = ringbuffer.read() * m_window_buffer[i];
                 }
-                std::cout << "readPos: " << ringbuffer.readPos();
                 ringbuffer.shiftReadPos(-block_size * 3);
-                std::cout << " ...: " << ringbuffer.readPos() << '\n';
 
-                // 5. fft -> partial_filter -> ifft
+                // fft -> partial_filter -> ifft
                 m_fft->fft(my_fft_buffer, m_partials);
                 m_partials->mul(partials);
                 auto err = m_fft->ifft(m_partials, my_fft_buffer);
                 if (err != ErrorCode::None) {
-                    std::cout << "Error in ifft: " << (int)err << '\n';
                     return err;
                 }
 
-                std::cout << signal_write_index << '\n';
-                // 6. Add filtered buffer back to signal
+                // Add filtered buffer back to signal
                 for (int64_t i = 0; i < fft_width; i++) {
                     addSample(channel, signal_write_index + i, my_fft_buffer[i]);
                 }
                 signal_write_index += block_size;
 
-
                 if (ri > ri_end + 1) {
                     break;
                 }
 
-                // 7. read ri into ringbuffer
+                // read ri into ringbuffer
                 for (int64_t i = 0; i < block_size; i++) {
                     ringbuffer.write(readFloat(channel, sample_read_index));
                     sample_read_index++;
                 }
 
-                // 8. clear signal ri
+                // clear signal ri
                 clearChannel(channel, ri * block_size, block_size);
 
                 ri += 1;
@@ -2928,7 +2911,6 @@ namespace Grain {
         catch (...) {
             result = ErrorCode::Unknown;
         }
-
 
         return result;
     }

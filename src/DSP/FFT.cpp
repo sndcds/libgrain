@@ -295,6 +295,7 @@ namespace Grain {
         m_fft_length = static_cast<int32_t>(Math::next_pow2(m_signal_length));  // TODO: next_pow2 or pad_two?
         m_fft_half_length = m_fft_length / 2;
 
+#if defined(__APPLE__) && defined(__MACH__)
         m_filter_samples = (float*)std::malloc(sizeof(float) * m_filter_length);
         m_signal_samples = (float*)std::malloc(sizeof(float) * m_signal_length);
         m_convolved_samples = (float*)std::malloc(sizeof(float) * m_signal_length);
@@ -304,19 +305,47 @@ namespace Grain {
         m_signal_real = (float*)std::malloc(sizeof(float) * m_fft_half_length);
         m_signal_imag = (float*)std::malloc(sizeof(float) * m_fft_half_length);
 
-        // TODO: Check all buffers againt nullptr
-
-#if defined(__APPLE__) && defined(__MACH__)
         m_fft_setup = FFT::_macos_fftSetup(std::log2(static_cast<float>(m_fft_length)));
         m_filter_real = (float*)std::malloc(sizeof(float) * m_fft_length);
         m_filter_imag = &m_filter_real[m_fft_half_length];
         m_filter_split_complex.realp = m_filter_real;
         m_filter_split_complex.imagp = m_filter_imag;
+#else
+        // Allocate spectrum buffer for filter (N/2 + 1 complex bins)
+        m_filter_fft = (fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex) * (m_fft_half_length + 1));
+
+        // Create plans bound to your existing buffers.
+        // NOTE: These pointers must remain stable for the lifetime of the plans.
+        // Forward filter (real -> complex)
+        m_plan_fwd_filter = fftwf_plan_dft_r2c_1d(
+                m_fft_length,
+                m_filter_padded, // In: real
+                m_filter_fft, // Out: complex
+                FFTW_ESTIMATE
+        );
+
+        // Forward signal (real -> complex), in-place over m_signal_padded
+        // We'll reinterpret m_signal_padded as fftwf_complex when using it.
+        m_plan_fwd_signal = fftwf_plan_dft_r2c_1d(
+                m_fft_length,
+                m_signal_padded, // In: real
+                reinterpret_cast<fftwf_complex*>(m_signal_padded), // Out: complex
+                FFTW_ESTIMATE
+        );
+
+        // Inverse (complex -> real), back into m_signal_padded
+        m_plan_inv_signal = fftwf_plan_dft_c2r_1d(
+                m_fft_length,
+                reinterpret_cast<fftwf_complex*>(m_signal_padded), // In: complex
+                m_signal_padded, // Uut: real
+                FFTW_ESTIMATE
+        );
 #endif
     }
 
 
     FFT_FIR::~FFT_FIR() noexcept {
+#if defined(__APPLE__) && defined(__MACH__)
         std::free(m_filter_real);
         std::free(m_filter_samples);
         std::free(m_signal_samples);
@@ -326,6 +355,12 @@ namespace Grain {
         std::free(m_filter_result);
         std::free(m_signal_real);
         std::free(m_signal_imag);
+#else
+        if (m_plan_fwd_filter) { fftwf_destroy_plan(m_plan_fwd_filter); }
+        if (m_plan_fwd_signal) { fftwf_destroy_plan(m_plan_fwd_signal); }
+        if (m_plan_inv_signal) { fftwf_destroy_plan(m_plan_inv_signal); }
+        if (m_filter_fft) { fftwf_free(m_filter_fft); }
+#endif
     }
 
 
@@ -340,14 +375,18 @@ namespace Grain {
     }
 #else
     void FFT_FIR::setFilter() noexcept {
-        // TODO: Implement linux version
+        // Zero-pad filter and copy taps
+        std::memset(m_filter_padded, 0, sizeof(float) * m_fft_length);
+        cblas_scopy(m_filter_length, m_filter_samples, 1, m_filter_padded, 1);
+
+        // Compute H[k] = FFT{h[n]} into m_filter_fft
+     fftwf_execute(m_plan_fwd_filter);
     }
 #endif
 
 
 #if defined(__APPLE__) && defined(__MACH__)
     void FFT_FIR::filter() noexcept {
-
         float zero = 0;
         vDSP_vfill(&zero, m_signal_padded, 1, m_fft_length);
         cblas_scopy(m_signal_length, m_signal_samples, 1, m_signal_padded, 1);
@@ -403,7 +442,33 @@ namespace Grain {
     }
 #else
     void FFT_FIR::filter() noexcept {
-        // TODO: Implement linux version
+        // Zero-pad the input block
+        std::memset(m_signal_padded, 0, sizeof(float) * m_fft_length);
+        cblas_scopy(m_signal_length, m_signal_samples, 1, m_signal_padded, 1);
+
+        // X[k] = FFT{x[n]}  (r2c in-place over m_signal_padded)
+        fftwf_execute(m_plan_fwd_signal);
+
+        // Y[k] = X[k] * H[k]
+        fftwf_complex* X = reinterpret_cast<fftwf_complex*>(m_signal_padded);
+        const fftwf_complex* H = m_filter_fft;
+        for (int k = 0; k <= m_fft_half_length; ++k) {
+            float xr = X[k][0], xi = X[k][1];
+            float hr = H[k][0], hi = H[k][1];
+            // (xr + j xi) * (hr + j hi)
+            X[k][0] = xr * hr - xi * hi;   // real
+            X[k][1] = xr * hi + xi * hr;   // imag
+        }
+
+        // y[n] = IFFT{Y[k]}  (c2r back into m_signal_padded)
+        fftwf_execute(m_plan_inv_signal);
+
+        // Scale (FFTW inverse returns sum without 1/N)
+        const float scale = 1.0f / static_cast<float>(m_fft_length);
+        cblas_sscal(m_fft_length, scale, m_signal_padded, 1);
+
+        // Copy the valid part to output (same as your vDSP code)
+        cblas_scopy(m_signal_length, m_signal_padded, 1, m_convolved_samples, 1);
     }
 #endif
 

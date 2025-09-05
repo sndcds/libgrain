@@ -142,6 +142,7 @@ namespace Grain {
         int32_t m_fft_half_length;
         int32_t m_overlap_length;
 
+#if defined(__APPLE__) && defined(__MACH__)
         float* m_filter_real;
         float* m_filter_imag;
         float* m_filter_samples = nullptr;
@@ -153,9 +154,16 @@ namespace Grain {
         float* m_signal_real = nullptr;
         float* m_signal_imag = nullptr;
 
-#if defined(__APPLE__) && defined(__MACH__)
         FFTSetup m_fft_setup;
         DSPSplitComplex m_filter_split_complex;
+#else
+        // FFTW plans
+        fftwf_plan m_plan_fwd_filter = nullptr;
+        fftwf_plan m_plan_fwd_signal = nullptr;
+        fftwf_plan m_plan_inv_signal = nullptr;
+
+        // Precomputed filter spectrum (size: m_fft_half_length + 1)
+        fftwf_complex* m_filter_fft = nullptr;
 #endif
 
     public:
