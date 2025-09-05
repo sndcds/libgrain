@@ -298,11 +298,13 @@ namespace Grain {
         m_filter_samples = (float*)std::malloc(sizeof(float) * m_filter_length);
         m_signal_samples = (float*)std::malloc(sizeof(float) * m_signal_length);
         m_convolved_samples = (float*)std::malloc(sizeof(float) * m_signal_length);
+
+
+#if defined(__APPLE__) && defined(__MACH__)
         m_filter_padded = (float*)std::malloc(sizeof(float) * m_fft_length);
         m_signal_padded = (float*)std::malloc(sizeof(float) * m_fft_length);
         m_filter_result = (float*)std::malloc(sizeof(float) * m_fft_length);
 
-#if defined(__APPLE__) && defined(__MACH__)
         m_signal_real = (float*)std::malloc(sizeof(float) * m_fft_half_length);
         m_signal_imag = (float*)std::malloc(sizeof(float) * m_fft_half_length);
 
@@ -312,6 +314,10 @@ namespace Grain {
         m_filter_split_complex.realp = m_filter_real;
         m_filter_split_complex.imagp = m_filter_imag;
 #else
+        m_filter_padded = (float*)fftwf_alloc_real(m_fft_length);
+        m_signal_padded = (float*)fftwf_alloc_real(m_fft_length);
+        m_filter_result = (float*)fftwf_alloc_real(m_fft_length); // if you want it aligned too
+
         // Allocate spectrum buffer for filter (N/2 + 1 complex bins)
         m_filter_fft = (fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex) * (m_fft_half_length + 1));
 
@@ -349,15 +355,20 @@ namespace Grain {
         std::free(m_filter_samples);
         std::free(m_signal_samples);
         std::free(m_convolved_samples);
+
+#if defined(__APPLE__) && defined(__MACH__)
         std::free(m_filter_padded);
         std::free(m_signal_padded);
         std::free(m_filter_result);
 
-#if defined(__APPLE__) && defined(__MACH__)
         std::free(m_filter_real);
         std::free(m_signal_real);
         std::free(m_signal_imag);
 #else
+        if (m_filter_padded) { fftwf_free(m_filter_padded); }
+        if (m_signal_padded) { fftwf_free(m_signal_padded); }
+        if (m_filter_result) { fftwf_free(m_filter_result); }
+
         if (m_plan_fwd_filter) { fftwf_destroy_plan(m_plan_fwd_filter); }
         if (m_plan_fwd_signal) { fftwf_destroy_plan(m_plan_fwd_signal); }
         if (m_plan_inv_signal) { fftwf_destroy_plan(m_plan_inv_signal); }

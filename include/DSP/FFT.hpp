@@ -190,6 +190,7 @@ namespace Grain {
             return m_filter_real && m_fft_setup;
 #else
             return m_plan_fwd_filter && m_plan_fwd_signal && m_plan_inv_signal && m_filter_fft;
+        }
 #endif
         }
 
