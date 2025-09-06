@@ -361,30 +361,20 @@ namespace Grain {
         std::free(m_signal_real);
         std::free(m_signal_imag);
 #else
-        std::cout << "..1\n";
         if (m_filter_padded) { fftwf_free(m_filter_padded); }
-        std::cout << "..2\n";
         if (m_signal_padded) { fftwf_free(m_signal_padded); }
-        std::cout << "..3\n";
         if (m_filter_result) { fftwf_free(m_filter_result); }
 
-        std::cout << "..4\n";
         if (m_plan_fwd_filter) { fftwf_destroy_plan(m_plan_fwd_filter); }
-        std::cout << "..5\n";
         if (m_plan_fwd_signal) { fftwf_destroy_plan(m_plan_fwd_signal); }
-        std::cout << "..6\n";
         if (m_plan_inv_signal) { fftwf_destroy_plan(m_plan_inv_signal); }
-        std::cout << "..7\n";
         if (m_filter_fft) { fftwf_free(m_filter_fft); }
 #endif
-
-        std::cout << "..8\n";
+/*
         std::free(m_filter_samples);
-        std::cout << "..9\n";
         std::free(m_signal_samples);
-        std::cout << "..10\n";
         std::free(m_convolved_samples);
-        std::cout << "..11\n";
+        */
     }
 
 
