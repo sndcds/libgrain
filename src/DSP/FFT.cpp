@@ -283,6 +283,7 @@ namespace Grain {
 
 
     FFT_FIR::FFT_FIR(int32_t log_n) noexcept {
+
         // Clamp log_n
         log_n = std::clamp<int32_t>(log_n, FFT::kLogNResolutionFirst, FFT::kLogNResolutionLast);
 
@@ -321,10 +322,10 @@ namespace Grain {
 #else
         // FFTW buffers
         // For in-place r2c, FFTW requires N + 2 floats
-        m_signal_padded   = fftwf_alloc_real(m_fft_length + 2);
-        m_filter_padded   = fftwf_alloc_real(m_fft_length);       // filter padding is out-of-place
-        m_filter_result   = fftwf_alloc_real(m_fft_length);       // for convolution result
-        m_filter_fft      = fftwf_alloc_complex(m_fft_half_length + 1);
+        m_signal_padded = fftwf_alloc_real(m_fft_length + 2);
+        m_filter_padded = fftwf_alloc_real(m_fft_length); // filter padding is out-of-place
+        m_filter_result = fftwf_alloc_real(m_fft_length); // for convolution result
+        m_filter_fft = fftwf_alloc_complex(m_fft_half_length + 1);
 
         // Create FFT plans
         m_plan_fwd_filter = fftwf_plan_dft_r2c_1d(
@@ -464,6 +465,10 @@ namespace Grain {
         cblas_scopy(m_signal_length, m_signal_samples, 1, m_signal_padded, 1);
 
         // Forward FFT (r2c, in-place)
+        std::cout
+                << "plan_fwd_filter = " << m_plan_fwd_filter
+                << ", m_filter_padded = " << m_filter_padded
+                << ", m_filter_fft = " << m_filter_fft << std::endl;
         fftwf_execute(m_plan_fwd_signal);
         fftwf_complex* X = reinterpret_cast<fftwf_complex*>(m_signal_padded);
 
