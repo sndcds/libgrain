@@ -322,12 +322,18 @@ namespace Grain {
 #else
         // FFTW buffers
         // For in-place r2c, FFTW requires N + 2 floats
-        m_signal_padded = fftwf_alloc_real(m_fft_length + 2 + m_fft_length + 2);
-        m_filter_padded = fftwf_alloc_real(m_fft_length + m_fft_length); // filter padding is out-of-place
-        m_filter_result = fftwf_alloc_real(m_fft_length + m_fft_length); // for convolution result
-        m_filter_fft = fftwf_alloc_complex(m_fft_half_length + 1 + m_fft_half_length + 1);
+        m_signal_padded = fftwf_alloc_real(m_fft_length + 2);
+        m_filter_padded = fftwf_alloc_real(m_fft_length); // filter padding is out-of-place
+        m_filter_result = fftwf_alloc_real(m_fft_length); // for convolution result
+        m_filter_fft = fftwf_alloc_complex(m_fft_half_length + 1);
 
-        // Create FFT plans
+        m_plan_fwd_signal = fftwf_plan_dft_r2c_1d(
+                m_fft_length,
+                m_signal_padded,
+                reinterpret_cast<fftwf_complex*>(m_signal_padded),
+                FFTW_ESTIMATE
+        );
+
         m_plan_fwd_filter = fftwf_plan_dft_r2c_1d(
                 m_fft_length,
                 m_filter_padded,
@@ -335,17 +341,10 @@ namespace Grain {
                 FFTW_ESTIMATE
         );
 
-        m_plan_fwd_signal = fftwf_plan_dft_r2c_1d(
-                m_fft_length,
-                m_signal_padded, // input
-                reinterpret_cast<fftwf_complex*>(m_signal_padded), // in-place output
-                FFTW_ESTIMATE
-        );
-
         m_plan_inv_signal = fftwf_plan_dft_c2r_1d(
                 m_fft_length,
-                reinterpret_cast<fftwf_complex*>(m_signal_padded), // input
-                m_signal_padded, // in-place output
+                reinterpret_cast<fftwf_complex*>(m_signal_padded),
+                m_signal_padded,
                 FFTW_ESTIMATE
         );
 #endif
