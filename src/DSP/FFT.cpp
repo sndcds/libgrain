@@ -283,10 +283,8 @@ namespace Grain {
 
 
     FFT_FIR::FFT_FIR(int32_t log_n) noexcept {
-        log_n = std::clamp(
-                log_n,
-                static_cast<int32_t>(FFT::kLogNResolutionFirst),
-                static_cast<int32_t>(FFT::kLogNResolutionLast));
+        // Clamp log_n
+        log_n = std::clamp<int32_t>(log_n, FFT::kLogNResolutionFirst, FFT::kLogNResolutionLast);
 
         m_log_n = log_n;
         m_step_length = 1 << log_n;
@@ -295,40 +293,40 @@ namespace Grain {
         m_overlap_length = m_step_length;
         m_signal_length = m_step_length + m_overlap_length;
 
-        // FFT length must be >= signal_length, power of 2
+        // FFT length: next power of 2 of signal + overlap
         m_fft_length = static_cast<int32_t>(Math::next_pow2(m_signal_length));
         m_fft_half_length = m_fft_length / 2;
 
         // Allocate basic buffers
-        m_filter_samples = static_cast<float*>(std::malloc(sizeof(float) * m_filter_length));
-        m_signal_samples = static_cast<float*>(std::malloc(sizeof(float) * m_signal_length));
-        m_convolved_samples = static_cast<float*>(std::malloc(sizeof(float) * m_signal_length));
+        m_filter_samples     = (float*)std::malloc(sizeof(float) * m_filter_length);
+        m_signal_samples     = (float*)std::malloc(sizeof(float) * m_signal_length);
+        m_convolved_samples  = (float*)std::malloc(sizeof(float) * m_signal_length);
 
 #if defined(__APPLE__) && defined(__MACH__)
-        m_filter_padded = static_cast<float*>(std::malloc(sizeof(float) * m_fft_length));
-        m_signal_padded = static_cast<float*>(std::malloc(sizeof(float) * m_fft_length));
-        m_filter_result = static_cast<float*>(std::malloc(sizeof(float) * m_fft_length));
+        // macOS vDSP buffers
+        m_filter_padded = (float*)std::malloc(sizeof(float) * m_fft_length);
+        m_signal_padded = (float*)std::malloc(sizeof(float) * m_fft_length);
+        m_filter_result = (float*)std::malloc(sizeof(float) * m_fft_length);
 
-        m_signal_real = static_cast<float*>(std::malloc(sizeof(float) * m_fft_half_length));
-        m_signal_imag = static_cast<float*>(std::malloc(sizeof(float) * m_fft_half_length));
+        m_signal_real = (float*)std::malloc(sizeof(float) * m_fft_half_length);
+        m_signal_imag = (float*)std::malloc(sizeof(float) * m_fft_half_length);
 
         m_fft_setup = FFT::_macos_fftSetup(std::log2f(static_cast<float>(m_fft_length)));
 
-        m_filter_real = static_cast<float*>(std::malloc(sizeof(float) * m_fft_length));
+        m_filter_real = (float*)std::malloc(sizeof(float) * m_fft_length);
         m_filter_imag = &m_filter_real[m_fft_half_length];
         m_filter_split_complex.realp = m_filter_real;
         m_filter_split_complex.imagp = m_filter_imag;
 
 #else
-        // Use fftwf_alloc_* for proper alignment
-        m_filter_padded = fftwf_alloc_real(m_fft_length);
-        m_signal_padded = fftwf_alloc_real(m_fft_length);
-        m_filter_result = fftwf_alloc_real(m_fft_length);
+        // FFTW buffers
+        // For in-place r2c, FFTW requires N + 2 floats
+        m_signal_padded   = fftwf_alloc_real(m_fft_length + 2);
+        m_filter_padded   = fftwf_alloc_real(m_fft_length);       // filter padding is out-of-place
+        m_filter_result   = fftwf_alloc_real(m_fft_length);       // for convolution result
+        m_filter_fft      = fftwf_alloc_complex(m_fft_half_length + 1);
 
-        // FFTW complex buffer (N/2 + 1)
-        m_filter_fft = fftwf_alloc_complex(m_fft_half_length + 1);
-
-        // Create FFTW plans
+        // Create FFT plans
         m_plan_fwd_filter = fftwf_plan_dft_r2c_1d(
                 m_fft_length,
                 m_filter_padded,
@@ -338,15 +336,15 @@ namespace Grain {
 
         m_plan_fwd_signal = fftwf_plan_dft_r2c_1d(
                 m_fft_length,
-                m_signal_padded,
-                reinterpret_cast<fftwf_complex*>(m_signal_padded),
+                m_signal_padded, // input
+                reinterpret_cast<fftwf_complex*>(m_signal_padded), // in-place output
                 FFTW_ESTIMATE
         );
 
         m_plan_inv_signal = fftwf_plan_dft_c2r_1d(
                 m_fft_length,
-                reinterpret_cast<fftwf_complex*>(m_signal_padded),
-                m_signal_padded,
+                reinterpret_cast<fftwf_complex*>(m_signal_padded), // input
+                m_signal_padded, // in-place output
                 FFTW_ESTIMATE
         );
 #endif
