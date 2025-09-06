@@ -358,32 +358,33 @@ namespace Grain {
         m_filter_split_complex.imagp = m_filter_imag;
 
 #else
-        // FFTW buffers
-        // For in-place r2c, FFTW requires N + 2 floats
-        m_signal_padded = fftwf_alloc_real(m_fft_length);
-        m_filter_padded = fftwf_alloc_real(m_fft_length); // filter padding is out-of-place
-        m_filter_result = fftwf_alloc_real(m_fft_length); // for convolution result
-        m_filter_fft = fftwf_alloc_complex(m_fft_half_length + 1);
+        // FFTW buffers (out-of-place)
+        m_signal_padded = fftwf_alloc_real(m_fft_length); // Input buffer
+        m_signal_fft = fftwf_alloc_complex(m_fft_half_length + 1); // Spectrum
+        m_filter_padded = fftwf_alloc_real(m_fft_length); // Zero-padded filter
+        m_filter_fft = fftwf_alloc_complex(m_fft_half_length + 1); // Filter spectrum
+        m_filter_result = fftwf_alloc_real(m_fft_length); // Inverse FFT output
 
+        // Plans
         m_plan_fwd_signal = fftwf_plan_dft_r2c_1d(
-                m_fft_length,
-                m_signal_padded,
-                reinterpret_cast<fftwf_complex*>(m_signal_padded),
-                FFTW_ESTIMATE
+            m_fft_length,
+            m_signal_padded, // Input
+            m_signal_fft, // Output
+            FFTW_ESTIMATE
         );
 
         m_plan_fwd_filter = fftwf_plan_dft_r2c_1d(
-                m_fft_length,
-                m_filter_padded,
-                m_filter_fft,
-                FFTW_ESTIMATE
+            m_fft_length,
+            m_filter_padded,
+            m_filter_fft,
+            FFTW_ESTIMATE
         );
 
         m_plan_inv_signal = fftwf_plan_dft_c2r_1d(
-                m_fft_length,
-                reinterpret_cast<fftwf_complex*>(m_signal_padded),
-                m_signal_padded,
-                FFTW_ESTIMATE
+            m_fft_length,
+            m_signal_fft, // Input spectrum
+            m_filter_result, // Output time-domain
+            FFTW_ESTIMATE
         );
 #endif
     }
@@ -401,15 +402,17 @@ namespace Grain {
         std::free(m_signal_padded);
         std::free(m_filter_result);
 #else
-        // Destroy FFTW plans before freeing buffers
-        if (m_plan_fwd_filter) { fftwf_destroy_plan(m_plan_fwd_filter); }
-        if (m_plan_fwd_signal) { fftwf_destroy_plan(m_plan_fwd_signal); }
-        if (m_plan_inv_signal) { fftwf_destroy_plan(m_plan_inv_signal); }
+        // Destroy FFTW plans
+        if (m_plan_fwd_signal) fftwf_destroy_plan(m_plan_fwd_signal);
+        if (m_plan_fwd_filter) fftwf_destroy_plan(m_plan_fwd_filter);
+        if (m_plan_inv_signal) fftwf_destroy_plan(m_plan_inv_signal);
 
-        if (m_filter_fft) { fftwf_free(m_filter_fft); }
-        if (m_filter_padded) { fftwf_free(m_filter_padded); }
-        if (m_signal_padded) { fftwf_free(m_signal_padded); }
-        if (m_filter_result) { fftwf_free(m_filter_result); }
+        // Free buffers
+        if (m_signal_fft)    fftwf_free(m_signal_fft);
+        if (m_signal_padded) fftwf_free(m_signal_padded);
+        if (m_filter_padded) fftwf_free(m_filter_padded);
+        if (m_filter_fft)    fftwf_free(m_filter_fft);
+        if (m_filter_result) fftwf_free(m_filter_result);
 #endif
 
         std::free(m_filter_samples);
@@ -430,11 +433,11 @@ namespace Grain {
     }
 #else
     void FFT_FIR::setFilter() noexcept {
-        // Zero-pad filter and copy taps
+        // Zero-pad filter
         std::memset(m_filter_padded, 0, sizeof(float) * m_fft_length);
         cblas_scopy(m_filter_length, m_filter_samples, 1, m_filter_padded, 1);
 
-        // Compute H[k] = FFT{h[n]} into m_filter_fft
+        // Compute H[k] = FFT{h[n]} into separate buffer
         fftwf_execute(m_plan_fwd_filter);
     }
 #endif
@@ -497,47 +500,33 @@ namespace Grain {
     }
 #else
     void FFT_FIR::filter() noexcept {
-        // Zero-pad the input block
+        // Zero-pad input
         std::memset(m_signal_padded, 0, sizeof(float) * m_fft_length);
         cblas_scopy(m_signal_length, m_signal_samples, 1, m_signal_padded, 1);
 
-        // Forward FFT (r2c, in-place)
-        std::cout
-                << "plan_fwd_filter = " << m_plan_fwd_filter
-                << ", m_filter_padded = " << m_filter_padded
-                << ", m_filter_fft = " << m_filter_fft << std::endl;
+        // Forward FFT: m_signal_padded -> m_signal_fft
         fftwf_execute(m_plan_fwd_signal);
-        std::cout << "... 1\n";
-        fftwf_complex* X = reinterpret_cast<fftwf_complex*>(m_signal_padded);
-        std::cout << "... 2\n";
 
-        // Multiply by filter spectrum H[k]
-        const fftwf_complex* H = m_filter_fft;
+        // Multiply spectra: X[k] *= H[k]
         for (int k = 0; k <= m_fft_half_length; ++k) {
-            float xr = X[k][0];
-            float xi = X[k][1];
-            float hr = H[k][0];
-            float hi = H[k][1];
+            float xr = m_signal_fft[k][0];
+            float xi = m_signal_fft[k][1];
+            float hr = m_filter_fft[k][0];
+            float hi = m_filter_fft[k][1];
 
-            // Complex multiplication: (xr + j xi)*(hr + j hi)
-            X[k][0] = xr * hr - xi * hi; // real part
-            X[k][1] = xr * hi + xi * hr; // imag part
+            m_signal_fft[k][0] = xr*hr - xi*hi;
+            m_signal_fft[k][1] = xr*hi + xi*hr;
         }
-        std::cout << "... 3\n";
 
-        // Inverse FFT (c2r, in-place)
+        // Inverse FFT: m_signal_fft -> m_filter_result
         fftwf_execute(m_plan_inv_signal);
-        std::cout << "... 4\n";
 
-        // Scale the result
-        // FFTW inverse does NOT scale by 1/N
+        // Scale result
         const float scale = 1.0f / static_cast<float>(m_fft_length);
-        cblas_sscal(m_fft_length, scale, m_signal_padded, 1);
-        std::cout << "... 5\n";
+        cblas_sscal(m_fft_length, scale, m_filter_result, 1);
 
         // Copy valid samples to output
-        cblas_scopy(m_signal_length, m_signal_padded, 1, m_convolved_samples, 1);
-        std::cout << "... 6\n";
+        cblas_scopy(m_signal_length, m_filter_result, 1, m_convolved_samples, 1);
     }
 #endif
 
