@@ -352,8 +352,11 @@ namespace Grain {
 
 
     FFT_FIR::~FFT_FIR() noexcept {
+        std::cout << "... 1\n";
         std::free(m_filter_samples);
+        std::cout << "... 2\n";
         std::free(m_signal_samples);
+        std::cout << "... 3\n";
         std::free(m_convolved_samples);
 
 #if defined(__APPLE__) && defined(__MACH__)
@@ -365,14 +368,22 @@ namespace Grain {
         std::free(m_signal_real);
         std::free(m_signal_imag);
 #else
+        std::cout << "... 4\n";
         if (m_filter_padded) { fftwf_free(m_filter_padded); }
+        std::cout << "... 5\n";
         if (m_signal_padded) { fftwf_free(m_signal_padded); }
+        std::cout << "... 6\n";
         if (m_filter_result) { fftwf_free(m_filter_result); }
 
+        std::cout << "... 7\n";
         if (m_plan_fwd_filter) { fftwf_destroy_plan(m_plan_fwd_filter); }
+        std::cout << "... 8\n";
         if (m_plan_fwd_signal) { fftwf_destroy_plan(m_plan_fwd_signal); }
+        std::cout << "... 9\n";
         if (m_plan_inv_signal) { fftwf_destroy_plan(m_plan_inv_signal); }
+        std::cout << "... 10\n";
         if (m_filter_fft) { fftwf_free(m_filter_fft); }
+        std::cout << "... 11\n";
 #endif
     }
 
@@ -388,16 +399,12 @@ namespace Grain {
     }
 #else
     void FFT_FIR::setFilter() noexcept {
-        std::cout << "FFT_FIR::setFilter()\n";
         // Zero-pad filter and copy taps
         std::memset(m_filter_padded, 0, sizeof(float) * m_fft_length);
-        std::cout << "  2\n";
         cblas_scopy(m_filter_length, m_filter_samples, 1, m_filter_padded, 1);
-        std::cout << "  3\n";
 
         // Compute H[k] = FFT{h[n]} into m_filter_fft
         fftwf_execute(m_plan_fwd_filter);
-        std::cout << "  4\n";
     }
 #endif
 
@@ -459,21 +466,15 @@ namespace Grain {
     }
 #else
     void FFT_FIR::filter() noexcept {
-        std::cout << "FFT_FIR::filter() 1\n";
-
         // Zero-pad the input block
         std::memset(m_signal_padded, 0, sizeof(float) * m_fft_length);
-        std::cout << "  2\n";
         cblas_scopy(m_signal_length, m_signal_samples, 1, m_signal_padded, 1);
 
-        std::cout << "  3\n";
         // X[k] = FFT{x[n]}  (r2c in-place over m_signal_padded)
         fftwf_execute(m_plan_fwd_signal);
 
-        std::cout << "  4\n";
         // Y[k] = X[k] * H[k]
         fftwf_complex* X = reinterpret_cast<fftwf_complex*>(m_signal_padded);
-        std::cout << "  5\n";
         const fftwf_complex* H = m_filter_fft;
         for (int k = 0; k <= m_fft_half_length; ++k) {
             float xr = X[k][0], xi = X[k][1];
@@ -482,21 +483,16 @@ namespace Grain {
             X[k][0] = xr * hr - xi * hi;   // real
             X[k][1] = xr * hi + xi * hr;   // imag
         }
-        std::cout << "  6\n";
 
         // y[n] = IFFT{Y[k]}  (c2r back into m_signal_padded)
         fftwf_execute(m_plan_inv_signal);
-        std::cout << "  7\n";
 
         // Scale (FFTW inverse returns sum without 1/N)
         const float scale = 1.0f / static_cast<float>(m_fft_length);
-        std::cout << "  8\n";
         cblas_sscal(m_fft_length, scale, m_signal_padded, 1);
-        std::cout << "  9\n";
 
         // Copy the valid part to output (same as your vDSP code)
         cblas_scopy(m_signal_length, m_signal_padded, 1, m_convolved_samples, 1);
-        std::cout << "  10\n";
     }
 #endif
 
