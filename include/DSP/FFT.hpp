@@ -161,9 +161,6 @@ namespace Grain {
         DSPSplitComplex m_filter_split_complex;
 #else
         // FFTW buffers
-        float* m_signal_padded = nullptr; // Zero-padded input for FFT
-        float* m_filter_padded = nullptr; // Zero-padded filter
-        float* m_filter_result = nullptr; // Output of inverse FFT
         fftwf_complex* m_signal_fft = nullptr; // Forward FFT of signal
         fftwf_complex* m_filter_fft = nullptr; // Forward FFT of filter
 
