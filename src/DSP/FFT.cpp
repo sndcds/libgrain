@@ -328,12 +328,15 @@ namespace Grain {
         m_log_n = log_n;
         m_step_length = 1 << log_n;
 
+        std::cout << "FFT_FIR::FFT_FIR(int32_t log_n) log_n: " << log_n << std::endl;
+        std::cout << "m_step_length: " << m_step_length << std::endl;
+
         m_filter_length = m_step_length;
         m_overlap_length = m_step_length;
         m_signal_length = m_step_length + m_overlap_length;
 
         // FFT length: next power of 2 of signal + overlap
-        m_fft_length = static_cast<int32_t>(Math::next_pow2(m_signal_length));
+        m_fft_length = m_step_length;   // TODO: !!!!! static_cast<int32_t>(Math::next_pow2(m_signal_length));
         m_fft_half_length = m_fft_length / 2;
 
         // Allocate basic buffers
