@@ -207,7 +207,6 @@ namespace Grain {
     };
 
 
-
     class SlidingDFT : public Object {
 
         // TODO: This class is not tested!

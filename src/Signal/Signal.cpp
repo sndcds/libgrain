@@ -3016,7 +3016,9 @@ namespace Grain {
             f_rest -= filter_width;
         }
 
+        std::cout << "delete fft_fir\n";
         delete fft_fir;
+        std::cout << "done\n";
 
         return ErrorCode::None;
     }
