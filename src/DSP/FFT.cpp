@@ -466,7 +466,7 @@ namespace Grain {
         cblas_scopy(m_signal_length, m_signal_samples, 1, m_signal_padded, 1);
 
         // X[k] = FFT{x[n]}  (r2c in-place over m_signal_padded)
-        std::cout << "fftwf_execute 1\n";
+        std::cout << "fftwf_execute 1, isValid(): " << isValid() << std::endl;
         fftwf_execute(m_plan_fwd_signal);
 
         // Y[k] = X[k] * H[k]
@@ -481,7 +481,7 @@ namespace Grain {
         }
 
         // y[n] = IFFT{Y[k]}  (c2r back into m_signal_padded)
-        std::cout << "fftwf_execute 2\n";
+        std::cout << "fftwf_execute 2, isValid(): " << isValid() << std::endl;
         fftwf_execute(m_plan_inv_signal);
 
         // Scale (FFTW inverse returns sum without 1/N)
@@ -495,7 +495,6 @@ namespace Grain {
 
 
     SlidingDFT::SlidingDFT(int32_t dft_length) noexcept {
-
         m_dft_length = std::clamp(dft_length, 128, 100000);
 
         _m_x = (double*)std::malloc(sizeof(double) * m_dft_length);
@@ -518,7 +517,6 @@ namespace Grain {
 
 
     SlidingDFT::~SlidingDFT() noexcept {
-
         std::free(_m_x);
         std::free(_m_twiddle);
         std::free(_m_s);
@@ -534,13 +532,11 @@ namespace Grain {
      *  @return Frequency of the bin in Hz
      */
     double SlidingDFT::binFreq(uint32_t bin_index, double sample_rate) {
-
         return (sample_rate * bin_index) / m_dft_length;
     }
 
 
     bool SlidingDFT::push(float value) noexcept {
-
         // Update the calculation with a new sample
         // Returns true if the data are valid (because enough samples have been presented),
         // or false if the data are invalid
