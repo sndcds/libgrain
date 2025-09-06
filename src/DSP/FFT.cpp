@@ -398,6 +398,7 @@ namespace Grain {
         cblas_scopy(m_filter_length, m_filter_samples, 1, m_filter_padded, 1);
 
         // Compute H[k] = FFT{h[n]} into m_filter_fft
+        std::cout << "FFT_FIR::setFilter() fftwf_execute\n";
         fftwf_execute(m_plan_fwd_filter);
     }
 #endif
@@ -465,6 +466,7 @@ namespace Grain {
         cblas_scopy(m_signal_length, m_signal_samples, 1, m_signal_padded, 1);
 
         // X[k] = FFT{x[n]}  (r2c in-place over m_signal_padded)
+        std::cout << "fftwf_execute 1\n";
         fftwf_execute(m_plan_fwd_signal);
 
         // Y[k] = X[k] * H[k]
@@ -479,6 +481,7 @@ namespace Grain {
         }
 
         // y[n] = IFFT{Y[k]}  (c2r back into m_signal_padded)
+        std::cout << "fftwf_execute 2\n";
         fftwf_execute(m_plan_inv_signal);
 
         // Scale (FFTW inverse returns sum without 1/N)

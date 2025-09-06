@@ -187,9 +187,19 @@ namespace Grain {
 
         [[nodiscard]] bool isValid() const noexcept {
 #if defined(__APPLE__) && defined(__MACH__)
-            return m_filter_real && m_fft_setup;
+            // Check all buffers and FFT setup
+            return
+                m_filter_samples && m_signal_samples && m_convolved_samples &&
+                m_filter_padded && m_signal_padded && m_filter_result &&
+                m_signal_real && m_signal_imag &&
+                m_filter_real && m_fft_setup;
 #else
-            return m_plan_fwd_filter && m_plan_fwd_signal && m_plan_inv_signal && m_filter_fft;
+            // Check buffers and FFTW plans
+            return
+                m_filter_samples && m_signal_samples && m_convolved_samples &&
+                m_filter_padded && m_signal_padded && m_filter_result &&
+                m_filter_fft &&
+                m_plan_fwd_filter && m_plan_fwd_signal && m_plan_inv_signal;
 #endif
         }
 
