@@ -500,13 +500,17 @@ namespace Grain {
     }
 #else
     void FFT_FIR::filter() noexcept {
+        std::cout << m_log_n << " ... FFT_FIR::filter() ... " << (std::log2f(m_fft_length)) << std::endl;
         // Zero-pad input
         std::memset(m_signal_padded, 0, sizeof(float) * m_fft_length);
+        std::cout << "...... 1\n";
         cblas_scopy(m_signal_length, m_signal_samples, 1, m_signal_padded, 1);
 
+        std::cout << "...... 2\n";
         // Forward FFT: m_signal_padded -> m_signal_fft
         fftwf_execute(m_plan_fwd_signal);
 
+        std::cout << "...... 3\n";
         // Multiply spectra: X[k] *= H[k]
         for (int k = 0; k <= m_fft_half_length; ++k) {
             float xr = m_signal_fft[k][0];
@@ -518,15 +522,19 @@ namespace Grain {
             m_signal_fft[k][1] = xr*hi + xi*hr;
         }
 
+        std::cout << "...... 4\n";
         // Inverse FFT: m_signal_fft -> m_filter_result
         fftwf_execute(m_plan_inv_signal);
 
+        std::cout << "...... 5\n";
         // Scale result
         const float scale = 1.0f / static_cast<float>(m_fft_length);
         cblas_sscal(m_fft_length, scale, m_filter_result, 1);
 
+        std::cout << "...... 6\n";
         // Copy valid samples to output
         cblas_scopy(m_signal_length, m_filter_result, 1, m_convolved_samples, 1);
+        std::cout << "...... 7\n";
     }
 #endif
 
