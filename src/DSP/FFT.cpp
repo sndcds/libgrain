@@ -322,10 +322,10 @@ namespace Grain {
 #else
         // FFTW buffers
         // For in-place r2c, FFTW requires N + 2 floats
-        m_signal_padded = fftwf_alloc_real(m_fft_length + 2);
-        m_filter_padded = fftwf_alloc_real(m_fft_length); // filter padding is out-of-place
-        m_filter_result = fftwf_alloc_real(m_fft_length); // for convolution result
-        m_filter_fft = fftwf_alloc_complex(m_fft_half_length + 1);
+        m_signal_padded = fftwf_alloc_real(m_fft_length + 2 + m_fft_length + 2);
+        m_filter_padded = fftwf_alloc_real(m_fft_length + m_fft_length); // filter padding is out-of-place
+        m_filter_result = fftwf_alloc_real(m_fft_length + m_fft_length); // for convolution result
+        m_filter_fft = fftwf_alloc_complex(m_fft_half_length + 1 + m_fft_half_length + 1);
 
         // Create FFT plans
         m_plan_fwd_filter = fftwf_plan_dft_r2c_1d(
