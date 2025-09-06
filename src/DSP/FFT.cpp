@@ -352,13 +352,6 @@ namespace Grain {
 
 
     FFT_FIR::~FFT_FIR() noexcept {
-        std::cout << "... 1\n";
-        std::free(m_filter_samples);
-        std::cout << "... 2\n";
-        std::free(m_signal_samples);
-        std::cout << "... 3\n";
-        std::free(m_convolved_samples);
-
 #if defined(__APPLE__) && defined(__MACH__)
         std::free(m_filter_padded);
         std::free(m_signal_padded);
@@ -368,23 +361,19 @@ namespace Grain {
         std::free(m_signal_real);
         std::free(m_signal_imag);
 #else
-        std::cout << "... 4\n";
         if (m_filter_padded) { fftwf_free(m_filter_padded); }
-        std::cout << "... 5\n";
         if (m_signal_padded) { fftwf_free(m_signal_padded); }
-        std::cout << "... 6\n";
         if (m_filter_result) { fftwf_free(m_filter_result); }
 
-        std::cout << "... 7\n";
         if (m_plan_fwd_filter) { fftwf_destroy_plan(m_plan_fwd_filter); }
-        std::cout << "... 8\n";
         if (m_plan_fwd_signal) { fftwf_destroy_plan(m_plan_fwd_signal); }
-        std::cout << "... 9\n";
         if (m_plan_inv_signal) { fftwf_destroy_plan(m_plan_inv_signal); }
-        std::cout << "... 10\n";
         if (m_filter_fft) { fftwf_free(m_filter_fft); }
-        std::cout << "... 11\n";
 #endif
+
+        std::free(m_filter_samples);
+        std::free(m_signal_samples);
+        std::free(m_convolved_samples);
     }
 
 
