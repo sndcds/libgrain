@@ -310,7 +310,7 @@ namespace Grain {
             return result < o_min ? o_min : result > o_max ? o_max : result;
         }
         [[nodiscard]] inline static float remapclampedf(float i_min, float i_max, float o_min, float o_max, float v) noexcept {
-            double result = i_max != i_min ? ((v - i_min) / (i_max - i_min)) * (o_max - o_min) + o_min : o_min;
+            float result = i_max != i_min ? ((v - i_min) / (i_max - i_min)) * (o_max - o_min) + o_min : o_min;
             return result < o_min ? o_min : result > o_max ? o_max : result;
         }
         [[nodiscard]] inline static double unitstep(double threshold, double v) noexcept {
@@ -469,7 +469,7 @@ namespace Grain {
 
     class ValueMapper {
     public:
-        ValueMapper() {}
+        ValueMapper() = default;
         ValueMapper(double in_min, double in_max, double out_min, double out_max) {
             m_in_min = in_min;
             m_in_max = in_max;
@@ -477,7 +477,7 @@ namespace Grain {
             m_out_max = out_max;
             _update();
         }
-        ~ValueMapper() {}
+        ~ValueMapper() = default;
 
         void set(double in_min, double in_max, double out_min, double out_max) {
             m_in_min = in_min;
@@ -531,10 +531,10 @@ namespace Grain {
         double m_out_min = 0.0;
         double m_out_max = 1.0;
 
-        double _m_in_range;
-        double _m_out_range;
-        bool _m_in_valid;
-        bool _m_out_valid;
+        double _m_in_range{};
+        double _m_out_range{};
+        bool _m_in_valid{};
+        bool _m_out_valid{};
     };
 
 

@@ -101,18 +101,60 @@ namespace Grain {
     }
 #endif
 
-// Returns true, if resolution is FFT compatible
+
+    /**
+     *  @brief Checks if a given resolution is valid for the FFT.
+     *
+     *  A valid resolution must satisfy all of the following:
+     *  - Be a power of two.
+     *  - Be at least 64.
+     *  - Be no greater than 16,777,216 (2^24).
+     *
+     *  @param resolution The FFT resolution to check.
+     *  @return true If the resolution is valid.
+     *  @return false If the resolution is invalid.
+     */
     bool FFT::isValidResolution(int32_t resolution) noexcept {
-        return (resolution >= (1 << 6)) && (resolution <= (1 << 24)) &&
-               ((resolution & (resolution - 1)) == 0);
+        return
+            (resolution >= (1 << 6)) &&
+            (resolution <= (1 << 24)) &&
+            ((resolution & (resolution - 1)) == 0);
     }
 
 
+    /**
+     *  @brief Computes the base-2 logarithm of a given FFT resolution.
+     *
+     *  This function calculates log2(resolution) by counting the number
+     *  of times the resolution can be divided by 2 until it reaches 0.
+     *
+     *  @note The function does not check if the resolution is a power of two.
+     *        Use FFT::isValidResolution() before calling this function if necessary.
+     *
+     *  @param resolution The FFT resolution (number of points).
+     *  @return int32_t The base-2 logarithm of the resolution.
+     *                  For example, if resolution = 1024, returns 10.
+     */
     int32_t FFT::logNFromResolution(int32_t resolution) noexcept {
-        return isValidResolution(resolution) ? Math::pow_inverse(resolution) : -1;
+        // Previous version: return isValidResolution(resolution) ? Math::pow_inverse(resolution) : -1;
+        int32_t log_n = 0;
+        while (resolution >>= 1) {
+            log_n++;
+        }
+        return log_n;
     }
 
 
+    /**
+     *  @brief Computes the FFT resolution from a base-2 logarithm.
+     *
+     *  Given the logarithm of the FFT length (log_n), this function returns
+     *  the corresponding number of points in the FFT.
+     *
+     *  @param log_n The base-2 logarithm of the FFT length.
+     *  @return int32_t The FFT resolution (number of points), equal to 2^log_n.
+     *                  For example, if log_n = 10, returns 1024.
+     */
     int32_t FFT::resolutionFromLogN(int32_t log_n) noexcept {
         return 1 << log_n;
     }
@@ -188,10 +230,8 @@ namespace Grain {
         for (int32_t k = 0; k <= m_half_length; ++k) {
             float re = m_out[k][0];
             float im = m_out[k][1];
-
-            float mag = std::sqrt(re*re + im*im) * fft_norm_factor;
+            float mag = std::sqrt(re * re + im * im) * fft_norm_factor;
             float phase = std::atan2(im, re);
-
             out_partials->setPartialAtIndex(k, mag, phase);
         }
 
@@ -264,7 +304,6 @@ namespace Grain {
         for (int32_t k = 0; k <= m_half_length; ++k) {
             float mag = partials->amplitudeAtIndex(k);
             float phase = partials->phaseAtIndex(k);
-
             m_out[k][0] = mag * std::cos(phase) * m_length; // scale back
             m_out[k][1] = mag * std::sin(phase) * m_length;
         }
@@ -283,7 +322,6 @@ namespace Grain {
 
 
     FFT_FIR::FFT_FIR(int32_t log_n) noexcept {
-
         // Clamp log_n
         log_n = std::clamp<int32_t>(log_n, FFT::kLogNResolutionFirst, FFT::kLogNResolutionLast);
 
@@ -299,9 +337,9 @@ namespace Grain {
         m_fft_half_length = m_fft_length / 2;
 
         // Allocate basic buffers
-        m_filter_samples     = (float*)std::malloc(sizeof(float) * m_filter_length);
-        m_signal_samples     = (float*)std::malloc(sizeof(float) * m_signal_length);
-        m_convolved_samples  = (float*)std::malloc(sizeof(float) * m_signal_length);
+        m_filter_samples = (float*)std::malloc(sizeof(float) * m_filter_length);
+        m_signal_samples = (float*)std::malloc(sizeof(float) * m_signal_length);
+        m_convolved_samples = (float*)std::malloc(sizeof(float) * m_signal_length);
 
 #if defined(__APPLE__) && defined(__MACH__)
         // macOS vDSP buffers
@@ -382,6 +420,7 @@ namespace Grain {
 
 #if defined(__APPLE__) && defined(__MACH__)
     void FFT_FIR::setFilter() noexcept {
+        std::cout << m_log_n << " ... " << (std::log2f(m_fft_length)) << std::endl;
         float zero = 0;
         vDSP_vfill(&zero, m_filter_padded, 1, m_fft_length);
         cblas_scopy(m_filter_length, m_filter_samples, 1, m_filter_padded, 1);
@@ -396,7 +435,6 @@ namespace Grain {
         cblas_scopy(m_filter_length, m_filter_samples, 1, m_filter_padded, 1);
 
         // Compute H[k] = FFT{h[n]} into m_filter_fft
-        std::cout << "FFT_FIR::setFilter() fftwf_execute\n";
         fftwf_execute(m_plan_fwd_filter);
     }
 #endif
@@ -404,6 +442,7 @@ namespace Grain {
 
 #if defined(__APPLE__) && defined(__MACH__)
     void FFT_FIR::filter() noexcept {
+        std::cout << m_log_n << " ... " << (std::log2f(m_fft_length)) << std::endl;
         float zero = 0;
         vDSP_vfill(&zero, m_signal_padded, 1, m_fft_length);
         cblas_scopy(m_signal_length, m_signal_samples, 1, m_signal_padded, 1);
@@ -415,12 +454,11 @@ namespace Grain {
         vDSP_ctoz((DSPComplex*)m_signal_padded, 2, &signal_split_complex, 1, m_fft_half_length);
         vDSP_fft_zrip(m_fft_setup, &signal_split_complex, 1, std::log2f(m_fft_length), FFT_FORWARD);
 
-        // This gets a bit strange. The vDSP FFT stores the real value at nyquist in the
-        // first element in the imaginary array. The first imaginary element is always
-        // zero, so no information is lost by doing this. The only issue is that we are
-        // going to use a complex vector multiply function from vDSP and it doesn't
-        // handle this format very well. We calculate this multiplication ourselves and
-        // add it into our result later.
+        // The vDSP FFT stores the real value at nyquist in the first element in the
+        // imaginary array. The first imaginary element is always zero, so no information
+        // is lost by doing this. The only issue is that we are going to use a complex
+        // vector multiply function from vDSP and it doesn't handle this format very well.
+        // We calculate this multiplication ourselves and add it into our result later.
 
         // We'll need this later
         float nyquist_multiplied = m_filter_split_complex.imagp[0] * signal_split_complex.imagp[0];
@@ -469,7 +507,9 @@ namespace Grain {
                 << ", m_filter_padded = " << m_filter_padded
                 << ", m_filter_fft = " << m_filter_fft << std::endl;
         fftwf_execute(m_plan_fwd_signal);
+        std::cout << "... 1\n";
         fftwf_complex* X = reinterpret_cast<fftwf_complex*>(m_signal_padded);
+        std::cout << "... 2\n";
 
         // Multiply by filter spectrum H[k]
         const fftwf_complex* H = m_filter_fft;
@@ -483,17 +523,21 @@ namespace Grain {
             X[k][0] = xr * hr - xi * hi; // real part
             X[k][1] = xr * hi + xi * hr; // imag part
         }
+        std::cout << "... 3\n";
 
         // Inverse FFT (c2r, in-place)
         fftwf_execute(m_plan_inv_signal);
+        std::cout << "... 4\n";
 
         // Scale the result
         // FFTW inverse does NOT scale by 1/N
         const float scale = 1.0f / static_cast<float>(m_fft_length);
         cblas_sscal(m_fft_length, scale, m_signal_padded, 1);
+        std::cout << "... 5\n";
 
         // Copy valid samples to output
         cblas_scopy(m_signal_length, m_signal_padded, 1, m_convolved_samples, 1);
+        std::cout << "... 6\n";
     }
 #endif
 
