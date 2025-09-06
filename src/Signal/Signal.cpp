@@ -2973,10 +2973,9 @@ namespace Grain {
         int64_t f_offs = 0;
         int64_t f_rest = b_length;
 
-        auto fft_fir = std::make_unique<FFT_FIR>(FFT::kLogNResolution16384);
-        // auto fft_fir = new (std::nothrow) FFT_FIR(FFT::kLogNResolution16384);
+        auto fft_fir = new (std::nothrow) FFT_FIR(FFT::kLogNResolution16384);
         if (!fft_fir) {
-            return ErrorCode::Fatal;
+            return ErrorCode::ClassInstantiationFailed;
         }
         if (!fft_fir->isValid()) {
             return ErrorCode::Fatal;
@@ -3016,6 +3015,8 @@ namespace Grain {
             f_offs += filter_width;
             f_rest -= filter_width;
         }
+
+        delete fft_fir;
 
         return ErrorCode::None;
     }

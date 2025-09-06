@@ -152,8 +152,8 @@ namespace Grain {
         float* m_filter_result = nullptr;
 
 #if defined(__APPLE__) && defined(__MACH__)
-        float* m_filter_real;
-        float* m_filter_imag;
+        float* m_filter_real = nullptr;
+        float* m_filter_imag = nullptr;
         float* m_signal_real = nullptr;
         float* m_signal_imag = nullptr;
 

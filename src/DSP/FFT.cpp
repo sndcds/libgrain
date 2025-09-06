@@ -283,7 +283,10 @@ namespace Grain {
 
 
     FFT_FIR::FFT_FIR(int32_t log_n) noexcept {
-        log_n = std::clamp(log_n, static_cast<int32_t>(FFT::kLogNResolutionFirst), static_cast<int32_t>(FFT::kLogNResolutionLast));
+        log_n = std::clamp(
+                log_n,
+                static_cast<int32_t>(FFT::kLogNResolutionFirst),
+                static_cast<int32_t>(FFT::kLogNResolutionLast));
 
         m_log_n = log_n;
         m_step_length = 1 << log_n;
@@ -292,59 +295,58 @@ namespace Grain {
         m_overlap_length = m_step_length;
         m_signal_length = m_step_length + m_overlap_length;
 
-        m_fft_length = static_cast<int32_t>(Math::next_pow2(m_signal_length));  // TODO: next_pow2 or pad_two?
+        // FFT length must be >= signal_length, power of 2
+        m_fft_length = static_cast<int32_t>(Math::next_pow2(m_signal_length));
         m_fft_half_length = m_fft_length / 2;
 
-        m_filter_samples = (float*)std::malloc(sizeof(float) * m_filter_length);
-        m_signal_samples = (float*)std::malloc(sizeof(float) * m_signal_length);
-        m_convolved_samples = (float*)std::malloc(sizeof(float) * m_signal_length);
-
+        // Allocate basic buffers
+        m_filter_samples = static_cast<float*>(std::malloc(sizeof(float) * m_filter_length));
+        m_signal_samples = static_cast<float*>(std::malloc(sizeof(float) * m_signal_length));
+        m_convolved_samples = static_cast<float*>(std::malloc(sizeof(float) * m_signal_length));
 
 #if defined(__APPLE__) && defined(__MACH__)
-        m_filter_padded = (float*)std::malloc(sizeof(float) * m_fft_length);
-        m_signal_padded = (float*)std::malloc(sizeof(float) * m_fft_length);
-        m_filter_result = (float*)std::malloc(sizeof(float) * m_fft_length);
+        m_filter_padded = static_cast<float*>(std::malloc(sizeof(float) * m_fft_length));
+        m_signal_padded = static_cast<float*>(std::malloc(sizeof(float) * m_fft_length));
+        m_filter_result = static_cast<float*>(std::malloc(sizeof(float) * m_fft_length));
 
-        m_signal_real = (float*)std::malloc(sizeof(float) * m_fft_half_length);
-        m_signal_imag = (float*)std::malloc(sizeof(float) * m_fft_half_length);
+        m_signal_real = static_cast<float*>(std::malloc(sizeof(float) * m_fft_half_length));
+        m_signal_imag = static_cast<float*>(std::malloc(sizeof(float) * m_fft_half_length));
 
-        m_fft_setup = FFT::_macos_fftSetup(std::log2(static_cast<float>(m_fft_length)));
-        m_filter_real = (float*)std::malloc(sizeof(float) * m_fft_length);
+        m_fft_setup = FFT::_macos_fftSetup(std::log2f(static_cast<float>(m_fft_length)));
+
+        m_filter_real = static_cast<float*>(std::malloc(sizeof(float) * m_fft_length));
         m_filter_imag = &m_filter_real[m_fft_half_length];
         m_filter_split_complex.realp = m_filter_real;
         m_filter_split_complex.imagp = m_filter_imag;
+
 #else
-        m_filter_padded = (float*)fftwf_alloc_real(m_fft_length);
-        m_signal_padded = (float*)fftwf_alloc_real(m_fft_length);
-        m_filter_result = (float*)fftwf_alloc_real(m_fft_length); // if you want it aligned too
+        // Use fftwf_alloc_* for proper alignment
+        m_filter_padded = fftwf_alloc_real(m_fft_length);
+        m_signal_padded = fftwf_alloc_real(m_fft_length);
+        m_filter_result = fftwf_alloc_real(m_fft_length);
 
-        // Allocate spectrum buffer for filter (N/2 + 1 complex bins)
-        m_filter_fft = (fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex) * (m_fft_half_length + 1));
+        // FFTW complex buffer (N/2 + 1)
+        m_filter_fft = fftwf_alloc_complex(m_fft_half_length + 1);
 
-        // Create plans bound to your existing buffers.
-        // NOTE: These pointers must remain stable for the lifetime of the plans.
-        // Forward filter (real -> complex)
+        // Create FFTW plans
         m_plan_fwd_filter = fftwf_plan_dft_r2c_1d(
                 m_fft_length,
-                m_filter_padded, // In: real
-                m_filter_fft, // Out: complex
+                m_filter_padded,
+                m_filter_fft,
                 FFTW_ESTIMATE
         );
 
-        // Forward signal (real -> complex), in-place over m_signal_padded
-        // We'll reinterpret m_signal_padded as fftwf_complex when using it.
         m_plan_fwd_signal = fftwf_plan_dft_r2c_1d(
                 m_fft_length,
-                m_signal_padded, // In: real
-                reinterpret_cast<fftwf_complex*>(m_signal_padded), // Out: complex
+                m_signal_padded,
+                reinterpret_cast<fftwf_complex*>(m_signal_padded),
                 FFTW_ESTIMATE
         );
 
-        // Inverse (complex -> real), back into m_signal_padded
         m_plan_inv_signal = fftwf_plan_dft_c2r_1d(
                 m_fft_length,
-                reinterpret_cast<fftwf_complex*>(m_signal_padded), // In: complex
-                m_signal_padded, // Uut: real
+                reinterpret_cast<fftwf_complex*>(m_signal_padded),
+                m_signal_padded,
                 FFTW_ESTIMATE
         );
 #endif
@@ -353,24 +355,27 @@ namespace Grain {
 
     FFT_FIR::~FFT_FIR() noexcept {
 #if defined(__APPLE__) && defined(__MACH__)
-        std::free(m_filter_padded);
-        std::free(m_signal_padded);
-        std::free(m_filter_result);
+        if (m_fft_setup) { vDSP_destroy_fftsetup(m_fft_setup); }
 
         std::free(m_filter_real);
         std::free(m_signal_real);
         std::free(m_signal_imag);
+
+        std::free(m_filter_padded);
+        std::free(m_signal_padded);
+        std::free(m_filter_result);
 #else
-        if (m_filter_fft) { fftwf_free(m_filter_fft); }
-
-        if (m_filter_padded) { fftwf_free(m_filter_padded); }
-        if (m_signal_padded) { fftwf_free(m_signal_padded); }
-        if (m_filter_result) { fftwf_free(m_filter_result); }
-
+        // Destroy FFTW plans before freeing buffers
         if (m_plan_fwd_filter) { fftwf_destroy_plan(m_plan_fwd_filter); }
         if (m_plan_fwd_signal) { fftwf_destroy_plan(m_plan_fwd_signal); }
         if (m_plan_inv_signal) { fftwf_destroy_plan(m_plan_inv_signal); }
+
+        if (m_filter_fft) { fftwf_free(m_filter_fft); }
+        if (m_filter_padded) { fftwf_free(m_filter_padded); }
+        if (m_signal_padded) { fftwf_free(m_signal_padded); }
+        if (m_filter_result) { fftwf_free(m_filter_result); }
 #endif
+
         std::free(m_filter_samples);
         std::free(m_signal_samples);
         std::free(m_convolved_samples);
