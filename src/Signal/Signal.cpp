@@ -2968,12 +2968,17 @@ namespace Grain {
             return ErrorCode::MemCantGrow;
         }
 
+        std::cout << "signal:\n" << this << std::endl;
+        std::cout << "b_signal:\n" << b_signal << std::endl;
+        std::cout << "result_signal:\n" << result_signal << std::endl;
         result_signal->clearChannel(result_channel, 0, result_length);
 
+        std::cout << "... 1\n";
         int64_t f_offs = 0;
         int64_t f_rest = b_length;
 
         auto fft_fir = new (std::nothrow) FFT_FIR(FFT::kLogNResolution16384);
+        std::cout << "... 2\n";
         if (!fft_fir) {
             return ErrorCode::ClassInstantiationFailed;
         }
@@ -2981,31 +2986,45 @@ namespace Grain {
             return ErrorCode::Fatal;
         }
 
+        std::cout << "... 3\n";
         int32_t filter_width = fft_fir->filterLength();
         int32_t overlap_width = fft_fir->overlapLength();
         int32_t signal_width = fft_fir->signalLength();
+        std::cout << "... filter_width: " << filter_width << std::endl;
+        std::cout << "... overlap_width: " << overlap_width << std::endl;
+        std::cout << "... signal_width: " << signal_width << std::endl;
 
         float *filter_samples = fft_fir->filterSamplesPtr();
         float *signal_samples = fft_fir->signalSamplesPtr();
         float *convolved_samples = fft_fir->convolvedSamplesPtr();
 
+        std::cout << "... filter_samples: " << (long)filter_samples << std::endl;
+        std::cout << "... signal_samples: " << (long)signal_samples << std::endl;
+        std::cout << "... convolved_samples: " << (long)convolved_samples << std::endl;
+
         while (f_rest > 0) {
+            std::cout << "... f_rest: " << f_rest << std::endl;
             b_signal->readSamplesAsFloatWithZeroPadding(b_channel, f_offs, filter_width, filter_samples);
+            std::cout << "... fft_fir->setFilter()" << std::endl;
             fft_fir->setFilter();
 
             int32_t o_offs = -overlap_width;
             int32_t o_rest = static_cast<int32_t>(a_length) + overlap_width;
 
             while (o_rest > 0) {
+                std::cout << "... o_rest: " << o_rest << std::endl;
                 int64_t n = a_length - o_offs;
                 n = Type::maxOf<int64_t>(n, signal_width);
                 readSamplesAsFloatWithZeroPadding(a_channel, o_offs, n, signal_samples);
+                std::cout << "... 5 n: " << n << std::endl;
                 if (n < signal_width) {
                     Type::clearArray<float>(&signal_samples[n], signal_width - n);
                 }
 
+                std::cout << "... fft_fir->filter()" << std::endl;
                 fft_fir->filter();
 
+                std::cout << "... 5 n: " << n << std::endl;
                 result_signal->writeSamples(result_channel, o_offs + overlap_width + f_offs, filter_width, &convolved_samples[overlap_width], CombineMode::Add);
 
                 o_offs += filter_width;
