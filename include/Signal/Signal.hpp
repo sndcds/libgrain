@@ -578,7 +578,7 @@ namespace Grain {
                 Signal* output_signal, int32_t output_channel) const noexcept;
 
         ErrorCode convolve(int64_t a_length, const Signal* b_signal, Signal* result_signal) const noexcept {
-            return convolveChannel(0, 0, a_length, b_signal, 0, 0, -1, result_signal, 0);
+            return convolveChannel(0, 0, a_length, b_signal, 0, 0, -1, result_signal, 0, 10);
         }
 
         ErrorCode convolveChannel(

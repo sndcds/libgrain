@@ -168,56 +168,28 @@ namespace Grain {
     }
 #else
     ErrorCode FFT::fft(float* data, Partials* out_partials) noexcept {
-        if (!data || !out_partials) return ErrorCode::NullData;
-        if (FFT::logNFromResolution(out_partials->resolution() * 2) != m_log_n) return ErrorCode::BadArgs;
-
-        // copy input into internal buffer used by plan
-        std::memcpy(m_x_buffer, data, sizeof(float) * m_length);
-
-        // execute the pre-created r2c plan: m_x_buffer -> m_out
-        fftwf_execute(m_plan);
-
-        // fill out_partials in CARTESIAN form (no scaling)
-        float* out_real = out_partials->mutRealData();
-        float* out_imag = out_partials->mutImagData();
-        for (int32_t k = 0; k <= m_half_length; ++k) {
-            out_real[k] = m_out[k][0];
-            out_imag[k] = m_out[k][1];
-        }
-        return ErrorCode::None;
-    }
-
-    /*
-    ErrorCode FFT::fft(float* data, Partials* out_partials) noexcept {
         if (!data || !out_partials) {
             return ErrorCode::NullData;
         }
-
-        // Verify resolution matches FFT size
         if (FFT::logNFromResolution(out_partials->resolution() * 2) != m_log_n) {
             return ErrorCode::BadArgs;
         }
 
-        // Copy input samples into FFT input buffer
+        // Copy input into internal buffer used by plan
         std::memcpy(m_x_buffer, data, sizeof(float) * m_length);
 
-        // Execute FFT (real-to-complex)
+        // Execute the pre-created r2c plan: m_x_buffer -> m_out
         fftwf_execute(m_plan);
 
-        // FFTW does not scale forward transforms — apply scaling factor
-        float scale = 1.0f; // You can leave scaling to ifft() instead, if preferred
-
-        // Fill Partials with Cartesian components
-        auto out_real = out_partials->mutRealData();
-        auto out_imag = out_partials->mutImagData();
+        // Fill out_partials in CARTESIAN form (no scaling)
+        float* out_real = out_partials->mutRealData();
+        float* out_imag = out_partials->mutImagData();
         for (int32_t i = 0; i < m_half_length; i++) {
-            out_real[i] = m_out[i][0] * scale;
-            out_imag[i] = m_out[i][1] * scale;
+            out_real[i] = m_out[i][0];
+            out_imag[i] = m_out[i][1];
         }
-
         return ErrorCode::None;
     }
-    */
 #endif
 
 
@@ -257,64 +229,38 @@ namespace Grain {
     }
 #else
     ErrorCode FFT::ifft(Partials* partials, float* out_data) noexcept {
-        if (!partials || !out_data) return ErrorCode::NullData;
-        if (FFT::logNFromResolution(partials->resolution() * 2) != m_log_n) return ErrorCode::BadArgs;
+        if (!partials || !out_data) {
+            return ErrorCode::NullData;
+        }
+        if (FFT::logNFromResolution(partials->resolution() * 2) != m_log_n) {
+            return ErrorCode::BadArgs;
+        }
 
         float* real = partials->mutRealData();
         float* imag = partials->mutImagData();
 
         // Fill FFTW complex input (m_out), same layout as FFT produced
-        for (int32_t k = 0; k <= m_half_length; ++k) {
-            m_out[k][0] = real[k];
-            m_out[k][1] = imag[k];
+        for (int32_t i = 0; i < m_half_length; i++) {
+            m_out[i][0] = real[i];
+            m_out[i][1] = imag[i];
         }
 
-        // execute c2r plan producing N real samples in m_x_buffer (unscaled: sum)
+        // Execute c2r plan producing N real samples in m_x_buffer (unscaled: sum)
         // reuse a plan cached for (m_out -> m_x_buffer) created via:
         // fftwf_plan_dft_c2r_1d(m_length, m_out, m_x_buffer, FFTW_ESTIMATE)
         fftwf_execute(m_plan_inv);
 
-        // normalize: FFTW's inverse returns sum; divide by N
+        // Normalize: FFTW's inverse returns sum; divide by N
         const float invN = 1.0f / static_cast<float>(m_length);
-        for (int i = 0; i < m_length; ++i) {
+        for (int i = 0; i < m_length; i++) {
             m_x_buffer[i] *= invN;
         }
 
-        // copy result to out_data (you can also write directly)
+        // Copy result to out_data (you can also write directly)
         std::memcpy(out_data, m_x_buffer, sizeof(float) * m_length);
 
         return ErrorCode::None;
     }
-    /*
-    ErrorCode FFT::ifft(Partials* partials, float* out_data) noexcept {
-        if (!partials || !out_data) {
-            return ErrorCode::NullData;
-        }
-
-        // Fill FFTW input buffer from Cartesian partials
-        auto real = partials->mutRealData();
-        auto imag = partials->mutImagData();
-        for (int32_t i = 0; i < m_half_length; i++) {
-            m_out[i][0] = real[i] * m_length; // scale for FFTW convention
-            m_out[i][1] = imag[i] * m_length;
-        }
-
-        // Create inverse plan on the fly or reuse a cached one
-        fftwf_plan plan_inv = fftwf_plan_dft_c2r_1d(m_length, m_out, m_x_buffer, FFTW_ESTIMATE);
-        fftwf_execute(plan_inv);
-        fftwf_destroy_plan(plan_inv);
-
-        float scale = 1.0f / m_length;
-        for (int32_t i = 0; i < m_length; i++) {
-            m_x_buffer[i] *= scale;
-        }
-
-        // Copy result
-        std::memcpy(out_data, m_x_buffer, sizeof(float) * m_length);
-
-        return ErrorCode::None;
-    }
-     */
 #endif
 
 

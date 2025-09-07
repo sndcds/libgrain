@@ -3102,11 +3102,11 @@ namespace Grain {
         float* t_in_buffer = nullptr;
         float* t_out_buffer = nullptr;
         float* overlap_buffer = nullptr;
+        float* write_buffer = nullptr;
         PartialsRing* ir_partials_ring = nullptr;
         PartialsRing* x_ring = nullptr;
         Partials* y_partials = nullptr;
         Partials* temp_partials = nullptr;
-        float* write_buffer = nullptr;
 
         try {
             fft = new (std::nothrow) FFT(fft_log_n);
