@@ -166,6 +166,27 @@ namespace Grain {
     }
 #else
     ErrorCode FFT::fft(float* data, Partials* out_partials) noexcept {
+        if (!data || !out_partials) return ErrorCode::NullData;
+        if (FFT::logNFromResolution(out_partials->resolution() * 2) != m_log_n) return ErrorCode::BadArgs;
+
+        // copy input into internal buffer used by plan
+        std::memcpy(m_x_buffer, data, sizeof(float) * m_length);
+
+        // execute the pre-created r2c plan: m_x_buffer -> m_out
+        fftwf_execute(m_plan);
+
+        // fill out_partials in CARTESIAN form (no scaling)
+        float* out_real = out_partials->mutRealData();
+        float* out_imag = out_partials->mutImagData();
+        for (int32_t k = 0; k <= m_half_length; ++k) {
+            out_real[k] = m_out[k][0];
+            out_imag[k] = m_out[k][1];
+        }
+        return ErrorCode::None;
+    }
+
+    /*
+    ErrorCode FFT::fft(float* data, Partials* out_partials) noexcept {
         if (!data || !out_partials) {
             return ErrorCode::NullData;
         }
@@ -194,6 +215,7 @@ namespace Grain {
 
         return ErrorCode::None;
     }
+    */
 #endif
 
 
@@ -233,6 +255,36 @@ namespace Grain {
     }
 #else
     ErrorCode FFT::ifft(Partials* partials, float* out_data) noexcept {
+        if (!partials || !out_data) return ErrorCode::NullData;
+        if (FFT::logNFromResolution(partials->resolution() * 2) != m_log_n) return ErrorCode::BadArgs;
+
+        float* real = partials->mutRealData();
+        float* imag = partials->mutImagData();
+
+        // Fill FFTW complex input (m_out), same layout as FFT produced
+        for (int32_t k = 0; k <= m_half_length; ++k) {
+            m_out[k][0] = real[k];
+            m_out[k][1] = imag[k];
+        }
+
+        // execute c2r plan producing N real samples in m_x_buffer (unscaled: sum)
+        // reuse a plan cached for (m_out -> m_x_buffer) created via:
+        // fftwf_plan_dft_c2r_1d(m_length, m_out, m_x_buffer, FFTW_ESTIMATE)
+        fftwf_execute(m_plan_inv);
+
+        // normalize: FFTW's inverse returns sum; divide by N
+        const float invN = 1.0f / static_cast<float>(m_length);
+        for (int i = 0; i < m_length; ++i) {
+            m_x_buffer[i] *= invN;
+        }
+
+        // copy result to out_data (you can also write directly)
+        std::memcpy(out_data, m_x_buffer, sizeof(float) * m_length);
+
+        return ErrorCode::None;
+    }
+    /*
+    ErrorCode FFT::ifft(Partials* partials, float* out_data) noexcept {
         if (!partials || !out_data) {
             return ErrorCode::NullData;
         }
@@ -260,6 +312,7 @@ namespace Grain {
 
         return ErrorCode::None;
     }
+     */
 #endif
 
 

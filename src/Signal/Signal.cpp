@@ -3055,15 +3055,6 @@ namespace Grain {
             int32_t partition_log_n
     ) const noexcept
     {
-        Log l;
-
-        l << "Signal::convolveChannel():" << Log::endl;
-        l++;
-        l << "signal channel " << channel << ", offset: " << offset << ", length: " << length << Log::endl;
-        l << "ir channel " << ir_channel << ", offset: " << ir_offset << ", length: " << ir_length << Log::endl;
-        l << "result channel " << result_channel << Log::endl;
-        l << "partition_log_n " << partition_log_n << Log::endl;
-
         if (partition_log_n < FFT::kMinLogN || partition_log_n > FFT::kMaxLogN) {
             return ErrorCode::BadArgs;
         }
@@ -3086,29 +3077,22 @@ namespace Grain {
             length = m_sample_count;
         }
         clampOffsetAndLength(offset, length);
-        l << "clamped offset: " << offset << ", length: " << length << Log::endl;
 
         if (ir_length < 0) {
             ir_length = ir->sampleCount();
         }
         ir->clampOffsetAndLength(ir_offset, ir_length);
-        l << "clamped ir_offset: " << ir_offset << ", ir_length: " << ir_length << Log::endl;
 
         const int32_t partition_size = FFT::resolutionFromLogN(partition_log_n);
-        l << "partition_size: " << partition_size << Log::endl;
         auto partition_n = static_cast<int32_t>((ir_length + partition_size - 1) / partition_size);
         if (partition_n < 1) {
             partition_n = 1;
         }
-        l << "partition_n: " << partition_n << Log::endl;
 
         const int32_t fft_size = FFT::nextPow2Int32(2 * partition_size);
         const int32_t fft_log_n = FFT::logNFromResolution(fft_size);
-        l << "fft_size: " << fft_size << Log::endl;
-        l << "fft_log_n: " << fft_log_n << Log::endl;
 
         int64_t result_length = length + ir_length - 1;
-        l << "result_length: " << result_length << Log::endl;
         if (result_signal->growIfNeeded(result_length) != ErrorCode::None) {
             return ErrorCode::MemCantGrow;
         }
@@ -3138,7 +3122,6 @@ namespace Grain {
             }
 
             const int32_t partial_res = fft->partialResolution();
-            l << "partial_res: " << partial_res << Log::endl;
 
             // Prepare IR Partials
             ir_partials_ring = new (std::nothrow) PartialsRing(partition_n, partial_res, Partials::Mode::Cartesian);
@@ -3289,8 +3272,6 @@ namespace Grain {
             std::cerr << e.what() << ", code: " << (int)e.code() << std::endl;
         }
 
-        l << "done!" << Log::endl;
-
         // Cleanup
         delete ir_partials_ring;
         delete x_ring;
@@ -3301,7 +3282,7 @@ namespace Grain {
         std::free(t_out_buffer);
         std::free(overlap_buffer);
         std::free(write_buffer);
-        // delete fft;
+        // delete fft; TODO: !!!!!
 
         return ErrorCode::None;
     }
