@@ -187,7 +187,7 @@ namespace Grain {
         // Fill Partials with Cartesian components
         auto out_real = out_partials->mutRealData();
         auto out_imag = out_partials->mutImagData();
-        for (int32_t i = 0; i <= m_half_length; i++) {
+        for (int32_t i = 0; i < m_half_length; i++) {
             out_real[i] = m_out[i][0] * scale;
             out_imag[i] = m_out[i][1] * scale;
         }
@@ -240,7 +240,7 @@ namespace Grain {
         // Fill FFTW input buffer from Cartesian partials
         auto real = partials->mutRealData();
         auto imag = partials->mutImagData();
-        for (int32_t i = 0; i <= m_half_length; i++) {
+        for (int32_t i = 0; i < m_half_length; i++) {
             m_out[i][0] = real[i] * m_length; // scale for FFTW convention
             m_out[i][1] = imag[i] * m_length;
         }
