@@ -240,15 +240,20 @@ namespace Grain {
         // Fill FFTW input buffer from Cartesian partials
         auto real = partials->mutRealData();
         auto imag = partials->mutImagData();
-        for (int32_t k = 0; k <= m_half_length; ++k) {
-            m_out[k][0] = real[0] * m_length; // scale for FFTW convention
-            m_out[k][1] = imag[0] * m_length;
+        for (int32_t i = 0; i <= m_half_length; i++) {
+            m_out[i][0] = real[i] * m_length; // scale for FFTW convention
+            m_out[i][1] = imag[i] * m_length;
         }
 
         // Create inverse plan on the fly or reuse a cached one
         fftwf_plan plan_inv = fftwf_plan_dft_c2r_1d(m_length, m_out, m_x_buffer, FFTW_ESTIMATE);
         fftwf_execute(plan_inv);
         fftwf_destroy_plan(plan_inv);
+
+        float scale = 1.0f / m_length;
+        for (int32_t i = 0; i < m_length; i++) {
+            m_x_buffer[i] *= scale;
+        }
 
         // Copy result
         std::memcpy(out_data, m_x_buffer, sizeof(float) * m_length);
