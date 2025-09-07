@@ -84,6 +84,7 @@ namespace Grain {
 #else
         fftwf_complex* m_out{};
         fftwf_plan m_plan{};
+        fftwf_plan m_plan_inv{};
         float* m_x_buffer;
         float* m_mag;
         float* m_phase;

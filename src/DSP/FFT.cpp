@@ -60,6 +60,7 @@ namespace Grain {
 
             // Create plan once
             m_plan = fftwf_plan_dft_r2c_1d(m_length, m_x_buffer, m_out, FFTW_ESTIMATE);
+            m_plan_inv = fftwf_plan_dft_c2r_1d(m_length, m_out, m_x_buffer, FFTW_ESTIMATE);
 #endif
         }
     }
@@ -75,6 +76,7 @@ namespace Grain {
         std::free(m_temp_complex);
 #else
         fftwf_destroy_plan(m_plan);
+        fftwf_destroy_plan(m_plan_inv);
         fftwf_free(m_out);
         std::free(m_x_buffer);
         std::free(m_mag);
