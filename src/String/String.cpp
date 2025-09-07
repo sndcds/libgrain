@@ -1287,7 +1287,7 @@ namespace Grain {
 
         va_list args;
         va_start(args, format);
-        ErrorCode result = appendFormatted(max_byte_length, format, args);
+        ErrorCode result = appendFormattedV(max_byte_length, format, args);
         va_end(args);
 
         return result;
@@ -1304,6 +1304,15 @@ namespace Grain {
      *        otherwise, dynamic memory allocation is used.
      */
     ErrorCode String::appendFormatted(int64_t max_byte_length, const char* format, ...) noexcept {
+        va_list args;
+        va_start(args, format);
+        ErrorCode result = appendFormattedV(max_byte_length, format, args);
+        va_end(args);
+        return result;
+    }
+
+
+    ErrorCode String::appendFormattedV(int64_t max_byte_length, const char* format, va_list args) noexcept {
         auto result = ErrorCode::None;
         constexpr int64_t kMaxStackBufferSize = 2056;
         bool allocate_flag = max_byte_length > kMaxStackBufferSize;
@@ -1321,15 +1330,14 @@ namespace Grain {
             }
         }
 
-        // Initialize the variadic argument list
-        va_list args;
-        va_start(args, format);
+        // Make a copy of va_list because vsnprintf consumes it
+        va_list args_copy;
+        va_copy(args_copy, args);
 
         // Format the string
-        int64_t byte_length = std::vsnprintf(buffer_ptr, max_byte_length, format, args);
+        int64_t byte_length = std::vsnprintf(buffer_ptr, max_byte_length, format, args_copy);
 
-        // Cleanup the argument list
-        va_end(args);
+        va_end(args_copy);
 
         if (byte_length >= 0) {
             if (!append(buffer_ptr)) {
@@ -1343,6 +1351,7 @@ namespace Grain {
 
         return result;
     }
+
 
 
     /**

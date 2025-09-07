@@ -903,9 +903,15 @@ namespace Grain {
          *  @return Adjusted copy length (may be less than requested), or 0 if invalid.
          */
         template <typename T>
-        static T computeValidCopyRegion(
-                T length, T src_size, T src_offset, T dst_size, T dst_offset, T& out_src_offset, T& out_dst_offset
-                ) noexcept {
+        static T validCopyRegion(
+                T length,
+                T src_size,
+                T src_offset,
+                T dst_size,
+                T dst_offset,
+                T& out_src_offset,
+                T& out_dst_offset) noexcept
+        {
             static_assert(std::is_integral<T>::value, "T must be an integral type");
             static_assert(std::is_signed<T>::value, "T must be signed");
 
@@ -949,13 +955,17 @@ namespace Grain {
 
         template <typename T>
         static bool isValidCopyRegion(
-                T length, T src_size, T src_offset, T dst_size, T dst_offset
-        ) noexcept {
+                T length,
+                T src_size,
+                T src_offset,
+                T dst_size,
+                T dst_offset) noexcept
+        {
             static_assert(std::is_integral<T>::value, "T must be an integral type");
             static_assert(std::is_signed<T>::value, "T must be signed");
             T new_src_offset;
             T out_dst_offset;
-            return computeValidCopyRegion<T>(length, src_size, src_offset, dst_size, dst_offset, new_src_offset, out_dst_offset) > 0;
+            return validCopyRegion<T>(length, src_size, src_offset, dst_size, dst_offset, new_src_offset, out_dst_offset) > 0;
         }
 
             /**

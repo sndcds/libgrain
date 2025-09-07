@@ -18,34 +18,32 @@
 
 namespace Grain {
 
-
     class FreqBands;
     class BezierValueCurve;
     class EQ21;
 
 
     class Partials : public Object {
-
         friend class Signal;
 
     public:
-        enum {
-            kModeAmplitude = 0,
-            kModePhase
+        enum class Mode {
+            Cartesian,      ///< Values are real + imaginary
+            Polar           ///< Values are amplitude and phase
         };
 
     private:
+        Mode m_mode = Mode::Cartesian;
         int32_t m_resolution = 0;
-        float* m_amplitude_data = nullptr;
-        float* m_phase_data = nullptr;
-        size_t m_data_size = 0;
+        float* m_data_a = nullptr;
+        float* m_data_b = nullptr;
         bool m_use_extern_mem = false;
 
     public:
-        Partials(int32_t resolution) noexcept;
-        Partials(int32_t resolution, float* mem) noexcept;
-        Partials(const Partials& partials) noexcept;
-        virtual ~Partials() noexcept;
+        explicit Partials(int32_t resolution, Mode mode) noexcept;
+        explicit Partials(int32_t resolution, float* mem, Mode mode) noexcept;
+        Partials(const Partials& other) noexcept;
+        ~Partials() noexcept override;
 
         [[nodiscard]] const char* className() const noexcept override { return "Partials"; }
 
@@ -55,30 +53,33 @@ namespace Grain {
         }
 
         friend std::ostream& operator << (std::ostream& os, const Partials& o) {
-            os << "Partials:\n";
-            os << "  m_resolution: " << o.m_resolution << std::endl;
-            os << "  m_data_size: " << o.m_data_size << std::endl;
-            os << "  m_use_extern_mem: " << o.m_use_extern_mem << std::endl;
+            os << "Partials, ";
+            os << "m_mode: " << (o.m_mode == Mode::Cartesian ? "cartesian" : "polar");
+            os << ", m_resolution: " << o.m_resolution;
+            os << ", m_use_extern_mem: " << o.m_use_extern_mem << std::endl;
             return os;
         }
 
+        void updateCartesian() noexcept;
+        void updatePolar() noexcept;
 
-        static int32_t dataSize(int32_t resolution) noexcept { return resolution * 2; }
+        [[nodiscard]] bool isCartesian() const noexcept { return m_mode == Mode::Cartesian; }
+        [[nodiscard]] bool isPolar() const noexcept { return m_mode == Mode::Polar; }
+        [[nodiscard]] int32_t resolution() const noexcept { return m_resolution; }
+        [[nodiscard]] bool hasData() const noexcept { return m_data_a; }
+        [[nodiscard]] size_t memSize() const noexcept { return sizeof(float) * m_resolution * 2; }
 
-        int32_t resolution() const noexcept { return m_resolution; }
+        [[nodiscard]] float* mutRealData() const noexcept { return m_data_a; }
+        [[nodiscard]] float* mutImagData() const noexcept { return m_data_b; }
 
-        bool hasData() const noexcept { return m_amplitude_data; }
-        bool isPartial(int32_t index) const noexcept { return index >= 0 && index < m_resolution; }
-
-        void partialAtIndex(int32_t index, float& out_amplitude, float& out_phase) const noexcept;
-        float amplitudeAtIndex(int32_t index) const noexcept;
-        float amplitudeLerpAtIndex(float index) const noexcept;
-        float amplitudeAtNormalizedIndex(float t) const noexcept;
+        [[nodiscard]] bool isPartialIndex(int32_t index) const noexcept { return index >= 0 && index < m_resolution; }
+        void valueAndPhaseAtIndex(int32_t index, float& out_amplitude, float& out_phase) const noexcept;
+        [[nodiscard]] float amplitudeAtIndex(int32_t index) const noexcept;
+        [[nodiscard]] float amplitudeLerpAtIndex(float index) const noexcept;
+        [[nodiscard]] float amplitudeAtT(float t) const noexcept;
         void scaleAmplitudeAtIndex(int32_t index, float scale) noexcept;
-        float phaseAtIndex(int32_t index) const noexcept;
-        float maxAmplitude() const noexcept;
-
-        float valueAtIndex(int32_t index, int16_t mode) const noexcept;
+        [[nodiscard]] float phaseAtIndex(int32_t index) const noexcept;
+        [[nodiscard]] float maxAmplitude() const noexcept;
 
 
         void clear() noexcept;
@@ -104,10 +105,10 @@ namespace Grain {
         void setAllPhases(float value) noexcept;
 
 
-        bool set(const Partials* partials) noexcept;
-        bool mul(const Partials* partials) noexcept;
-        bool complexMultiply(const Partials* partials) noexcept;
-        bool add(const Partials* partials) noexcept;
+        bool set(const Partials* other) noexcept;
+        bool multiply(const Partials* other) noexcept;
+        bool add(const Partials* other) noexcept;
+
         bool octaveUp() noexcept;
         bool interpolate(int32_t first_index, int32_t last_index, int16_t mode) noexcept;
 
@@ -118,6 +119,49 @@ namespace Grain {
         void setByEQ21(const EQ21& eq) noexcept;
     };
 
+
+    class PartialsRing {
+    protected:
+        int32_t m_size = 0;
+        Partials::Mode m_partials_mode = Partials::Mode::Cartesian;
+        int32_t m_partials_resolution = 0;
+        Partials** m_partials_array = nullptr;
+
+    public:
+        explicit PartialsRing(int32_t size, int32_t partials_resolution, Partials::Mode partials_mode) {
+            m_partials_mode = partials_mode;
+            m_size = size;
+            m_partials_resolution = partials_resolution;
+            if (size > 0) {
+                m_partials_array = static_cast<Partials**>(std::malloc(sizeof(Partials*) * size));
+                if (m_partials_array) {
+                    for (int32_t i = 0; i < size; ++i) {
+                        m_partials_array[i] = nullptr;
+                    }
+                }
+            }
+        }
+        ~PartialsRing() {
+            if (m_partials_array) {
+                for (int i = 0; i < m_size; ++i) {
+                    if (m_partials_array[i]) {
+                        delete m_partials_array[i];
+                    }
+                }
+                std::free(m_partials_array);
+            }
+        }
+        Partials* partialsAtIndex(int32_t index) {
+            if (index < 0 || index >= m_size) {
+                return nullptr;
+            }
+
+            if (!m_partials_array[index]) {
+                m_partials_array[index] = new (std::nothrow) Partials(m_partials_resolution, m_partials_mode);
+            }
+            return m_partials_array[index];
+        }
+    };
 
 } // End of namespace Grain
 

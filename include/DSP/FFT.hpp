@@ -32,25 +32,11 @@ namespace Grain {
 
     class Partials;
 
-    typedef struct {
-        int32_t m_log_n;
-        int32_t m_n;
-        float* m_data;
-        float* m_x_buffer;
-        float* m_y_buffer;
-        float* m_realp;
-        float* m_imagp;
-        float* m_mag;
-        float *m_phase;
-#if defined(__APPLE__) && defined(__MACH__)
-        FFTSetup m_fft_setup;
-        DSPComplex* m_temp_complex;
-#endif
-    } FFTConfig;
-
-
     class FFT : public Object {
     public:
+        enum {
+            kErrPartialsMustBeCartesian
+        };
         enum {
             kLogNResolution64 = 6,
             kLogNResolution128,
@@ -69,13 +55,16 @@ namespace Grain {
 
             kLogNResolutionFirst = kLogNResolution64,
             kLogNResolutionLast = kLogNResolution524288,
-            kLogNResolutionCount = kLogNResolutionLast - kLogNResolutionFirst + 1
+            kLogNResolutionCount = kLogNResolutionLast - kLogNResolutionFirst + 1,
+
+            kMinLogN = kLogNResolutionFirst,
+            kMaxLogN = kLogNResolutionLast
         };
 
     protected:
-        #if defined(__APPLE__) && defined(__MACH__)
-            static FFTSetup g_fft_setups[kLogNResolutionCount];
-        #endif
+#if defined(__APPLE__) && defined(__MACH__)
+        static FFTSetup g_fft_setups[kLogNResolutionCount];
+#endif
 
         bool m_valid = false;
         int32_t m_log_n;
@@ -83,15 +72,15 @@ namespace Grain {
         int32_t m_half_length;
 
 #if defined(__APPLE__) && defined(__MACH__)
-        float* m_data;
-        float* m_x_buffer;
-        float* m_y_buffer;
-        float* m_real_part;
-        float* m_imag_part;
-        float* m_mag;
-        float* m_phase;
+        float *m_data;
+        float *m_x_buffer;
+        float *m_y_buffer;
+        float *m_real_part;
+        float *m_imag_part;
+        float *m_mag;
+        float *m_phase;
         FFTSetup m_fft_setup;
-        DSPComplex* m_temp_complex;
+        DSPComplex *m_temp_complex;
 #else
         fftwf_complex* m_out{};
         fftwf_plan m_plan{};
@@ -102,17 +91,19 @@ namespace Grain {
 
     public:
         explicit FFT(int32_t log_n) noexcept;
+
         ~FFT() noexcept override;
 
-        [[nodiscard]] const char* className() const noexcept override { return "FFT"; }
+        [[nodiscard]] const char *className() const noexcept override { return "FFT"; }
 
-        friend std::ostream& operator << (std::ostream& os, const FFT* o) {
+        friend std::ostream &operator<<(std::ostream &os, const FFT *o) {
             o == nullptr ? os << "FFT nullptr" : os << *o;
             return os;
         }
 
-        friend std::ostream& operator << (std::ostream& os, const FFT& o) {
-            os << "m_valid: " << o.m_valid << ", m_log_n: " << o.m_log_n << ", m_length: " << o.m_length << ", m_half_length: " << o.m_half_length << std::endl;
+        friend std::ostream &operator<<(std::ostream &os, const FFT &o) {
+            os << "m_valid: " << o.m_valid << ", m_log_n: " << o.m_log_n << ", m_length: " << o.m_length
+               << ", m_half_length: " << o.m_half_length << std::endl;
             return os;
         }
 
@@ -121,15 +112,16 @@ namespace Grain {
 #endif
 
         static bool isValidResolution(int32_t resolution) noexcept;
-        static int32_t logNFromResolution(int32_t resolution) noexcept;
-        static int32_t resolutionFromLogN(int32_t log_n) noexcept;
-
         [[nodiscard]] int32_t logN() const noexcept { return m_log_n; }
         [[nodiscard]] int32_t length() const noexcept { return m_length; }
         [[nodiscard]] int32_t partialResolution() const noexcept { return m_length / 2; }
 
-        ErrorCode fft(float* data, Partials* out_partials) noexcept;
-        ErrorCode ifft(Partials* partials, float* out_data) noexcept;
+        ErrorCode fft(float *data, Partials *out_partials) noexcept;
+        ErrorCode ifft(Partials *partials, float *out_data) noexcept;
+
+        [[nodiscard]] static int32_t logNFromResolution(int32_t resolution) noexcept;
+        [[nodiscard]] static int32_t resolutionFromLogN(int32_t log_n) noexcept;
+        [[nodiscard]] static int32_t nextPow2Int32(int32_t v) noexcept;
     };
 
 
@@ -208,6 +200,7 @@ namespace Grain {
         void filter() noexcept;
 
         [[nodiscard]] int32_t fftLength() const noexcept { return m_fft_length; }
+        [[nodiscard]] int32_t stepLength() const noexcept { return m_step_length; }
         [[nodiscard]] int32_t signalLength() const noexcept { return m_signal_length; }
         [[nodiscard]] int32_t filterLength() const noexcept { return m_filter_length; }
         [[nodiscard]] int32_t overlapLength() const noexcept { return m_overlap_length; }

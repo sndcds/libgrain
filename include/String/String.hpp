@@ -248,6 +248,7 @@ namespace Grain {
         ErrorCode readFromFile(const String& file_path) noexcept;
 
         ErrorCode appendFormatted(int64_t max_byte_length, const char* format, ...) noexcept;
+        ErrorCode appendFormattedV(int64_t max_byte_length, const char* format, va_list args) noexcept;
         bool appendBool(bool v) noexcept;
         bool appendBoolTrueFalse(bool v) noexcept;
         bool appendBoolYesNo(bool v) noexcept;

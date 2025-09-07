@@ -312,7 +312,7 @@ namespace Grain {
         [[nodiscard]] DataType dataType() const noexcept { return m_data_type; }
         [[nodiscard]] int32_t sampleRate() const noexcept { return m_sample_rate; }
         [[nodiscard]] int32_t channelCount() const noexcept { return m_channel_count; }
-        [[nodiscard]] int64_t length() const noexcept { return m_sample_count; }
+        [[nodiscard]] int64_t sampleCount() const noexcept { return m_sample_count; }
         [[nodiscard]] int64_t lastSampleIndex() const noexcept { return m_last_sample_index; }
         [[nodiscard]] int64_t allChannelSampleCount() const noexcept { return m_sample_count * m_channel_count; }
         [[nodiscard]] int32_t bitsPerSample() const noexcept { return m_bits_per_sample; }
@@ -572,11 +572,21 @@ namespace Grain {
 
         void releaseFilterFFTResources();
 
-        ErrorCode convolveChannel(int32_t a_channel, int64_t a_offset, int64_t a_length, const Signal* b_signal, int32_t b_channel, int64_t b_offset, int64_t b_length, Signal* result_signal, int32_t result_channel) const noexcept;
+        ErrorCode convolveChannel(
+                int32_t input_channel, int64_t input_offset, int64_t input_length,
+                const Signal* kernel_signal, int32_t kernel_channel, int64_t kernel_offset, int64_t kernel_length,
+                Signal* output_signal, int32_t output_channel) const noexcept;
 
         ErrorCode convolve(int64_t a_length, const Signal* b_signal, Signal* result_signal) const noexcept {
             return convolveChannel(0, 0, a_length, b_signal, 0, 0, -1, result_signal, 0);
         }
+
+        ErrorCode convolveChannel(
+                int32_t channel, int64_t offset, int64_t length,
+                const Signal* ir, int32_t ir_channel, int64_t ir_offset, int64_t ir_length,
+                Signal* result_signal, int32_t result_channel,
+                int32_t partition_log_n
+        ) const noexcept;
 
         // Generate
         void addWhiteNoise(int64_t offset, int64_t length, float amount = 1.0f, float threshold = 1.0f) const noexcept;

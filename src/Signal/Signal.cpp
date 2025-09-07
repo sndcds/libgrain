@@ -17,6 +17,7 @@
 #include "DSP/DSP.hpp"
 #include "Math/Random.hpp"
 #include "DSP/RingBuffer.hpp"
+#include "Core/Log.hpp"
 
 #include <sndfile.h>
 
@@ -72,7 +73,7 @@ namespace Grain {
         }
 
         // TODO: Implement custom, context specific divisor instead of using hard coded 4096.
-        new_length = signal->length() / 4096;
+        new_length = signal->sampleCount() / 4096;
         if (new_length < 1) {
             return;
         }
@@ -87,7 +88,7 @@ namespace Grain {
 
         m_length = new_length;
         int32_t sample_rate = signal->sampleRate();
-        int64_t sample_count = signal->length();
+        int64_t sample_count = signal->sampleCount();
 
         auto min_step = static_cast<int64_t>(std::round(static_cast<double>(m_length) / 500 * sample_rate / 44100));
         auto ms = static_cast<int64_t>(std::round(15.0 * sample_rate / 44100));
@@ -1255,13 +1256,17 @@ namespace Grain {
         if (m_weights_mode && m_weights) {
             Type::clearArray<float>(m_weights, std::min(n, m_sample_count));
         }
-
         m_weighted_start = std::numeric_limits<int64_t>::max();
         m_weighted_end = std::numeric_limits<int64_t>::min();
     }
 
 
-    bool Signal::addWeightedSample(int32_t channel, const HiResValue& sample_pos, float value) noexcept {
+    bool Signal::addWeightedSample(
+            int32_t channel,
+            const HiResValue& sample_pos,
+            float value
+    ) noexcept
+    {
         if (m_data_type != DataType::Float || !m_weights || !m_weights_mode) {
             return false;
         }
@@ -1366,7 +1371,13 @@ namespace Grain {
     }
 
 
-    int64_t Signal::copyAll(const Signal* src, int32_t src_channel, int64_t dst_offset, uint32_t dst_channel_mask) noexcept {
+    int64_t Signal::copyAll(
+            const Signal* src,
+            int32_t src_channel,
+            int64_t dst_offset,
+            uint32_t dst_channel_mask
+    ) noexcept
+    {
         if (!src) {
             return 0;
         }
@@ -1387,13 +1398,19 @@ namespace Grain {
 
 
     int64_t Signal::copySamples(const Signal* src) noexcept {
-        return src != nullptr ? copySamples(src, src->length(), 0, 0) : 0;
+        return src != nullptr ? copySamples(src, src->sampleCount(), 0, 0) : 0;
     }
 
 
-    int64_t Signal::copySamples(const Signal* src, int64_t length, int64_t src_offset, int64_t dst_offset) noexcept {
-        int64_t sn = 0;  // Number of copied samples
-        int64_t cn = 0;  // Number of copied channels
+    int64_t Signal::copySamples(
+            const Signal* src,
+            int64_t length,
+            int64_t src_offset,
+            int64_t dst_offset
+    ) noexcept
+    {
+        int64_t sn = 0; // Number of copied samples
+        int64_t cn = 0; // Number of copied channels
 
         Signal* dst_signal = this;
         if (src->m_channel_count == dst_signal->m_channel_count) {
@@ -1428,7 +1445,8 @@ namespace Grain {
             int32_t src_channel,
             int64_t src_offset,
             int32_t dst_channel,
-            int64_t dst_offset) noexcept
+            int64_t dst_offset
+    ) noexcept
     {
         if (!src || length < 1) {
             return 0;
@@ -1444,7 +1462,7 @@ namespace Grain {
 
         // Check boundaries and get indices
         int64_t copy_src_offset, copy_dst_offset;
-        auto n = Type::computeValidCopyRegion<int64_t>(length, src->m_sample_count, src_offset, m_sample_count, dst_offset, copy_src_offset, copy_dst_offset);
+        auto n = Type::validCopyRegion<int64_t>(length, src->m_sample_count, src_offset, m_sample_count, dst_offset, copy_src_offset, copy_dst_offset);
         if (n < 1) {
             return 0;
         }
@@ -1616,7 +1634,13 @@ namespace Grain {
     }
 
 
-    int64_t Signal::copyChannel(int32_t src_channel, int32_t dst_channel, int64_t offset, int64_t length) noexcept {
+    int64_t Signal::copyChannel(
+            int32_t src_channel,
+            int32_t dst_channel,
+            int64_t offset,
+            int64_t length
+    ) noexcept
+    {
         if (src_channel != dst_channel) {
             return copySamples(this, length, src_channel, offset, dst_channel, offset);
         }
@@ -1627,77 +1651,77 @@ namespace Grain {
 
 
     /**
-     *  @brief Read samples from Signal.
+     *  @brief Read `length` samples starting from `offset` into `out_samples`.
+     *         Pads with zeros if the requested range lies partially or completely
+     *         outside the signal.
+     *
+     *  @param channel Channel index.
+     *  @param offset Starting sample index (can be < 0 or > signal length).
+     *  @param length Number of samples to read.
+     *  @param out_samples Output buffer (must have space for `length` floats).
+     *  @return Number of *valid* samples actually read from the signal.
      */
     int64_t Signal::readSamplesAsFloatWithZeroPadding(
             int32_t channel,
             int64_t offset,
             int64_t length,
-            float* out_samples) const noexcept
+            float* out_samples
+    ) const noexcept
     {
         if (!out_samples || !hasChannelAndData(channel)) {
             return 0;
         }
 
-        int64_t requested_offset = offset;
-        int64_t requested_length = length;
-        int64_t n = clampOffsetAndLength(offset, length);
+        int64_t s_index, d_index;
+        auto n = Type::validCopyRegion<int64_t>(length, m_sample_count, offset, length, 0, s_index, d_index);
 
-        if (n < 1) {
-            // Fill with zeros if neccessary
-            Type::clearArray<float>(out_samples, length);
-            return 0;
-        }
-
-        int64_t d_index = offset - requested_offset;
-        if (d_index >= requested_length) {
-            // Fill with zeros if neccessary
-            Type::clearArray<float>(out_samples, length);
-            return 0;
-        }
-
-        if (d_index > 0) {
-            // Fill head with zeros if neccessary
-            Type::clearArray<float>(out_samples, d_index);
-        }
-
-        int64_t s_step = sampleStep();
-        float *d = &out_samples[d_index];
-        int64_t i = n;  // Counter for while loop
-
-        if (m_data_type == DataType::Float) {
-            auto s = reinterpret_cast<const float*>(dataPtr(channel, offset));
-            while (i--) {
-                *d++ = *s;
-                s += s_step;
+        if (n > 0) {
+            int64_t s_end_index = s_index + n;
+            if (d_index > 0) {
+                Type::clearArray<float>(out_samples, d_index);
             }
-        }
-        else if (m_data_type == DataType::Int8) {
-            auto s = reinterpret_cast<const int8_t*>(dataPtr(channel, offset));
-            while (i--) {
-                *d++ = static_cast<float>(*s) / std::numeric_limits<int8_t>::max();
-                s += s_step;
-            }
-        }
-        else if (m_data_type == DataType::Int16) {
-            auto s = reinterpret_cast<const int16_t*>(dataPtr(channel, offset));
-            while (i--) {
-                *d++ = static_cast<float>(*s) / std::numeric_limits<int16_t>::max();
-                s += s_step;
-            }
-        }
-        else if (m_data_type == DataType::Int32) {
-            auto s = reinterpret_cast<const int32_t*>(dataPtr(channel, offset));
-            float scale = 1.0f / static_cast<float>(std::numeric_limits<int32_t>::max());
-            while (i--) {
-                *d++ = static_cast<float>(*s) * scale;
-                s += s_step;
-            }
-        }
 
-        if (d_index + n < requested_length) {
-            int64_t tail_n = requested_length - (d_index + n);
-            Type::clearArray<float>(&out_samples[requested_length - tail_n], tail_n);  // Fill tail with zeros if neccessary
+            float* d = &out_samples[d_index];
+            int64_t s_step = sampleStep();
+            int64_t i = n;
+
+            if (m_data_type == DataType::Float) {
+                auto s = reinterpret_cast<const float*>(dataPtr(channel, s_index));
+                while (i--) {
+                    *d++ = *s;
+                    s += s_step;
+                }
+            }
+            else if (m_data_type == DataType::Int8) {
+                auto s = reinterpret_cast<const int8_t*>(dataPtr(channel, s_index));
+                while (i--) {
+                    *d++ = static_cast<float>(*s) / std::numeric_limits<int8_t>::max();
+                    s += s_step;
+                }
+            }
+            else if (m_data_type == DataType::Int16) {
+                auto s = reinterpret_cast<const int16_t*>(dataPtr(channel, s_index));
+                while (i--) {
+                    *d++ = static_cast<float>(*s) / std::numeric_limits<int16_t>::max();
+                    s += s_step;
+                }
+            }
+            else if (m_data_type == DataType::Int32) {
+                auto s = reinterpret_cast<const int32_t*>(dataPtr(channel, s_index));
+                float scale = 1.0f / static_cast<float>(std::numeric_limits<int32_t>::max());
+                while (i--) {
+                    *d++ = static_cast<float>(*s) * scale;
+                    s += s_step;
+                }
+            }
+
+            // Tail zero fill
+            int64_t d_end_index = d_index + n;
+            int64_t tail_n = std::max<int64_t>(0, length - d_end_index);
+            if (d_index + n > 0) {
+                int64_t tail_offset = s_index - offset;
+                Type::clearArray<float>(out_samples + tail_offset, tail_n);
+            }
         }
 
         return n;
@@ -1709,70 +1733,66 @@ namespace Grain {
             int64_t offset,
             int64_t length,
             DataType data_type,
-            void* out_samples) noexcept
+            void* out_samples
+    ) noexcept
     {
-        int64_t n = 0;
-
-        try {
-            if (!out_samples) {
-                throw ErrorCode::NullData;
-            }
-
-            if (!hasChannelAndData(channel)) {
-                throw ErrorCode::InvalidChannel;
-            }
-
-            if (clampOffsetAndLength(offset, length) < 1) {
-                return 0;
-            }
-
-            n = length;
-
-            int64_t s_step = sampleStep();
-
-            if (m_data_type == DataType::Float) {
-                auto s =  reinterpret_cast<const float*>(dataPtr(channel, offset));
-                int64_t i = length;
-
-                if (data_type == DataType::Int8) {
-                    auto d = reinterpret_cast<int8_t*>(out_samples);
-                    while (i--) {
-                        *d++ = static_cast<int8_t>(*s * 0x7F);
-                        s += s_step;
-                    }
-                }
-                else if (data_type == DataType::Int16) {
-                    auto d = reinterpret_cast<int16_t*>(out_samples);
-                    while (i--) {
-                        *d++ = static_cast<int16_t>(*s * 0x7FFF);
-                        s += s_step;
-                    }
-                }
-                else if (data_type == DataType::Int32) {
-                    auto d = reinterpret_cast<int32_t*>(out_samples);
-                    auto scale = static_cast<float>(std::numeric_limits<int32_t>::max());
-                    while (i--) {
-                        *d++ = static_cast<int32_t>(*s * scale);
-                        s += s_step;
-                    }
-                }
-                else if (data_type == DataType::Float) {
-                    auto d = reinterpret_cast<float*>(out_samples);
-                    while (i--) {
-                        *d++ = *s;
-                        s += s_step;
-                    }
-                }
-                else {
-                    throw ErrorCode::UnsupportedDataType;
-                }
-            }
-        }
-        catch (ErrorCode err) {
-            n = 0;  // TODO: Eventually return a negative error code?
+        if (!out_samples || !hasChannelAndData(channel)) {
+            return -1;
         }
 
-        return n;
+        int64_t s_offset, d_offset;
+        auto n = Type::validCopyRegion<int64_t>(length, m_sample_count, offset, length, 0, s_offset, d_offset);
+
+
+        int64_t valid_start_index = offset;
+        int64_t valid_n = length;
+        if (clampOffsetAndLength(valid_start_index, valid_n) < 1) {
+            return 0;
+        }
+
+        int64_t valid_end_index = valid_start_index + valid_n;
+
+        int64_t s_step = sampleStep();
+
+        if (m_data_type == DataType::Float) {
+            auto s =  reinterpret_cast<const float*>(dataPtr(channel, valid_start_index));
+            int64_t i = valid_n;
+
+            if (data_type == DataType::Int8) {
+                auto d = reinterpret_cast<int8_t*>(out_samples);
+                while (i--) {
+                    *d++ = static_cast<int8_t>(*s * 0x7F);
+                    s += s_step;
+                }
+            }
+            else if (data_type == DataType::Int16) {
+                auto d = reinterpret_cast<int16_t*>(out_samples);
+                while (i--) {
+                    *d++ = static_cast<int16_t>(*s * 0x7FFF);
+                    s += s_step;
+                }
+            }
+            else if (data_type == DataType::Int32) {
+                auto d = reinterpret_cast<int32_t*>(out_samples);
+                auto scale = static_cast<float>(std::numeric_limits<int32_t>::max());
+                while (i--) {
+                    *d++ = static_cast<int32_t>(*s * scale);
+                    s += s_step;
+                }
+            }
+            else if (data_type == DataType::Float) {
+                auto d = reinterpret_cast<float*>(out_samples);
+                while (i--) {
+                    *d++ = *s;
+                    s += s_step;
+                }
+            }
+            else {
+                return -2;
+            }
+        }
+
+        return valid_n;
     }
 
 
@@ -1781,26 +1801,27 @@ namespace Grain {
             int64_t offset,
             int64_t length,
             const float* samples,
-            CombineMode combine_mode) noexcept
+            CombineMode combine_mode
+    ) noexcept
     {
         if (!samples || !hasChannelAndData(channel) || !isFloatType()) {
             return 0;
         }
 
-        int64_t requested_offset = offset;
-        int64_t n = clampOffsetAndLength(offset, length);
-        if (n < 1) {
+        int64_t valid_start_index = offset;
+        int64_t valid_n = length;
+        if (clampOffsetAndLength(valid_start_index, valid_n) < 1) {
             return 0;
         }
+        int64_t valid_end_index = valid_start_index + valid_n;
 
-        int64_t s_index = offset - requested_offset;
-
-        auto s = &samples[s_index];
+        int64_t samples_offset = valid_start_index - offset;
+        auto s = &samples[samples_offset];
         int64_t d_step = sampleStep();
-        int64_t i = n;
+        int64_t i = valid_n;
 
         if (m_data_type == DataType::Float) {
-            auto d = reinterpret_cast<float*>(mutDataPtr(channel, offset));
+            auto d = reinterpret_cast<float*>(mutDataPtr(channel, valid_start_index));
             if (combine_mode == CombineMode::Replace) {
                 while (i--) {
                     *d = *s++;
@@ -1827,7 +1848,7 @@ namespace Grain {
             }
         }
 
-        return n;
+        return valid_n;
     }
 
 
@@ -1839,7 +1860,8 @@ namespace Grain {
             int32_t dst_channel,
             int64_t dst_offset,
             CombineMode combine_mode,
-            float amount) noexcept
+            float amount
+    ) noexcept
     {
         if (!src || length < 1) {
             return 0;
@@ -1855,17 +1877,13 @@ namespace Grain {
 
         // Check boundaries and get offsets and number of samples to copy
         int64_t copy_src_offset, copy_dst_offset;
-        auto n = Type::computeValidCopyRegion<int64_t>(length, src->m_sample_count, src_offset, m_sample_count, dst_offset, copy_src_offset, copy_dst_offset);
+        auto n = Type::validCopyRegion<int64_t>(length, src->m_sample_count, src_offset, m_sample_count, dst_offset, copy_src_offset, copy_dst_offset);
 
         if (n < 1) {
             return 0;
         }
 
         if ((copy_src_offset + n) > src->m_sample_count || (copy_dst_offset + n) > m_sample_count) {
-            std::cerr << "Fatal error in Grain::Signal::combineSamples()\n";
-            std::cerr << std::format("   n = {}, copySrcOffset = {}, copyDesOffset = {}\n", n, copy_src_offset, copy_dst_offset);
-            std::cerr << std::format("   src = {} + {} > {}\n", copy_src_offset, n, src->m_sample_count);
-            std::cerr << std::format("   des = {} + {} > {}\n", copy_dst_offset, n, m_sample_count);
             return 0;
         }
 
@@ -2019,7 +2037,8 @@ namespace Grain {
             int64_t src_offset,
             int64_t dst_offset,
             CombineMode combine_mode,
-            float amount) noexcept
+            float amount
+    ) noexcept
     {
         int64_t n = 0;
 
@@ -2782,7 +2801,7 @@ namespace Grain {
         m_fft_buffer[1] = &m_computation_mem[fft_length];
         m_window_buffer = &m_computation_mem[2 * fft_length];
 
-        m_partials = new (std::nothrow) Partials(fft_length / 2);
+        m_partials = new (std::nothrow) Partials(fft_length / 2, Partials::Mode::Cartesian);
         if (!m_partials) {
             Exception::throwMessage(ErrorCode::ClassInstantiationFailed, "Failed to instantiate Partials object for FFT");
         }
@@ -2876,7 +2895,7 @@ namespace Grain {
 
                 // fft -> partial_filter -> ifft
                 m_fft->fft(my_fft_buffer, m_partials);
-                m_partials->mul(partials);
+                m_partials->multiply(partials);
                 auto err = m_fft->ifft(m_partials, my_fft_buffer);
                 if (err != ErrorCode::None) {
                     return err;
@@ -2932,110 +2951,357 @@ namespace Grain {
             Signal* result_signal,
             int32_t result_channel) const noexcept
     {
-        // TODO: possible optimization
-        // vDSP_conv(Signal, SignalStride, Filter, FilterStride, Result, ResultStride, ResultLength, FilterLength);
+        if (!b_signal || !result_signal) return ErrorCode::NullData;
+        if (b_signal == this) return ErrorCode::BuffersMustBeDifferent;
 
-        if (!b_signal || !result_signal) {
-            return ErrorCode::NullData;
+        if (!hasChannelAndData(a_channel) || !b_signal->hasChannelAndData(b_channel) ||
+            !result_signal->hasChannel(result_channel)) return ErrorCode::InvalidChannel;
+
+        if (a_length < 0) a_length = sampleCount();
+        if (b_length < 0) b_length = b_signal->sampleCount();
+
+        clampOffsetAndLength(a_offset, a_length);
+        b_signal->clampOffsetAndLength(b_offset, b_length);
+
+        int64_t result_length = a_length + b_length - 1;
+        if (result_signal->growIfNeeded(result_length) != ErrorCode::None)
+            return ErrorCode::MemCantGrow;
+
+        result_signal->clearChannel(result_channel, 0, result_length);
+
+        // --- Set up FFT parameters ---
+        int32_t log_n = FFT::kLogNResolution16384; // pick suitable
+        auto fft = new (std::nothrow) FFT(log_n);
+
+        int32_t step_length = 1 << log_n;
+        int32_t overlap_length = step_length;
+        int32_t signal_block_length = step_length + overlap_length;
+
+        auto signal_block = static_cast<float*>(malloc(sizeof(float) * signal_block_length));
+        auto filter_block = static_cast<float*>(malloc(sizeof(float) * step_length));
+        auto filter_partials = new (std::nothrow) Partials(step_length, Partials::Mode::Cartesian);
+        auto signal_partials = new (std::nothrow) Partials(signal_block_length, Partials::Mode::Cartesian);
+        auto result_partials = new (std::nothrow) Partials(signal_block_length, Partials::Mode::Cartesian);
+
+        int64_t f_offset = 0;
+
+        while (f_offset < b_length) {
+            int64_t n_filter = std::min<int64_t>(step_length, b_length - f_offset);
+            b_signal->readSamplesAsFloatWithZeroPadding(b_channel, b_offset + f_offset, n_filter, filter_block);
+
+            // FFT filter
+            fft->fft(filter_block, filter_partials);
+
+            int64_t s_offset = 0;
+            while (s_offset < a_length) {
+                int64_t n_signal = std::min<int64_t>(signal_block_length, a_length - s_offset + overlap_length);
+                readSamplesAsFloatWithZeroPadding(a_channel, a_offset + s_offset - overlap_length, n_signal, signal_block);
+
+                // FFT signal
+                fft->fft(signal_block, signal_partials);
+
+                // Multiply spectra
+                result_partials = signal_partials; // copy amplitudes/phases
+                result_partials->multiply(filter_partials);
+
+                // IFFT back to time-domain
+                fft->ifft(result_partials, signal_block);
+
+                // Overlap-add into result
+                int64_t write_offset = s_offset + f_offset;
+                int64_t n_write = std::min<int64_t>(signal_block_length, result_length - write_offset);
+                for (int64_t i = 0; i < n_write; ++i) {
+                    result_signal->addSample(result_channel, write_offset + i, signal_block[i]);
+                }
+
+                s_offset += step_length;
+            }
+
+            f_offset += step_length;
         }
 
-        if (b_signal == this) {
+        std::cout << ".........................\n";
+
+        return ErrorCode::None;
+    }
+
+
+    /**
+     *  @brief Partitioned convolution:
+     *
+     *  L: partition length (block of new input processed each iteration)
+     *  N: fft length = next_pow2(2 * L)  (so N/2 == L when L is power-of-two)
+     *  P: number of filter partitions = ceil(filter_length / L)
+     *
+     *  Algorithm:
+     *  for each input block x_k (length L):
+     *    X_k = FFT(zero_pad(x_k, N))
+     *    store X_k in ring buffer input_fft[head]
+     *    Y = sum_{j=0..P-1} H_j * input_fft[(head - j) mod P]
+     *    y = IFFT(Y)   // length N
+     *    output samples = y[0..L-1] + overlap[0..L-1]
+     *    overlap[:] = y[L..N-1]  // keep for next block
+     */
+    ErrorCode Signal::convolveChannel(
+            int32_t channel,
+            int64_t offset,
+            int64_t length,
+            const Signal* ir,
+            int32_t ir_channel,
+            int64_t ir_offset,
+            int64_t ir_length,
+            Signal* result_signal,
+            int32_t result_channel,
+            int32_t partition_log_n
+    ) const noexcept
+    {
+        Log l;
+
+        l << "Signal::convolveChannel():" << Log::endl;
+        l++;
+        l << "signal channel " << channel << ", offset: " << offset << ", length: " << length << Log::endl;
+        l << "ir channel " << ir_channel << ", offset: " << ir_offset << ", length: " << ir_length << Log::endl;
+        l << "result channel " << result_channel << Log::endl;
+        l << "partition_log_n " << partition_log_n << Log::endl;
+
+        if (partition_log_n < FFT::kMinLogN || partition_log_n > FFT::kMaxLogN) {
+            return ErrorCode::BadArgs;
+        }
+
+        if (!ir || !result_signal) {
+            return ErrorCode::NullPointer;
+        }
+
+        if (ir == this) {
             return ErrorCode::BuffersMustBeDifferent;
         }
 
-        // Check channels
-        if (!hasChannelAndData(a_channel) ||
-            !b_signal->hasChannelAndData(b_channel) ||
+        if (!hasChannelAndData(channel) ||
+            !ir->hasChannelAndData(ir_channel) ||
             !result_signal->hasChannel(result_channel)) {
             return ErrorCode::InvalidChannel;
         }
 
-        if (a_length < 0) {
-            a_length = length();
+        if (length < 0) {
+            length = m_sample_count;
         }
+        clampOffsetAndLength(offset, length);
+        l << "clamped offset: " << offset << ", length: " << length << Log::endl;
 
-        clampOffsetAndLength(a_offset, a_length);
-
-        if (b_length < 0) {
-            b_length = b_signal->length();
+        if (ir_length < 0) {
+            ir_length = ir->sampleCount();
         }
-        b_signal->clampOffsetAndLength(b_offset, b_length);
+        ir->clampOffsetAndLength(ir_offset, ir_length);
+        l << "clamped ir_offset: " << ir_offset << ", ir_length: " << ir_length << Log::endl;
 
-        int64_t result_length = a_length + b_length - 1;
+        const int32_t partition_size = FFT::resolutionFromLogN(partition_log_n);
+        l << "partition_size: " << partition_size << Log::endl;
+        auto partition_n = static_cast<int32_t>((ir_length + partition_size - 1) / partition_size);
+        if (partition_n < 1) {
+            partition_n = 1;
+        }
+        l << "partition_n: " << partition_n << Log::endl;
 
-        ErrorCode err = result_signal->growIfNeeded(result_length);
-        if (err != ErrorCode::None) {
+        const int32_t fft_size = FFT::nextPow2Int32(2 * partition_size);
+        const int32_t fft_log_n = FFT::logNFromResolution(fft_size);
+        l << "fft_size: " << fft_size << Log::endl;
+        l << "fft_log_n: " << fft_log_n << Log::endl;
+
+        int64_t result_length = length + ir_length - 1;
+        l << "result_length: " << result_length << Log::endl;
+        if (result_signal->growIfNeeded(result_length) != ErrorCode::None) {
             return ErrorCode::MemCantGrow;
         }
+        result_signal->clearChannel(result_channel);
 
-        std::cout << "signal:\n" << this << std::endl;
-        std::cout << "b_signal:\n" << b_signal << std::endl;
-        std::cout << "result_signal:\n" << result_signal << std::endl;
-        result_signal->clearChannel(result_channel, 0, result_length);
+        FFT* fft = nullptr;
+        float* t_in_buffer = nullptr;
+        float* t_out_buffer = nullptr;
+        float* overlap_buffer = nullptr;
+        PartialsRing* ir_partials_ring = nullptr;
+        PartialsRing* x_ring = nullptr;
+        Partials* y_partials = nullptr;
+        Partials* temp_partials = nullptr;
+        float* write_buffer = nullptr;
 
-        std::cout << "... 1\n";
-        int64_t f_offs = 0;
-        int64_t f_rest = b_length;
-
-        auto fft_fir = new (std::nothrow) FFT_FIR(FFT::kLogNResolution16384);
-        std::cout << "... 2\n";
-        if (!fft_fir) {
-            return ErrorCode::ClassInstantiationFailed;
-        }
-        if (!fft_fir->isValid()) {
-            return ErrorCode::Fatal;
-        }
-
-        std::cout << "... 3\n";
-        int32_t filter_width = fft_fir->filterLength();
-        int32_t overlap_width = fft_fir->overlapLength();
-        int32_t signal_width = fft_fir->signalLength();
-        std::cout << "... filter_width: " << filter_width << std::endl;
-        std::cout << "... overlap_width: " << overlap_width << std::endl;
-        std::cout << "... signal_width: " << signal_width << std::endl;
-
-        float *filter_samples = fft_fir->filterSamplesPtr();
-        float *signal_samples = fft_fir->signalSamplesPtr();
-        float *convolved_samples = fft_fir->convolvedSamplesPtr();
-
-        std::cout << "... filter_samples: " << (long)filter_samples << std::endl;
-        std::cout << "... signal_samples: " << (long)signal_samples << std::endl;
-        std::cout << "... convolved_samples: " << (long)convolved_samples << std::endl;
-
-        while (f_rest > 0) {
-            std::cout << "... f_rest: " << f_rest << std::endl;
-            b_signal->readSamplesAsFloatWithZeroPadding(b_channel, f_offs, filter_width, filter_samples);
-            std::cout << "... fft_fir->setFilter()" << std::endl;
-            fft_fir->setFilter();
-
-            int32_t o_offs = -overlap_width;
-            int32_t o_rest = static_cast<int32_t>(a_length) + overlap_width;
-
-            while (o_rest > 0) {
-                std::cout << "... o_rest: " << o_rest << std::endl;
-                int64_t n = a_length - o_offs;
-                n = Type::maxOf<int64_t>(n, signal_width);
-                readSamplesAsFloatWithZeroPadding(a_channel, o_offs, n, signal_samples);
-                std::cout << "... 5 n: " << n << std::endl;
-                if (n < signal_width) {
-                    Type::clearArray<float>(&signal_samples[n], signal_width - n);
-                }
-
-                std::cout << "... fft_fir->filter()" << std::endl;
-                fft_fir->filter();
-
-                std::cout << "... 5 n: " << n << std::endl;
-                result_signal->writeSamples(result_channel, o_offs + overlap_width + f_offs, filter_width, &convolved_samples[overlap_width], CombineMode::Add);
-
-                o_offs += filter_width;
-                o_rest -= filter_width;
+        try {
+            fft = new (std::nothrow) FFT(fft_log_n);
+            if (!fft) {
+                Exception::throwStandard(ErrorCode::ClassInstantiationFailed);
             }
 
-            f_offs += filter_width;
-            f_rest -= filter_width;
+            // Allocate separated input/output temp buffers (clear & easier to reason about)
+            t_in_buffer  = static_cast<float*>(std::calloc(fft_size, sizeof(float)));
+            t_out_buffer = static_cast<float*>(std::calloc(fft_size, sizeof(float)));
+            if (!t_in_buffer || !t_out_buffer) {
+                Exception::throwStandard(ErrorCode::MemCantAllocate);
+            }
+
+            const int32_t partial_res = fft->partialResolution();
+            l << "partial_res: " << partial_res << Log::endl;
+
+            // Prepare IR Partials
+            ir_partials_ring = new (std::nothrow) PartialsRing(partition_n, partial_res, Partials::Mode::Cartesian);
+            if (!ir_partials_ring) {
+                Exception::throwStandard(ErrorCode::MemCantAllocate);
+            }
+
+            for (int32_t i = 0; i < partition_n; i++) {
+                auto partials = ir_partials_ring->partialsAtIndex(i);
+                if (!partials) {
+                    Exception::throwStandard(ErrorCode::MemCantAllocate);
+                }
+
+                int64_t src_off = static_cast<int64_t>(i) * partition_size;
+                ir->readSamplesAsFloatWithZeroPadding(ir_channel, ir_offset + src_off, partition_size, t_in_buffer);
+
+                auto err = fft->fft(t_in_buffer, partials);
+                Exception::throwStandard(err);
+            }
+
+            // Ring buffer
+            x_ring = new (std::nothrow) PartialsRing(partition_n, partial_res, Partials::Mode::Cartesian);
+            if (!x_ring) {
+                Exception::throwStandard(ErrorCode::MemCantAllocate);
+            }
+
+            for (int32_t i = 0; i < partition_n; i++) {
+                auto partials = x_ring->partialsAtIndex(i);
+                if (!partials) {
+                    Exception::throwStandard(ErrorCode::MemCantAllocate);
+                }
+                partials->clear();
+            }
+
+            int32_t ring_head = 0; // Points to newest input partial
+
+            // Accumulator partials: Y = sum H_j * X_{k-j}
+            y_partials = new (std::nothrow) Partials(partial_res, Partials::Mode::Cartesian);
+            if (!y_partials) {
+                Exception::throwStandard(ErrorCode::MemCantAllocate);
+            }
+            y_partials->clear();
+
+            // Overlap buffer
+            const int32_t overlap_len = fft_size - partition_size;
+            if (overlap_len > 0) {
+                overlap_buffer = static_cast<float*>(std::calloc(overlap_len, sizeof(float)));
+                if (!overlap_buffer) {
+                    Exception::throwStandard(ErrorCode::MemCantAllocate);
+                }
+            }
+            else {
+                overlap_buffer = nullptr; // zero overlap
+            }
+
+            // Process input in blocks of size L
+            int64_t processed = 0;
+            int64_t write_pos = 0; // Where to write in result
+
+            write_buffer = static_cast<float*>(std::malloc(sizeof(float) * partition_size));
+            if (!write_buffer) {
+                Exception::throwStandard(ErrorCode::MemCantAllocate);
+            }
+
+
+            temp_partials = new (std::nothrow) Partials(partial_res, Partials::Mode::Cartesian);
+            if (!temp_partials) {
+                Exception::throwStandard(ErrorCode::MemCantAllocate);
+            }
+
+            int32_t loop_index = 0;
+            while (processed < length) {
+                // number of input samples to read this iteration (<= L)
+                const int64_t read_n = std::min<int64_t>(partition_size, length - processed);
+
+                // Zero input buffer then fill first read_n samples
+                std::memset(t_in_buffer, 0, sizeof(float) * fft_size);
+                readSamplesAsFloatWithZeroPadding(channel, offset + processed, read_n, t_in_buffer);
+
+                // Compute X_k (FFT of the current input block) and store in ring at ring_head
+                Partials* Xk = x_ring->partialsAtIndex(ring_head);
+                if (!Xk) {
+                    Exception::throwStandard(ErrorCode::Fatal);
+                }
+                Xk->clear();
+                auto err = fft->fft(t_in_buffer, Xk);
+                Exception::throwStandard(err);
+
+                // Compute Y_p = sum_{j=0..P-1} H_j * X_{k-j}
+                y_partials->clear();
+                for (int j = 0; j < partition_n; ++j) {
+                    int idx = ring_head - j;
+                    if (idx < 0) {
+                        idx += partition_n;
+                    }
+                    Partials* Xsrc = x_ring->partialsAtIndex(idx);
+                    Partials* Hj = ir_partials_ring->partialsAtIndex(j);
+                    if (!Xsrc || !Hj) {
+                        Exception::throwStandard(ErrorCode::Fatal);
+                    }
+
+                    temp_partials->set(Xsrc);
+
+                    // temp_partials *= Hj  (complex multiply in cartesian)
+                    if (!temp_partials->multiply(Hj)) {
+                        Exception::throwSpecific(2);
+                    }
+
+                    // accumulate
+                    if (!y_partials->add(temp_partials)) {
+                        Exception::throwSpecific(3);
+                    }
+                }
+
+                // IFFT Y_p -> t_out_buf
+                Exception::throwStandard(fft->ifft(y_partials, t_out_buffer));
+
+                // Compose output: first L samples plus overlap[0..L-1]
+                const int64_t remaining = result_length - write_pos;
+                const int64_t out_len = std::min<int64_t>(partition_size, remaining);
+
+                for (int64_t i = 0; i < out_len; ++i) {
+                    float s = t_out_buffer[i];
+                    if (overlap_len > 0 && i < overlap_len) s += overlap_buffer[i];
+                    write_buffer[i] = s;
+                }
+
+                // Write into result buffer (combine/add)
+                result_signal->writeSamples(result_channel, write_pos, out_len, write_buffer, CombineMode::Add);
+
+                // Update overlap = t_out_buf[L .. N-1]  (length = N - L)
+                if (overlap_len > 0) {
+                    std::memcpy(overlap_buffer, &t_out_buffer[partition_size], sizeof(float) * overlap_len);
+                }
+
+                // Advance ring_head circularly (newest partial index)
+                ring_head++;
+                if (ring_head >= partition_n) ring_head = 0;
+
+                // Advance positions
+                processed += read_n;
+                write_pos += out_len;
+
+                loop_index++;
+            }
+        }
+        catch (const Exception& e) {
+            std::cerr << e.what() << ", code: " << (int)e.code() << std::endl;
         }
 
-        delete fft_fir;
+        l << "done!" << Log::endl;
+
+        // Cleanup
+        delete ir_partials_ring;
+        delete x_ring;
+        delete y_partials;
+        delete temp_partials;
+
+        std::free(t_in_buffer);
+        std::free(t_out_buffer);
+        std::free(overlap_buffer);
+        std::free(write_buffer);
+        // delete fft;
 
         return ErrorCode::None;
     }
@@ -3978,6 +4244,5 @@ namespace Grain {
                 break;
         }
     }
-
 
 } // End of namespace Grain
