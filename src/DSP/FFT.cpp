@@ -242,7 +242,7 @@ namespace Grain {
         auto imag = partials->mutImagData();
         for (int32_t k = 0; k <= m_half_length; ++k) {
             m_out[k][0] = real[0] * m_length; // scale for FFTW convention
-            m_out[k][1] = image[0] * m_length;
+            m_out[k][1] = imag[0] * m_length;
         }
 
         // Create inverse plan on the fly or reuse a cached one
