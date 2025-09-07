@@ -69,8 +69,8 @@ namespace Grain {
             for (int i = 0; i < m_resolution; ++i) {
                 float am = m_data_a[i];
                 float ph = m_data_b[i];
-                m_data_a[i] = am * std::cosf(ph);
-                m_data_b[i] = am * std::sinf(ph);
+                m_data_a[i] = am * cosf(ph);
+                m_data_b[i] = am * sinf(ph);
             }
             m_mode = Mode::Cartesian;
         }
@@ -82,8 +82,8 @@ namespace Grain {
             for (int i = 0; i < m_resolution; ++i) {
                 float re = m_data_a[i];
                 float im = m_data_b[i];
-                m_data_a[i] = std::sqrtf(re * re + im * im);
-                m_data_b[i] = std::atan2f(im, re);
+                m_data_a[i] = sqrtf(re * re + im * im);
+                m_data_b[i] = atan2f(im, re);
             }
             m_mode = Mode::Polar;
         }
@@ -95,8 +95,8 @@ namespace Grain {
             if (m_mode == Mode::Cartesian) {
                 float re = m_data_a[index];
                 float im = m_data_b[index];
-                out_amplitude = std::sqrtf(re * re + im * im);
-                out_phase = std::atan2f(im, re);
+                out_amplitude = sqrtf(re * re + im * im);
+                out_phase = atan2f(im, re);
             }
             else {
                 out_amplitude = m_data_a[index];
@@ -111,7 +111,7 @@ namespace Grain {
             if (m_mode == Mode::Cartesian) {
                 float re = m_data_a[index];
                 float im = m_data_b[index];
-                return std::sqrtf(re * re + im * im);
+                return sqrtf(re * re + im * im);
             }
             else {
                 return m_data_a[index];
@@ -156,7 +156,7 @@ namespace Grain {
             if (m_mode == Mode::Cartesian) {
                 float re = m_data_a[index];
                 float im = m_data_b[index];
-                return std::atan2f(im, re);
+                return atan2f(im, re);
             }
             else {
                 return m_data_b[index];
