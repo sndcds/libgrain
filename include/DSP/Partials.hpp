@@ -86,22 +86,11 @@ namespace Grain {
         [[nodiscard]] bool hasData() const noexcept { return m_primary; }
 
         [[nodiscard]] size_t memSize() const noexcept {
-#if defined(__APPLE__) && defined(__MACH__)
-            return sizeof(float) * m_resolution * 2;
-#else
             return sizeof(float) * (m_resolution + 1) * 2;
-#endif
         }
 
         [[nodiscard]] float* _secondary() const noexcept {
-            if (!m_primary) {
-                return nullptr;
-            }
-#if defined(__APPLE__) && defined(__MACH__)
-            return &m_primary[m_resolution];
-#else
-            return &m_primary[m_resolution + 1];
-#endif
+            return m_primary == nullptr ? nullptr : &m_primary[m_resolution + 1];
         }
 
 

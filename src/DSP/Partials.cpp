@@ -59,12 +59,23 @@ namespace Grain {
 
     void Partials::updateCartesian() noexcept {
         if (m_mode != Mode::Cartesian) {
-            for (int i = 0; i < m_resolution; ++i) {
-                float am = m_primary[i];
-                float ph = m_secondary[i];
-                m_primary[i] = am * cosf(ph);
-                m_secondary[i] = am * sinf(ph);
+#if defined(__APPLE__) && defined(__MACH__)
+            m_primary[0] = m_primary[0] * cosf(m_secondary[0]); // DC -> realp[0]
+            m_secondary[0] = m_primary[m_resolution]; // Nyquist -> imagp[0]
+            for (int i = 1; i < m_resolution; ++i) {
+                float mag = m_primary[i];
+                float phase = m_secondary[i];
+                m_primary[i]   = mag * cosf(phase); // realp[i]
+                m_secondary[i] = mag * sinf(phase); // imagp[i]
             }
+#else
+            for (int i = 0; i <= m_resolution; ++i) {
+                float mag = m_primary[i];
+                float phase = m_secondary[i];
+                m_primary[i] = mag * cosf(phase);
+                m_secondary[i] = mag * sinf(phase);
+            }
+#endif
             m_mode = Mode::Cartesian;
         }
     }
@@ -72,12 +83,31 @@ namespace Grain {
 
     void Partials::updatePolar() noexcept {
         if (m_mode != Mode::Polar) {
-            for (int i = 0; i < m_resolution; ++i) {
+#if defined(__APPLE__) && defined(__MACH__)
+            // DC (bin 0)
+            float re0 = m_primary[0]; // realp[0]
+            m_primary[0] = sqrtf(re0 * re0); // DC magnitude, no phase
+            m_secondary[0] = 0.0f; // DC phase, allways 0
+            // Nyquist (bin N/2), stored in imagp[0]
+            float re_ny = m_secondary[0]; // Nyquist has no real part in vDSP
+            m_primary[m_resolution] = sqrtf(re_ny * re_ny); // Nyquist magnitude, no phase
+            m_secondary[m_resolution] = 0.0f;  //  Nyquist phase, allways 0
+            // bins 1..N/2-1
+            for (int i = 1; i < m_resolution; ++i) {
+                float re = m_primary[i]; // realp[i]
+                float im = m_secondary[i]; // imagp[i]
+                m_primary[i] = sqrtf(re * re + im * im); // magnitude
+                m_secondary[i] = atan2f(im, re); // phase
+            }
+#else
+            // FFTW: all bins explicit
+            for (int i = 0; i <= m_resolution; ++i) {
                 float re = m_primary[i];
                 float im = m_secondary[i];
-                m_primary[i] = sqrtf(re * re + im * im);
-                m_secondary[i] = atan2f(im, re);
+                m_primary[i]   = sqrtf(re*re + im*im);  // magnitude
+                m_secondary[i] = atan2f(im, re);        // phase
             }
+#endif
             m_mode = Mode::Polar;
         }
     }
