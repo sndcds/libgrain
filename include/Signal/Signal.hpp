@@ -572,11 +572,6 @@ namespace Grain {
 
         void releaseFilterFFTResources();
 
-        ErrorCode convolveChannel(
-                int32_t input_channel, int64_t input_offset, int64_t input_length,
-                const Signal* kernel_signal, int32_t kernel_channel, int64_t kernel_offset, int64_t kernel_length,
-                Signal* output_signal, int32_t output_channel) const noexcept;
-
         ErrorCode convolve(int64_t a_length, const Signal* b_signal, Signal* result_signal) const noexcept {
             return convolveChannel(0, 0, a_length, b_signal, 0, 0, -1, result_signal, 0, 10);
         }

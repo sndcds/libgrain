@@ -21,11 +21,8 @@ namespace Grain {
     Partials::Partials(int32_t resolution, Mode mode) noexcept : Object() {
         m_mode = mode;
         m_resolution = resolution;
-        m_data_a = static_cast<float*>(std::malloc(memSize()));
-        m_data_b = nullptr;
-        if (m_data_a) {
-            m_data_b = &m_data_a[resolution];
-        }
+        m_primary = static_cast<float*>(std::malloc(memSize()));
+        m_secondary = _secondary();
         m_use_extern_mem = false;
         clear();
     }
@@ -34,11 +31,8 @@ namespace Grain {
     Partials::Partials(int32_t resolution, float* mem, Mode mode) noexcept : Object() {
         m_mode = mode;
         m_resolution = resolution;
-        m_data_a = mem;
-        m_data_b = nullptr;
-        if (m_data_a) {
-            m_data_b = &m_data_a[resolution];
-        }
+        m_primary = mem;
+        m_secondary = _secondary();
         m_use_extern_mem = true;
         clear();
     }
@@ -47,19 +41,18 @@ namespace Grain {
     Partials::Partials(const Partials& other) noexcept : Object() {
         m_mode = other.m_mode;
         m_resolution = other.m_resolution;
-        m_data_a = static_cast<float*>(std::malloc(memSize()));
-        m_data_b = nullptr;
-        if (m_data_a) {
-            m_data_b = &m_data_a[m_resolution];
-            memcpy(m_data_a, other.m_data_a, memSize());
+        m_primary = static_cast<float*>(std::malloc(memSize()));
+        m_secondary = _secondary();
+        if (m_primary) {
+            memcpy(m_primary, other.m_primary, memSize());
         }
         m_use_extern_mem = false;
     }
 
 
     Partials::~Partials() noexcept {
-        if (m_data_a && !m_use_extern_mem) {
-            std::free(m_data_a);
+        if (m_primary && !m_use_extern_mem) {
+            std::free(m_primary);
         }
     }
 
@@ -67,10 +60,10 @@ namespace Grain {
     void Partials::updateCartesian() noexcept {
         if (m_mode != Mode::Cartesian) {
             for (int i = 0; i < m_resolution; ++i) {
-                float am = m_data_a[i];
-                float ph = m_data_b[i];
-                m_data_a[i] = am * cosf(ph);
-                m_data_b[i] = am * sinf(ph);
+                float am = m_primary[i];
+                float ph = m_secondary[i];
+                m_primary[i] = am * cosf(ph);
+                m_secondary[i] = am * sinf(ph);
             }
             m_mode = Mode::Cartesian;
         }
@@ -80,10 +73,10 @@ namespace Grain {
     void Partials::updatePolar() noexcept {
         if (m_mode != Mode::Polar) {
             for (int i = 0; i < m_resolution; ++i) {
-                float re = m_data_a[i];
-                float im = m_data_b[i];
-                m_data_a[i] = sqrtf(re * re + im * im);
-                m_data_b[i] = atan2f(im, re);
+                float re = m_primary[i];
+                float im = m_secondary[i];
+                m_primary[i] = sqrtf(re * re + im * im);
+                m_secondary[i] = atan2f(im, re);
             }
             m_mode = Mode::Polar;
         }
@@ -93,14 +86,14 @@ namespace Grain {
     void Partials::valueAndPhaseAtIndex(int32_t index, float& out_amplitude, float& out_phase) const noexcept {
         if (isPartialIndex(index)) {
             if (m_mode == Mode::Cartesian) {
-                float re = m_data_a[index];
-                float im = m_data_b[index];
+                float re = m_primary[index];
+                float im = m_secondary[index];
                 out_amplitude = sqrtf(re * re + im * im);
                 out_phase = atan2f(im, re);
             }
             else {
-                out_amplitude = m_data_a[index];
-                out_phase = m_data_b[index];
+                out_amplitude = m_primary[index];
+                out_phase = m_secondary[index];
             }
         }
     }
@@ -109,12 +102,12 @@ namespace Grain {
     float Partials::amplitudeAtIndex(int32_t index) const noexcept {
         if (isPartialIndex(index)) {
             if (m_mode == Mode::Cartesian) {
-                float re = m_data_a[index];
-                float im = m_data_b[index];
+                float re = m_primary[index];
+                float im = m_secondary[index];
                 return sqrtf(re * re + im * im);
             }
             else {
-                return m_data_a[index];
+                return m_primary[index];
             }
         }
     }
@@ -144,9 +137,8 @@ namespace Grain {
 
     void Partials::scaleAmplitudeAtIndex(int32_t index, float scale) noexcept {
         if (isPartialIndex(index)) {
-            std::cout << ".....1\n";
             updatePolar();
-            m_data_a[index] *= scale;
+            m_primary[index] *= scale;
         }
     }
 
@@ -154,12 +146,12 @@ namespace Grain {
     float Partials::phaseAtIndex(int32_t index) const noexcept {
         if (isPartialIndex(index)) {
             if (m_mode == Mode::Cartesian) {
-                float re = m_data_a[index];
-                float im = m_data_b[index];
+                float re = m_primary[index];
+                float im = m_secondary[index];
                 return atan2f(im, re);
             }
             else {
-                return m_data_b[index];
+                return m_secondary[index];
             }
         }
     }
@@ -167,7 +159,7 @@ namespace Grain {
 
     void Partials::clear() noexcept {
         if (hasData()) {
-            memset(m_data_a, 0, memSize());
+            memset(m_primary, 0, memSize());
         }
     }
 
@@ -179,10 +171,9 @@ namespace Grain {
 
     void Partials::setAmplitudes(float value) noexcept {
         if (hasData()) {
-            std::cout << ".....2\n";
             updatePolar();
             for (int32_t i = 0; i < m_resolution; i++) {
-                m_data_a[i] = value;
+                m_primary[i] = value;
             }
         }
     }
@@ -195,10 +186,9 @@ namespace Grain {
 
     void Partials::setPhases(float value) noexcept {
         if (hasData()) {
-            std::cout << ".....3\n";
             updatePolar();
             for (int32_t i = 0; i < m_resolution; i++) {
-                m_data_b[i] = value;
+                m_secondary[i] = value;
             }
         }
     }
@@ -207,11 +197,11 @@ namespace Grain {
     void Partials::sawtooth() noexcept {
         if (hasData()) {
             m_mode = Mode::Polar;
-            m_data_a[0] = 0.0f;
-            m_data_b[0] = 0.0f;
+            m_primary[0] = 0.0f;
+            m_secondary[0] = 0.0f;
             for (int32_t i = 1; i < m_resolution; i++) {
-                m_data_a[i] = 1.0f / i;
-                m_data_b[i] = 0.0f;
+                m_primary[i] = 1.0f / i;
+                m_secondary[i] = 0.0f;
             }
         }
     }
@@ -220,11 +210,11 @@ namespace Grain {
     void Partials::square() noexcept {
         if (hasData()) {
             m_mode = Mode::Polar;
-            m_data_a[0] = 1.0f;
-            m_data_b[0] = 0.0f;
+            m_primary[0] = 1.0f;
+            m_secondary[0] = 0.0f;
             for (int32_t i = 1; i < m_resolution; i++) {
-                m_data_a[i] = i % 2 ? 1 / i : 0;
-                m_data_b[i] = 0.0f;
+                m_primary[i] = i % 2 ? 1 / i : 0;
+                m_secondary[i] = 0.0f;
             }
         }
     }
@@ -234,7 +224,7 @@ namespace Grain {
         float max = 0;
         if (m_mode == Mode::Polar) {
             for (int32_t i = 0; i < m_resolution; i++) {
-                float a = m_data_a[i];
+                float a = m_primary[i];
                 if (a > max) {
                     max = a;
                 }
@@ -281,9 +271,8 @@ namespace Grain {
 
     void Partials::setAmplitudeAtIndex(int32_t index, float value) noexcept {
         if (isPartialIndex(index)) {
-            std::cout << ".....4\n";
             updatePolar();
-            m_data_a[index] = value;
+            m_primary[index] = value;
         }
     }
 
@@ -291,29 +280,26 @@ namespace Grain {
     void Partials::setAmplitudesInRange(int32_t start_index, int32_t end_index, float value) noexcept {
         start_index = std::clamp(start_index, 0, m_resolution - 1);
         end_index = std::clamp(end_index, start_index, m_resolution - 1);
-        std::cout << ".....5\n";
         updatePolar();
         for (int32_t i = start_index; i <= end_index; i++) {
-            m_data_a[i] = value;
+            m_primary[i] = value;
         }
     }
 
 
     void Partials::setAllAmplitudes(float value) noexcept {
-        std::cout << ".....6\n";
         updatePolar();
         for (int32_t i = 0; i < m_resolution; i++) {
-            m_data_a[i] = value;
+            m_primary[i] = value;
         }
     }
 
 
     void Partials::setAllAmplitudes(const float* values) noexcept {
         if (values) {
-            std::cout << ".....7\n";
             updatePolar();
             for (int32_t i = 0; i < m_resolution; i++) {
-                m_data_a[i] = values[i];
+                m_primary[i] = values[i];
             }
         }
     }
@@ -370,7 +356,7 @@ namespace Grain {
 
     bool Partials::set(const Partials* other) noexcept {
         if (other && other->m_resolution == m_resolution && hasData() && other->hasData()) {
-            memcpy(m_data_a, other->m_data_a, memSize());
+            memcpy(m_primary, other->m_primary, memSize());
             m_mode = other->m_mode;
             return true;
         }
@@ -386,10 +372,10 @@ namespace Grain {
             other->m_resolution == m_resolution &&
             hasData() && other->hasData())
         {
-            float* ar = m_data_a;
-            float* ai = m_data_b;
-            float* br = other->m_data_a;
-            float* bi = other->m_data_b;
+            float* ar = m_primary;
+            float* ai = m_secondary;
+            float* br = other->m_primary;
+            float* bi = other->m_secondary;
 
             for (int32_t i = 0; i < m_resolution; i++) {
                 float rr =  (ar[i] * br[i]) + (ai[i] * bi[i] * -1.0f);
@@ -413,8 +399,8 @@ namespace Grain {
             hasData() && other->hasData())
         {
             for (int i = 0; i < m_resolution; ++i) {
-                m_data_a[i] += other->m_data_a[i];
-                m_data_b[i] += other->m_data_b[i];
+                m_primary[i] += other->m_primary[i];
+                m_secondary[i] += other->m_secondary[i];
             }
             return true;
         }
@@ -537,10 +523,15 @@ namespace Grain {
             for (int32_t i = 1; i < m_resolution; i++) {
                 float freq = root_freq * i;
                 freq = Audio::freqFromPitch(Audio::pitchFromFreq(static_cast<float>(freq)) + shift);
-                double pos = Freq::freqToPos(freq, root_freq, high_freq, 0, 1);
-                float value = bezier_value_curve->lookup(static_cast<float>(pos), 1024);
+                float pos = static_cast<float>(Freq::freqToPos(freq, root_freq, high_freq, 0, 1));
+                float value = bezier_value_curve->lookup(pos, 1024);
                 setAmplitudeAtIndex(i, Audio::amplitudeFromLevel(value * amount));
                 std::cout << i << ": " << Audio::amplitudeFromLevel(value * amount) << std::endl;
+            }
+
+            std::cout << "Partial: " << this << std::endl;
+            for (int32_t i = 0; i < m_resolution; i++) {
+                std::cout << i << " ... " << m_primary[i] << " / " << m_secondary[i] << std::endl;
             }
         }
     }

@@ -18,7 +18,9 @@
 #include "2d/Rect.hpp"
 #include "Type/Object.hpp"
 #include "Bezier.hpp"
-// #include "GrRGB.hpp" !!!!!
+#include "Type/List.hpp"
+
+// #include "GrRGB.hpp" TODO: !!!!!
 
 
 namespace Grain {
@@ -34,7 +36,6 @@ namespace Grain {
      *  @brief A single point on a BezierValueCurve.
      */
     class BezierValueCurvePoint : public BaseObject {
-
         friend class Bezier;
         friend class BezierValueCurve;
         friend class Viewport;
@@ -75,7 +76,6 @@ namespace Grain {
 
         Vec2d m_remembered_pos;
         Status m_remembered_status = Status::None;
-
 
     public:
         BezierValueCurvePoint() noexcept : BaseObject() {
@@ -257,7 +257,7 @@ namespace Grain {
         };
 
     protected:
-        std::vector<BezierValueCurvePoint> m_points;
+        List<BezierValueCurvePoint> m_points;
         WeightedSamples* m_weighted_samples = nullptr;
 
         int32_t m_default_resolution = 1000;
@@ -316,7 +316,7 @@ namespace Grain {
         void rangeY(double& out_min_y, double& out_max_y) const noexcept;
         [[nodiscard]] Rectd bbox(bool selected_only) const noexcept;
 
-        [[nodiscard]] std::vector<BezierValueCurvePoint> points() noexcept { return m_points; }
+        [[nodiscard]] List<BezierValueCurvePoint> points() noexcept { return m_points; }
         [[nodiscard]] int32_t pointCount() const noexcept { return static_cast<int32_t>(m_points.size()); }
         [[nodiscard]] BezierValueCurvePoint* mutPointAtIndex(int32_t index) noexcept;
         [[nodiscard]] const BezierValueCurvePoint* pointAtIndex(int32_t index) const noexcept;
@@ -348,6 +348,7 @@ namespace Grain {
         void selectPointsInRect(const Rectd& rect) noexcept;
 
         [[nodiscard]] BezierValueCurvePoint* addPoint() noexcept;
+        BezierValueCurvePoint* addLinearPoint(double x, double y) noexcept;
         BezierValueCurvePoint* addPoint(double x, double y, double lx, double ly, double rx, double ry, Bezier::PointType point_type, BezierValueCurvePoint::Status status = BezierValueCurvePoint::Status::None) noexcept;
         bool removePoint(int32_t index) noexcept;
         [[nodiscard]] int32_t removeSelectedPoints() noexcept;

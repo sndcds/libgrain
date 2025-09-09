@@ -2700,7 +2700,6 @@ namespace Grain {
 
 
     ErrorCode Signal::applyFilterToChannel(SignalFilter* filter, int32_t channel, int64_t offset, int64_t length) noexcept {
-        std::cout << "applyFilterToChannel: " << channel << std::endl;
         if (!filter) {
             return ErrorCode::NullData;
         }
@@ -2722,7 +2721,6 @@ namespace Grain {
         }
 
         if (clampOffsetAndLength(offset, length) > 0) {
-            std::cout << "   offset: " << offset << ", length: " << length << std::endl;
             filter->reset();
             auto s = reinterpret_cast<float*>(mutDataPtr(channel, offset));
             int64_t s_step = sampleStep();
@@ -2762,7 +2760,6 @@ namespace Grain {
 
 
     void Signal::_prepareFilterFFT(int32_t fft_length) {
-        std::cout << "_prepareFilterFFT() fft_length: " << fft_length << std::endl;
         if (m_fft) {
             // FFT allready in use
             if (m_fft->length() != fft_length) {
@@ -2884,7 +2881,6 @@ namespace Grain {
             int64_t ri = 2;
             // int64_t wi = -2; // Unused
             int64_t ri_end = length / block_size;
-            std::cout << "ri_end: " << ri_end << '\n';
 
             for (;;) {
                 // ring_buffer to fft_buffer with windowing applied
@@ -2936,111 +2932,40 @@ namespace Grain {
 
 
     /**
-     *  @brief FIR convolution, can be used for reverb, speaker/microphone simulation etc.
+     *  @brief Perform partitioned convolution of one channel of this signal with
+     *         one channel of an impulse response (IR) signal, writing the result
+     *         into another signal.
      *
-     *  Overlap save method.
-     */
-    ErrorCode Signal::convolveChannel(
-            int32_t a_channel,
-            int64_t a_offset,
-            int64_t a_length,
-            const Signal* b_signal,
-            int32_t b_channel,
-            int64_t b_offset,
-            int64_t b_length,
-            Signal* result_signal,
-            int32_t result_channel) const noexcept
-    {
-        if (!b_signal || !result_signal) return ErrorCode::NullData;
-        if (b_signal == this) return ErrorCode::BuffersMustBeDifferent;
-
-        if (!hasChannelAndData(a_channel) || !b_signal->hasChannelAndData(b_channel) ||
-            !result_signal->hasChannel(result_channel)) return ErrorCode::InvalidChannel;
-
-        if (a_length < 0) a_length = sampleCount();
-        if (b_length < 0) b_length = b_signal->sampleCount();
-
-        clampOffsetAndLength(a_offset, a_length);
-        b_signal->clampOffsetAndLength(b_offset, b_length);
-
-        int64_t result_length = a_length + b_length - 1;
-        if (result_signal->growIfNeeded(result_length) != ErrorCode::None)
-            return ErrorCode::MemCantGrow;
-
-        result_signal->clearChannel(result_channel, 0, result_length);
-
-        // --- Set up FFT parameters ---
-        int32_t log_n = FFT::kLogNResolution16384; // pick suitable
-        auto fft = new (std::nothrow) FFT(log_n);
-
-        int32_t step_length = 1 << log_n;
-        int32_t overlap_length = step_length;
-        int32_t signal_block_length = step_length + overlap_length;
-
-        auto signal_block = static_cast<float*>(malloc(sizeof(float) * signal_block_length));
-        auto filter_block = static_cast<float*>(malloc(sizeof(float) * step_length));
-        auto filter_partials = new (std::nothrow) Partials(step_length, Partials::Mode::Cartesian);
-        auto signal_partials = new (std::nothrow) Partials(signal_block_length, Partials::Mode::Cartesian);
-        auto result_partials = new (std::nothrow) Partials(signal_block_length, Partials::Mode::Cartesian);
-
-        int64_t f_offset = 0;
-
-        while (f_offset < b_length) {
-            int64_t n_filter = std::min<int64_t>(step_length, b_length - f_offset);
-            b_signal->readSamplesAsFloatWithZeroPadding(b_channel, b_offset + f_offset, n_filter, filter_block);
-
-            // FFT filter
-            fft->fft(filter_block, filter_partials);
-
-            int64_t s_offset = 0;
-            while (s_offset < a_length) {
-                int64_t n_signal = std::min<int64_t>(signal_block_length, a_length - s_offset + overlap_length);
-                readSamplesAsFloatWithZeroPadding(a_channel, a_offset + s_offset - overlap_length, n_signal, signal_block);
-
-                // FFT signal
-                fft->fft(signal_block, signal_partials);
-
-                // Multiply spectra
-                result_partials = signal_partials; // copy amplitudes/phases
-                result_partials->multiply(filter_partials);
-
-                // IFFT back to time-domain
-                fft->ifft(result_partials, signal_block);
-
-                // Overlap-add into result
-                int64_t write_offset = s_offset + f_offset;
-                int64_t n_write = std::min<int64_t>(signal_block_length, result_length - write_offset);
-                for (int64_t i = 0; i < n_write; ++i) {
-                    result_signal->addSample(result_channel, write_offset + i, signal_block[i]);
-                }
-
-                s_offset += step_length;
-            }
-
-            f_offset += step_length;
-        }
-
-        std::cout << ".........................\n";
-
-        return ErrorCode::None;
-    }
-
-
-    /**
-     *  @brief Partitioned convolution:
+     *  This implements a frequency-domain partitioned convolution algorithm:
+     *  - The input signal is processed in blocks of size L = 2^(partition_log_n - 1).
+     *  - Each block is FFT-transformed, multiplied with precomputed FFTs of the IR
+     *    partitions, accumulated, and transformed back using an inverse FFT.
+     *  - Overlap-save/add is used to handle the block convolution tails.
      *
-     *  L: partition length (block of new input processed each iteration)
-     *  N: fft length = next_pow2(2 * L)  (so N/2 == L when L is power-of-two)
-     *  P: number of filter partitions = ceil(filter_length / L)
+     *  @param channel Channel index of the input signal to convolve.
+     *  @param offset Sample offset into the input signal where convolution starts.
+     *  @param length Number of input samples to process (if < 0, uses the remainder of the signal).
+     *  @param ir Pointer to the impulse response signal.
+     *  @param ir_channel Channel index of the impulse response to use.
+     *  @param ir_offset Sample offset into the impulse response.
+     *  @param ir_length Number of samples from the impulse response to use (if < 0, uses the remainder).
+     *  @param result_signal Pointer to the signal object where the output will be written.
+     *  @param result_channel Channel index of the result signal to write into.
+     *  @param partition_log_n Base-2 logarithm of the FFT length used per partition.
+     *                         Must be between FFT::kMinLogN and FFT::kMaxLogN.
      *
-     *  Algorithm:
-     *  for each input block x_k (length L):
-     *    X_k = FFT(zero_pad(x_k, N))
-     *    store X_k in ring buffer input_fft[head]
-     *    Y = sum_{j=0..P-1} H_j * input_fft[(head - j) mod P]
-     *    y = IFFT(Y)   // length N
-     *    output samples = y[0..L-1] + overlap[0..L-1]
-     *    overlap[:] = y[L..N-1]  // keep for next block
+     *  @return ErrorCode::None on success, or an appropriate error code on failure:
+     *  - ErrorCode::BadArgs if arguments are invalid.
+     *  - ErrorCode::NullPointer if required pointers are null.
+     *  - ErrorCode::BuffersMustBeDifferent if the IR and input signal are the same object.
+     *  - ErrorCode::InvalidChannel if channels are invalid.
+     *  - ErrorCode::MemCantGrow if result signal cannot be resized.
+     *  - ErrorCode::MemCantAllocate if temporary buffers or structures cannot be allocated.
+     *  - ErrorCode::ClassInstantiationFailed if FFT instance cannot be created.
+     *
+     *  @note This method assumes both input and IR signals are floating-point.
+     *        The result signal will be resized to fit the full convolution length:
+     *        result_length = length + ir_length - 1.
      */
     ErrorCode Signal::convolveChannel(
             int32_t channel,
@@ -3114,7 +3039,7 @@ namespace Grain {
                 Exception::throwStandard(ErrorCode::ClassInstantiationFailed);
             }
 
-            // Allocate separated input/output temp buffers (clear & easier to reason about)
+            // Temporary input and output buffers
             t_in_buffer  = static_cast<float*>(std::calloc(fft_size, sizeof(float)));
             t_out_buffer = static_cast<float*>(std::calloc(fft_size, sizeof(float)));
             if (!t_in_buffer || !t_out_buffer) {
@@ -3142,7 +3067,6 @@ namespace Grain {
                 Exception::throwStandard(err);
             }
 
-            // Ring buffer
             x_ring = new (std::nothrow) PartialsRing(partition_n, partial_res, Partials::Mode::Cartesian);
             if (!x_ring) {
                 Exception::throwStandard(ErrorCode::MemCantAllocate);
@@ -3158,7 +3082,7 @@ namespace Grain {
 
             int32_t ring_head = 0; // Points to newest input partial
 
-            // Accumulator partials: Y = sum H_j * X_{k-j}
+            // Accumulator partials
             y_partials = new (std::nothrow) Partials(partial_res, Partials::Mode::Cartesian);
             if (!y_partials) {
                 Exception::throwStandard(ErrorCode::MemCantAllocate);
@@ -3177,15 +3101,14 @@ namespace Grain {
                 overlap_buffer = nullptr; // zero overlap
             }
 
-            // Process input in blocks of size L
+            // Process input in blocks
             int64_t processed = 0;
-            int64_t write_pos = 0; // Where to write in result
+            int64_t write_pos = 0;
 
             write_buffer = static_cast<float*>(std::malloc(sizeof(float) * partition_size));
             if (!write_buffer) {
                 Exception::throwStandard(ErrorCode::MemCantAllocate);
             }
-
 
             temp_partials = new (std::nothrow) Partials(partial_res, Partials::Mode::Cartesian);
             if (!temp_partials) {
@@ -3194,14 +3117,11 @@ namespace Grain {
 
             int32_t loop_index = 0;
             while (processed < length) {
-                // number of input samples to read this iteration (<= L)
                 const int64_t read_n = std::min<int64_t>(partition_size, length - processed);
 
-                // Zero input buffer then fill first read_n samples
                 std::memset(t_in_buffer, 0, sizeof(float) * fft_size);
                 readSamplesAsFloatWithZeroPadding(channel, offset + processed, read_n, t_in_buffer);
 
-                // Compute X_k (FFT of the current input block) and store in ring at ring_head
                 Partials* Xk = x_ring->partialsAtIndex(ring_head);
                 if (!Xk) {
                     Exception::throwStandard(ErrorCode::Fatal);
@@ -3210,7 +3130,6 @@ namespace Grain {
                 auto err = fft->fft(t_in_buffer, Xk);
                 Exception::throwStandard(err);
 
-                // Compute Y_p = sum_{j=0..P-1} H_j * X_{k-j}
                 y_partials->clear();
                 for (int j = 0; j < partition_n; ++j) {
                     int idx = ring_head - j;
@@ -3225,21 +3144,19 @@ namespace Grain {
 
                     temp_partials->set(Xsrc);
 
-                    // temp_partials *= Hj  (complex multiply in cartesian)
                     if (!temp_partials->multiply(Hj)) {
                         Exception::throwSpecific(2);
                     }
 
-                    // accumulate
+                    // Accumulate
                     if (!y_partials->add(temp_partials)) {
                         Exception::throwSpecific(3);
                     }
                 }
 
-                // IFFT Y_p -> t_out_buf
-                Exception::throwStandard(fft->ifft(y_partials, t_out_buffer));
+                err = fft->ifft(y_partials, t_out_buffer);
+                Exception::throwStandard(err);
 
-                // Compose output: first L samples plus overlap[0..L-1]
                 const int64_t remaining = result_length - write_pos;
                 const int64_t out_len = std::min<int64_t>(partition_size, remaining);
 
@@ -3249,22 +3166,81 @@ namespace Grain {
                     write_buffer[i] = s;
                 }
 
-                // Write into result buffer (combine/add)
                 result_signal->writeSamples(result_channel, write_pos, out_len, write_buffer, CombineMode::Add);
 
-                // Update overlap = t_out_buf[L .. N-1]  (length = N - L)
+                // Update overlap
                 if (overlap_len > 0) {
                     std::memcpy(overlap_buffer, &t_out_buffer[partition_size], sizeof(float) * overlap_len);
                 }
 
                 // Advance ring_head circularly (newest partial index)
                 ring_head++;
-                if (ring_head >= partition_n) ring_head = 0;
+                if (ring_head >= partition_n) {
+                    ring_head = 0;
+                }
 
                 // Advance positions
                 processed += read_n;
                 write_pos += out_len;
 
+                loop_index++;
+            }
+
+            // Flush loop
+            while (write_pos < result_length) {
+                std::memset(t_in_buffer, 0, sizeof(float) * fft_size);
+
+                Partials* Xk = x_ring->partialsAtIndex(ring_head);
+                if (!Xk) {
+                    Exception::throwStandard(ErrorCode::Fatal);
+                }
+                Xk->clear();
+                auto err = fft->fft(t_in_buffer, Xk);
+                Exception::throwStandard(err);
+
+                y_partials->clear();
+                for (int j = 0; j < partition_n; ++j) {
+                    int idx = ring_head - j;
+                    if (idx < 0) idx += partition_n;
+                    Partials* Xsrc = x_ring->partialsAtIndex(idx);
+                    Partials* Hj   = ir_partials_ring->partialsAtIndex(j);
+                    if (!Xsrc || !Hj) {
+                        Exception::throwStandard(ErrorCode::Fatal);
+                    }
+
+                    temp_partials->set(Xsrc);
+                    if (!temp_partials->multiply(Hj)) {
+                        Exception::throwSpecific(2);
+                    }
+                    if (!y_partials->add(temp_partials)) {
+                        Exception::throwSpecific(3);
+                    }
+                }
+
+                err = fft->ifft(y_partials, t_out_buffer);
+                Exception::throwStandard(err);
+
+                const int64_t remaining = result_length - write_pos;
+                const int64_t out_len = std::min<int64_t>(partition_size, remaining);
+
+                for (int64_t i = 0; i < out_len; ++i) {
+                    float s = t_out_buffer[i];
+                    if (overlap_len > 0 && i < overlap_len) s += overlap_buffer[i];
+                    write_buffer[i] = s;
+                }
+
+                result_signal->writeSamples(result_channel, write_pos, out_len, write_buffer, CombineMode::Add);
+
+                if (overlap_len > 0) {
+                    std::memcpy(overlap_buffer, &t_out_buffer[partition_size], sizeof(float) * overlap_len);
+                }
+
+                ring_head++;
+                if (ring_head >= partition_n) {
+                    ring_head = 0;
+                }
+
+                write_pos += out_len;
                 loop_index++;
             }
         }
@@ -3427,9 +3403,7 @@ namespace Grain {
             int64_t length)
             const noexcept
     {
-        std::cout << "Signal::writeToFile() offset: " << offset << ", length: " << length << std::endl;
         if (clampOffsetAndLength(offset, length) < 1) {
-            std::cout << "    after clamp() offset: " << offset << ", length: " << length << std::endl;
             return Error::specific(kErr_NothingToWrite);
         }
 

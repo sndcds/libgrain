@@ -23,6 +23,20 @@ namespace Grain {
     class EQ21;
 
 
+    /**
+     *  @note Apple vDSP vs FFTW bin storage.
+     *
+     *  FFTW (r2c) outputs N/2+1 complex bins explicitly: indices 0..N/2
+     *  (DC at 0, Nyquist at N/2 when N is even).
+     *
+     *  vDSP (zrip) uses N/2 slots in split-complex form:
+     *    - realp[0] = DC
+     *    - imagp[0] = Nyquist (real-only)
+     *    - realp[k], imagp[k] for k=1..N/2-1 = bins 1..N/2-1
+     *
+     *  Both represent the same N/2+1 unique bins; vDSP just packs
+     *  Nyquist into imagp[0] instead of a separate complex element.
+     */
     class Partials : public Object {
         friend class Signal;
 
@@ -32,12 +46,13 @@ namespace Grain {
             Polar           ///< Values are amplitude and phase
         };
 
-    private:
-        Mode m_mode = Mode::Cartesian;
-        int32_t m_resolution = 0;
-        float* m_data_a = nullptr;
-        float* m_data_b = nullptr;
-        bool m_use_extern_mem = false;
+    protected:
+    protected:
+        Mode m_mode = Mode::Cartesian;    ///< Storage mode: Cartesian (real/imag) or Polar (mag/phase)
+        int32_t m_resolution = 0;         ///< Number of partials excluding the DC bin
+        float* m_primary = nullptr;       ///< Magnitude (Polar) or real part (Cartesian)
+        float* m_secondary = nullptr;     ///< Phase (Polar) or imaginary part (Cartesian)
+        bool m_use_extern_mem = false;    ///< True if memory is provided externally; false if owned/allocated by this class
 
     public:
         explicit Partials(int32_t resolution, Mode mode) noexcept;
@@ -60,17 +75,38 @@ namespace Grain {
             return os;
         }
 
+        void setCartesian() noexcept { m_mode = Mode::Cartesian; }
+        void setPolar() noexcept { m_mode = Mode::Polar; }
+        [[nodiscard]] bool isCartesian() const noexcept { return m_mode == Mode::Cartesian; }
+        [[nodiscard]] bool isPolar() const noexcept { return m_mode == Mode::Polar; }
         void updateCartesian() noexcept;
         void updatePolar() noexcept;
 
-        [[nodiscard]] bool isCartesian() const noexcept { return m_mode == Mode::Cartesian; }
-        [[nodiscard]] bool isPolar() const noexcept { return m_mode == Mode::Polar; }
         [[nodiscard]] int32_t resolution() const noexcept { return m_resolution; }
-        [[nodiscard]] bool hasData() const noexcept { return m_data_a; }
-        [[nodiscard]] size_t memSize() const noexcept { return sizeof(float) * m_resolution * 2; }
+        [[nodiscard]] bool hasData() const noexcept { return m_primary; }
 
-        [[nodiscard]] float* mutRealData() const noexcept { return m_data_a; }
-        [[nodiscard]] float* mutImagData() const noexcept { return m_data_b; }
+        [[nodiscard]] size_t memSize() const noexcept {
+#if defined(__APPLE__) && defined(__MACH__)
+            return sizeof(float) * m_resolution * 2;
+#else
+            return sizeof(float) * (m_resolution + 1) * 2;
+#endif
+        }
+
+        [[nodiscard]] float* _secondary() const noexcept {
+            if (!m_primary) {
+                return nullptr;
+            }
+#if defined(__APPLE__) && defined(__MACH__)
+            return &m_primary[m_resolution];
+#else
+            return &m_primary[m_resolution + 1];
+#endif
+        }
+
+
+        [[nodiscard]] float* mutRealData() const noexcept { return m_primary; }
+        [[nodiscard]] float* mutImagData() const noexcept { return m_secondary; }
 
         [[nodiscard]] bool isPartialIndex(int32_t index) const noexcept { return index >= 0 && index < m_resolution; }
         void valueAndPhaseAtIndex(int32_t index, float& out_amplitude, float& out_phase) const noexcept;

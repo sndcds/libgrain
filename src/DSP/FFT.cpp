@@ -7,11 +7,6 @@
 //  This file is part of GrainLib, see <https://grain.one>.
 //
 
-/*
- *  TODO: Check these ...
- *  - cblas_scopy is deprecated
- */
-
 #include "DSP/FFT.hpp"
 #include "Type/Type.hpp"
 #include "Math/Math.hpp"
@@ -153,12 +148,14 @@ namespace Grain {
             float scale = 0.5f;  // matches vDSP convention for forward real FFT
 
             // Write Cartesian (real, imag) directly into Partials
+            out_partials->setCartesian();
             auto out_real = out_partials->mutRealData();
             auto out_imag = out_partials->mutImagData();
             for (int32_t i = 0; i < m_half_length; i++) {
                 out_real[i] = temp_split_complex.realp[i] * scale;
                 out_imag[i] = temp_split_complex.imagp[i] * scale;
             }
+
         }
         catch (const Exception& e) {
             result = e.code();
@@ -182,9 +179,10 @@ namespace Grain {
         fftwf_execute(m_plan);
 
         // Fill out_partials in CARTESIAN form (no scaling)
+        out_partials->setCartesian();
         float* out_real = out_partials->mutRealData();
         float* out_imag = out_partials->mutImagData();
-        for (int32_t i = 0; i < m_half_length; i++) {
+        for (int32_t i = 0; i <= m_half_length; i++) {
             out_real[i] = m_out[i][0];
             out_imag[i] = m_out[i][1];
         }
@@ -232,6 +230,11 @@ namespace Grain {
         if (!partials || !out_data) {
             return ErrorCode::NullData;
         }
+
+        if (!partials->isCartesian()) {
+            return ErrorCode::BadArgs; // or your custom error
+        }
+
         if (FFT::logNFromResolution(partials->resolution() * 2) != m_log_n) {
             return ErrorCode::BadArgs;
         }
@@ -240,7 +243,7 @@ namespace Grain {
         float* imag = partials->mutImagData();
 
         // Fill FFTW complex input (m_out), same layout as FFT produced
-        for (int32_t i = 0; i < m_half_length; i++) {
+        for (int32_t i = 0; i <= m_half_length; i++) {
             m_out[i][0] = real[i];
             m_out[i][1] = imag[i];
         }
