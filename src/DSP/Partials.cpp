@@ -110,6 +110,7 @@ namespace Grain {
                 return m_primary[index];
             }
         }
+        else 0.0f;
     }
 
 
@@ -154,6 +155,7 @@ namespace Grain {
                 return m_secondary[index];
             }
         }
+        return 0.0f;
     }
 
 
