@@ -110,7 +110,7 @@ namespace Grain {
                 return m_primary[index];
             }
         }
-        else 0.0f;
+        return 0.0f;
     }
 
 
