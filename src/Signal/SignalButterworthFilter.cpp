@@ -14,7 +14,6 @@ namespace Grain {
 
 
     SignalButterworthFilter::SignalButterworthFilter(int32_t sample_rate) noexcept : SignalFilter(sample_rate) {
-
         setFilterType(FilterType::LowPass);
         SignalButterworthFilter::reset();
         SignalButterworthFilter::setFreq(1000);
@@ -22,7 +21,6 @@ namespace Grain {
 
 
     SignalButterworthFilter::SignalButterworthFilter(int32_t sample_rate, FilterType filter_type, float freq) noexcept : SignalFilter(sample_rate) {
-
         setFilterType(filter_type);
         SignalButterworthFilter::reset();
         SignalButterworthFilter::setFreq(freq);
@@ -34,7 +32,6 @@ namespace Grain {
 
 
     const char *SignalButterworthFilter::filterTypeName() const noexcept {
-
         switch (m_filter_type) {
             case FilterType::LowPass: return "low pass";
             case FilterType::HighPass: return "high pass";
@@ -47,7 +44,6 @@ namespace Grain {
 
 
     void SignalButterworthFilter::setFilterType(FilterType filter_type) noexcept {
-
         m_filter_type = filter_type;
 
         _m_has_range = false;
@@ -72,9 +68,7 @@ namespace Grain {
 
 
     void SignalButterworthFilter::setFreq(float freq) noexcept {
-
         m_freq = std::clamp<double>(freq, 20.0, 10000.0);
-
         double a = std::tan(_m_pi_divided_by_sample_rate * m_freq);
         double a2 = a * a;
         double s = a2 + a * 2 * M_SQRT1_2 + 1;
@@ -99,10 +93,8 @@ namespace Grain {
 
 
     void SignalButterworthFilter::setFreqRange(float low_freq, float high_freq) noexcept {
-
         m_low_freq = std::clamp<double>(low_freq, 20.0f, 9999.0f);
         m_high_freq = std::clamp<double>(high_freq, m_low_freq * 1.001f, 10000.0f);
-
 
         double p = _m_pi_divided_by_sample_rate * (m_high_freq - m_low_freq);
 
@@ -143,7 +135,6 @@ namespace Grain {
 
 
     void SignalButterworthFilter::reset() noexcept {
-
         m_w[0] = 0.0;
         m_w[1] = 0.0;
         m_w[2] = 0.0;
@@ -153,7 +144,6 @@ namespace Grain {
 
 
     float SignalButterworthFilter::process(float input) noexcept {
-
         float output;
 
         switch (m_filter_type) {

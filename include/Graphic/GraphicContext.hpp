@@ -91,12 +91,12 @@ namespace Grain {
         };
 
     protected:
-        fourcc_t m_magic = Type::fourcc('b', 'a', 's', 'e');
+        fourcc_t magic_ = Type::fourcc('b', 'a', 's', 'e');
         bool m_flipped_y = true;        ///< true, if vertical axis is flipped
-        double m_width = 0.0;           ///< Pixel width
-        double m_height = 0.0;          ///< Pixel height
+        double width_{};                ///< Pixel width
+        double height_{};               ///< Pixel height
         int32_t m_state_depth = 0;      ///< Depth of context state savings
-        float m_alpha = 1.0f;           ///< Current alpha value
+        float alpha_ = 1.0f;            ///< Current alpha value
 
         Vec2d m_last_pos;               ///< Last, current positionfor drawing methods
 
@@ -125,10 +125,10 @@ namespace Grain {
         void _freeResources() noexcept;
         void _freeImage() noexcept;
 
-        [[nodiscard]] fourcc_t magic() const noexcept { return m_magic; }
+        [[nodiscard]] fourcc_t magic() const noexcept { return magic_; }
 
-        [[nodiscard]] double width() const noexcept { return m_width; }
-        [[nodiscard]] double height() const noexcept { return m_height; }
+        [[nodiscard]] double width() const noexcept { return width_; }
+        [[nodiscard]] double height() const noexcept { return height_; }
 
         [[nodiscard]] Image* image() noexcept { return m_image; }
         [[nodiscard]] Component* component() noexcept { return m_component; }
@@ -146,10 +146,10 @@ namespace Grain {
 
         void setOpaque() noexcept { setAlpha(1.0f); }
 
-        virtual void setFillColor(float r, float g, float b, float alpha) noexcept {}
         virtual void setFillClearColor() noexcept {
             setFillColor(1.0f, 1.0f, 1.0f, 0.0f);
         }
+        virtual void setFillColor(float r, float g, float b, float alpha) noexcept {}
         virtual void setFillGray(float grey) noexcept {
             setFillColor(grey, grey, grey, 1.0f);
         }
@@ -163,7 +163,7 @@ namespace Grain {
             setFillColor(rgb.m_data[0], rgb.m_data[1], rgb.m_data[2], alpha);
         }
         virtual void setFillRGBA(const RGBA& rgba) noexcept {
-            setFillColor(rgba.m_data[0], rgba.m_data[1], rgba.m_data[2], rgba.m_alpha);
+            setFillColor(rgba.m_data[0], rgba.m_data[1], rgba.m_data[2], rgba.alpha_);
         }
 
         virtual void setStrokeColor(float r, float g, float b, float alpha) noexcept {}
@@ -180,7 +180,7 @@ namespace Grain {
             setStrokeColor(rgb.m_data[0], rgb.m_data[1], rgb.m_data[2], alpha);
         }
         virtual void setStrokeRGBA(const RGBA& rgba) noexcept {
-            setStrokeColor(rgba.m_data[0], rgba.m_data[1], rgba.m_data[2], rgba.m_alpha);
+            setStrokeColor(rgba.m_data[0], rgba.m_data[1], rgba.m_data[2], rgba.alpha_);
         }
 
         virtual void setStrokeWidth(double width) noexcept {}
@@ -206,11 +206,11 @@ namespace Grain {
 
         virtual void beginPath() noexcept {}
         virtual void moveTo(double x, double y) noexcept {}
-        virtual void moveTo(const Vec2d& point) noexcept { moveTo(point.m_x, point.m_y); }
+        virtual void moveTo(const Vec2d& point) noexcept { moveTo(point.x_, point.y_); }
         virtual void lineTo(double x, double y) noexcept {}
         virtual void lineTo(double x, double y, bool start_flag) noexcept {}
-        virtual void lineTo(const Vec2d& point) noexcept { lineTo(point.m_x, point.m_y); }
-        virtual void lineTo(const Vec2d& point, bool start_flag) noexcept { lineTo(point.m_x, point.m_y, start_flag); }
+        virtual void lineTo(const Vec2d& point) noexcept { lineTo(point.x_, point.y_); }
+        virtual void lineTo(const Vec2d& point, bool start_flag) noexcept { lineTo(point.x_, point.y_, start_flag); }
         virtual void curveTo(double c1x, double c1y, double c2x, double c2y, double x, double y) noexcept {}
         virtual void curveTo(const Vec2d& control1, const Vec2d& control2, const Vec2d& point) noexcept {}
         virtual void curveTo(double cx, double cy, double x, double y) noexcept {}
@@ -227,7 +227,7 @@ namespace Grain {
 
         virtual void addRectPath(double x, double y, double width, double height) noexcept;
         virtual void addRectPath(const Rectd& rect) noexcept {
-            addRectPath(rect.m_x, rect.m_y, rect.m_width, rect.m_height);
+            addRectPath(rect.x_, rect.y_, rect.width_, rect.height_);
         };
 
         virtual bool addFramePath(const Rectd& rect, double top, double right, double bottom, double left) noexcept;
@@ -235,17 +235,17 @@ namespace Grain {
         virtual void addEllipsePath(const Rectd& rect) noexcept {}
         virtual void addCirclePath(double x, double y, double radius) noexcept {}
         virtual void addCirclePath(const Vec2d& center, double radius) noexcept {
-            addCirclePath(center.m_x, center.m_y, radius);
+            addCirclePath(center.x_, center.y_, radius);
         }
 
         virtual void addRoundBarPath(double x, double y, double width, double height) noexcept;
         virtual void addRoundBarPath(const Rectd& rect) noexcept {
-            addRoundBarPath(rect.m_x, rect.m_y, rect.m_width, rect.m_height);
+            addRoundBarPath(rect.x_, rect.y_, rect.width_, rect.height_);
         }
 
         virtual void addRoundRectPath(double x, double y, double width, double height, double radius) noexcept;
         virtual void addRoundRectPath(const Rectd& rect, double radius) noexcept {
-            addRoundRectPath(rect.m_x, rect.m_y, rect.m_width, rect.m_height, radius);
+            addRoundRectPath(rect.x_, rect.y_, rect.width_, rect.height_, radius);
         }
 
         virtual void addRoundRectPath(
@@ -255,7 +255,7 @@ namespace Grain {
                 const Rectd& rect,
                 double radius1, double radius2, double radius3, double radius4) noexcept {
             addRoundRectPath(
-                    rect.m_x, rect.m_y, rect.m_width, rect.m_height,
+                    rect.x_, rect.y_, rect.width_, rect.height_,
                     radius1, radius2, radius3, radius4);
 
         }
@@ -304,16 +304,16 @@ namespace Grain {
 
         virtual void strokeRect(double x, double y, double width, double height) noexcept {}
         virtual void strokeRect(const Rectd& rect) noexcept {
-            strokeRect(rect.m_x, rect.m_y, rect.m_width, rect.m_height);
+            strokeRect(rect.x_, rect.y_, rect.width_, rect.height_);
         }
         virtual void strokeRect(const Rectd& rect, double offset) noexcept {
-            strokeRect(rect.m_x - offset, rect.m_y - offset, rect.m_width + offset * 2, rect.m_height + offset * 2);
+            strokeRect(rect.x_ - offset, rect.y_ - offset, rect.width_ + offset * 2, rect.height_ + offset * 2);
         }
         virtual void strokeRoundBar(double x, double y, double width, double height) noexcept;
         virtual void strokeRoundBar(const Rectd& rect) noexcept;
         virtual void strokeRoundRect(double x, double y, double width, double height, double radius) noexcept;
         virtual void strokeRoundRect(const Rectd& rect, double radius) noexcept {
-            strokeRoundRect(rect.m_x, rect.m_y, rect.m_width, rect.m_height, radius);
+            strokeRoundRect(rect.x_, rect.y_, rect.width_, rect.height_, radius);
         }
         virtual void strokeRoundRect(double x, double y, double width, double height, double radius1, double radius2, double radius3, double radius4) noexcept;
         virtual void strokeRoundRect(const Rectd& rect, double radius1, double radius2, double radius3, double radius4) noexcept;
@@ -401,11 +401,11 @@ namespace Grain {
         void translateY(double ty) noexcept { translate(0.0, ty); }
         template<typename T>
         void translate(const Vec2<T>& tv) noexcept {
-            translate(static_cast<double>(tv.m_x), static_cast<double>(tv.m_y));
+            translate(static_cast<double>(tv.x_), static_cast<double>(tv.y_));
         }
         virtual void scale(double sx, double sy) noexcept {}
         void scale(double s) noexcept { scale(s, s); }
-        void scale(const Vec2d& sv) noexcept { scale(sv.m_x, sv.m_y); }
+        void scale(const Vec2d& sv) noexcept { scale(sv.x_, sv.y_); }
         void scaleFromPivot(const Vec2d& pivot, double s) noexcept { translate(pivot); scale(s); translate(-pivot); }
         void scaleFromPivot(const Vec2d& pivot, double sx, double sy) noexcept { translate(pivot); scale(sx, sy); translate(-pivot); }
         virtual void rotate(double angle) noexcept {}

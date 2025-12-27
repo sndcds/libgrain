@@ -113,7 +113,7 @@ namespace Grain {
         float m_duration = 10.0f;
         float m_min = 0.0f;
         float m_max = 1.0f;
-        bool m_running = true;
+        bool running_ = true;
 
     public:
         LUT1Stepper(LUT1* lut, float duration, float step = 1) noexcept;

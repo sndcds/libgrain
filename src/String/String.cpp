@@ -66,9 +66,9 @@ namespace Grain {
         if ((c & 0x80) == 0x0) {
             // Only if c is a valid 7 bit ASCII character
             uint8_t uc = static_cast<uint8_t>(c);
-            m_flags[uc] |= kFlagDelimiter;
+            flags_[uc] |= kFlagDelimiter;
             if (String::charIsWhiteSpace(c)) {
-                m_flags[uc] |= kFlagWhiteSpace;
+                flags_[uc] |= kFlagWhiteSpace;
             }
         }
     }
@@ -88,7 +88,7 @@ namespace Grain {
     uint8_t Utf8SingleByteDelimiterStates::check(char c) {
         if ((c & 0x80) == 0x0) {
             // Only if c is a valid 7 bit ASCII character
-            return m_flags[static_cast<uint8_t>(c)];
+            return flags_[static_cast<uint8_t>(c)];
         }
         else {
             return kFlagsNone;
@@ -188,7 +188,7 @@ namespace Grain {
 
 
     String::~String() noexcept {
-        std::free(m_data);
+        std::free(data_);
     }
 
 
@@ -208,15 +208,15 @@ namespace Grain {
 
 
     void String::_init() noexcept {
-        if (m_data) {
-            free(m_data);
+        if (data_) {
+            free(data_);
         }
-        m_data = nullptr;
-        m_byte_length = 0;
-        m_character_length = 0;
-        m_byte_capacity = 0;
-        m_extra_grow_bytes = 32;
-        m_grow_count = 0;
+        data_ = nullptr;
+        byte_len_ = 0;
+        character_len_ = 0;
+        byte_capacity_ = 0;
+        extra_grow_bytes_ = 32;
+        grow_count_ = 0;
     }
 
 
@@ -272,22 +272,22 @@ namespace Grain {
 
 
     int64_t String::length() const noexcept {
-        return m_character_length;
+        return character_len_;
     }
 
 
     int64_t String::byteLength() const noexcept {
-        return m_byte_length;
+        return byte_len_;
     }
 
 
     char* String::mutDataPtr() noexcept {
-        return m_data;
+        return data_;
     }
 
 
     const char* String::utf8() const noexcept {
-        return m_data ? m_data : String::g_empty_data;
+        return data_ ? data_ : String::g_empty_data;
     }
 
 
@@ -300,14 +300,14 @@ namespace Grain {
      *  @return `true` if the string contains valid UTF-8 encoding, `false` otherwise.
      */
     bool String::isValidUtf8(int64_t* out_byte_index) const noexcept {
-        if (!m_data) {
+        if (!data_) {
             return false;
         }
 
         int64_t byte_index = 0;
 
-        while (byte_index < m_byte_length) {
-            int32_t seq_length = String::utf8SeqLength((uint8_t*)&m_data[byte_index]);
+        while (byte_index < byte_len_) {
+            int32_t seq_length = String::utf8SeqLength((uint8_t*)&data_[byte_index]);
 
             if (seq_length < 1) {
                 if (out_byte_index) {
@@ -328,12 +328,12 @@ namespace Grain {
 
 
     bool String::isEmpty() const noexcept {
-        return m_character_length < 1;
+        return character_len_ < 1;
     }
 
 
     bool String::isNotEmpty() const noexcept {
-        return m_character_length > 0;
+        return character_len_ > 0;
     }
 
 
@@ -343,9 +343,9 @@ namespace Grain {
      *  @return `true` if all chars are 7 bit ASCII.
      */
     bool String::isAscii() const noexcept {
-        if (m_data && m_byte_length > 0) {
-            int64_t n = m_byte_length;
-            auto p = (uint8_t*)m_data;
+        if (data_ && byte_len_ > 0) {
+            int64_t n = byte_len_;
+            auto p = (uint8_t*)data_;
 
             while (n--) {
                 if (*p & 0x80) {
@@ -371,7 +371,7 @@ namespace Grain {
      *  @return `true` if the string is alphanumeric, false otherwise.
      */
     bool String::isAlphaNumeric() const noexcept {
-        if (!m_data || m_data[0] == String::EOS) {
+        if (!data_ || data_[0] == String::EOS) {
             // Empty string is not considered alphanumeric
             return false;
         }
@@ -380,7 +380,7 @@ namespace Grain {
         int64_t length = byteLength();
 
         while (i < length) {
-            if (!isAlpha(m_data[i]) && !isDigit(m_data[i])) {
+            if (!isAlpha(data_[i]) && !isDigit(data_[i])) {
                 return false;  // Found a non-alphanumeric character
             }
             i++;
@@ -396,7 +396,7 @@ namespace Grain {
      *  @return `true` if string represents a valid natural or real number.
      */
     bool String::isValidNumber() const noexcept {
-        if (!m_data || m_data[0] == String::EOS) {
+        if (!data_ || data_[0] == String::EOS) {
             // Empty string is not a valid number
             return false;
         }
@@ -405,36 +405,36 @@ namespace Grain {
         int64_t length = byteLength();
 
         // Check for optional sign
-        if (isSignChar(m_data[i])) {
+        if (isSignChar(data_[i])) {
             i++;
         }
 
         // Check for digits before the decimal point
-        while (i < length && isDigit(m_data[i])) {
+        while (i < length && isDigit(data_[i])) {
             i++;
         }
 
         // Check for optional decimal point
-        if (i < length && m_data[i] == '.') {
+        if (i < length && data_[i] == '.') {
             i++;
         }
 
         // Check for digits after the decimal point
-        while (i < length && isDigit(m_data[i])) {
+        while (i < length && isDigit(data_[i])) {
             i++;
         }
 
         // Check for optional exponent part
-        if (i < length && isExponentChar(m_data[i])) {
+        if (i < length && isExponentChar(data_[i])) {
             i++;
 
             // Check for optional sign after the exponent character
-            if (i < length && isSignChar(m_data[i])) {
+            if (i < length && isSignChar(data_[i])) {
                 i++;
             }
 
             // Check for digits in the exponent part
-            while (i < length && isDigit(m_data[i])) {
+            while (i < length && isDigit(data_[i])) {
                 i++;
             }
         }
@@ -451,10 +451,10 @@ namespace Grain {
      */
     bool String::isQuoted() const noexcept {
         return
-            m_data &&
-            m_byte_length > 1 &&
-            m_data[0] == '"' &&
-            m_data[m_byte_length - 1] == '"';
+            data_ &&
+            byte_len_ > 1 &&
+            data_[0] == '"' &&
+            data_[byte_len_ - 1] == '"';
     }
 
 
@@ -466,7 +466,7 @@ namespace Grain {
      *  @return `true` if index is within a valid range.
      */
     bool String::isCharacterIndexInRange(int64_t char_index) const noexcept {
-        return m_data && char_index >= 0 && char_index < m_character_length;
+        return data_ && char_index >= 0 && char_index < character_len_;
     }
 
 
@@ -478,7 +478,7 @@ namespace Grain {
      *  @return `true` if `byte_index` is within a valid range.
      */
     bool String::isByteIndexInRange(int64_t byte_index) const noexcept {
-        return m_data && byte_index >= 0 && byte_index < m_byte_length;
+        return data_ && byte_index >= 0 && byte_index < byte_len_;
     }
 
 
@@ -520,7 +520,7 @@ namespace Grain {
      *          if the provided `byte_index` is println of range.
      */
     int64_t String::characterIndexFromByteIndex(int64_t byte_index) const noexcept {
-        if (!m_data || byte_index >= m_byte_length) {
+        if (!data_ || byte_index >= byte_len_) {
             return -1;
         }
 
@@ -564,7 +564,7 @@ namespace Grain {
      *         `byte_index` is println of range.
      */
     int32_t String::utf8SeqLengthAtByteIndex(int64_t byte_index) const noexcept {
-        return isByteIndexInRange(byte_index) ? utf8SeqLengthByStartByte(m_data[byte_index]) : 0;
+        return isByteIndexInRange(byte_index) ? utf8SeqLengthByStartByte(data_[byte_index]) : 0;
     }
 
 
@@ -791,14 +791,14 @@ namespace Grain {
     bool String::clampCharacterRange(
             int64_t& character_index,
             int64_t& character_length) const noexcept {
-        if (m_data) {
-            if (character_index < m_character_length && character_length > 0) {
+        if (data_) {
+            if (character_index < character_len_ && character_length > 0) {
                 if (character_index < 0) {
                     character_length += character_index;
                     character_index = 0;
                 }
 
-                int64_t max_length = m_character_length - character_index;
+                int64_t max_length = character_len_ - character_index;
                 if (character_length > max_length) {
                     character_length = max_length;
                 }
@@ -851,14 +851,14 @@ namespace Grain {
      *  @return Number of whitespaces or a negative error code.
      */
     int64_t String::whiteSpaceHead() const noexcept {
-        if (!m_data) {
+        if (!data_) {
             return -1;  // Return error code
         }
 
         int64_t byte_index = 0;
         int64_t n = 0;  // Whitespaces counter
 
-        char* p = m_data;
+        char* p = data_;
 
         while (*p != 0) {
             int64_t seq_length = utf8SeqLengthAtByteIndex(byte_index);
@@ -899,14 +899,14 @@ namespace Grain {
 
         // TODO: Can be optimized by looking for white spaces from the tail side
 
-        if (!m_data) {
+        if (!data_) {
             return -1;  // Return error code
         }
 
         int64_t byte_index = 0;
         int64_t n = 0;  // Whitespaces counter
 
-        char* p = m_data;
+        char* p = data_;
 
         while (*p != 0) {
             int64_t seq_length = utf8SeqLengthAtByteIndex(byte_index);
@@ -945,9 +945,9 @@ namespace Grain {
      *  @note The memory will notbe changed.
      */
     void String::clear() noexcept {
-        m_byte_length = m_character_length = 0;
-        if (m_data) {
-            m_data[0] = 0;
+        byte_len_ = character_len_ = 0;
+        if (data_) {
+            data_[0] = 0;
         }
     }
 
@@ -961,7 +961,7 @@ namespace Grain {
      *  @return `true` if whitespace characters were removed, `false` otherwise.
      */
     bool String::trim(TrimMode trim_mode) noexcept {
-        if (!m_data) {
+        if (!data_) {
             return false;
         }
 
@@ -981,14 +981,14 @@ namespace Grain {
 
         if (head > 0) {
             byteRangeFromCharacterRange(0, head, byte_index, byte_length);
-            memmove(m_data, &m_data[byte_length], m_byte_length - byte_length + 1);
+            memmove(data_, &data_[byte_length], byte_len_ - byte_length + 1);
             new_length -= head;
         }
 
         if (tail > 0) {
             byteRangeFromCharacterRange(new_length - tail, 1, byte_index, byte_length);
-            if (byte_index >= 0 && byte_index < m_byte_length) {
-                m_data[byte_index] = 0;
+            if (byte_index >= 0 && byte_index < byte_len_) {
+                data_[byte_index] = 0;
             }
         }
 
@@ -1042,7 +1042,7 @@ namespace Grain {
 
             checkCapacity(max_size);
 
-            if (CFStringGetCString(cf_string, m_data, max_size, kCFStringEncodingUTF8)) {
+            if (CFStringGetCString(cf_string, data_, max_size, kCFStringEncodingUTF8)) {
                 result = true;
             }
         }
@@ -1162,10 +1162,10 @@ namespace Grain {
             length = l;
 
             if (checkCapacity(length + 10)) {
-                memcpy(m_data, str, length);
-                m_data[length] = 0;
-                m_byte_length = static_cast<int64_t>(strlen(m_data));
-                m_character_length = utf8Length(m_data);
+                memcpy(data_, str, length);
+                data_[length] = 0;
+                byte_len_ = static_cast<int64_t>(strlen(data_));
+                character_len_ = utf8Length(data_);
                 return true;
             }
             else {
@@ -1401,10 +1401,10 @@ namespace Grain {
             return false;
         }
         else if (_checkExtraCapacity(1)) {
-            m_data[m_byte_length] = c;
-            m_data[m_byte_length + 1] = 0;
-            m_byte_length++;
-            m_character_length++;
+            data_[byte_len_] = c;
+            data_[byte_len_ + 1] = 0;
+            byte_len_++;
+            character_len_++;
             return true;
         }
         else {
@@ -1433,12 +1433,12 @@ namespace Grain {
         }
         else if (_checkExtraCapacity(n)) {
             for (int64_t i = 0; i < n; i++) {
-                m_data[m_byte_length + i] = c;
+                data_[byte_len_ + i] = c;
             }
 
-            m_data[m_byte_length + n] = 0;
-            m_byte_length += n;
-            m_character_length += n;
+            data_[byte_len_ + n] = 0;
+            byte_len_ += n;
+            character_len_ += n;
 
             return true;
         }
@@ -1461,10 +1461,10 @@ namespace Grain {
 
             if (byte_length > 0 && character_length > 0) {
                 if (_checkExtraCapacity(byte_length + 1)) {
-                    memcpy(&m_data[m_byte_length], str, byte_length);
-                    m_data[m_byte_length + byte_length] = String::EOS;
-                    m_byte_length += byte_length;
-                    m_character_length += character_length;
+                    memcpy(&data_[byte_len_], str, byte_length);
+                    data_[byte_len_ + byte_length] = String::EOS;
+                    byte_len_ += byte_length;
+                    character_len_ += character_length;
                     return true;
                 }
             }
@@ -1491,10 +1491,10 @@ namespace Grain {
 
             if (byte_length > 0) {
                 if (_checkExtraCapacity(byte_length + 1)) {
-                    memcpy(&m_data[m_byte_length], str, byte_length);
-                    m_data[m_byte_length + byte_length] = String::EOS;
-                    m_byte_length += byte_length;
-                    m_character_length = utf8Length(m_data);
+                    memcpy(&data_[byte_len_], str, byte_length);
+                    data_[byte_len_ + byte_length] = String::EOS;
+                    byte_len_ += byte_length;
+                    character_len_ = utf8Length(data_);
                     return true;
                 }
             }
@@ -1562,7 +1562,7 @@ namespace Grain {
             return false;
         }
         else {
-            return append(&string.m_data[s], e - s + 1);
+            return append(&string.data_[s], e - s + 1);
         }
     }
 
@@ -1582,7 +1582,7 @@ namespace Grain {
             seq_length = string.utf8SeqLengthAtByteIndex(byte_index);
 
             if (seq_length > 0) {
-                append(&string.m_data[character_index], seq_length);
+                append(&string.data_[character_index], seq_length);
             }
         }
 
@@ -1694,7 +1694,7 @@ namespace Grain {
             return false;
         }
 
-        if (character_index == m_character_length) {
+        if (character_index == character_len_) {
             append(str);
             return true;
         }
@@ -1717,27 +1717,27 @@ namespace Grain {
             return false;
         }
 
-        int64_t n = m_byte_length - byte_index + 1;
+        int64_t n = byte_len_ - byte_index + 1;
         if (n < 1) {
             return false;
         }
 
-        char* d = &m_data[m_byte_length + byte_length];
-        const char* s = &m_data[m_byte_length];
+        char* d = &data_[byte_len_ + byte_length];
+        const char* s = &data_[byte_len_];
         while (n--) {
             *d-- = *s--;
         }
 
-        d = &m_data[byte_index];
+        d = &data_[byte_index];
         s = str;
         n = byte_length;
         while (n--) {
             *d++ = *s++;
         }
 
-        m_character_length += character_length;
-        m_byte_length += byte_length;
-        m_data[m_byte_length] = 0;
+        character_len_ += character_length;
+        byte_len_ += byte_length;
+        data_[byte_len_] = 0;
 
         return true;
     }
@@ -1863,7 +1863,7 @@ namespace Grain {
             }
 
             for (int64_t i = 0; i < new_seq_length; i++) {
-                m_data[byte_index + i] = c[i];
+                data_[byte_index + i] = c[i];
             }
         }
 
@@ -1984,8 +1984,8 @@ namespace Grain {
 
             char sign = 0;
             int64_t start = 0;
-            if (isSignChar(m_data[0])) {
-                sign = m_data[0];
+            if (isSignChar(data_[0])) {
+                sign = data_[0];
                 start = 1;
             }
 
@@ -2002,14 +2002,14 @@ namespace Grain {
 
             // Remove leading zeros from integer part
             int64_t index = 0;
-            while (integer_part.m_data[index] == '0') {
+            while (integer_part.data_[index] == '0') {
                 index++;
             }
             integer_part.remove(0, index);
 
             // Remove trailing zeros from floating point part
             index = float_part.byteLength() - 1;
-            while (index >= 0 && float_part.m_data[index] == '0') {
+            while (index >= 0 && float_part.data_[index] == '0') {
                 index--;
             }
             float_part.truncate(index + 1);
@@ -2082,7 +2082,7 @@ namespace Grain {
      */
     void String::removeStringDoubleQuotes() noexcept {
         if (isQuoted()) {
-            remove(m_byte_length - 1, 1);
+            remove(byte_len_ - 1, 1);
             remove(0, 1);
         }
     }
@@ -2102,7 +2102,7 @@ namespace Grain {
             return ErrorCode::MemCantGrow;
         }
         else {
-            randomName(length, m_data);
+            randomName(length, data_);
             return ErrorCode::None;
         }
     }
@@ -2124,7 +2124,7 @@ namespace Grain {
             return ErrorCode::MemCantGrow;
         }
         else {
-            return randomName(mask, path, length + 1, m_data);
+            return randomName(mask, path, length + 1, data_);
         }
     }
 
@@ -2141,7 +2141,7 @@ namespace Grain {
         if (checkCapacity(36)) {  // UUIDs are 36 characters
             uuid_t uuid;
             uuid_generate(uuid);
-            uuid_unparse(uuid, m_data);
+            uuid_unparse(uuid, data_);
             return true;
         }
         else {
@@ -2186,23 +2186,23 @@ namespace Grain {
     int64_t String::findAsciiChar(char c, int64_t index) const noexcept {
         // TODO: Test!!!
 
-        if (index < 0 || index >= m_character_length) {
+        if (index < 0 || index >= character_len_) {
             return kFindResult_CharacterIndexOutOfRange;
         }
 
         int64_t byte_index = byteIndexFromCharacterIndex(index);
-        if (byte_index < 0 || byte_index >= m_byte_length) {
+        if (byte_index < 0 || byte_index >= byte_len_) {
             return kFindResult_ByteIndexOutOfRange;
         }
 
-        char* ptr = &m_data[byte_index];
-        for (int64_t i = index; i < m_byte_length; i++) {
+        char* ptr = &data_[byte_index];
+        for (int64_t i = index; i < byte_len_; i++) {
             if (*ptr == String::EOS) {
                 break;
             }
 
             if (*ptr == c) {
-                int64_t character_index = characterIndexFromByteIndex(static_cast<int64_t>(ptr - m_data));
+                int64_t character_index = characterIndexFromByteIndex(static_cast<int64_t>(ptr - data_));
                 if (character_index < 0) {
                     return kFindResult_ConversionIndexFailed;
                 }
@@ -2232,7 +2232,7 @@ namespace Grain {
      *          -5: nothing found.
      */
     int64_t String::find(const char* str, int64_t index) const noexcept {
-        if (!m_data) {
+        if (!data_) {
             return kFindResult_MemError;
         }
 
@@ -2240,21 +2240,21 @@ namespace Grain {
             return kFindResult_StrError;
         }
 
-        if (index < 0 || index >= m_character_length) {
+        if (index < 0 || index >= character_len_) {
             return kFindResult_CharacterIndexOutOfRange;
         }
 
         int64_t byte_index = byteIndexFromCharacterIndex(index);
-        if (byte_index < 0 || byte_index >= m_byte_length) {
+        if (byte_index < 0 || byte_index >= byte_len_) {
             return kFindResult_ByteIndexOutOfRange;
         }
 
-        char* ptr = strstr(&m_data[byte_index], str);
+        char* ptr = strstr(&data_[byte_index], str);
         if (!ptr) {
             return kFindResult_NothingFound;
         }
 
-        int64_t character_index = characterIndexFromByteIndex(static_cast<int64_t>(ptr - m_data));
+        int64_t character_index = characterIndexFromByteIndex(static_cast<int64_t>(ptr - data_));
         if (character_index < 0) {
             return kFindResult_ConversionIndexFailed;
         }
@@ -2432,8 +2432,8 @@ namespace Grain {
      *          null input.
      */
     int32_t String::compare(const char* str) const noexcept {
-        if (str && m_data) {
-            return strcmp(m_data, str);
+        if (str && data_) {
+            return strcmp(data_, str);
         }
         else {
             return std::numeric_limits<int32_t>::min();
@@ -2487,12 +2487,12 @@ namespace Grain {
             uint32_t offs,
             uint32_t offs_other,
             int32_t length) const noexcept {
-        if (m_data &&
-            string.m_data &&
+        if (data_ &&
+            string.data_ &&
             offs <= byteLength() &&
             offs_other <= string.byteLength()) {
-            const char* ptr = &m_data[offs];
-            const char* ptr_other = &string.m_data[offs_other];
+            const char* ptr = &data_[offs];
+            const char* ptr_other = &string.data_[offs_other];
             return strcmp(ptr, ptr_other);
         }
         else {
@@ -2508,8 +2508,8 @@ namespace Grain {
      *          greater; -1 on null input.
      */
     int32_t String::compareIgnoreCase(const char* str) const noexcept {
-        if (str && m_data) {
-            return strcasecmp(m_data, str);
+        if (str && data_) {
+            return strcasecmp(data_, str);
         }
         else {
             return -1;
@@ -2577,7 +2577,7 @@ namespace Grain {
      *  @return Length of the substring, or -1 on failure.
      */
     int64_t String::subString(int64_t start, String& out_string) const noexcept {
-        return subString(start, m_character_length - 1, out_string);
+        return subString(start, character_len_ - 1, out_string);
     }
 
 
@@ -2590,12 +2590,12 @@ namespace Grain {
      *  @return Length of the substring, or -1 on failure.
      */
     int64_t String::subString(int64_t start, int64_t end, String& out_string) const noexcept {
-        if (start < 0 || start >= m_character_length || end < start) {
+        if (start < 0 || start >= character_len_ || end < start) {
             return -1;
         }
 
-        if (end >= m_character_length) {
-            end = m_character_length - 1;
+        if (end >= character_len_) {
+            end = character_len_ - 1;
         }
 
         if (out_string.setByStr(utf8(), byteIndexFromCharacterIndex(start), byteIndexFromCharacterIndex(end))) {
@@ -2654,7 +2654,7 @@ namespace Grain {
 
             if (isByteIndexInRange(symbol_index)) {
                 if (utf8SeqLengthAtByteIndex(symbol_index) == 1) {
-                    out_char = m_data[symbol_index];
+                    out_char = data_[symbol_index];
                     return true;
                 }
             }
@@ -2687,7 +2687,7 @@ namespace Grain {
      * @return First character, or 0 if the string is empty or null.
      */
     char String::firstAsciiChar() const noexcept {
-        return m_data && m_byte_length > 0 ? m_data[0] : 0;
+        return data_ && byte_len_ > 0 ? data_[0] : 0;
     }
 
 
@@ -2700,14 +2700,14 @@ namespace Grain {
      *          C-string if charIndex is println of range.
      */
     const char* String::utf8AtIndex(int64_t index) const noexcept {
-        if (m_data) {
+        if (data_) {
             int64_t symbol_index = byteIndexFromCharacterIndex(index);
 
             if (symbol_index < 0) {
                 return String::g_empty_data;
             }
 
-            return &m_data[symbol_index];
+            return &data_[symbol_index];
         }
 
         return String::g_empty_data;
@@ -2730,12 +2730,12 @@ namespace Grain {
      *          is insufficient.
      */
     bool String::utf8SubStr(int64_t index, int64_t length, int64_t max_byte_capacity, char* out_buffer) const noexcept {
-        if (m_data && out_buffer) {
+        if (data_ && out_buffer) {
             int64_t symbol_index, symbol_length;
 
             if (byteRangeFromCharacterRange(index, length, symbol_index, symbol_length)) {
                 if (symbol_length < max_byte_capacity) {
-                    strncpy(out_buffer, &m_data[symbol_index], symbol_length);
+                    strncpy(out_buffer, &data_[symbol_index], symbol_length);
                     out_buffer[symbol_length] = 0;
 
                     return true;
@@ -2758,13 +2758,13 @@ namespace Grain {
     int32_t String::utf8CodeAtByteIndex(int64_t byte_index, char* out_buffer) const noexcept {
         int32_t seq_length = 0;
 
-        if (m_data && out_buffer) {
+        if (data_ && out_buffer) {
             if (isByteIndexInRange(byte_index)) {
                 seq_length = utf8SeqLengthAtByteIndex(byte_index);
 
                 if (seq_length > 0) {
                     for (int32_t i = 0; i < seq_length; i++) {
-                        out_buffer[i] = m_data[byte_index + i];
+                        out_buffer[i] = data_[byte_index + i];
                     }
                     out_buffer[seq_length] = 0;
                 }
@@ -3089,10 +3089,10 @@ namespace Grain {
      */
     void String::fillBuffer(int64_t length, char* out_buffer) const noexcept {
         if (out_buffer) {
-            int64_t n = std::min(m_byte_length, length);
+            int64_t n = std::min(byte_len_, length);
 
             for (int64_t i = 0; i < n; i++) {
-                out_buffer[i] = m_data[i];
+                out_buffer[i] = data_[i];
             }
 
             for (int64_t i = n; i < length; i++) {
@@ -3132,37 +3132,81 @@ namespace Grain {
 
 
     bool String::asBool() const noexcept {
-        return m_data && static_cast<bool>(0 != atoi(m_data));
+        return data_ && static_cast<bool>(0 != asInt32(data_));
     }
-
 
     int32_t String::asInt32() const noexcept {
-        return m_data ? static_cast<int32_t>(atoi(m_data)) : 0;
+        return asInt32(data_);
     }
 
+    int32_t String::asInt32(const char* str) noexcept {
+        if (!str) {
+            return 0;
+        }
+        errno = 0; // reset errno before conversion
+        char* endptr = nullptr;
+        long val = std::strtol(str, &endptr, 10);
+        if (endptr == str) {
+            return 0; // No digits found
+        }
+        if (errno == ERANGE || val < INT32_MIN || val > INT32_MAX) {
+            // Value out of range for int32
+            return 0;
+        }
+        return static_cast<int32_t>(val);
+    }
 
     int64_t String::asInt64() const noexcept {
-        return m_data ? static_cast<int64_t>(atol(m_data)) : 0L;
+        return asInt64(data_);
     }
 
+    int64_t String::asInt64(const char* str) noexcept {
+        if (!str) {
+            return 0;
+        }
+        errno = 0; // reset errno before conversion
+        char* endptr = nullptr;
+        long long val = std::strtoll(str, &endptr, 10);
+        if (endptr == str) {
+            return 0; // No digits found
+        }
+        if (errno == ERANGE || val < INT64_MIN || val > INT64_MAX) {
+            // Value out of range for int64_t
+            return 0;
+        }
+        return static_cast<int64_t>(val);
+    }
 
     float String::asFloat() const noexcept {
-        return m_data ? static_cast<float>(parseDoubleWithDotOrComma(m_data)) : 0.0f;
+        return static_cast<float>(asDouble(data_));
     }
-
 
     double String::asDouble() const noexcept {
-        return m_data ? parseDoubleWithDotOrComma(m_data) : 0.0;
+        return asDouble(data_);
     }
 
+    double String::asDouble(const char* str) noexcept {
+        if (!str) {
+            return 0.0;
+        }
+        errno = 0; // reset errno before conversion
+        char* endptr = nullptr;
+        double val = std::strtod(str, &endptr);
+        if (endptr == str) {
+            return 0.0; // Check if no digits were found
+        }
+        if (errno == ERANGE || val == HUGE_VAL || val == -HUGE_VAL) {
+            return 0.0; // Overflow/underflow
+        }
+        return val;
+    }
 
     Fix String::asFix() const noexcept {
-        return Fix(m_data);
+        return Fix(data_);
     }
 
-
     void String::toFix(Fix& out_fix) const noexcept {
-        out_fix.setStr(m_data);
+        out_fix.setStr(data_);
     }
 
 
@@ -3192,7 +3236,7 @@ namespace Grain {
         int32_t count = 0;
         char* des = out_parts;
 
-        const char* p = m_data;
+        const char* p = data_;
         while (*p != String::EOS && count < max_parts) {
             if (*p == delimiter) {
                 if (i > 0) {
@@ -3467,7 +3511,7 @@ namespace Grain {
      */
 #if defined(__APPLE__) && defined(__MACH__)
     void String::copyToPasteboard(int64_t character_index, int64_t character_length) noexcept {
-        if (m_data) {
+        if (data_) {
             _macosApp_copyToPasteboard(this, character_index, character_length);
         }
     }
@@ -3491,7 +3535,7 @@ namespace Grain {
      */
 #if defined(__APPLE__) && defined(__MACH__)
     int64_t String::pasteFromPasteboard(int64_t character_index) noexcept {
-        if (m_data) {
+        if (data_) {
             return _macosApp_pasteFromPasteboard(this, character_index);
         }
         return 0;
@@ -3509,27 +3553,27 @@ namespace Grain {
      *  @brief Check memory capacity.
      */
     bool String::checkCapacity(int64_t needed) noexcept {
-        if (!m_data || m_byte_capacity < 0) {
-            int64_t new_capacity = needed + m_extra_grow_bytes;
-            m_data = (char*)calloc(new_capacity + 1, 1);
+        if (!data_ || byte_capacity_ < 0) {
+            int64_t new_capacity = needed + extra_grow_bytes_;
+            data_ = (char*)calloc(new_capacity + 1, 1);
 
-            if (!m_data) {
+            if (!data_) {
                 return false;
             }
 
-            m_byte_capacity = new_capacity;
+            byte_capacity_ = new_capacity;
         }
-        else if (needed >= m_byte_capacity) {  // Array must grow
-            int64_t new_capacity = needed + m_extra_grow_bytes;
-            char* new_data = (char*)std::realloc(m_data, new_capacity + 1);
+        else if (needed >= byte_capacity_) {  // Array must grow
+            int64_t new_capacity = needed + extra_grow_bytes_;
+            char* new_data = (char*)std::realloc(data_, new_capacity + 1);
 
             if (!new_data) {
                 return false;
             }
 
-            m_grow_count++;
-            m_data = new_data;
-            m_byte_capacity = new_capacity;
+            grow_count_++;
+            data_ = new_data;
+            byte_capacity_ = new_capacity;
         }
 
         return true;
@@ -3547,9 +3591,9 @@ namespace Grain {
 
 
     void String::_updateInternalLengthInfo() noexcept {
-        if (m_data) {
-            m_byte_length = static_cast<int64_t>(strlen(m_data));
-            m_character_length = utf8Length(m_data);
+        if (data_) {
+            byte_len_ = static_cast<int64_t>(strlen(data_));
+            character_len_ = utf8Length(data_);
         }
     }
 
@@ -3558,7 +3602,7 @@ namespace Grain {
      *  @brief Check memory capacity.
      */
     bool String::_checkExtraCapacity(int64_t needed) noexcept {
-        return checkCapacity(m_byte_length + needed);
+        return checkCapacity(byte_len_ + needed);
     }
 
 
@@ -3567,9 +3611,9 @@ namespace Grain {
      */
     void String::_removeData(int64_t byte_index, int64_t byte_length, int64_t character_length) noexcept {
         if (byte_length > 0 && character_length >= 0) {
-            char* d = &m_data[byte_index];
-            char* s = &m_data[byte_index + byte_length];
-            int64_t n = m_byte_length - byte_length - byte_index;
+            char* d = &data_[byte_index];
+            char* s = &data_[byte_index + byte_length];
+            int64_t n = byte_len_ - byte_length - byte_index;
 
             if (n > 0) {
                 while (n--) {
@@ -3577,9 +3621,9 @@ namespace Grain {
                 }
             }
 
-            m_character_length -= character_length;
-            m_byte_length -= byte_length;
-            m_data[m_byte_length] = 0;
+            character_len_ -= character_length;
+            byte_len_ -= byte_length;
+            data_[byte_len_] = 0;
         }
     }
 
@@ -4172,6 +4216,42 @@ namespace Grain {
         return -3;
     }
 
+    /**
+     *  @brief Encodes a Unicode code point into UTF-8.
+     *  @return Number of bytes written (excluding null terminator).
+     */
+    int32_t String::utf8CodeToStr(uint32_t code, char out_str[kUtf8SeqBufferSize]) noexcept {
+        if (code <= 0x7F) {
+            out_str[0] = static_cast<char>(code);
+            out_str[1] = '\0';
+            return 1;
+        }
+        if (code <= 0x7FF) {
+            out_str[0] = static_cast<char>(0xC0 | (code >> 6));
+            out_str[1] = static_cast<char>(0x80 | (code & 0x3F));
+            out_str[2] = '\0';
+            return 2;
+        }
+        if (code <= 0xFFFF) {
+            out_str[0] = static_cast<char>(0xE0 | (code >> 12));
+            out_str[1] = static_cast<char>(0x80 | ((code >> 6) & 0x3F));
+            out_str[2] = static_cast<char>(0x80 | (code & 0x3F));
+            out_str[3] = '\0';
+            return 3;
+        }
+        if (code <= 0x10FFFF) {
+            out_str[0] = static_cast<char>(0xF0 | (code >> 18));
+            out_str[1] = static_cast<char>(0x80 | ((code >> 12) & 0x3F));
+            out_str[2] = static_cast<char>(0x80 | ((code >> 6) & 0x3F));
+            out_str[3] = static_cast<char>(0x80 | (code & 0x3F));
+            out_str[4] = '\0';
+            return 4;
+        }
+
+        // invalid code point
+        out_str[0] = '\0';
+        return 0;
+    }
 
     /**
      *  @brief Find a C-string in an array.
@@ -4435,19 +4515,19 @@ namespace Grain {
 
 
     void StringRing::write(const char* str) noexcept {
-        m_pos++;
-        m_index++;
+        pos_++;
+        index_++;
 
-        if (m_pos >= static_cast<int32_t>(m_size)) {
-            m_pos = 0;
+        if (pos_ >= static_cast<int32_t>(size_)) {
+            pos_ = 0;
         }
 
-        if (!m_strings[m_pos]) {
-            m_strings[m_pos] = new (std::nothrow) String(str);
+        if (!strings_[pos_]) {
+            strings_[pos_] = new (std::nothrow) String(str);
         }
 
-        else if (m_strings[m_pos]) {
-            *m_strings[m_pos] = str;
+        else if (strings_[pos_]) {
+            *strings_[pos_] = str;
         }
     }
 
@@ -4492,18 +4572,18 @@ namespace Grain {
     const char* StringRing::read(int32_t index) const noexcept {
         static const char* _default = "!?";
 
-        if (index >= static_cast<int32_t>(m_size) || index < 0) {
+        if (index >= static_cast<int32_t>(size_) || index < 0) {
             return _default;
         }
 
-        auto read_index = m_pos - index;
+        auto read_index = pos_ - index;
 
         if (read_index < 0) {
-            read_index += static_cast<int32_t>(m_size);
+            read_index += static_cast<int32_t>(size_);
         }
 
-        if (m_strings[read_index]) {
-            return m_strings[read_index]->utf8();
+        if (strings_[read_index]) {
+            return strings_[read_index]->utf8();
         }
         else {
             return _default;

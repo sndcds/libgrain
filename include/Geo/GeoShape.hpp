@@ -77,8 +77,7 @@ namespace Grain {
         int32_t m_part_count = 0;
         int32_t m_poly_count = 0;
 
-        // List<Vec2d> m_points
-        std::vector<Vec2d> m_points;        // TODO: Use List instead of std::vector, maybe use Point2d instead of Vec2d
+        std::vector<Vec2d> points_;        // TODO: Use List instead of std::vector, maybe use Point2d instead of Vec2d
         std::vector<int32_t> m_parts;       // TODO: Use List instead of std::vector
         std::vector<GeoShapePoly> m_polys;  // TODO: Use List instead of std::vector
 
@@ -145,7 +144,7 @@ namespace Grain {
         ShapeType shapeType() const noexcept { return m_shape_type; }
 
         Vec2d* pointPtrAtIndex(int32_t index) noexcept {
-            return index >= 0 && index < m_points.size() ? &m_points[index] : nullptr;
+            return index >= 0 && index < points_.size() ? &points_[index] : nullptr;
         }
 
         GeoShapePoly* polyPtrAtIndex(int32_t index) noexcept;
@@ -288,7 +287,7 @@ namespace Grain {
         int32_t m_record_number;
         int32_t m_content_length;
         GeoShape::ShapeType m_shape_type;
-        RangeRectd m_bbox;
+        RangeRectd bbox_;
         int32_t m_part_offset = 0;
         int32_t m_part_count = 0;
         int32_t m_point_offset = 0;
@@ -325,7 +324,7 @@ namespace Grain {
             m_record_number = poly.m_record_number;
             m_content_length = poly.m_content_length;
             m_shape_type = poly.m_shape_type;
-            m_bbox = poly.m_bbox;
+            bbox_ = poly.bbox_;
             m_part_offset = poly.m_part_offset;
             m_part_count = poly.m_part_count;
             m_point_offset = poly.m_point_offset;
@@ -338,7 +337,7 @@ namespace Grain {
             m_record_number = poly.m_record_number;
             m_content_length = poly.m_content_length;
             m_shape_type = poly.m_shape_type;
-            m_bbox = std::move(poly.m_bbox);
+            bbox_ = std::move(poly.bbox_);
             m_part_offset = poly.m_part_offset;
             m_part_count = poly.m_part_count;
             m_point_offset = poly.m_point_offset;
@@ -361,7 +360,7 @@ namespace Grain {
 
         bool pointAtIndex(int32_t index, Vec2d& outPoint) noexcept {
             if (isPointIndex(index)) {
-                outPoint = m_shape->m_points[m_point_offset + index];
+                outPoint = m_shape->points_[m_point_offset + index];
                 return true;
             }
             else {
@@ -371,7 +370,7 @@ namespace Grain {
 
         Vec2d* pointPtrAtIndex(int32_t index) noexcept {
             if (isPointIndex(index)) {
-                return &m_shape->m_points[m_point_offset + index];
+                return &m_shape->points_[m_point_offset + index];
             }
             else {
                 return nullptr;

@@ -134,8 +134,8 @@ namespace Grain {
         BuffersMustBeDifferent,
         IndexOutOfRange,            ///< An index is println of range
         RegionOutOfRange,
-        OffsetOutOfRange,
-        LengthOutOfRange,
+        OffsOutOfRange,
+        LenOutOfRange,
         DestinationOutOfBounds,
         SourceOutOfBounds,
         UnsupportedStepSize,
@@ -146,6 +146,13 @@ namespace Grain {
         MemCantAllocate = 400,
         MemCantGrow,
         MemExternalMemCantGrow,
+
+        DataComposerUnknownPropertyType = 460,
+        DataComposerPropertyTypeMismatch,
+        DataComposerObjectCreationModelIsNull,
+        DataComposerObjectCreationFailed,
+        DataComposerNoModelForName,
+        DataComposerModelCreationNoBaseModel,
 
         FileOverwriteNotAllowed = 500,
         FileNoHandle,
@@ -177,6 +184,7 @@ namespace Grain {
         UnknownTiffFieldType,
 
         UnsupportedDimension = 600,
+        UnsupportedResolution,
         UnsupportedColorModel,
         UnsupportedChannelCount,
         InvalidChannel,
@@ -230,9 +238,15 @@ namespace Grain {
 
     class Error {
     public:
+        static inline bool isError(ErrorCode code) {
+            return code != ErrorCode::None;
+        }
+
+        // TODO: Check, is this needed anymore?
         static void throwSpecific(int32_t custom_code) {
             throw static_cast<ErrorCode>(custom_code + 1000000);
         }
+
         static ErrorCode specific(int32_t custom_code) {
             return static_cast<ErrorCode>(custom_code + 1000000);
         }

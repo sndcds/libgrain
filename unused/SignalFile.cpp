@@ -138,7 +138,7 @@ namespace Grain {
 
     ErrorCode SignalFile::scan() {
 
-        if (m_scan_done) {
+        if (scan_done_) {
             return m_scan_err_code;
         }
 
@@ -249,7 +249,7 @@ namespace Grain {
         }
 
 
-        m_scan_done = true;
+        scan_done_ = true;
 
         return m_scan_err_code;
     }
@@ -264,8 +264,7 @@ namespace Grain {
 
 
     void SignalFile::read(Signal* signal, int32_t offset, int32_t length) {
-
-        if (!m_scan_done) {
+        if (!scan_done_) {
             scan();
         }
 

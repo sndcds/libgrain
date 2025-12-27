@@ -35,7 +35,7 @@ namespace Grain {
     class AudioFilterBand {
     protected:
         float m_freg = 1000.0f;
-        float m_width = 100.0f;
+        float width_ = 100.0f;
         float m_db = 0.0f;
     };
 
@@ -47,6 +47,9 @@ namespace Grain {
             Output,
             Through
         };
+
+        static constexpr float kMinDb = -1500.0f;   ///< Lowest db
+        static constexpr float kMinLinear = 1e-12f; ///< Small positive floor
 
         enum {
             kMusicPitch_C0 = 12,
@@ -174,7 +177,6 @@ namespace Grain {
 
     public:
         static const double g_envelope_min_level;
-        static LUT1* g_amplitude_from_level_lut;
         static LUT1* g_release_lut;
         static LUT1* g_release_duration_lut;
 
@@ -188,14 +190,9 @@ namespace Grain {
         [[nodiscard]] static float durationForNote(float bpm, float length) noexcept;
         [[nodiscard]] static float samplesNeededForNote(int32_t sample_rate, float bpm, float length) noexcept;
 
-        // Level, Amplitude, Dezibel
-        [[nodiscard]] static float dezibelFromAmplitude(float amplitude) noexcept;
-        [[nodiscard]] static float levelFromAmplitude(float amplitude) noexcept;
-        [[nodiscard]] static float amplitudeFromDezibel(float dezibel) noexcept;
-        [[nodiscard]] static float levelFromDezibel(float dezibel) noexcept;
-        [[nodiscard]] static float dezibelFromLevel(float level) noexcept;
-        [[nodiscard]] static float amplitudeFromLevel(float level) noexcept;
-        [[nodiscard]] static float amplitudeFromLevelLUT(float level) noexcept;
+        // Amplitude, Dezibel
+        [[nodiscard]] static float linearToDb(float level) noexcept;
+        [[nodiscard]] static float dbToLinear(float db) noexcept;
 
         // Frequency, Pitch
         [[nodiscard]] static float freqFromPitch(float pitch, float reference_freq = 440) noexcept;
@@ -224,7 +221,6 @@ namespace Grain {
         [[nodiscard]] static float interauralSampleDelay(int32_t sample_rate, float level) noexcept;
 
         [[nodiscard]] static float amplitudeAttenuation(float db, float distance) noexcept;
-        [[nodiscard]] static float levelAttenuation(float db, float distance) noexcept;
         [[nodiscard]] static float dbAttenuation(float db, float distance) noexcept;
         [[nodiscard]] static float soundIntensity(float initial_intensity, float attenuation, float distance);
 

@@ -214,8 +214,8 @@ namespace Grain {
             // Header.
             meta_file.writeStr("META");
             meta_file.writeValue<int32_t>(tile_n);
-            meta_file.writeValue<int32_t>(tile_index.m_x);
-            meta_file.writeValue<int32_t>(tile_index.m_y);
+            meta_file.writeValue<int32_t>(tile_index.x_);
+            meta_file.writeValue<int32_t>(tile_index.y_);
             meta_file.writeValue<int32_t>(zoom);
 
             uint32_t tile_offs = static_cast<uint32_t>(meta_file.pos() + tile_n * sizeof(GeoMetaTileEntry));
@@ -345,12 +345,12 @@ namespace Grain {
 
         m_zoom = zoom;
 
-        Geo::wgs84ToTileIndex(m_zoom, bbox.m_min_x, bbox.m_max_y, m_tile_start.m_x, m_tile_start.m_y);
-        Geo::wgs84ToTileIndex(m_zoom, bbox.m_max_x, bbox.m_min_y, m_tile_end.m_x, m_tile_end.m_y);
+        Geo::wgs84ToTileIndex(m_zoom, bbox.min_x_, bbox.max_y_, m_tile_start.x_, m_tile_start.y_);
+        Geo::wgs84ToTileIndex(m_zoom, bbox.max_x_, bbox.min_y_, m_tile_end.x_, m_tile_end.y_);
 
 
-        m_first_tile.m_x = m_tile_start.m_x & (~0b111);
-        m_first_tile.m_y = m_tile_start.m_y & (~0b111);
+        m_first_tile.x_ = m_tile_start.x_ & (~0b111);
+        m_first_tile.y_ = m_tile_start.y_ & (~0b111);
 
 
         // Special cases for zoom levels less than 3.
@@ -363,8 +363,8 @@ namespace Grain {
             default: m_sn = kGridSize; break;
         }
 
-        m_horizontal_tile_n = (m_tile_end.m_x - m_first_tile.m_x) / kGridSize + 1;
-        m_vertical_tile_n = (m_tile_end.m_y - m_first_tile.m_y) / kGridSize + 1;
+        m_horizontal_tile_n = (m_tile_end.x_ - m_first_tile.x_) / kGridSize + 1;
+        m_vertical_tile_n = (m_tile_end.y_ - m_first_tile.y_) / kGridSize + 1;
 
         m_meta_tiles_needed = m_horizontal_tile_n * m_vertical_tile_n;
 
@@ -389,13 +389,13 @@ namespace Grain {
 
         Log log(std::cout);
 
-        for (m_curr_tile.m_y = m_first_tile.m_y, m_curr_meta_index.m_y = 0;
-             m_curr_tile.m_y <= m_tile_end.m_y;
-             m_curr_tile.m_y += kGridSize, m_curr_meta_index.m_y++) {
+        for (m_curr_tile.y_ = m_first_tile.y_, m_curr_meta_index.y_ = 0;
+             m_curr_tile.y_ <= m_tile_end.y_;
+             m_curr_tile.y_ += kGridSize, m_curr_meta_index.y_++) {
 
-            for (m_curr_tile.m_x = m_first_tile.m_x, m_curr_meta_index.m_x = 0;
-                 m_curr_tile.m_x <= m_tile_end.m_x;
-                 m_curr_tile.m_x += kGridSize, m_curr_meta_index.m_x++) {
+            for (m_curr_tile.x_ = m_first_tile.x_, m_curr_meta_index.x_ = 0;
+                 m_curr_tile.x_ <= m_tile_end.x_;
+                 m_curr_tile.x_ += kGridSize, m_curr_meta_index.x_++) {
 
                 if (m_action) {
                     m_action(this, m_action_ref);
@@ -424,8 +424,8 @@ namespace Grain {
             int32_t tile_x_offset = static_cast<int32_t>(m_curr_index % m_horizontal_tile_n);
             int32_t tile_y_offset = static_cast<int32_t>(m_curr_index / m_horizontal_tile_n);
 
-            m_curr_tile.m_x = m_first_tile.m_x + tile_x_offset * kGridSize;
-            m_curr_tile.m_y = m_first_tile.m_y + tile_y_offset * kGridSize;
+            m_curr_tile.x_ = m_first_tile.x_ + tile_x_offset * kGridSize;
+            m_curr_tile.y_ = m_first_tile.y_ + tile_y_offset * kGridSize;
 
             m_curr_meta_index.set(tile_x_offset, tile_y_offset);
 
@@ -461,15 +461,15 @@ namespace Grain {
             m_reset_flag = false;
         }
         else {
-            m_curr_tile.m_x += kGridSize;
-            m_curr_meta_index.m_x++;
-            if (m_curr_meta_index.m_x >= m_horizontal_tile_n) {
-                m_curr_meta_index.m_x = 0;
-                m_curr_tile.m_x = m_first_tile.m_x;
-                m_curr_tile.m_y += kGridSize;
-                m_curr_meta_index.m_y++;
+            m_curr_tile.x_ += kGridSize;
+            m_curr_meta_index.x_++;
+            if (m_curr_meta_index.x_ >= m_horizontal_tile_n) {
+                m_curr_meta_index.x_ = 0;
+                m_curr_tile.x_ = m_first_tile.x_;
+                m_curr_tile.y_ += kGridSize;
+                m_curr_meta_index.y_++;
             }
-            if (m_curr_meta_index.m_y >= m_vertical_tile_n) {
+            if (m_curr_meta_index.y_ >= m_vertical_tile_n) {
                 out_tile_index.set(-1, -1);
                 return false;
             }
@@ -477,8 +477,8 @@ namespace Grain {
             m_curr_index++;
         }
 
-        out_tile_index.m_x = m_curr_tile.m_x;
-        out_tile_index.m_y = m_curr_tile.m_y;
+        out_tile_index.x_ = m_curr_tile.x_;
+        out_tile_index.y_ = m_curr_tile.y_;
 
         return m_curr_index < m_meta_tiles_needed;
     }
@@ -492,13 +492,13 @@ namespace Grain {
 
         Vec2d latlon1;
         Vec2d latlon2;
-        Geo::wgs84FromTileIndex(m_zoom, tile_min.m_x, tile_max.m_y, latlon1.m_x, latlon1.m_y);
-        Geo::wgs84FromTileIndex(m_zoom, tile_max.m_x, tile_min.m_y, latlon2.m_x, latlon2.m_y);
+        Geo::wgs84FromTileIndex(m_zoom, tile_min.x_, tile_max.y_, latlon1.x_, latlon1.y_);
+        Geo::wgs84FromTileIndex(m_zoom, tile_max.x_, tile_min.y_, latlon2.x_, latlon2.y_);
 
-        out_bbox.m_min_x = latlon1.m_x;
-        out_bbox.m_min_y = latlon1.m_y;
-        out_bbox.m_max_x = latlon2.m_x;
-        out_bbox.m_max_y = latlon2.m_y;
+        out_bbox.min_x_ = latlon1.x_;
+        out_bbox.min_y_ = latlon1.y_;
+        out_bbox.max_x_ = latlon2.x_;
+        out_bbox.max_y_ = latlon2.y_;
     }
 
 

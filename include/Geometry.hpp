@@ -69,10 +69,10 @@ namespace Grain {
     };
 
     struct LengthUnitInfo {
-        LengthUnit m_unit;
+        LengthUnit unit_;
         const char* m_name;
         const char* m_abbreviation;
-        double m_scale_to_meter;        // If < 0, no absolute length calculation is possible.
+        double m_scale_to_meter;    // If < 0, no absolute length calculation is possible.
     };
 
     /**

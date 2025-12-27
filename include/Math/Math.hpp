@@ -40,21 +40,23 @@ namespace Grain {
         };
 
     public:
-        [[nodiscard]] static int64_t roundToNearestPowerOfTwo(double value) noexcept;
+        [[nodiscard]] static int64_t roundToNearestPowerOfTwo(double v) noexcept;
         [[nodiscard]] static int64_t greatestCommonDivisor(int64_t a, int64_t b) noexcept;
-        [[nodiscard]] static int64_t stepsToReachAtOrAfterInt(int64_t x, int64_t step, int64_t start) noexcept;
-        [[nodiscard]] static int64_t stepsToReachAtOrAfter(double x, double step, double start) noexcept;
+        [[nodiscard]] static int64_t stepsToReachAtOrAfterInt(int64_t v, int64_t step, int64_t target) noexcept;
+        [[nodiscard]] static int64_t stepsToReachAtOrAfter(double v, double step, double target) noexcept;
         [[nodiscard]] static int64_t factorial(int32_t n) noexcept;
         [[nodiscard]] static int64_t sumN(int32_t n) noexcept;
 
+
+        inline static void _pushRoot(double root, double* out_values, int32_t& index);
 
         [[nodiscard]] static int32_t solveQuadratic(double a, double b, double c, double (&out_values)[2])  noexcept;
         [[nodiscard]] static int32_t solveCubic(double a, double b, double c, double d, double (&out_values)[3]) noexcept;
         [[nodiscard]] static int32_t solveCubicBezier(double p0, double p1, double p2, double p3, double p, double (&out_values)[3]) noexcept;
 
         [[nodiscard]] static double cubicInterpolate(double p[4], double x) noexcept;
-        [[nodiscard]] static double bicubicInterpolate(double p[4][4], double x, double y) noexcept;
-        [[nodiscard]] static double tricubicInterpolate(double p[4][4][4], double x, double y, double z) noexcept;
+        [[nodiscard]] static double biCubicInterpolate(double p[4][4], double x, double y) noexcept;
+        [[nodiscard]] static double triCubicInterpolate(double p[4][4][4], double x, double y, double z) noexcept;
         [[nodiscard]] static double nCubicInterpolate(int32_t n, double* p, double coordinates[]) noexcept;
 
         // Circle
@@ -70,8 +72,8 @@ namespace Grain {
             return 2.0 * std::numbers::pi * radius * radius * (1.0 - std::cos(angle_radians));
         }
 
-        [[nodiscard]] static double distanceOnSphere(double radius, double lat1, double lon1, double lat2, double lon2) noexcept;
-        [[nodiscard]] static double distanceOnEarth(double lat1, double lon1, double lat2, double lon2) noexcept;
+        [[nodiscard]] static double haversineDistanceOnSphere(double r, double lon1, double lat1, double lon2, double lat2) noexcept;
+        [[nodiscard]] static double haversineDistanceOnEarth(double lon1, double lat1, double lon2, double lat2) noexcept;
 
         // Optics
         [[nodiscard]] static double angleOfView(double sensor_size, double focal_length) {
@@ -266,14 +268,16 @@ namespace Grain {
             return static_cast<int64_t>((y <= kEpsilon) ? std::numeric_limits<double>::quiet_NaN() : std::round(x / y));
         }
 
-
         [[nodiscard]] static float powf_inverse(float value) noexcept { return static_cast<float>(std::log(value) / std::numbers::ln2); }
         [[nodiscard]] static float powf_inverse(float value, float factor) noexcept { return std::log(value) / std::log(factor); }
         [[nodiscard]] static double pow_inverse(double value) noexcept { return std::log(value) / std::numbers::ln2; }
         [[nodiscard]] static double pow_inverse(double value, double factor) noexcept { return std::log(value) / std::log(factor); }
 
-        [[nodiscard]] static int64_t next_pow2(int64_t x) noexcept;
-        [[nodiscard]] static int32_t pad_two(int32_t length) noexcept;
+        [[nodiscard]] static int32_t nextLog2(int64_t v) noexcept;
+        [[nodiscard]] static bool isPowerOfTwo(int64_t v) noexcept { return log2IfPowerOfTwo(v) >= 0; }
+        [[nodiscard]] static int32_t log2IfPowerOfTwo(int64_t v) noexcept;
+        [[nodiscard]] static int64_t nextPowerOfTwo(int64_t v) noexcept;
+
 
         /**
          *  @brief Calculate secant.
@@ -396,34 +400,30 @@ namespace Grain {
         }
 
         /**
-         *  @brief Computes the median of a subrange in an array.
+         *  @brief Computes the median in an array.
          *
-         *  This function calculates the median of a specified subrange within an array.
          *  The median is the middle value when the number of elements is odd, and the
          *  average of the two middle values when the number of elements is even.
          *
          *  @tparam T The type of elements in the array (must support numeric operations).
-         *  @param array Pointer to the array containing the data.
-         *  @param start The starting index (inclusive) of the subrange.
-         *  @param end The ending index (inclusive) of the subrange.
+         *  @param values Pointer to the array containing the values.
+         *  @param len The length.
          *  @return The median value as a double. Returns 0.0 if the input is invalid.
          *
          *  @note The array should be sorted for meaningful median calculations.
-         *  @warning No bounds checking is performed on `array`. Ensure `start` and `end`
-         *           are within the valid array range.
+         *  @warning No bounds checking is performed on `array`.
          */
         template <typename T>
-        [[nodiscard]] double medianInArray(T* array, size_t start, size_t end) {
-            if (!array || start > end) {
+        [[nodiscard]] double medianInArray(T* values, size_t len) {
+            if (!values || len < 1) {
                 return 0.0;
             }
-            size_t size = end - start + 1;
-            if (size % 2 == 0) {
-                return (static_cast<double>(array[start + size / 2 - 1]) +
-                        static_cast<double>(array[start + size / 2])) / 2.0;
+            if (len % 2 == 0) {
+                return (static_cast<double>(values[len / 2 - 1]) +
+                        static_cast<double>(values[len / 2])) / 2.0;
             }
             else {
-                return static_cast<double>(array[start + size / 2]);
+                return static_cast<double>(values[len / 2]);
             }
         }
 
@@ -437,18 +437,18 @@ namespace Grain {
          *  numbers vary significantly in magnitude.
          *
          *  @param values Pointer to the array of double values to sum.
-         *  @param value_n Number of elements in the array.
+         *  @param len Number of elements in the array.
          *  @return The numerically stable sum of the values in the array.
          *
          *  @note If the input pointer is null, the function returns 0.0.
          *
          *  @see https://en.wikipedia.org/wiki/Kahan_summation_algorithm
          */
-        [[nodiscard]] inline double sum(const double* values, int64_t value_n) {
+        [[nodiscard]] inline double sum(const double* values, int64_t len) {
             if (values != nullptr) {
                 double sum = values[0];
                 double err = 0.0;
-                for (int64_t i = 1; i < value_n; i++) {
+                for (int64_t i = 1; i < len; i++) {
                     const double k = values[i];
                     const double m = sum + k;
                     err += std::fabs(sum) >= std::fabs(k) ? sum - m + k : k - m + sum;
@@ -465,78 +465,6 @@ namespace Grain {
         static constexpr double kEpsilon = std::numeric_limits<double>::epsilon();
         static constexpr double kEpsilonFloat = std::numeric_limits<float>::epsilon();
     };
-
-
-    class ValueMapper {
-    public:
-        ValueMapper() = default;
-        ValueMapper(double in_min, double in_max, double out_min, double out_max) {
-            m_in_min = in_min;
-            m_in_max = in_max;
-            m_out_min = out_min;
-            m_out_max = out_max;
-            _update();
-        }
-        ~ValueMapper() = default;
-
-        void set(double in_min, double in_max, double out_min, double out_max) {
-            m_in_min = in_min;
-            m_in_max = in_max;
-            m_out_min = out_min;
-            m_out_max = out_max;
-            _update();
-        }
-
-        void setIn(double min, double max) noexcept {
-            m_in_min = min;
-            m_in_max = max;
-            _update();
-        }
-
-        void setOut(double min, double max) noexcept {
-            m_out_min = min;
-            m_out_max = max;
-            _update();
-        }
-
-        [[nodiscard]] double remap(double v) const noexcept {
-            if (_m_in_valid) {
-                return m_out_min + ((v - m_in_min) / _m_in_range) * _m_out_range;
-            }
-            else {
-                return m_out_min;
-            }
-        }
-
-        [[nodiscard]] double remapclamped(double v) const noexcept {
-            if (_m_in_valid) {
-                v = m_out_min + ((v - m_in_min) / _m_in_range) * _m_out_range;
-                return v < m_out_min ? m_out_min : v > m_out_max ? m_out_max : v;
-            }
-            else {
-                return m_out_min;
-            }
-        }
-
-        void _update() noexcept {
-            _m_in_range = (m_in_max - m_in_min);
-            _m_in_valid = std::fabs(_m_in_range) > std::numeric_limits<double>::epsilon();
-            _m_out_range = (m_out_max - m_out_min);
-            _m_out_valid = std::fabs(_m_in_range) > std::numeric_limits<double>::epsilon();
-        }
-
-    public:
-        double m_in_min = 0.0;
-        double m_in_max = 1.0;
-        double m_out_min = 0.0;
-        double m_out_max = 1.0;
-
-        double _m_in_range{};
-        double _m_out_range{};
-        bool _m_in_valid{};
-        bool _m_out_valid{};
-    };
-
 
 } // End of namespace Grain
 

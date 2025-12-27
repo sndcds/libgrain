@@ -59,7 +59,7 @@ namespace Grain {
 
         [[nodiscard]] Fix minValue() const noexcept { return m_min; }
         [[nodiscard]] Fix maxValue() const noexcept { return m_max; }
-        [[nodiscard]] Fix offsetValue() const noexcept { return m_offset; }
+        [[nodiscard]] Fix offsetValue() const noexcept { return offs_; }
         [[nodiscard]] Fix defaultValue() const noexcept { return m_default; }
         [[nodiscard]] Fix valueStep() const noexcept { return m_step; }
         [[nodiscard]] Fix valueBigStep() const noexcept { return m_big_step; }
@@ -76,7 +76,7 @@ namespace Grain {
         }
 
         [[nodiscard]] double normalizedOffsetValue() const noexcept {
-            double offset = m_offset.asDouble();
+            double offset = offs_.asDouble();
             double min = m_min.asDouble();
             double max = m_max.asDouble();
             return ((max - min) == 0.0) ? 0.0 : (offset - min) / (max - min);
@@ -117,7 +117,7 @@ namespace Grain {
         Fix m_value;
         Fix m_min;
         Fix m_max;
-        Fix m_offset;
+        Fix offs_;
         Fix m_default;
         Fix m_step;
         Fix m_big_step;

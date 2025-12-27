@@ -269,26 +269,26 @@ namespace Grain {
         [[nodiscard]] bool isRightMousePressed() const noexcept { return Event::g_right_mouse_pressed; }
         [[nodiscard]] Timestamp timeOfLastMouseClick() const noexcept { return g_ts_last_mouse_click; }
         [[nodiscard]] Vec2d mousePos() const noexcept { return m_mouse_pos; }
-        [[nodiscard]] double mouseX() const noexcept { return m_mouse_pos.m_x; }
-        [[nodiscard]] double mouseY() const noexcept { return m_mouse_pos.m_y; }
+        [[nodiscard]] double mouseX() const noexcept { return m_mouse_pos.x_; }
+        [[nodiscard]] double mouseY() const noexcept { return m_mouse_pos.y_; }
         [[nodiscard]] Vec2d mouseDownPos() const noexcept { return Event::g_mouse_down_pos; }
-        [[nodiscard]] double mouseDownX() const noexcept { return Event::g_mouse_down_pos.m_x; }
-        [[nodiscard]] double mouseDownY() const noexcept { return Event::g_mouse_down_pos.m_y; }
+        [[nodiscard]] double mouseDownX() const noexcept { return Event::g_mouse_down_pos.x_; }
+        [[nodiscard]] double mouseDownY() const noexcept { return Event::g_mouse_down_pos.y_; }
         [[nodiscard]] int32_t mouseDragCount() const noexcept { return Event::g_mouse_drag_count; }
         [[nodiscard]] double dragZoomX(double step) const noexcept;
         [[nodiscard]] double dragZoomY(double step, bool flipped = false) const noexcept;
 
-        [[nodiscard]] double mouseDragDeltaX() const noexcept { return m_mouse_pos.m_x - Event::g_mouse_down_pos.m_x; }
-        [[nodiscard]] double mouseDragDeltaY() const noexcept { return m_mouse_pos.m_y - Event::g_mouse_down_pos.m_y; }
+        [[nodiscard]] double mouseDragDeltaX() const noexcept { return m_mouse_pos.x_ - Event::g_mouse_down_pos.x_; }
+        [[nodiscard]] double mouseDragDeltaY() const noexcept { return m_mouse_pos.y_ - Event::g_mouse_down_pos.y_; }
         [[nodiscard]] Vec2d mouseDragDelta() const noexcept { return Vec2d(mouseDragDeltaX(), mouseDragDeltaY()); }
         [[nodiscard]] double mouseDragDistance() const noexcept { return m_mouse_pos.distance(Event::g_mouse_down_pos); }
         [[nodiscard]] DragDirection dragDirection() const noexcept;
 
         [[nodiscard]] double value() const noexcept { return m_value; }
         [[nodiscard]] Vec3d delta() const noexcept { return m_delta; }
-        [[nodiscard]] double deltaX() const noexcept { return m_delta.m_x; }
-        [[nodiscard]] double deltaY() const noexcept { return m_delta.m_y; }
-        [[nodiscard]] double deltaZ() const noexcept { return m_delta.m_z; }
+        [[nodiscard]] double deltaX() const noexcept { return m_delta.x_; }
+        [[nodiscard]] double deltaY() const noexcept { return m_delta.y_; }
+        [[nodiscard]] double deltaZ() const noexcept { return m_delta.z_; }
         [[nodiscard]] uint32_t keyMask() const noexcept { return m_key_mask; }
         [[nodiscard]] int32_t keyCharCount() const noexcept { return m_key_unichar_count; }
         [[nodiscard]] uint16_t keyChar() const noexcept { return m_key_unichar; }

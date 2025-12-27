@@ -70,7 +70,7 @@ namespace Grain {
         PSQLType m_type = PSQLType::Undefined;
         PSQLParamFormat m_format = PSQLParamFormat::Text;
         String m_value;
-        int32_t m_length;
+        int32_t length_;
         void* m_bin_ptr = nullptr;  ///< Pointer to data if m_format = Binary
     };
 
@@ -426,8 +426,8 @@ namespace Grain {
     class PSQLPropertyList : public Object {
 
     protected:
-        int32_t m_size = 0;
-        PSQLProperty* m_properties = nullptr;
+        int32_t size_ = 0;
+        PSQLProperty* properties_ = nullptr;
 
     public:
         PSQLPropertyList(int32_t size);
@@ -441,11 +441,11 @@ namespace Grain {
         }
 
         friend std::ostream& operator << (std::ostream& os, const PSQLPropertyList& o) {
-            os << "size: " << o.m_size;
+            os << "size: " << o.size_;
             return os;
         }
 
-        [[nodiscard]] int32_t size() const noexcept { return m_size; }
+        [[nodiscard]] int32_t size() const noexcept { return size_; }
 
         [[nodiscard]] PSQLProperty* mutPropertyPtrAtIndex(int32_t index) noexcept;
         void setPropertyAtIndexByPSQLBinaryData(int32_t index, PSQLType psql_type, const void* data, int32_t data_size);

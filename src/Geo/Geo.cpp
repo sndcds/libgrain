@@ -83,7 +83,7 @@ namespace Grain {
      */
     void Geo::wgs84ToTileIndex(int32_t zoom, Vec2d lonlat, Vec2i& out_tile_index) noexcept {
 
-        wgs84ToTileIndex(zoom, lonlat.m_x, lonlat.m_y, out_tile_index.m_x, out_tile_index.m_y);
+        wgs84ToTileIndex(zoom, lonlat.x_, lonlat.y_, out_tile_index.x_, out_tile_index.y_);
     }
 
 
@@ -116,7 +116,7 @@ namespace Grain {
      */
     void Geo::wgs84FromTileIndex(int32_t zoom, Vec2i tile_index, Vec2d& out_lonlat) noexcept {
 
-        wgs84FromTileIndex(zoom, tile_index.m_x, tile_index.m_y, out_lonlat.m_x, out_lonlat.m_y);
+        wgs84FromTileIndex(zoom, tile_index.x_, tile_index.y_, out_lonlat.x_, out_lonlat.y_);
     }
 
 
@@ -157,10 +157,10 @@ namespace Grain {
         try {
 
             if (base_path.length() > 0) {
-                n = std::snprintf(buffer, 2048, "%s/%d/%d", base_path.utf8(), zoom, tile_index.m_x);
+                n = std::snprintf(buffer, 2048, "%s/%d/%d", base_path.utf8(), zoom, tile_index.x_);
             }
             else {
-                n = std::snprintf(buffer, 2048, "%d/%d", zoom, tile_index.m_x);
+                n = std::snprintf(buffer, 2048, "%d/%d", zoom, tile_index.x_);
             }
 
             if (n >= 2048) { throw ErrorCode::StrBufferTooSmall; }
@@ -168,10 +168,10 @@ namespace Grain {
             out_dir_path = buffer;
 
             if (file_ext.length() < 1) {
-                n = std::snprintf(buffer, 2048, "%d", tile_index.m_y);
+                n = std::snprintf(buffer, 2048, "%d", tile_index.y_);
             }
             else {
-                n = std::snprintf(buffer, 2048, "%d.%s", tile_index.m_y, file_ext.utf8());
+                n = std::snprintf(buffer, 2048, "%d.%s", tile_index.y_, file_ext.utf8());
             }
 
             if (n >= 2048) { throw ErrorCode::StrBufferTooSmall; }
@@ -203,16 +203,16 @@ namespace Grain {
 
 
         // Compute Slippy tile X.
-        out_slippy_index.m_x = static_cast<int32_t>(floor(((pos.m_x + 180.0) / 360.0 * (1 << zoom)) + kCorrectionFactor));
+        out_slippy_index.x_ = static_cast<int32_t>(floor(((pos.x_ + 180.0) / 360.0 * (1 << zoom)) + kCorrectionFactor));
 
         // Compute Slippy tile Y (adjusted for Web Mercator).
-        double lat_rad = pos.m_y * std::numbers::pi / 180.0;
-        out_slippy_index.m_y = static_cast<int32_t>(floor(((1.0 - log(tan(lat_rad) + 1.0 / cos(lat_rad)) / std::numbers::pi) / 2.0 * (1 << zoom)) + kCorrectionFactor));
+        double lat_rad = pos.y_ * std::numbers::pi / 180.0;
+        out_slippy_index.y_ = static_cast<int32_t>(floor(((1.0 - log(tan(lat_rad) + 1.0 / cos(lat_rad)) / std::numbers::pi) / 2.0 * (1 << zoom)) + kCorrectionFactor));
 
         // Clamp tile values to valid range.
         int max_tile = (1 << zoom) - 1;
-        out_slippy_index.m_x = fmin(fmax(out_slippy_index.m_x, 0), max_tile);
-        out_slippy_index.m_y = fmin(fmax(out_slippy_index.m_y, 0), max_tile);
+        out_slippy_index.x_ = fmin(fmax(out_slippy_index.x_, 0), max_tile);
+        out_slippy_index.y_ = fmin(fmax(out_slippy_index.y_, 0), max_tile);
 
         return ErrorCode::None;
     }
@@ -251,8 +251,8 @@ namespace Grain {
         uint8_t hash[5];
         uint8_t mask = kMetaTileGridSize - 1;
 
-        int32_t tile_x = tile_index.m_x;
-        int32_t tile_y = tile_index.m_y;
+        int32_t tile_x = tile_index.x_;
+        int32_t tile_y = tile_index.y_;
 
         // Each meta tile winds up in its own file, with several in each leaf directory.
         // the .meta tile name is beasd on the sub-tile at (0, 0).
@@ -349,17 +349,17 @@ namespace Grain {
             used_bounds = bounds;
         }
 
-        p1.m_x = used_bounds.m_min_x;
-        p2.m_x = used_bounds.m_max_x;
-        p1.m_y = p2.m_y = used_bounds.m_min_y;
+        p1.x_ = used_bounds.min_x_;
+        p2.x_ = used_bounds.max_x_;
+        p1.y_ = p2.y_ = used_bounds.min_y_;
         auto w1 = haversineDistance(p1, p2, radius);
-        p1.m_y = p2.m_y = used_bounds.m_max_y;
+        p1.y_ = p2.y_ = used_bounds.max_y_;
         auto w2 = haversineDistance(p1, p2, radius);
-        p1.m_y = used_bounds.m_min_y;
-        p2.m_y = used_bounds.m_max_y;
-        p1.m_x = p2.m_x = used_bounds.m_min_x;
+        p1.y_ = used_bounds.min_y_;
+        p2.y_ = used_bounds.max_y_;
+        p1.x_ = p2.x_ = used_bounds.min_x_;
         auto h1 = haversineDistance(p1, p2, radius);
-        p1.m_x = p2.m_x = used_bounds.m_max_x;
+        p1.x_ = p2.x_ = used_bounds.max_x_;
         auto h2 = haversineDistance(p1, p2, radius);
 
         switch (bound_type) {

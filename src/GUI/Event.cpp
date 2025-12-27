@@ -56,7 +56,7 @@ namespace Grain {
             return 1.0;
         }
         else {
-            double d = Event::g_mouse_down_pos.m_x - m_mouse_pos.m_x;
+            double d = Event::g_mouse_down_pos.x_ - m_mouse_pos.x_;
             return d >= 0.0 ? 1.0 + d / step : 1.0 / (1.0 - d / step);
         }
     }
@@ -67,7 +67,7 @@ namespace Grain {
             return 1.0;
         }
         else {
-            double d = flipped ? m_mouse_pos.m_y - Event::g_mouse_down_pos.m_y : Event::g_mouse_down_pos.m_y - m_mouse_pos.m_y;
+            double d = flipped ? m_mouse_pos.y_ - Event::g_mouse_down_pos.y_ : Event::g_mouse_down_pos.y_ - m_mouse_pos.y_;
             return d >= 0.0 ? 1.0 + d / step : 1.0 / (1.0 - d / step);
         }
     }

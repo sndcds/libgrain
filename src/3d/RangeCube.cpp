@@ -14,30 +14,30 @@
 namespace Grain {
 
     RangeCubeFix& RangeCubeFix::operator = (const Vec3Fix& v) {
-        m_min_x = m_max_x = v.m_x;
-        m_min_y = m_max_y = v.m_y;
-        m_min_z = m_max_z = v.m_z;
+        min_x_ = max_x_ = v.x_;
+        min_y_ = max_y_ = v.y_;
+        min_z_ = max_z_ = v.z_;
         return *this;
     }
 
     RangeCubeFix RangeCubeFix::operator + (const Vec3Fix& v) const {
         RangeCubeFix result = *this;
-        if (v.m_x < m_min_x) { result.m_min_x = v.m_x; }
-        if (v.m_x > m_max_x) { result.m_max_x = v.m_x; }
-        if (v.m_y < m_min_y) { result.m_min_y = v.m_y; }
-        if (v.m_y > m_max_y) { result.m_max_y = v.m_y; }
-        if (v.m_z < m_min_z) { result.m_min_z = v.m_z; }
-        if (v.m_z > m_max_z) { result.m_max_z = v.m_z; }
+        if (v.x_ < min_x_) { result.min_x_ = v.x_; }
+        if (v.x_ > max_x_) { result.max_x_ = v.x_; }
+        if (v.y_ < min_y_) { result.min_y_ = v.y_; }
+        if (v.y_ > max_y_) { result.max_y_ = v.y_; }
+        if (v.z_ < min_z_) { result.min_z_ = v.z_; }
+        if (v.z_ > max_z_) { result.max_z_ = v.z_; }
         return result;
     }
 
     RangeCubeFix& RangeCubeFix::operator += (const Vec3Fix& v) {
-        if (v.m_x < m_min_x) { m_min_x = v.m_x; }
-        if (v.m_x > m_max_x) { m_max_x = v.m_x; }
-        if (v.m_y < m_min_y) { m_min_y = v.m_y; }
-        if (v.m_y > m_max_y) { m_max_y = v.m_y; }
-        if (v.m_z < m_min_z) { m_min_z = v.m_z; }
-        if (v.m_z > m_max_z) { m_max_z = v.m_z; }
+        if (v.x_ < min_x_) { min_x_ = v.x_; }
+        if (v.x_ > max_x_) { max_x_ = v.x_; }
+        if (v.y_ < min_y_) { min_y_ = v.y_; }
+        if (v.y_ > max_y_) { max_y_ = v.y_; }
+        if (v.z_ < min_z_) { min_z_ = v.z_; }
+        if (v.z_ > max_z_) { max_z_ = v.z_; }
         return *this;
     }
 

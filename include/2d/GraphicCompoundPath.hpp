@@ -6,8 +6,6 @@
 //
 //  This file is part of GrainLib, see <https://grain.one>.
 //
-//  LastChecked: 23.08.2025
-//
 
 #ifndef GrainGraphicCompoundPath_hpp
 #define GrainGraphicCompoundPath_hpp
@@ -21,78 +19,79 @@
 
 namespace Grain {
 
-    class StrokeStyle;
-    class GraphicContext;
-    class Font;
-    class String;
-    class WKBParser;
+class StrokeStyle;
+class GraphicContext;
+class Font;
+class String;
+class WKBParser;
 
 
-    class GraphicCompoundPath : protected Object {
-        friend class GraphicPath;
-        friend class GraphicPathPoint;
-        friend class GraphicContext;
+class GraphicCompoundPath : protected Object {
 
-    protected:
-        ObjectList<GraphicPath*> m_paths;
-        Vec2d m_offset;
-        bool m_must_add_path = true;
+    friend class GraphicPath;
+    friend class GraphicPathPoint;
+    friend class GraphicContext;
+
+protected:
+    ObjectList<GraphicPath*> paths_;
+    Vec2d offs_;
+    bool must_add_path_ = true;
+
+public:
+    GraphicCompoundPath() noexcept;
+    ~GraphicCompoundPath() noexcept override;
+
+    [[nodiscard]] const char* className() const noexcept override {
+        return "GraphicCompoundPath";
+    }
+
+    friend std::ostream& operator << (std::ostream& os, const GraphicCompoundPath* o) {
+        o == nullptr ? os << "GraphicCompoundPath nullptr" : os << *o;
+        return os;
+    }
+
+    friend std::ostream& operator << (std::ostream& os, const GraphicCompoundPath& o) {
+        os << "path count: " << o.pathCount();
+        os << ", offset: " << o.offs_;
+        return os;
+    }
+
+    [[nodiscard]] bool hasPaths() const noexcept { return paths_.size() > 0; }
+    [[nodiscard]] int32_t pathCount() const noexcept { return static_cast<int32_t>(paths_.size()); };
+    [[nodiscard]] int32_t lastPointIndex() const noexcept { return static_cast<int32_t>(paths_.size()) - 1; }
+    [[nodiscard]] GraphicPath* pathPtrAtIndex(int32_t index) noexcept;
+    [[nodiscard]] GraphicPath* lastPathPtr() noexcept;
+    bool boundsRect(Rectd& out_bounds_rect) const noexcept;
+    double polygonCentroid(Vec2d& out_centroid) const noexcept;
+
+    void clear() noexcept;
+    void clearOffset() noexcept { offs_.zero(); }
+
+    ErrorCode addEmptyPath(int32_t point_capacity = 32) noexcept;
+
+    Rectd buildFromText(const Font& font, const char* text) noexcept;
+    Rectd buildFromText(const Font& font, const String& text) noexcept;
+
+    Rectd buildFromWKB(WKBParser& wkb_parser, RemapRectd& remap_rect) noexcept;
 
 
-    public:
-        GraphicCompoundPath() noexcept;
-        ~GraphicCompoundPath() noexcept;
-
-        [[nodiscard]] virtual const char* className() const noexcept { return "GraphicCompoundPath"; }
-
-        friend std::ostream& operator << (std::ostream& os, const GraphicCompoundPath* o) {
-            o == nullptr ? os << "GraphicCompoundPath nullptr" : os << *o;
-            return os;
-        }
-
-        friend std::ostream& operator << (std::ostream& os, const GraphicCompoundPath& o) {
-            os << "GraphicCompoundPath:";
-            os << "\npath count: " << o.pathCount();
-            os << "\noffset: " << o.m_offset;
-            return os;
-        }
-
-        virtual void log(Log& l) const;
+#if defined(__APPLE__) && defined(__MACH__)
+    void _addCGPathElement(const CGPathElement* element) noexcept;
+#endif
 
 
-        [[nodiscard]] bool hasPaths() const noexcept { return m_paths.size() > 0; }
-        [[nodiscard]] int32_t pathCount() const noexcept { return (int32_t)m_paths.size(); };
-        [[nodiscard]] int32_t lastPointIndex() const noexcept { return (int32_t)m_paths.size() - 1; }
-        [[nodiscard]] GraphicPath* pathPtrAtIndex(int32_t index) noexcept;
-        [[nodiscard]] GraphicPath* lastPathPtr() noexcept;
-        bool boundsRect(Rectd& out_bounds_rect) const noexcept;
-        double polygonCentroid(Vec2d& out_centroid) const noexcept;
+    void finish() noexcept;
 
-        void clear() noexcept;
-        void clearOffset() noexcept { m_offset.zero(); }
+    void projectToQuadrilateral(const Quadrilateral& quadrilateral, const Mat3d* matrix = nullptr) noexcept;
 
-        ErrorCode addEmptyPath(int32_t point_capacity = 32) noexcept;
+    void addAllPaths(GraphicContext* gc) noexcept;
+    void fill(GraphicContext* gc) noexcept;
+    void fillOuter(GraphicContext* gc) noexcept;
+    void fillEvenOdd(GraphicContext* gc) noexcept;
+    void stroke(GraphicContext* gc, StrokeStyle* stroke_style = nullptr) noexcept;
+    void addClip(GraphicContext* gc) noexcept;
+};
 
-        Rectd buildFromText(const Font& font, const char* text) noexcept;
-        Rectd buildFromText(const Font& font, const String& text) noexcept;
-
-        Rectd buildFromWKB(WKBParser& wkb_parser, RemapRectd& remap_rect) noexcept;
-
-        /* TODO: macOS
-        void _addCGPathElement(const CGPathElement* element) noexcept;
-        */
-
-        void finish() noexcept;
-
-        void projectToQuadrilateral(const Quadrilateral& quadrilateral, const Mat3d* matrix = nullptr) noexcept;
-
-        void addAllPaths(GraphicContext* gc) noexcept;
-        void fill(GraphicContext* gc) noexcept;
-        void fillOuter(GraphicContext* gc) noexcept;
-        void fillEvenOdd(GraphicContext* gc) noexcept;
-        void stroke(GraphicContext* gc, StrokeStyle* stroke_style = nullptr) noexcept;
-        void addClip(GraphicContext* gc) noexcept;
-    };
 
 } // End of namespace Grain
 

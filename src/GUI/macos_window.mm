@@ -50,7 +50,7 @@ namespace Grain {
 
 
         GrainNSWindow* ns_window = [[GrainNSWindow alloc]
-                initWithContentRect:NSMakeRect(rect.m_x, rect.m_y, rect.m_width, rect.m_height)
+                initWithContentRect:NSMakeRect(rect.x_, rect.y_, rect.width_, rect.height_)
                 styleMask:ns_style_mask
                 backing:NSBackingStoreBuffered
                 defer:ns_defer_flag
@@ -76,7 +76,7 @@ namespace Grain {
     }
 
     void _macosWindow_setFrame(const Window* window, const Rectd& rect) {
-        NSRect frame = NSMakeRect(rect.m_x, rect.m_y, rect.m_width, rect.m_height);
+        NSRect frame = NSMakeRect(rect.x_, rect.y_, rect.width_, rect.height_);
         [(GrainNSWindow*)window->nsWindow() setFrame:frame display:YES];
     }
 

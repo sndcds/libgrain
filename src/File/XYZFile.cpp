@@ -37,7 +37,7 @@ namespace Grain {
      *  @return `ErrorCode::None` if successful, or an error code otherwise.
      */
     ErrorCode XYZFile::scan() noexcept {
-        if (m_scan_done) {
+        if (scan_done_) {
             return ErrorCode::None;
         }
 
@@ -71,8 +71,8 @@ namespace Grain {
                     m_range += m_last_coordinate;
                 }
 
-                const double x = m_last_coordinate.m_x.asDouble();
-                const double y = m_last_coordinate.m_y.asDouble();
+                const double x = m_last_coordinate.x_.asDouble();
+                const double y = m_last_coordinate.y_.asDouble();
                 sum_z += m_last_coordinate.zDouble();
 
                 if (check_x) {
@@ -122,7 +122,7 @@ namespace Grain {
             result = ErrorCode::StdCppException;
         }
 
-        m_scan_done = true;
+        scan_done_ = true;
         m_last_err_code = result;
 
         return result;
@@ -207,7 +207,7 @@ namespace Grain {
 
             // Mark all pixels as unused
             image->clear(-100000, 0, 0, 0);
-            image->setSampleValueRange(range.m_min_z.asDouble(), range.m_max_z.asDouble());
+            image->setSampleValueRange(range.min_z_.asDouble(), range.max_z_.asDouble());
 
             image->setGeoSrid(dst_srid);
 
@@ -215,17 +215,17 @@ namespace Grain {
             Vec2d tie_point_pos;
             if (proj) {
                 Vec2d min_pos, max_pos;
-                proj->transform(Vec2d(range.m_min_x.asDouble(), range.m_min_y.asDouble()), min_pos);
-                proj->transform(Vec2d(range.m_max_x.asDouble(), range.m_max_y.asDouble()), max_pos);
+                proj->transform(Vec2d(range.min_x_.asDouble(), range.min_y_.asDouble()), min_pos);
+                proj->transform(Vec2d(range.max_x_.asDouble(), range.max_y_.asDouble()), max_pos);
 
                 // Top-left corner (raster: 0,0)
-                image->addTiePoint(Vec3d(0, 0, 0), Vec3d(min_pos.m_x, max_pos.m_y, 0));
+                image->addTiePoint(Vec3d(0, 0, 0), Vec3d(min_pos.x_, max_pos.y_, 0));
 
                 // Top-right corner (raster: image_width, 0)
-                image->addTiePoint(Vec3d(image_width, 0, 0), Vec3d(max_pos.m_x, max_pos.m_y, 0));
+                image->addTiePoint(Vec3d(image_width, 0, 0), Vec3d(max_pos.x_, max_pos.y_, 0));
 
                 // Bottom-left corner (raster: 0, image_height)
-                image->addTiePoint(Vec3d(0, image_height, 0), Vec3d(min_pos.m_x, min_pos.m_y, 0));
+                image->addTiePoint(Vec3d(0, image_height, 0), Vec3d(min_pos.x_, min_pos.y_, 0));
             }
 
             float pixel[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -233,8 +233,8 @@ namespace Grain {
 
             // Read all lines from XYZ-file.
             String xyz_line;
-            double xyz_min_x = xyz_file2->m_range.m_min_x.asDouble();
-            double xyz_min_y = xyz_file2->m_range.m_min_y.asDouble();
+            double xyz_min_x = xyz_file2->m_range.min_x_.asDouble();
+            double xyz_min_y = xyz_file2->m_range.min_y_.asDouble();
 
             while (xyz_file2->readTrimmedLine(xyz_line)) {
                 if (xyz_line.length() > 0) {
@@ -243,8 +243,8 @@ namespace Grain {
                         throw ErrorCode::UnexpectedData;
                     }
 
-                    int32_t x = static_cast<int32_t>(round(xyz_coord.m_x - xyz_min_x));
-                    int32_t y = image_height - 1 - static_cast<int32_t>(round(xyz_coord.m_y - xyz_min_y));
+                    int32_t x = static_cast<int32_t>(round(xyz_coord.x_ - xyz_min_x));
+                    int32_t y = image_height - 1 - static_cast<int32_t>(round(xyz_coord.y_ - xyz_min_y));
 
                     auto p = (float*)ia.ptrAt(x, y);
                     if (p) {
@@ -339,17 +339,17 @@ namespace Grain {
             int32_t xyz_line_count = 0;
             String xyz_line;
             Vec3Fix xyz_coord;
-            double xyz_min_x = xyz_file->m_range.m_min_x.asDouble();
-            double xyz_min_y = xyz_file->m_range.m_min_y.asDouble();
+            double xyz_min_x = xyz_file->m_range.min_x_.asDouble();
+            double xyz_min_y = xyz_file->m_range.min_y_.asDouble();
 
             while (xyz_file->readTrimmedLine(xyz_line)) {
                 if (xyz_line.length() > 0) {
                     if (!xyz_coord.setByCSV(xyz_line, ' ')) {
                         throw ErrorCode::UnexpectedData;
                     }
-                    int32_t x = static_cast<int32_t>(round(xyz_coord.m_x.asDouble() - xyz_min_x));
-                    int32_t y = static_cast<int32_t>(round(xyz_coord.m_y.asDouble() - xyz_min_y));
-                    cvf2->pushValueToData(x, y, xyz_coord.m_z.asInt64(z_decimals));
+                    int32_t x = static_cast<int32_t>(round(xyz_coord.x_.asDouble() - xyz_min_x));
+                    int32_t y = static_cast<int32_t>(round(xyz_coord.y_.asDouble() - xyz_min_y));
+                    cvf2->pushValueToData(x, y, xyz_coord.z_.asInt64(z_decimals));
                     xyz_line_count++;
                 }
             }

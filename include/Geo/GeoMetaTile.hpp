@@ -26,8 +26,8 @@ namespace Grain {
 
 
     struct GeoMetaTileEntry {
-        uint32_t m_offset;      ///< Offset of tile data from start of the file.
-        uint32_t m_size;        ///< Size of tile data in bytes.
+        uint32_t offs_;     ///< Offset of tile data from start of the file
+        uint32_t size_;     ///< Size of tile data in bytes
     };
 
 
@@ -41,12 +41,12 @@ namespace Grain {
             kErrTempFileNotFound
         };
 
-        char m_magic[4];
-        int32_t m_count;                        ///< Number of tiles included.
-        int32_t m_x;                            ///< Lowest x position.
-        int32_t m_y;                            ///< Lowest y position.
-        int32_t m_zoom;                         ///< Zoom level.
-        struct GeoMetaTileEntry* m_entries;     ///< One entry per tile.
+        char magic_[4];
+        int32_t count_;                        ///< Number of tiles included
+        int32_t m_x;                            ///< Lowest x position
+        int32_t m_y;                            ///< Lowest y position
+        int32_t m_zoom;                         ///< Zoom level
+        struct GeoMetaTileEntry* m_entries;     ///< One entry per tile
         bool m_compressed = false;
 
     public:
@@ -59,7 +59,7 @@ namespace Grain {
 
         friend std::ostream& operator << (std::ostream& os, const GeoMetaTile& o) {
             os << "GeoMetaTile\n";
-            os << "  count: " << o.m_count << ", zoom: " << "x, y: " << o.m_x << ", " << o.m_y;
+            os << "  count: " << o.count_ << ", zoom: " << "x, y: " << o.m_x << ", " << o.m_y;
             if (o.m_compressed) {
                 os << ", compressed";
             }
@@ -82,16 +82,16 @@ namespace Grain {
 
             setPos(0);
 
-            readStr(4, m_magic);
-            if (std::strncmp(m_magic, "METZ", 4) == 0) {
+            readStr(4, magic_);
+            if (std::strncmp(magic_, "METZ", 4) == 0) {
                 m_compressed = true;
             }
-            else if (std::strncmp(m_magic, "META", 4) != 0) {
+            else if (std::strncmp(magic_, "META", 4) != 0) {
                 throw ErrorCode::UnsupportedFileFormat;
             }
 
-            m_count = readValue<int32_t>();
-            if (m_count < 1) {
+            count_ = readValue<int32_t>();
+            if (count_ < 1) {
                 throw Error::specific(kErrUnsupportedCount);
             }
 
@@ -103,14 +103,14 @@ namespace Grain {
                 throw Error::specific(kErrUnsupportedZoom);
             }
 
-            m_entries = (GeoMetaTileEntry*)malloc(sizeof(GeoMetaTileEntry) * m_count);
+            m_entries = (GeoMetaTileEntry*)malloc(sizeof(GeoMetaTileEntry) * count_);
             if (!m_entries) {
                 throw ErrorCode::MemCantAllocate;
             }
 
-            for (int32_t i = 0; i < m_count; i++) {
-                m_entries[i].m_offset = readValue<uint32_t>();
-                m_entries[i].m_size = readValue<uint32_t>();
+            for (int32_t i = 0; i < count_; i++) {
+                m_entries[i].offs_ = readValue<uint32_t>();
+                m_entries[i].size_ = readValue<uint32_t>();
             }
         }
 
@@ -247,8 +247,8 @@ namespace Grain {
         int32_t metaTileSize() const noexcept { return m_meta_tile_size; }
         int64_t currIndex() const noexcept { return m_curr_index; }
         int64_t rest() const noexcept { return m_meta_tiles_needed - m_curr_index; }
-        int64_t x() const noexcept { return m_curr_meta_index.m_x; }
-        int64_t y() const noexcept { return m_curr_meta_index.m_y; }
+        int64_t x() const noexcept { return m_curr_meta_index.x_; }
+        int64_t y() const noexcept { return m_curr_meta_index.y_; }
         int64_t horizontalMetaTileCount() const noexcept { return m_horizontal_tile_n; }
         int64_t verticalMetaTileCount() const noexcept { return m_vertical_tile_n; }
 

@@ -1130,52 +1130,52 @@ namespace Grain {
 
         switch (direction) {
             case Direction::LeftToRight:
-                start_pos.m_x = rect.m_x;
-                start_pos.m_y = rect.m_y;
-                end_pos.m_x = rect.x2();
-                end_pos.m_y = rect.m_y;
+                start_pos.x_ = rect.x_;
+                start_pos.y_ = rect.y_;
+                end_pos.x_ = rect.x2();
+                end_pos.y_ = rect.y_;
                 break;
             case Direction::RightToLeft:
-                start_pos.m_x = rect.x2();
-                start_pos.m_y = rect.m_y;
-                end_pos.m_x = rect.m_x;
-                end_pos.m_y = rect.m_y;
+                start_pos.x_ = rect.x2();
+                start_pos.y_ = rect.y_;
+                end_pos.x_ = rect.x_;
+                end_pos.y_ = rect.y_;
                 break;
             case Direction::TopToBottom:
-                start_pos.m_x = rect.m_x;
-                start_pos.m_y = rect.m_y;
-                end_pos.m_x = rect.m_x;
-                end_pos.m_y = rect.y2();
+                start_pos.x_ = rect.x_;
+                start_pos.y_ = rect.y_;
+                end_pos.x_ = rect.x_;
+                end_pos.y_ = rect.y2();
                 break;
             case Direction::BottomToTop:
-                start_pos.m_x = rect.m_x;
-                start_pos.m_y = rect.y2();
-                end_pos.m_x = rect.m_x;
-                end_pos.m_y = rect.m_y;
+                start_pos.x_ = rect.x_;
+                start_pos.y_ = rect.y2();
+                end_pos.x_ = rect.x_;
+                end_pos.y_ = rect.y_;
                 break;
             case Direction::DiagonalRightUp:
-                start_pos.m_x = rect.m_x;
-                start_pos.m_y = rect.y2();
-                end_pos.m_x = rect.x2();
-                end_pos.m_y = rect.m_y;
+                start_pos.x_ = rect.x_;
+                start_pos.y_ = rect.y2();
+                end_pos.x_ = rect.x2();
+                end_pos.y_ = rect.y_;
                 break;
             case Direction::DiagonalRightDown:
-                start_pos.m_x = rect.m_x;
-                start_pos.m_y = rect.m_y;
-                end_pos.m_x = rect.x2();
-                end_pos.m_y = rect.y2();
+                start_pos.x_ = rect.x_;
+                start_pos.y_ = rect.y_;
+                end_pos.x_ = rect.x2();
+                end_pos.y_ = rect.y2();
                 break;
             case Direction::DiagonalLeftUp:
-                start_pos.m_x = rect.x2();
-                start_pos.m_y = rect.y2();
-                end_pos.m_x = rect.m_x;
-                end_pos.m_y = rect.m_y;
+                start_pos.x_ = rect.x2();
+                start_pos.y_ = rect.y2();
+                end_pos.x_ = rect.x_;
+                end_pos.y_ = rect.y_;
                 break;
             case Direction::DiagonalLeftDown:
-                start_pos.m_x = rect.x2();
-                start_pos.m_y = rect.m_y;
-                end_pos.m_x = rect.m_x;
-                end_pos.m_y = rect.y2();
+                start_pos.x_ = rect.x2();
+                start_pos.y_ = rect.y_;
+                end_pos.x_ = rect.x_;
+                end_pos.y_ = rect.y2();
                 break;
         }
 

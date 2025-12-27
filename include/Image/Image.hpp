@@ -111,8 +111,8 @@ namespace Grain {
         Color::Model m_color_model = Color::Model::Undefined;
         PixelType m_pixel_type = PixelType::Undefined;
         PixelType m_fallback_pixel_type = PixelType::UInt8;     ///< Fallback pixel type for saving when float isn´t wanted or possible
-        int32_t m_width = 0;
-        int32_t m_height = 0;
+        int32_t width_ = 0;
+        int32_t height_ = 0;
         bool m_float_type = false;
         bool m_has_alpha = false;
         bool m_compressed = false;
@@ -172,7 +172,7 @@ namespace Grain {
         }
 
         friend std::ostream& operator << (std::ostream& os, const Image& o) {
-            os << "width x height: " << o.m_width << " x " << o.m_height << " pixel" << '\n';
+            os << "width x height: " << o.width_ << " x " << o.height_ << " pixel" << '\n';
             os << "float type: " << o.m_float_type << '\n';
             os << "has alpha: " << o.m_has_alpha << '\n';
             os << "bytes per component: " << o._m_bytes_per_component << '\n';
@@ -202,7 +202,7 @@ namespace Grain {
         }
 
 
-        [[nodiscard]] bool hasPixel() const noexcept { return _m_mem_size > 0 && _m_pixel_data != nullptr && m_width > 0 && m_height > 0; };
+        [[nodiscard]] bool hasPixel() const noexcept { return _m_mem_size > 0 && _m_pixel_data != nullptr && width_ > 0 && height_ > 0; };
         [[nodiscard]] bool isUsable() const noexcept { return _m_mem_size > 0 && _m_pixel_data; };
         [[nodiscard]] bool hasAlpha() const noexcept { return m_has_alpha; }
         [[nodiscard]] bool isFloat() const noexcept { return m_float_type; }
@@ -226,18 +226,18 @@ namespace Grain {
 
         [[nodiscard]] Color::Model colorModel() const noexcept { return m_color_model; }
 
-        [[nodiscard]] int32_t width() const noexcept { return m_width; }
-        [[nodiscard]] int32_t height() const noexcept { return m_height; }
-        [[nodiscard]] double diagonal() const noexcept { return Vec2d(m_width, m_height).length(); }
-        [[nodiscard]] Dimensiond dimension() const noexcept { return Dimensiond(m_width, m_height); }
-        [[nodiscard]] Vec2d center() const noexcept { return Vec2d(0.5 * m_width, 0.5 * m_height); }
+        [[nodiscard]] int32_t width() const noexcept { return width_; }
+        [[nodiscard]] int32_t height() const noexcept { return height_; }
+        [[nodiscard]] double diagonal() const noexcept { return Vec2d(width_, height_).length(); }
+        [[nodiscard]] Dimensiond dimension() const noexcept { return Dimensiond(width_, height_); }
+        [[nodiscard]] Vec2d center() const noexcept { return Vec2d(0.5 * width_, 0.5 * height_); }
         [[nodiscard]] Vec2d topLeft() const noexcept { return Vec2d(0.0, 0.0); }
-        [[nodiscard]] Vec2d topRight() const noexcept { return Vec2d(m_width - 1, 0); }
-        [[nodiscard]] Vec2d bottomRight() const noexcept { return Vec2d(m_width - 1, m_height - 1); }
-        [[nodiscard]] Vec2d bottomLeft() const noexcept { return Vec2d(0.0, m_height - 1.0); }
-        [[nodiscard]] double centerX() const noexcept { return m_width * 0.5; }
-        [[nodiscard]] double centerY() const noexcept { return m_height * 0.5; }
-        [[nodiscard]] Rectd rect() const noexcept { return Rectd(m_width, m_height); }
+        [[nodiscard]] Vec2d topRight() const noexcept { return Vec2d(width_ - 1, 0); }
+        [[nodiscard]] Vec2d bottomRight() const noexcept { return Vec2d(width_ - 1, height_ - 1); }
+        [[nodiscard]] Vec2d bottomLeft() const noexcept { return Vec2d(0.0, height_ - 1.0); }
+        [[nodiscard]] double centerX() const noexcept { return width_ * 0.5; }
+        [[nodiscard]] double centerY() const noexcept { return height_ * 0.5; }
+        [[nodiscard]] Rectd rect() const noexcept { return Rectd(width_, height_); }
 
         [[nodiscard]] int64_t pixelCount() const noexcept { return _m_pixel_count; }
         [[nodiscard]] int64_t totalComponentCount() const noexcept { return _m_pixel_count * _m_components_per_pixel; }
@@ -255,7 +255,7 @@ namespace Grain {
         uint8_t* mutPixelDataPtr() { return reinterpret_cast<uint8_t*>(_m_pixel_data); }
 
         uint8_t* pixelDataPtrAtRow(int32_t y) {
-            if (y >= 0 && y < m_height) {
+            if (y >= 0 && y < height_) {
                 return (uint8_t*)_m_pixel_data + y * _m_row_data_step;
             }
             else {
@@ -265,7 +265,7 @@ namespace Grain {
 
 
 
-        [[nodiscard]] double aspectRatio() const { return m_height > 0 ? static_cast<double>(m_width) / static_cast<double>(m_height) : 1; }
+        [[nodiscard]] double aspectRatio() const { return height_ > 0 ? static_cast<double>(width_) / static_cast<double>(height_) : 1; }
 
         bool camToXYZMatrix(Mat3f& out_matrix) const noexcept;
         bool camToSRGBMatrix(Mat3f& out_matrix) const noexcept;
@@ -440,8 +440,8 @@ namespace Grain {
 
 
     struct ImageAccessSetupInfo {
-        int32_t m_width = 0;
-        int32_t m_height = 0;
+        int32_t width_ = 0;
+        int32_t height_ = 0;
         Image::PixelType m_pixel_type = Image::PixelType::Undefined;
         Color::Model m_color_model = Color::Model::Undefined;
         int32_t m_component_count = 0;
@@ -459,10 +459,10 @@ namespace Grain {
         int32_t m_component_count = 0;
         bool m_usable = false;
 
-        int32_t m_x;               ///< Current pixel x position
-        int32_t m_y;               ///< Current pixel y position
-        int32_t m_width;
-        int32_t m_height;
+        int32_t x_;               ///< Current pixel x position
+        int32_t y_;               ///< Current pixel y position
+        int32_t width_;
+        int32_t height_;
         int32_t m_region_x1;        ///< Start of region
         int32_t m_region_y1;
         int32_t m_region_x2;        ///< End of region
@@ -498,21 +498,21 @@ namespace Grain {
 
         bool isUsable() const { return m_usable; }
 
-        inline int32_t x() const { return m_x; }
-        inline float xNrm() const { return static_cast<float>(m_x) / m_width; }
-        inline int32_t flippedX() const { return m_width - m_x - 1; }
-        inline int32_t y() const { return m_y; }
-        inline float yNrm() const { return static_cast<float>(m_y) / m_height; }
-        inline int32_t flippedY() const { return m_height - m_y - 1; }
-        inline int32_t width() const { return m_width; }
-        inline int32_t height() const { return m_height; }
-        inline void pos(Vec2i& out_pos) const { out_pos.m_x = m_x; out_pos.m_y = m_y; }
-        inline void pos(Vec2d& out_pos) const { out_pos.m_x = m_x; out_pos.m_y = m_y; }
+        inline int32_t x() const { return x_; }
+        inline float xNrm() const { return static_cast<float>(x_) / width_; }
+        inline int32_t flippedX() const { return width_ - x_ - 1; }
+        inline int32_t y() const { return y_; }
+        inline float yNrm() const { return static_cast<float>(y_) / height_; }
+        inline int32_t flippedY() const { return height_ - y_ - 1; }
+        inline int32_t width() const { return width_; }
+        inline int32_t height() const { return height_; }
+        inline void pos(Vec2i& out_pos) const { out_pos.x_ = x_; out_pos.y_ = y_; }
+        inline void pos(Vec2d& out_pos) const { out_pos.x_ = x_; out_pos.y_ = y_; }
         inline int32_t regionWidth() const { return m_region_width; }
         inline int32_t regionHeight() const { return m_region_height; }
 
-        double xFactor() const { return m_region_width > 0 ? static_cast<double>(m_x - m_region_x1) / (m_region_width - 1) : 1; }
-        double yFactor() const { return m_region_height > 0 ? static_cast<double>(m_y - m_region_y1) / (m_region_height - 1) : 1; }
+        double xFactor() const { return m_region_width > 0 ? static_cast<double>(x_ - m_region_x1) / (m_region_width - 1) : 1; }
+        double yFactor() const { return m_region_height > 0 ? static_cast<double>(y_ - m_region_y1) / (m_region_height - 1) : 1; }
 
         inline bool isOddRow() const { return y() & 0x1; };
         inline bool isEvenRow() const { return !(y() & 0x1); };
@@ -520,11 +520,11 @@ namespace Grain {
         bool setX(int32_t x) { return setPos(x, y()); }
         bool setY(int32_t y) { return setPos(x(), y); }
         bool setPos(int32_t x, int32_t y);
-        bool setPos(const ImageAccess& image_access) { return setPos(image_access.m_x, image_access.m_y); }
-        bool setPos(const Vec2i& pos) { return setPos(pos.m_x, pos.m_y); }
+        bool setPos(const ImageAccess& image_access) { return setPos(image_access.x_, image_access.y_); }
+        bool setPos(const Vec2i& pos) { return setPos(pos.x_, pos.y_); }
         void resetRegion();
         void setRegion(int32_t x, int32_t y, int32_t width, int32_t height);
-        void setRegion(const Recti& rect) { setRegion(rect.m_x, rect.m_y, rect.m_width, rect.m_height); }
+        void setRegion(const Recti& rect) { setRegion(rect.x_, rect.y_, rect.width_, rect.height_); }
         bool stepX();
         bool stepY();
 

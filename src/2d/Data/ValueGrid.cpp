@@ -26,8 +26,8 @@ namespace Grain {
     template <typename T>
     void ValueGrid<T>::setGeoInfo(int32_t srid, const Fix& min_x, const Fix& min_y, const Fix& max_x, const Fix& max_y) noexcept {
 
-        m_srid = srid;
-        m_bbox.set(min_x, min_y, max_x, max_y);
+        srid_ = srid;
+        bbox_.set(min_x, min_y, max_x, max_y);
         setFeature(kFeature_GeoInfo);
     }
 
@@ -35,17 +35,16 @@ namespace Grain {
     template <typename T>
     void ValueGrid<T>::setGeoInfo(int32_t srid, const RangeRectFix& bbox) noexcept {
 
-        m_srid = srid;
-        m_bbox = bbox;
+        srid_ = srid;
+        bbox_ = bbox;
         setFeature(kFeature_GeoInfo);
     }
 
 
     template <typename T>
     void ValueGrid<T>::setGeoInfo(int32_t srid, const RangeRectd& bbox) noexcept {
-
-        m_srid = srid;
-        m_bbox.set(bbox.m_min_x, bbox.m_min_y, bbox.m_max_x, bbox.m_max_y);
+        srid_ = srid;
+        bbox_.set(bbox.min_x_, bbox.min_y_, bbox.max_x_, bbox.max_y_);
         setFeature(kFeature_GeoInfo);
     }
 
@@ -59,11 +58,11 @@ namespace Grain {
         auto result = ErrorCode::None;
 
         try {
-            if (!m_values) {
+            if (!values_) {
                 _initMemThrow();
             }
 
-            if (m_width % 2 != 0 || m_height % 2 != 0) {
+            if (width_ % 2 != 0 || height_ % 2 != 0) {
                 // Width and height must be a multiple of 2
                 throw ErrorCode::UnsupportedDimension;
             }
@@ -77,7 +76,7 @@ namespace Grain {
                         throw ErrorCode::NullData;
                     }
 
-                    if (src_grids[i]->m_width != m_width || src_grids[i]->m_height != m_height) {
+                    if (src_grids[i]->width_ != width_ || src_grids[i]->height_ != height_) {
                         throw Error::specific(1);
                         throw ErrorCode::FormatMismatch;
                     }
@@ -87,7 +86,7 @@ namespace Grain {
                         throw ErrorCode::FormatMismatch;
                     }
 
-                    if (hasFeature(kFeature_Invalid_Value) && src_grids[i]->m_invalid_value != m_invalid_value) {
+                    if (hasFeature(kFeature_Invalid_Value) && src_grids[i]->invalid_value_ != invalid_value_) {
                         throw Error::specific(3);
                         throw ErrorCode::FormatMismatch;
                     }
@@ -104,15 +103,15 @@ namespace Grain {
                     uint8_t bit = 0x1 << grid_index;
 
 
-                    int32_t dst_x_offset = src_x_index * m_width / 2;
-                    int32_t dst_y_offset = src_y_index * m_height / 2;
+                    int32_t dst_x_offset = src_x_index * width_ / 2;
+                    int32_t dst_y_offset = src_y_index * height_ / 2;
 
                     if (mask & bit) {
-                        auto values = src_grids[grid_index]->m_values;
+                        auto values = src_grids[grid_index]->values_;
 
-                        for (int32_t y = 0; y < m_height; y += 2) {
+                        for (int32_t y = 0; y < height_; y += 2) {
 
-                            for (int32_t x = 0; x < m_width; x += 2) {
+                            for (int32_t x = 0; x < width_; x += 2) {
                                 T sum{};
                                 T v[4];
 
@@ -125,7 +124,7 @@ namespace Grain {
                                 if (check_invalid) {
 
                                     for (int32_t i = 0; i < 4; i++) {
-                                        if (v[i] != m_invalid_value) {
+                                        if (v[i] != invalid_value_) {
                                             sum += v[i];
                                             n++;
                                         }
@@ -149,8 +148,8 @@ namespace Grain {
                         }   // End of y loop
                     }
                     else {
-                        for (int32_t y = 0; y < m_height / 2; y++) {
-                            for (int32_t x = 0; x < m_width / 2; x++) {
+                        for (int32_t y = 0; y < height_ / 2; y++) {
+                            for (int32_t x = 0; x < width_ / 2; x++) {
                                 invalidateValueAtXY(dst_x_offset + x, dst_y_offset + y);
                             }
                         }
@@ -181,24 +180,24 @@ namespace Grain {
             if (quadrant_index < 0 || quadrant_index > 3) { throw ErrorCode::BadArgs; }
 
             // Width and height must be a multiple of 2
-            if (m_width % 2 != 0 || m_height % 2 != 0) { throw ErrorCode::UnsupportedDimension; }
+            if (width_ % 2 != 0 || height_ % 2 != 0) { throw ErrorCode::UnsupportedDimension; }
 
-            if (value_grid->width() != m_width || value_grid->height() != m_height) {
+            if (value_grid->width() != width_ || value_grid->height() != height_) {
                 throw ErrorCode::UnsupportedDimension;
             }
 
-            if (!m_values) {
+            if (!values_) {
                 _initMemThrow();
             }
 
-            int32_t dst_x_offset = quadrant_index & 0x1 ? m_width / 2 : 0;
-            int32_t dst_y_offset = quadrant_index & 0x2 ? m_height / 2 : 0;
+            int32_t dst_x_offset = quadrant_index & 0x1 ? width_ / 2 : 0;
+            int32_t dst_y_offset = quadrant_index & 0x2 ? height_ / 2 : 0;
 
-            auto values = value_grid->m_values;
+            auto values = value_grid->values_;
 
-            for (int32_t y = 0; y < m_height; y += 2) {
+            for (int32_t y = 0; y < height_; y += 2) {
 
-                for (int32_t x = 0; x < m_width; x += 2) {
+                for (int32_t x = 0; x < width_; x += 2) {
                     T sum{};
                     T v[4];
 
@@ -209,7 +208,7 @@ namespace Grain {
 
                     int32_t n = 0;
                     for (int32_t i = 0; i < 4; i++) {
-                        if (v[i] != m_invalid_value) {
+                        if (v[i] != invalid_value_) {
                             sum += v[i];
                             n++;
                         }
@@ -262,39 +261,39 @@ namespace Grain {
             file->writeEndianSignature();
 
             // Version
-            file->writeValue<uint16_t>(m_main_version);
-            file->writeValue<uint16_t>(m_sub_version);
+            file->writeValue<uint16_t>(main_version_);
+            file->writeValue<uint16_t>(sub_version_);
 
             // Data type
             file->writeValue<uint16_t>(valueDataType());
 
             // Dimension and position inside 2d tile array
-            file->writeValue<int32_t>(m_width);
-            file->writeValue<int32_t>(m_height);
-            file->writeValue<int32_t>(m_x_index);
-            file->writeValue<int32_t>(m_y_index);
+            file->writeValue<int32_t>(width_);
+            file->writeValue<int32_t>(height_);
+            file->writeValue<int32_t>(x_index_);
+            file->writeValue<int32_t>(y_index_);
 
             // Features
-            file->writeValue<uint32_t>(m_feature_flags.bits());
+            file->writeValue<uint32_t>(feature_flags_.bits());
 
             // Feature min/max
             if (hasFeature(kFeature_MinMax)) {
-                _writeTypeValue(file, m_min_value);
-                _writeTypeValue(file, m_max_value);
+                _writeTypeValue(file, min_value_);
+                _writeTypeValue(file, max_value_);
             }
 
             // Feature invalid value
             if (hasFeature(kFeature_Invalid_Value)) {
-                _writeTypeValue(file, m_invalid_value);
+                _writeTypeValue(file, invalid_value_);
             }
 
             // Feature Geo information
             if (hasFeature(kFeature_GeoInfo)) {
-                file->writeValue<int32_t>(m_srid);
-                file->writeFix(m_bbox.minX());
-                file->writeFix(m_bbox.minY());
-                file->writeFix(m_bbox.maxX());
-                file->writeFix(m_bbox.maxY());
+                file->writeValue<int32_t>(srid_);
+                file->writeFix(bbox_.minX());
+                file->writeFix(bbox_.minY());
+                file->writeFix(bbox_.maxX());
+                file->writeFix(bbox_.maxY());
             }
 
             // Custom infos
@@ -348,43 +347,43 @@ namespace Grain {
             file->setEndianBySignature(buffer);
 
             // Version
-            m_main_version = file->readValue<uint16_t>();
-            m_sub_version = file->readValue<uint16_t>();
+            main_version_ = file->readValue<uint16_t>();
+            sub_version_ = file->readValue<uint16_t>();
 
             // Data type
-            m_data_type = file->readValue<int16_t>();
-            if (valueDataType() != m_data_type) {
+            data_type_ = file->readValue<int16_t>();
+            if (valueDataType() != data_type_) {
                 throw ErrorCode::UnsupportedDataType;
             }
 
             // Dimension and position inside 2d tile array
-            m_width = file->readValue<int32_t>();
-            m_height = file->readValue<int32_t>();
-            m_value_count = m_width * m_height;
-            m_x_index = file->readValue<int32_t>();
-            m_y_index = file->readValue<int32_t>();
+            width_ = file->readValue<int32_t>();
+            height_ = file->readValue<int32_t>();
+            value_count_ = width_ * height_;
+            x_index_ = file->readValue<int32_t>();
+            y_index_ = file->readValue<int32_t>();
 
             // Features
-            m_feature_flags.set(file->readValue<uint32_t>());
+            feature_flags_.set(file->readValue<uint32_t>());
 
             // Feature min/max
             if (hasFeature(kFeature_MinMax)) {
-                m_min_value = _readTypeValue(file);
-                m_max_value = _readTypeValue(file);
+                min_value_ = _readTypeValue(file);
+                max_value_ = _readTypeValue(file);
             }
 
             // Feature invalid value
             if (hasFeature(kFeature_Invalid_Value)) {
-                m_invalid_value = _readTypeValue(file);
+                invalid_value_ = _readTypeValue(file);
             }
 
             // Feature Geo information
             if (hasFeature(kFeature_GeoInfo)) {
-                m_srid = file->readValue<int32_t>();
-                file->readFix(m_bbox.m_min_x);
-                file->readFix(m_bbox.m_min_y);
-                file->readFix(m_bbox.m_max_x);
-                file->readFix(m_bbox.m_max_y);
+                srid_ = file->readValue<int32_t>();
+                file->readFix(bbox_.min_x_);
+                file->readFix(bbox_.min_y_);
+                file->readFix(bbox_.max_x_);
+                file->readFix(bbox_.max_y_);
             }
 
             // Custom infos
@@ -407,32 +406,32 @@ namespace Grain {
 
 
     template <> void ValueGrid<uint8_t>::_writeDataToFile(File* file) {
-        for (int32_t i = 0; i < m_value_count; i++) {
-            file->writeValue<uint8_t>(m_values[i]);
+        for (int32_t i = 0; i < value_count_; i++) {
+            file->writeValue<uint8_t>(values_[i]);
         }
     }
 
     template <> void ValueGrid<int32_t>::_writeDataToFile(File* file) {
-        for (int32_t i = 0; i < m_value_count; i++) {
-            file->writeValue<int32_t>(m_values[i]);
+        for (int32_t i = 0; i < value_count_; i++) {
+            file->writeValue<int32_t>(values_[i]);
         }
     }
 
     template <> void ValueGrid<int64_t>::_writeDataToFile(File* file) {
-        for (int32_t i = 0; i < m_value_count; i++) {
-            file->writeValue<int64_t>(m_values[i]);
+        for (int32_t i = 0; i < value_count_; i++) {
+            file->writeValue<int64_t>(values_[i]);
         }
     }
 
     template <> void ValueGrid<float>::_writeDataToFile(File* file) {
-        for (int32_t i = 0; i < m_value_count; i++) {
-            file->writeValue<float>(m_values[i]);
+        for (int32_t i = 0; i < value_count_; i++) {
+            file->writeValue<float>(values_[i]);
         }
     }
 
     template <> void ValueGrid<double>::_writeDataToFile(File* file) {
-        for (int32_t i = 0; i < m_value_count; i++) {
-            file->writeValue<double>(m_values[i]);
+        for (int32_t i = 0; i < value_count_; i++) {
+            file->writeValue<double>(values_[i]);
         }
     }
 
@@ -446,36 +445,36 @@ namespace Grain {
 
     template <> void ValueGrid<uint8_t>::_readDataFromFile(File* file) {
         _initMemThrow();
-        for (int32_t i = 0; i < m_value_count; i++) {
-            m_values[i] = file->readValue<uint8_t>();
+        for (int32_t i = 0; i < value_count_; i++) {
+            values_[i] = file->readValue<uint8_t>();
         }
     }
 
     template <> void ValueGrid<int32_t>::_readDataFromFile(File* file) {
         _initMemThrow();
-        for (int32_t i = 0; i < m_value_count; i++) {
-            m_values[i] = file->readValue<int32_t>();
+        for (int32_t i = 0; i < value_count_; i++) {
+            values_[i] = file->readValue<int32_t>();
         }
     }
 
     template <> void ValueGrid<int64_t>::_readDataFromFile(File* file) {
         _initMemThrow();
-        for (int32_t i = 0; i < m_value_count; i++) {
-            m_values[i] = file->readValue<int64_t>();
+        for (int32_t i = 0; i < value_count_; i++) {
+            values_[i] = file->readValue<int64_t>();
         }
     }
 
     template <> void ValueGrid<float>::_readDataFromFile(File* file) {
         _initMemThrow();
-        for (int32_t i = 0; i < m_value_count; i++) {
-            m_values[i] = file->readValue<float>();
+        for (int32_t i = 0; i < value_count_; i++) {
+            values_[i] = file->readValue<float>();
         }
     }
 
     template <> void ValueGrid<double>::_readDataFromFile(File* file) {
         _initMemThrow();
-        for (int32_t i = 0; i < m_value_count; i++) {
-            m_values[i] = file->readValue<double>();
+        for (int32_t i = 0; i < value_count_; i++) {
+            values_[i] = file->readValue<double>();
         }
     }
 
@@ -507,19 +506,19 @@ namespace Grain {
 
         try {
 
-            cvf2 = new (std::nothrow) CVF2(m_width, m_height, length_unit, min_digits, max_digits);
+            cvf2 = new (std::nothrow) CVF2(width_, height_, length_unit, min_digits, max_digits);
             if (!cvf2) {
                 throw ErrorCode::ClassInstantiationFailed;
             }
 
-            cvf2->setSRID(m_srid);
+            cvf2->setSRID(srid_);
             cvf2->setUnit(length_unit);
-            cvf2->setBbox(m_bbox);
+            cvf2->setBbox(bbox_);
             cvf2->openFileToWrite(file_path);
 
-            for (int32_t y = 0; y < m_height; y++) {
-                for (int32_t x = 0; x < m_width; x++) {
-                    cvf2->pushValueToData(x, y, m_values[y * m_width + x]);
+            for (int32_t y = 0; y < height_; y++) {
+                for (int32_t x = 0; x < width_; x++) {
+                    cvf2->pushValueToData(x, y, values_[y * width_ + x]);
                 }
             }
 
@@ -550,12 +549,12 @@ namespace Grain {
 
         Image* image = nullptr;
 
-        if (m_values && m_width > 0 && m_height > 0) {
+        if (values_ && width_ > 0 && height_ > 0) {
 
-            image = Image::createLuminaFloat(m_width, m_height);
+            image = Image::createLuminaFloat(width_, height_);
 
             if (image) {
-                image->setSampleValueRange(m_min_value, m_max_value);
+                image->setSampleValueRange(min_value_, max_value_);
 
                 float pixel[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
                 ImageAccess ia(image, pixel);
@@ -600,14 +599,14 @@ namespace Grain {
 
         Image* image = nullptr;
 
-        if (m_values && m_width > 0 && m_height > 0) {
+        if (values_ && width_ > 0 && height_ > 0) {
 
-            image = Image::createLuminaAlphaFloat(m_width, m_height);
+            image = Image::createLuminaAlphaFloat(width_, height_);
 
             // int32_t undefined_value_count = 0; // Unused
 
             if (image) {
-                image->setSampleValueRange(m_min_value, m_max_value);
+                image->setSampleValueRange(min_value_, max_value_);
 
                 float pixel[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
                 ImageAccess ia(image, pixel);
@@ -620,7 +619,7 @@ namespace Grain {
                     while (ia.stepX()) {
                         T v =* src++;
                         if (v == undefined_value) {
-                            pixel[0] = static_cast<float>(m_min_value);
+                            pixel[0] = static_cast<float>(min_value_);
                             pixel[1] = 0.0f;
                             // undefined_value_count++; // Unused
                         }

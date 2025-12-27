@@ -99,10 +99,10 @@ namespace Grain {
         double m_stroke_px_fix = -1.0;
         double m_stroke_dash_array[kMaxStrokeDashLength] = {0};
         int32_t m_stroke_dash_length = 0;
-        double m_radius = 5.0;
-        double m_radius_px_min = 0.0;
-        double m_radius_px_max = 100.0;
-        double m_radius_px_fix = -1.0;
+        double radius_ = 5.0;
+        double radius_px_min_ = 0.0;
+        double radius_px_max_ = 100.0;
+        double radius_px_fix_ = -1.0;
 
         double m_fill_extend_width = 0.0;
         double m_fill_extend_px_fix = -1.0;
@@ -118,7 +118,7 @@ namespace Grain {
         GraphicContext::BlendMode m_blend_mode = GraphicContext::BlendMode::Normal;
 
         float m_stroke_width_px;
-        float m_radius_px;
+        float radius_px_{};
 
     public:
         GeoTileRendererDrawSettings() {}
@@ -157,10 +157,10 @@ namespace Grain {
         int32_t m_max_zoom = 20;                        ///< End zoom level
         bool m_resources_released_flag = false;         ///< Resources have been released
 
-        int32_t m_srid;                                 ///< Spatial Reference System Identifier (SRID)
+        int32_t srid_;                                  ///< Spatial Reference System Identifier (SRID)
         bool m_ignore_proj = false;                     ///< Flag indicating, wether projection can be ignored
 
-        String m_dir_path;                              ///< Directory path, eg. used when type is Shape or CSV
+        String dir_path_;                               ///< Directory path, eg. used when type is Shape or CSV
         String m_file_name;                             ///< File name, eg. used when type is Shape or CSV
         String m_used_file_path;                        ///< File path used
 
@@ -206,7 +206,7 @@ namespace Grain {
         int32_t m_x_field_index = -1;       ///< Used for accessing x coordinate values in CSV and other file formats
         int32_t m_y_field_index = -1;       ///< Used for accessing y coordinate values in CSV and other file formats
         double m_xy_scale = 1.0;            ///< Used for scaling x/y coordinate values
-        int32_t m_radius_field_index = -1;  ///< Used for accessing radius values in CSV and other file formats
+        int32_t radius_field_index_ = -1;   ///< Used for accessing radius values in CSV and other file formats
 
         CSVData m_csv_data;
         bool m_csv_must_read = true;
@@ -509,19 +509,19 @@ namespace Grain {
         void setRenderMode(RenderMode render_mode) noexcept { m_render_mode = render_mode; }
         bool setRenderModeByName(const String& render_mode_name) noexcept {
             static const KeyIntPair items[] = {
-                    { "tiles", (int32_t)RenderMode::Tiles },
-                    { "meta-tiles", (int32_t)RenderMode::MetaTiles },
-                    { "image", (int32_t)RenderMode::Image },
-                    { "animation", (int32_t)RenderMode::Animation },
-                    { nullptr, (int32_t)RenderMode::Undefined  }  // Sentinel item (end of list)
+                    { "tiles", static_cast<int32_t>(RenderMode::Tiles) },
+                    { "meta-tiles", static_cast<int32_t>(RenderMode::MetaTiles) },
+                    { "image", static_cast<int32_t>(RenderMode::Image) },
+                    { "animation", static_cast<int32_t>(RenderMode::Animation) },
+                    { nullptr, static_cast<int32_t>(RenderMode::Undefined)  }  // Sentinel item (end of list)
             };
 
             m_render_mode = (RenderMode)KeyIntPair::lookupValue(render_mode_name.utf8(), items);
             return m_render_mode == RenderMode::Undefined ? false : true;
         }
         void setRenderSize(int32_t width, int32_t height) noexcept {
-            m_render_image_size.m_width = width;
-            m_render_image_size.m_height = height;
+            m_render_image_size.width_ = width;
+            m_render_image_size.height_ = height;
         }
 
         void setRenderBoundsWGS84(const Vec2d& top_left, const Vec2d& bottom_right) noexcept;
@@ -603,7 +603,7 @@ namespace Grain {
             int32_t index = 0;
             while (names[index] != nullptr) {
                 if (strcmp(name, names[index]) == 0) {
-                    return (GeoTileDrawMode)(index + (int32_t)GeoTileDrawMode::Stroke);
+                    return (GeoTileDrawMode)(index + static_cast<int32_t>(GeoTileDrawMode::Stroke));
                 }
                 index++;
             }
@@ -615,7 +615,7 @@ namespace Grain {
             int32_t index = 0;
             while (names[index] != nullptr) {
                 if (strcmp(name, names[index]) == 0) {
-                    return (GeoTileDrawShape)(index + (int32_t)GeoTileDrawShape::Circle);
+                    return (GeoTileDrawShape)(index + static_cast<int32_t>(GeoTileDrawShape::Circle));
                 }
                 index++;
             }

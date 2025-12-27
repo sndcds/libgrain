@@ -42,6 +42,8 @@ namespace Grain {
 
         ~SignalFilter() noexcept override = default;
 
+        [[nodiscard]] const char* className() const noexcept override { return "SignalFilter"; }
+
 
         [[nodiscard]] int32_t sampleRate() const noexcept { return m_sample_rate; }
 
@@ -54,7 +56,7 @@ namespace Grain {
         [[nodiscard]] virtual int32_t stageCount() const noexcept { return 0; }
 
         [[nodiscard]] bool isInverted() const noexcept { return m_inverted; }
-        [[nodiscard]] bool isValid() const noexcept { return m_valid; }
+        [[nodiscard]] bool isValid() const noexcept { return valid_; }
 
         void setSampleRate(int32_t sampleRate) noexcept {
             m_sample_rate = sampleRate < 1 ? 1 : sampleRate;
@@ -115,7 +117,7 @@ namespace Grain {
     protected:
         int32_t m_sample_rate = 44100;  ///< Samples per sesond, importent for many filter functions
         bool m_inverted = false;        ///< Determines whether the filtered output is subtracted or added to the original input
-        bool m_valid = true;            ///< If set to true, the filter is invalid an must not be used
+        bool valid_ = true;             ///< If set to true, the filter is invalid an must not be used
 
         double _m_pi_divided_by_sample_rate = std::numbers::pi / 44100.0;
         double _m_nyquist_freq = 22050.0;

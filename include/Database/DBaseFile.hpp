@@ -74,10 +74,10 @@ namespace Grain {
         char m_name[11];             ///< Byte: 0-10; field name in ASCII
         DBaseFieldType m_type;       ///< Byte: 11; field type in ASCII (C, D, L, M or N)
         uint32_t m_address;          ///< Byte: 12-15; field data address
-        uint8_t m_length;            ///< Byte: 16; field length in binary
+        uint8_t length_;             ///< Byte: 16; field length in binary
         uint8_t m_decimals;          ///< Byte: 17; field decimal count in binary
         uint8_t m_reserved1[2];      ///< Byte: 18-30; reserved
-        uint32_t m_offset;
+        uint32_t offs_;
         uint8_t m_reserved2[7];
         uint8_t m_mdx;               ///< Byte: 31; Production MDX field flag
     };
@@ -128,7 +128,7 @@ namespace Grain {
         DBaseField* m_columns;          ///< array of field specification
         uint32_t m_column_count;        ///< number of columns
         uint8_t m_integrity[7];         ///< integrity could be: valid, invalid
-        int32_t m_curr_row_index;       ///< Current Row index
+        int32_t curr_row_index_;        ///< Current Row index
         char errmsg[254];               ///< errorhandler, maximum of 254 characters. // TODO: Replace
 
         bool m_has_variable_length_fields = false;
@@ -200,11 +200,11 @@ namespace Grain {
         }
 
         int32_t columnLength(int32_t column_index) const noexcept {
-            return hasColumn(column_index) ? m_columns[column_index].m_length : -1;
+            return hasColumn(column_index) ? m_columns[column_index].length_ : -1;
         }
 
         uint32_t columnOffset(int32_t column_index) const noexcept {
-            return hasColumn(column_index) ? m_columns[column_index].m_offset : -1;
+            return hasColumn(column_index) ? m_columns[column_index].offs_ : -1;
         }
 
         DBaseFieldType columnType(int32_t column_index) const noexcept {
@@ -284,7 +284,7 @@ namespace Grain {
         }
 
         int32_t setRowIndex(int32_t row_index) {
-            if (row_index >= (int32_t)m_header->m_row_count) {
+            if (row_index >= static_cast<int32_t>(m_header->m_row_count)) {
                 return -1;
             }
             else if (row_index < 0) {
@@ -292,13 +292,13 @@ namespace Grain {
                     return -2;
                 }
                 else {
-                    m_curr_row_index = (int32_t)m_header->m_row_count + row_index;
+                    curr_row_index_ = static_cast<int32_t>(m_header->m_row_count) + row_index;
                 }
             }
             else {
-                m_curr_row_index = row_index;
+                curr_row_index_ = row_index;
             }
-            return m_curr_row_index;
+            return curr_row_index_;
         }
 
         int32_t readField(int32_t row_index, int32_t column_index, void* out_data) {
@@ -330,15 +330,15 @@ namespace Grain {
         }
 
         int32_t readNextRecord(void* out_data) {
-            if (m_curr_row_index >= m_header->m_row_count) {
+            if (curr_row_index_ >= m_header->m_row_count) {
                 return -1;
             }
 
-            setPos(_rowFilePos(m_curr_row_index));
+            setPos(_rowFilePos(curr_row_index_));
             read(m_header->m_row_length, (uint8_t*)out_data);
-            m_curr_row_index++;
+            curr_row_index_++;
 
-            return m_curr_row_index - 1;
+            return curr_row_index_ - 1;
         }
 
         int32_t readString(int32_t row_index, int32_t column_index, String& out_string) {
@@ -351,7 +351,7 @@ namespace Grain {
                 }
                 read(length, _m_temp_buffer->data());
                 out_string.setByData(_m_temp_buffer, length);
-                return (int32_t)out_string.length();
+                return static_cast<int32_t>(out_string.length());
             }
 
             return 0;
@@ -367,7 +367,7 @@ namespace Grain {
         }
 
         int64_t _fieldFilePos(int32_t row_index, int32_t column_index) {
-            return _rowFilePos(row_index) + m_columns[column_index].m_offset;
+            return _rowFilePos(row_index) + m_columns[column_index].offs_;
         }
     };
 

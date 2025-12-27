@@ -41,15 +41,10 @@ add_library(libgrain STATIC
 
         src/App/App.cpp
 
-        src/2d/Line.cpp
-        src/2d/Rect.cpp
-        src/2d/Circle.cpp
-        src/2d/Triangle.cpp
-        src/2d/Quadrilateral.cpp
+        src/Audio/AudioInterface.cpp
+
+        src/2d/RangeRect.cpp
         src/2d/Polygon.cpp
-        src/2d/Border.cpp
-        src/2d/RectEdges.cpp
-        src/2d/Dimension.cpp
         src/2d/GraphicPathPoint.cpp
         src/2d/GraphicPath.cpp
         src/2d/GraphicCompoundPath.cpp
@@ -60,7 +55,6 @@ add_library(libgrain STATIC
         src/2d/Data/CVF2File.cpp
         src/2d/Data/CVF2TileManager.cpp
         src/2d/Data/ValueGrid.cpp
-        src/2d/RangeRect.cpp
 
         src/3d/Cube.cpp
         src/3d/RangeCube.cpp
@@ -91,6 +85,8 @@ add_library(libgrain STATIC
 
         src/CSS/CSSColor.cpp
         src/CSS/CSS.cpp
+
+        src/Data/DataComposer.cpp
 
         src/Database/PostgreSQL.cpp
         src/Database/DBaseFile.cpp
@@ -126,6 +122,7 @@ add_library(libgrain STATIC
         src/GUI/Components/Checkbox.cpp
         src/GUI/Components/TextField.cpp
         src/GUI/Views/View.cpp
+        src/GUI/Views/Viewport.cpp
         src/GUI/Views/ScrollView.cpp
         src/GUI/Views/SplitView.cpp
         src/GUI/Event.cpp
@@ -178,6 +175,13 @@ add_library(libgrain STATIC
         src/Signal/SignalBandPassFilter.cpp
         src/Signal/SignalAllPassFilter.cpp
         src/Signal/SignalLadderFilter.cpp
+        src/Signal/SignalFormantFilter.cpp
+        src/Signal/SignalIR.cpp
+        src/Signal/SignalWave.cpp
+        include/Audio/AudioInterface.hpp
+        src/Audio/AudioInterface.cpp
+        include/Data/DataComposer.hpp
+        src/Data/DataComposer.cpp
 )
 
 # Add the warning flag for GCC/Clang

@@ -167,7 +167,7 @@ namespace Grain {
             { "yellow", 0xFFFF00FFu },
             { "yellowgreen", 0x9ACD32FFu },
 
-            { nullptr, 0x0 } // Sentinel item (end of list).
+            { nullptr, 0x0 } // Sentinel item (end of list)
     };
 
     const CSSColorFunctionInfo CSSColor::_g_color_function_infos[]  = {
@@ -179,31 +179,31 @@ namespace Grain {
             { "cmyk(",  5, CSSColorFunction::CMYK, 4, true },
             { "lab(",   4, CSSColorFunction::Lab, 3, true },
             { "lch(",   4, CSSColorFunction::Lch, 3, true },
-            { "color(", 6, CSSColorFunction::Color, 0, true },  // TODO: Check if `m_can_modern_syntax` is correct!
+            { "color(", 6, CSSColorFunction::Color, 0, true },  // TODO: Check if `can_modern_syntax_` is correct!
             { "gray(",  5, CSSColorFunction::Gray, 1, true },
             { "oklch(", 6, CSSColorFunction::OKLCh, 3, true },
             { "oklab(", 6, CSSColorFunction::OKLab, 3, true },
 
-            { nullptr, 0, CSSColorFunction::Undefined, 0, false } // Sentinel item (end of list).
+            { nullptr, 0, CSSColorFunction::Undefined, 0, false } // Sentinel item (end of list)
     };
 
 
     ErrorCode CSSColor::parseColor(const char* css_str) noexcept {
         auto result = ErrorCode::None;
 
-        m_valid = false;
+        valid_ = false;
 
         try {
             if (!css_str) { throw ErrorCode::BadArgs; }
 
             const char* ptr = css_str;
 
-            // Skip all whitespaces.
+            // Skip all whitespaces
             while (String::charIsWhiteSpace(*ptr)) {
                 ptr++;
             }
 
-            // Hexadecimal notation.
+            // Hexadecimal notation
             if (*ptr == '#') {
                 return parseHex(ptr + 1);
             }
@@ -225,17 +225,16 @@ namespace Grain {
 
 
     ErrorCode CSSColor::parseHex(const char* str) noexcept {
-
         const int32_t kMaxHexLength = 8;
         auto result = ErrorCode::None;
 
-        m_valid = false;
+        valid_ = false;
 
         try {
             if (!str) { throw ErrorCode::BadArgs; }
 
             int32_t index = 0;
-            int8_t hex_digits[kMaxHexLength];  // Buffer for eight hex values.
+            int8_t hex_digits[kMaxHexLength]; // Buffer for eight hex values
 
             auto ptr = str;
             while (*ptr != '\0') {
@@ -254,36 +253,36 @@ namespace Grain {
                     m_rgba.m_data[0] = static_cast<float>((hex_digits[0] << 4) + hex_digits[0]) / 255.0f;
                     m_rgba.m_data[1] = static_cast<float>((hex_digits[1] << 4) + hex_digits[1]) / 255.0f;
                     m_rgba.m_data[2] = static_cast<float>((hex_digits[2] << 4) + hex_digits[2]) / 255.0f;
-                    m_rgba.m_alpha = 1.0f;
-                    m_valid = true;
+                    m_rgba.alpha_ = 1.0f;
+                    valid_ = true;
                     break;
                 case 4:
                     m_rgba.m_data[0] = static_cast<float>((hex_digits[0] << 4) + hex_digits[0]) / 255.0f;
                     m_rgba.m_data[1] = static_cast<float>((hex_digits[1] << 4) + hex_digits[1]) / 255.0f;
                     m_rgba.m_data[2] = static_cast<float>((hex_digits[2] << 4) + hex_digits[2]) / 255.0f;
-                    m_rgba.m_alpha = static_cast<float>((hex_digits[3] << 4) + hex_digits[3]) / 255.0f;
-                    m_valid = true;
+                    m_rgba.alpha_ = static_cast<float>((hex_digits[3] << 4) + hex_digits[3]) / 255.0f;
+                    valid_ = true;
                     break;
                 case 6:
                     m_rgba.m_data[0] = static_cast<float>((hex_digits[0] << 4) + hex_digits[1]) / 255.0f;
                     m_rgba.m_data[1] = static_cast<float>((hex_digits[2] << 4) + hex_digits[3]) / 255.0f;
                     m_rgba.m_data[2] = static_cast<float>((hex_digits[4] << 4) + hex_digits[5]) / 255.0f;
-                    m_rgba.m_alpha = 1.0f;
-                    m_valid = true;
+                    m_rgba.alpha_ = 1.0f;
+                    valid_ = true;
                     break;
                 case 8:
                     m_rgba.m_data[0] = static_cast<float>((hex_digits[0] << 4) + hex_digits[1]) / 255.0f;
                     m_rgba.m_data[1] = static_cast<float>((hex_digits[2] << 4) + hex_digits[3]) / 255.0f;
                     m_rgba.m_data[2] = static_cast<float>((hex_digits[4] << 4) + hex_digits[5]) / 255.0f;
-                    m_rgba.m_alpha = static_cast<float>((hex_digits[6] << 4) + hex_digits[7]) / 255.0f;
-                    m_valid = true;
+                    m_rgba.alpha_ = static_cast<float>((hex_digits[6] << 4) + hex_digits[7]) / 255.0f;
+                    valid_ = true;
                     break;
                 default:
                     throw ErrorCode::CSSWrongDigitsInHexCode;
             }
         }
         catch (ErrorCode err) {
-            m_valid = false;
+            valid_ = false;
             result = err;
         }
 
@@ -292,7 +291,7 @@ namespace Grain {
 
 
     bool CSSColor::parseNamed(const char* str) noexcept {
-        m_valid = false;
+        valid_ = false;
 
         if (!str) {
             return false;
@@ -302,7 +301,7 @@ namespace Grain {
         while (named_color->m_name) {
             if (strcasecmp(str, named_color->m_name) == 0) {
                 m_rgba.set32bit(named_color->m_color);
-                m_valid = true;
+                valid_ = true;
                 return true;
             }
             named_color++;
@@ -313,9 +312,7 @@ namespace Grain {
 
 
     bool CSSColor::parseFunctional(const char* str, ErrorCode& out_err) noexcept {
-
-        m_valid = false;
-
+        valid_ = false;
         out_err = ErrorCode::None;
 
         bool function_flag = false;
@@ -329,8 +326,8 @@ namespace Grain {
 
         while (_g_color_function_infos[index].m_signature != nullptr) {
             auto info = &_g_color_function_infos[index];
-            if (strncasecmp(str, info->m_signature, info->m_length) == 0) {
-                ptr = str + info->m_length;  // Pointer to the functions content part
+            if (strncasecmp(str, info->m_signature, info->length_) == 0) {
+                ptr = str + info->length_; // Pointer to the functions content part
                 function_info = *info;
                 function = info->m_function;
                 function_flag = true;
@@ -342,7 +339,7 @@ namespace Grain {
 
         if (!function_flag) {
             out_err = ErrorCode::None;
-            return false;  // No function found
+            return false; // No function found
         }
 
         // Look for ending ')'
@@ -393,8 +390,10 @@ namespace Grain {
                     !m_comp_values[2].isColorLevelUnit()) {
                     return false;
                 }
-                m_rgba.set(m_comp_values[0].valueForColorLevel(), m_comp_values[1].valueForColorLevel(),
-                           m_comp_values[2].valueForColorLevel());
+                m_rgba.set(
+                        m_comp_values[0].valueForColorLevel(),
+                        m_comp_values[1].valueForColorLevel(),
+                        m_comp_values[2].valueForColorLevel());
                 break;
 
             case CSSColorFunction::RGBA:
@@ -404,8 +403,11 @@ namespace Grain {
                     !m_comp_values[3].isWithoutUnitOrPercentage()) {
                     return false;
                 }
-                m_rgba.setRGBA(m_comp_values[0].valueForColorLevel(), m_comp_values[1].valueForColorLevel(),
-                               m_comp_values[2].valueForColorLevel(), m_comp_values[3].valueAsFloat());
+                m_rgba.setRGBA(
+                        m_comp_values[0].valueForColorLevel(),
+                        m_comp_values[1].valueForColorLevel(),
+                        m_comp_values[2].valueForColorLevel(),
+                        m_comp_values[3].valueAsFloat());
                 break;
 
             case CSSColorFunction::HSL: {
@@ -414,8 +416,7 @@ namespace Grain {
                     !m_comp_values[2].isPercentage()) {
                     return false;
                 }
-                HSL hsl(
-                        m_comp_values[0].valueAsFloat() / 360.0f,
+                HSL hsl(m_comp_values[0].valueAsFloat() / 360.0f,
                         m_comp_values[1].valueForColorLevel(),
                         m_comp_values[2].valueForColorLevel());
                 m_rgba.setRGB(RGB(hsl));
@@ -429,8 +430,7 @@ namespace Grain {
                     !m_comp_values[3].isWithoutUnitOrPercentage()) {
                     return false;
                 }
-                HSL hsl(
-                        m_comp_values[0].valueAsFloat() / 360.0f,
+                HSL hsl(m_comp_values[0].valueAsFloat() / 360.0f,
                         m_comp_values[1].valueForColorLevel(),
                         m_comp_values[2].valueForColorLevel());
                 m_rgba.setRGBA(RGB(hsl), m_comp_values[3].valueForColorLevel());
@@ -501,10 +501,10 @@ namespace Grain {
         }
 
         if (m_modern_syntax) {
-            m_rgba.m_alpha = alpha;
+            m_rgba.alpha_ = alpha;
         }
 
-        m_valid = true;
+        valid_ = true;
 
         return true;
     }
@@ -512,7 +512,7 @@ namespace Grain {
 
     ErrorCode CSSColor::parseColorComponents(const char* str, int32_t str_length, int32_t component_n) noexcept {
         constexpr int32_t kMaxStrLength = 256;
-        m_valid = false;
+        valid_ = false;
         m_parsed_comp_n = 0;
 
         if (str_length <= 0) {
@@ -523,7 +523,7 @@ namespace Grain {
             return ErrorCode::LimitExceeded;
         }
 
-        // Look for slash separator '/', which indicates modern syntax and separates the alpha component at the end.
+        // Look for slash separator '/', which indicates modern syntax and separates the alpha component at the end
         auto slash_separator_ptr = strchr(str, '/');
         m_modern_syntax = slash_separator_ptr != nullptr;
 
@@ -548,8 +548,8 @@ namespace Grain {
                 break;
             }
 
-            // Check if the unit is valid for color components.
-            // Valid units are `Absolute` and `Percentage`.
+            // Check if the unit is valid for color components
+            // Valid units are `Absolute` and `Percentage`
             CSSUnit unit = m_comp_values[index].unit();
             if (unit != CSSUnit::Absolute && unit != CSSUnit::Percentage) {
                 return ErrorCode::CSSWrongUnit;
@@ -563,14 +563,13 @@ namespace Grain {
             }
         }
 
-        m_valid = true;
+        valid_ = true;
 
         return ErrorCode::None;
     }
 
 
     ErrorCode CSSColor::parseColorToRGB(const char* css_str, RGB& out_color) noexcept {
-
         CSSColor css_color;
         auto err = css_color.parseColor(css_str);
         if (err == ErrorCode::None) {
@@ -581,13 +580,11 @@ namespace Grain {
 
 
     ErrorCode CSSColor::parseColorToRGB(const String& css_string, RGB& out_color) noexcept {
-
         return parseColorToRGB(css_string.utf8(), out_color);
     }
 
 
     ErrorCode CSSColor::parseColorToRGBA(const char* css_str, RGBA& out_color) noexcept {
-
         CSSColor css_color;
         auto err = css_color.parseColor(css_str);
         if (err == ErrorCode::None) {
@@ -598,7 +595,6 @@ namespace Grain {
 
 
     ErrorCode CSSColor::parseColorToRGBA(const String& css_string, RGBA& out_color) noexcept {
-
         return parseColorToRGBA(css_string.utf8(), out_color);
     }
 

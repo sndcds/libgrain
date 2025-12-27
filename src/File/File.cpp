@@ -55,16 +55,16 @@ namespace Grain {
 
 
     std::ostream& operator << (std::ostream& os, const FileEntry& o) {
-        if (o.m_dir_flag) {
+        if (o.dir_flag_) {
             os << "dir: ";
         }
-        else if (o.m_reg_file_flag) {
-            os << "file (" << o.m_file_size << " bytes): ";
+        else if (o.reg_file_flag_) {
+            os << "file (" << o.file_size_ << " bytes): ";
         }
-        else if (o.m_sym_link_flag) {
+        else if (o.sym_link_flag_) {
             os << "symbolic link: ";
         }
-        return os << o.m_path;
+        return os << o.path_;
     }
 
 
@@ -80,26 +80,26 @@ namespace Grain {
      */
     File::File(const String& file_path) : Object() {
 
-        m_file_path = file_path;
-        m_read_flag = false;
-        m_write_flag = false;
-        m_append_flag = false;
-        m_can_overwrite = false;
-        m_file_size = 0;
-        m_last_err_code = ErrorCode::None;
-        _m_write_buffer[0] = String::EOS;
+        file_path_ = file_path;
+        read_flag_ = false;
+        write_flag_ = false;
+        append_flag_ = false;
+        can_overwrite_ = false;
+        file_size_ = 0;
+        last_err_code_ = ErrorCode::None;
+        write_buffer_[0] = String::EOS;
     }
 
 
     File::~File() {
 
         try {
-            if (_m_base64_encode_flag) {
+            if (base64_encode_flag_) {
                 base64EncodeEnd();
             }
 
             // Close the file explicitly
-            m_file_stream.close();
+            file_stream_.close();
         }
         catch (...) {
         }
@@ -108,17 +108,17 @@ namespace Grain {
 
     void File::log(Log& l) {
         l << className() << l.endl;
-        l << "m_file_path : " << m_file_path << l.endl;
-        l << "m_file_size: " << m_file_size << l.endl;
-        l << "m_big_endian: " << m_big_endian << l.endl;
-        l << "m_read_flag: " << l.boolValue(m_read_flag) << l.endl;
-        l << "m_write_flag: " << l.boolValue(m_write_flag) << l.endl;
-        l << "m_append_flag: " << l.boolValue(m_append_flag) << l.endl;
-        l << "m_binary_flag: " << l.boolValue(m_binary_flag) << l.endl;
-        l << "m_file_exists: " << l.boolValue(m_file_exists) << l.endl;
-        l << "m_can_overwrite: " << l.boolValue(m_can_overwrite) << l.endl;
-        l << "m_last_err_code: " << (int32_t)m_last_err_code << l.endl;
-        l << "m_last_err_message: " << m_last_err_message << l.endl;
+        l << "m_file_path : " << file_path_ << l.endl;
+        l << "m_file_size: " << file_size_ << l.endl;
+        l << "m_big_endian: " << big_endian_ << l.endl;
+        l << "m_read_flag: " << l.boolValue(read_flag_) << l.endl;
+        l << "m_write_flag: " << l.boolValue(write_flag_) << l.endl;
+        l << "m_append_flag: " << l.boolValue(append_flag_) << l.endl;
+        l << "m_binary_flag: " << l.boolValue(binary_flag_) << l.endl;
+        l << "m_file_exists: " << l.boolValue(file_exists_) << l.endl;
+        l << "m_can_overwrite: " << l.boolValue(can_overwrite_) << l.endl;
+        l << "m_last_err_code: " << (int32_t)last_err_code_ << l.endl;
+        l << "m_last_err_message: " << last_err_message_ << l.endl;
     }
 
 
@@ -127,38 +127,38 @@ namespace Grain {
         DeferredException deferred_exception;
 
         try {
-            m_read_flag = flags & AccessFlags::kRead;
-            m_write_flag = flags & AccessFlags::kWrite;
-            m_append_flag = flags & AccessFlags::kAppend;
-            m_binary_flag = flags & AccessFlags::kBinary;
-            m_can_overwrite = flags & AccessFlags::kOverwrite;
+            read_flag_ = flags & AccessFlags::kRead;
+            write_flag_ = flags & AccessFlags::kWrite;
+            append_flag_ = flags & AccessFlags::kAppend;
+            binary_flag_ = flags & AccessFlags::kBinary;
+            can_overwrite_ = flags & AccessFlags::kOverwrite;
 
-            m_file_exists = File::fileExists(m_file_path);
+            file_exists_ = File::fileExists(file_path_);
 
-            if (m_write_flag && m_file_exists && !m_can_overwrite) {
+            if (write_flag_ && file_exists_ && !can_overwrite_) {
                 Exception::throwStandard(ErrorCode::FileOverwriteNotAllowed);
             }
 
             std::ios_base::openmode streamMode = std::ios_base::openmode{};
 
-            if (m_read_flag) {
+            if (read_flag_) {
                 streamMode |= std::ios::in; // Open the file for reading
             }
-            if (m_write_flag) {
+            if (write_flag_) {
                 streamMode |= std::ios::out; // Open the file for writing
             }
-            if (m_append_flag) {
+            if (append_flag_) {
                 streamMode |= std::ios::app; // Append to the end of the file
             }
-            if (m_binary_flag) {
+            if (binary_flag_) {
                 streamMode |= std::ios::binary; // Open the file in binary mode
             }
-            if (m_can_overwrite) {
+            if (can_overwrite_) {
                 streamMode |= std::ios::trunc; // Truncate the file if it already exists
             }
 
-            m_file_stream.open(m_file_path.utf8(), streamMode);
-            if (!m_file_stream.is_open()) {
+            file_stream_.open(file_path_.utf8(), streamMode);
+            if (!file_stream_.is_open()) {
                 Exception::throwStandard(ErrorCode::FileCantOpen);
             }
 
@@ -166,9 +166,9 @@ namespace Grain {
         }
         catch (const Exception& e) {
             deferred_exception.capture();
-            m_read_flag = false;
-            m_write_flag = false;
-            m_last_err_code = e.code();
+            read_flag_ = false;
+            write_flag_ = false;
+            last_err_code_ = e.code();
         }
 
         deferred_exception.rethrow();
@@ -217,25 +217,25 @@ namespace Grain {
 
     int64_t File::_updateFileSize() noexcept {
 
-        m_file_size = -1;
+        file_size_ = -1;
 
         try {
-            auto file_path = std::filesystem::path(m_file_path.utf8());
-            m_file_size = static_cast<int64_t>(std::filesystem::file_size(file_path));
+            auto file_path = std::filesystem::path(file_path_.utf8());
+            file_size_ = static_cast<int64_t>(std::filesystem::file_size(file_path));
         }
         catch (const std::filesystem::filesystem_error& exc) {
-            m_last_err_code = ErrorCode::StdFileSysError;
+            last_err_code_ = ErrorCode::StdFileSysError;
         }
         catch (const std::exception& e) {
-            m_last_err_code = ErrorCode::StdCppException;
+            last_err_code_ = ErrorCode::StdCppException;
         }
 
-        return m_file_size;
+        return file_size_;
     }
 
 
     void File::checkStream() const {
-        if (!m_file_stream.good()) {
+        if (!file_stream_.good()) {
             Exception::throwStandard(ErrorCode::FileInvalidStream);
         }
     }
@@ -243,10 +243,10 @@ namespace Grain {
 
     void File::checkBeforeReading() const {
         checkStream();
-        if (!m_read_flag) {
+        if (!read_flag_) {
             Exception::throwStandard(ErrorCode::FileCantRead);
         }
-        if (m_file_size < 1) {
+        if (file_size_ < 1) {
             Exception::throwStandard(ErrorCode::FileIsEmpty);
         }
     }
@@ -254,16 +254,16 @@ namespace Grain {
 
     void File::checkBeforeWriting() const {
         checkStream();
-        if (!m_write_flag) {
+        if (!write_flag_) {
             Exception::throwStandard(ErrorCode::FileCantWrite);
         }
     }
 
 
     void File::close() {
-        if (m_file_stream.is_open()) {
-            m_file_stream.flush();
-            m_file_stream.close();
+        if (file_stream_.is_open()) {
+            file_stream_.flush();
+            file_stream_.close();
         }
     }
 
@@ -275,7 +275,7 @@ namespace Grain {
      */
     int64_t File::pos() {
         checkStream();
-        const std::streampos pos = m_file_stream.tellg();
+        const std::streampos pos = file_stream_.tellg();
         if (pos == std::ios::pos_type(-1)) {
             // Check for an error in determining the position
             Exception::throwStandard(ErrorCode::FileCantGetPos);
@@ -286,8 +286,8 @@ namespace Grain {
 
     void File::setPos(int64_t pos) {
         checkStream();
-        m_file_stream.seekg(pos, std::ios::beg);
-        if (m_file_stream.fail()) {
+        file_stream_.seekg(pos, std::ios::beg);
+        if (file_stream_.fail()) {
             Exception::throwStandard(ErrorCode::FileCantSetPos);
         }
     }
@@ -297,7 +297,7 @@ namespace Grain {
         if (size > 0) {
             auto current_pos = pos();
             auto new_pos = current_pos + size;
-            if (new_pos >= m_file_size) {
+            if (new_pos >= file_size_) {
                 Exception::throwStandard(ErrorCode::FileCantGetPos);
             }
             setPos(new_pos);
@@ -307,22 +307,22 @@ namespace Grain {
 
     bool File::mustSwap() const noexcept {
         if constexpr (std::endian::native == std::endian::little) {
-            return m_big_endian;
+            return big_endian_;
         }
         else {
-            return !m_big_endian;
+            return !big_endian_;
         }
     }
 
 
     bool File::read(int64_t size, uint8_t* out_data) {
         if (out_data) {
-            m_file_stream.read(reinterpret_cast<char*>(out_data), size);
-            if (m_file_stream.fail()) {
+            file_stream_.read(reinterpret_cast<char*>(out_data), size);
+            if (file_stream_.fail()) {
                 Exception::throwStandard(ErrorCode::FileReadError);
             }
-            if (m_file_stream.eof()) {
-                m_file_stream.clear();  // Clear the EOF flag
+            if (file_stream_.eof()) {
+                file_stream_.clear();  // Clear the EOF flag
                 return false;
             }
         }
@@ -343,20 +343,20 @@ namespace Grain {
         int64_t result = 0;
 
         std::string line;
-        while (std::getline(m_file_stream, line)) {
-            if (m_file_stream.eof()) {
-                m_file_stream.clear();  // Clear the EOF flag
+        while (std::getline(file_stream_, line)) {
+            if (file_stream_.eof()) {
+                file_stream_.clear();  // Clear the EOF flag
                 break;
             }
 
-            if (m_file_stream.fail()) {
+            if (file_stream_.fail()) {
                 Exception::throwStandard(ErrorCode::FileReadError);
             }
 
             result++;
         }
 
-        m_file_stream.clear();
+        file_stream_.clear();
         setPos(0);
 
         return result;
@@ -384,25 +384,25 @@ namespace Grain {
         }
 
         std::string line;
-        std::getline(m_file_stream, line);
+        std::getline(file_stream_, line);
 
         // Check if no data was read due to EOF at the start
-        if (m_file_stream.eof() && line.empty()) {
-            m_file_stream.clear();  // Clear the EOF flag
+        if (file_stream_.eof() && line.empty()) {
+            file_stream_.clear();  // Clear the EOF flag
             return false;
         }
 
         // Handle other errors
-        if (m_file_stream.fail() && !m_file_stream.eof()) {
+        if (file_stream_.fail() && !file_stream_.eof()) {
             Exception::throwStandard(ErrorCode::FileReadError);
         }
 
-        if (m_file_stream.fail()) {
+        if (file_stream_.fail()) {
             Exception::throwStandard(ErrorCode::FileReadError);
         }
 
         out_line.set(line.c_str());
-        m_curr_line_index++;
+        curr_line_index_++;
 
         return true;
     }
@@ -414,11 +414,11 @@ namespace Grain {
     bool File::skipLine() {
 
         std::string line;
-        std::getline(m_file_stream, line);
+        std::getline(file_stream_, line);
 
         // Check if no data was read due to EOF at the start
-        if (m_file_stream.eof() && line.empty()) {
-            m_file_stream.clear();  // Clear the EOF flag
+        if (file_stream_.eof() && line.empty()) {
+            file_stream_.clear();  // Clear the EOF flag
             return false;
         }
 
@@ -511,8 +511,8 @@ namespace Grain {
             Exception::throwStandard(ErrorCode::BadArgs);
         }
 
-        m_file_stream.read(reinterpret_cast<char*>(out_str), max_length);
-        auto n = m_file_stream.gcount();
+        file_stream_.read(reinterpret_cast<char*>(out_str), max_length);
+        auto n = file_stream_.gcount();
         if (n > 0 && n < max_length) {
             out_str[n] = 0;
         }
@@ -520,8 +520,8 @@ namespace Grain {
             Exception::throwStandard(ErrorCode::FileReadError);
         }
 
-        if (m_file_stream.eof()) {
-            m_file_stream.clear();  // Clear the EOF flag
+        if (file_stream_.eof()) {
+            file_stream_.clear();  // Clear the EOF flag
             Exception::throwStandard(ErrorCode::FileEndOfFileReached);
         }
     }
@@ -546,30 +546,30 @@ namespace Grain {
             Exception::throwStandard(ErrorCode::FileEndOfFileReached);
         }
 
-        _m_utf8_seq_length = String::utf8SeqLengthByStartByte(c);
-        if (_m_utf8_seq_length < 1) {
+        utf8_seq_len_ = String::utf8SeqLengthByStartByte(c);
+        if (utf8_seq_len_ < 1) {
             Exception::throwStandard(ErrorCode::FileUTF8Mismatch);
         }
 
         int32_t index = 0;
-        _m_utf8_buffer[index++] = c;
-        while (index < _m_utf8_seq_length) {
+        utf8_buffer_[index++] = c;
+        while (index < utf8_seq_len_) {
             c = readChar();
             if (c == EOF) {
                 Exception::throwStandard(ErrorCode::FileEndOfFileReached);
             }
-            _m_utf8_buffer[index++] = c;
+            utf8_buffer_[index++] = c;
         }
 
-        _m_utf8_buffer[index] = 0;
+        utf8_buffer_[index] = 0;
         if (out_data) {
-            for (int32_t i = 0; i < _m_utf8_seq_length; i++) {
-                out_data[i] = _m_utf8_buffer[i];
+            for (int32_t i = 0; i < utf8_seq_len_; i++) {
+                out_data[i] = utf8_buffer_[i];
             }
             out_data[index] = 0;
         }
 
-        return _m_utf8_seq_length;
+        return utf8_seq_len_;
     }
 
 
@@ -675,7 +675,7 @@ namespace Grain {
         }
         catch (const Exception& e) {
             if (e.code() != ErrorCode::FileEndOfFileReached) {
-                m_last_err_code = e.code();
+                last_err_code_ = e.code();
             }
             else {
                 deferred_exception.capture();
@@ -834,7 +834,7 @@ namespace Grain {
         else if (atom_size32 == 0) {
             // Last atom
             last_atom = true;
-            atom_size = m_file_size - pos() + 8;
+            atom_size = file_size_ - pos() + 8;
         }
         else {
             atom_size = atom_size32;
@@ -941,8 +941,8 @@ namespace Grain {
      *  @return `true` if the last symbol is a white space character, `false` otherwise.
      */
     bool File::lastUtf8SymbolIsWhiteSpace() noexcept {
-        char c = _m_utf8_buffer[0];
-        return _m_utf8_seq_length == 1 && (c == 0x20 || c == 0x09 || c == 0x0d || c == 0x0a || c == 0x0c || c == 0x0b);
+        char c = utf8_buffer_[0];
+        return utf8_seq_len_ == 1 && (c == 0x20 || c == 0x09 || c == 0x0d || c == 0x0a || c == 0x0c || c == 0x0b);
     }
 
 
@@ -957,7 +957,7 @@ namespace Grain {
      *  @return `true` if the last symbol matches the provided symbol, `false` otherwise.
      */
     bool File::compareLastUtf8Symbol(const char* symbol) noexcept {
-        return strcmp(_m_utf8_buffer, symbol) == 0;
+        return strcmp(utf8_buffer_, symbol) == 0;
     }
 
 
@@ -968,7 +968,7 @@ namespace Grain {
      *  This is typically used in file formats that require an endian indicator.
      */
     void File::writeEndianSignature() {
-        if (m_big_endian) {
+        if (big_endian_) {
             writeStr("MM");
         }
         else {
@@ -992,8 +992,8 @@ namespace Grain {
             Exception::throwStandard(ErrorCode::NullData);
         }
 
-        m_file_stream.write(reinterpret_cast<const char*>(data), length);
-        if (m_file_stream.fail()) {
+        file_stream_.write(reinterpret_cast<const char*>(data), length);
+        if (file_stream_.fail()) {
             Exception::throwStandard(ErrorCode::FileCantWrite);
         }
     }
@@ -1152,11 +1152,11 @@ namespace Grain {
         va_list args;
         va_start(args, format);
 
-        std::vsnprintf(_m_write_buffer, kWriteBufferSize, format, args);
+        std::vsnprintf(write_buffer_, kWriteBufferSize, format, args);
         va_end(args);
 
-        write8BitData(reinterpret_cast<uint8_t*>(_m_write_buffer),
-                      static_cast<int64_t>(strlen(_m_write_buffer)));
+        write8BitData(reinterpret_cast<uint8_t*>(write_buffer_),
+                      static_cast<int64_t>(strlen(write_buffer_)));
     }
 
 
@@ -1194,8 +1194,8 @@ namespace Grain {
      *  to the file. It is designed to help format and structure the content in the file.
      */
     void File::writeIndent() {
-        if (m_indent > 0) {
-            for (int32_t i = 0; i < m_indent; i++) {
+        if (indent_ > 0) {
+            for (int32_t i = 0; i < indent_; i++) {
                 writeChar('\t');
             }
         }
@@ -1319,11 +1319,11 @@ namespace Grain {
         va_list args;
         va_start(args, format);
 
-        std::vsnprintf(_m_write_buffer, kWriteBufferSize, format, args);
+        std::vsnprintf(write_buffer_, kWriteBufferSize, format, args);
         va_end(args);
 
-        write8BitData(reinterpret_cast<uint8_t*>(_m_write_buffer),
-                      static_cast<int64_t>(strlen(_m_write_buffer)));
+        write8BitData(reinterpret_cast<uint8_t*>(write_buffer_),
+                      static_cast<int64_t>(strlen(write_buffer_)));
         writeNewLine();
     }
 
@@ -1484,7 +1484,7 @@ namespace Grain {
             result = signature == mm || signature == ii;
         }
         catch (...) {
-            m_last_err_code = ErrorCode::Unknown;
+            last_err_code_ = ErrorCode::Unknown;
         }
 
         return result;
@@ -1531,7 +1531,7 @@ namespace Grain {
             setPos(remembered_pos);
         }
         catch (...) {
-            m_last_err_code = ErrorCode::Unknown;
+            last_err_code_ = ErrorCode::Unknown;
         }
 
         return result;
@@ -1565,7 +1565,7 @@ namespace Grain {
             setPos(remembered_pos);
         }
         catch (...) {
-            m_last_err_code = ErrorCode::Unknown;
+            last_err_code_ = ErrorCode::Unknown;
         }
 
         return result;
@@ -1599,7 +1599,7 @@ namespace Grain {
             setPos(remembered_pos);
         }
         catch (...) {
-            m_last_err_code = ErrorCode::Unknown;
+            last_err_code_ = ErrorCode::Unknown;
         }
 
         return result;
@@ -1674,7 +1674,7 @@ namespace Grain {
             setPos(remembered_pos);
         }
         catch (...) {
-            m_last_err_code = ErrorCode::Unknown;
+            last_err_code_ = ErrorCode::Unknown;
         }
 
         return result;
@@ -1730,7 +1730,7 @@ namespace Grain {
             setPos(remembered_pos);
         }
         catch (...) {
-            m_last_err_code = ErrorCode::Unknown;
+            last_err_code_ = ErrorCode::Unknown;
         }
 
         return result;
@@ -1785,7 +1785,7 @@ namespace Grain {
             result = v == 4;
         }
         catch (...) {
-            m_last_err_code = ErrorCode::Unknown;
+            last_err_code_ = ErrorCode::Unknown;
         }
 
         return result;
@@ -1817,7 +1817,7 @@ namespace Grain {
             setPos(remembered_pos);
         }
         catch (...) {
-            m_last_err_code = ErrorCode::Unknown;
+            last_err_code_ = ErrorCode::Unknown;
         }
 
         return result;
@@ -1847,7 +1847,7 @@ namespace Grain {
             setPos(remembered_pos);
         }
         catch (...) {
-            m_last_err_code = ErrorCode::Unknown;
+            last_err_code_ = ErrorCode::Unknown;
         }
 
         return result;
@@ -1897,7 +1897,7 @@ namespace Grain {
             }
         }
         catch (const Exception& e) {
-            m_last_err_code = e.code();
+            last_err_code_ = e.code();
         }
 
         setPos(rem_pos);
@@ -1910,31 +1910,31 @@ namespace Grain {
 
 
     void File::base64EncodeBegin() {
-        if (_m_base64_encode_flag || !canWrite()) {
+        if (base64_encode_flag_ || !canWrite()) {
             Exception::throwStandard(ErrorCode::FileBase64EncodeError);
         }
-        _m_base64_encode_flag = true;
+        base64_encode_flag_ = true;
     }
 
 
     void File::base64EncodeByte(uint64_t byte) {
-        if (!_m_base64_encode_flag) {
+        if (!base64_encode_flag_) {
             Exception::throwStandard(ErrorCode::FileBase64EncodeError);
         }
-        if (_m_base64_encoder.encodeByte(byte)) {
-            writeStr(_m_base64_encoder.codePtr());
+        if (base64_encoder_.encodeByte(byte)) {
+            writeStr(base64_encoder_.codePtr());
         }
     }
 
 
     void File::base64EncodeEnd() {
-        if (!_m_base64_encode_flag) {
+        if (!base64_encode_flag_) {
             Exception::throwStandard(ErrorCode::FileBase64EncodeError);
         }
-        if (_m_base64_encoder.encodeFinalize()) {
-            writeStr(_m_base64_encoder.codePtr());
+        if (base64_encoder_.encodeFinalize()) {
+            writeStr(base64_encoder_.codePtr());
         }
-        _m_base64_encode_flag = false;
+        base64_encode_flag_ = false;
     }
 
 
@@ -1963,7 +1963,7 @@ namespace Grain {
             out_string._updateInternalLengthInfo();
         }
         catch (const Exception& e) {
-            m_last_err_code = result = e.code();
+            last_err_code_ = result = e.code();
         }
 
         return result;
@@ -2028,7 +2028,7 @@ namespace Grain {
                     free(buffer);
                 }
                 buffer = nullptr;
-                m_last_err_code = e.code();
+                last_err_code_ = e.code();
             }
         }
 
@@ -2408,9 +2408,9 @@ NSString *file = [NSString stringWithUTF8String:file_path.utf8()];
     /**
      *  @brief Change multiple individual bytes at arbitrary positions in a file.
      *
-     *  Opens the file at @p file_path in read/write binary mode and overwrites
-     *  @p n bytes at the positions specified in the @p pos array with the
-     *  corresponding values in the @p bytes array.
+     *  Opens the file at `file_path` in read/write binary mode and overwrites
+     *  `n` bytes at the positions specified in the `pos` array with the
+     *  corresponding values in the `bytes` array.
      *
      *  @param file_path Path to the file to modify.
      *  @param n Number of bytes to modify.
@@ -2490,9 +2490,9 @@ NSString *file = [NSString stringWithUTF8String:file_path.utf8()];
     /**
      *  @brief Change multiple individual bytes at arbitrary positions in a file.
      *
-     *  Opens the file at @p file_path in read/write binary mode and overwrites
-     *  @p n bytes at the positions specified in the @p pos array with the
-     *  corresponding values in the @p bytes array.
+     *  Opens the file at `file_path` in read/write binary mode and overwrites
+     *  `n` bytes at the positions specified in the `pos` array with the
+     *  corresponding values in the `bytes` array.
      *
      *  @param file_path Path to the file to modify.
      *  @param n Number of bytes to modify.
@@ -2806,24 +2806,24 @@ NSString *file = [NSString stringWithUTF8String:file_path.utf8()];
         auto result = ErrorCode::None;
         std::filesystem::path path(file_path.utf8());
 
-        out_file_entry.m_path.clear();
-        out_file_entry.m_name.clear();
-        out_file_entry.m_file_size = 0;
+        out_file_entry.path_.clear();
+        out_file_entry.name_.clear();
+        out_file_entry.file_size_ = 0;
 
         try {
             if (File::fileExists(file_path)) {
-                out_file_entry.m_path = path.string().c_str();
-                out_file_entry.m_name = path.filename().string().c_str();
-                out_file_entry.m_dir_flag = std::filesystem::is_directory(path);
-                out_file_entry.m_reg_file_flag = std::filesystem::is_regular_file(path);
-                out_file_entry.m_sym_link_flag = std::filesystem::is_symlink(path);
+                out_file_entry.path_ = path.string().c_str();
+                out_file_entry.name_ = path.filename().string().c_str();
+                out_file_entry.dir_flag_ = std::filesystem::is_directory(path);
+                out_file_entry.reg_file_flag_ = std::filesystem::is_regular_file(path);
+                out_file_entry.sym_link_flag_ = std::filesystem::is_symlink(path);
 
-                if (out_file_entry.m_reg_file_flag) {
+                if (out_file_entry.reg_file_flag_) {
                     try {
-                        out_file_entry.m_file_size = std::filesystem::file_size(path);
+                        out_file_entry.file_size_ = std::filesystem::file_size(path);
                     }
                     catch (const std::filesystem::filesystem_error&) {
-                        out_file_entry.m_file_size = 0; // Handle inaccessible files gracefully
+                        out_file_entry.file_size_ = 0; // Handle inaccessible files gracefully
                     }
                 }
             }
@@ -2844,16 +2844,16 @@ NSString *file = [NSString stringWithUTF8String:file_path.utf8()];
             for (const auto& entry : std::filesystem::directory_iterator(path.utf8())) {
 
                 FileEntry file_entry;
-                file_entry.m_dir_flag = entry.is_directory();
-                file_entry.m_reg_file_flag = entry.is_regular_file();
-                file_entry.m_sym_link_flag = entry.is_symlink();
-                file_entry.m_path = entry.path().c_str();
-                file_entry.m_name = entry.path().filename().string().c_str();
-                if (file_entry.m_reg_file_flag) {
-                    file_entry.m_file_size = entry.file_size();
+                file_entry.dir_flag_ = entry.is_directory();
+                file_entry.reg_file_flag_ = entry.is_regular_file();
+                file_entry.sym_link_flag_ = entry.is_symlink();
+                file_entry.path_ = entry.path().c_str();
+                file_entry.name_ = entry.path().filename().string().c_str();
+                if (file_entry.reg_file_flag_) {
+                    file_entry.file_size_ = entry.file_size();
                 }
                 else {
-                    file_entry.m_file_size = 0;
+                    file_entry.file_size_ = 0;
                 }
 
                 auto err = action(&file_entry, ref);
@@ -2891,16 +2891,16 @@ NSString *file = [NSString stringWithUTF8String:file_path.utf8()];
             for (auto entry = std::filesystem::recursive_directory_iterator(path.utf8()); entry != std::filesystem::recursive_directory_iterator(); entry++) {
 
                 FileEntry file_entry;
-                file_entry.m_dir_flag = entry->is_directory();
-                file_entry.m_reg_file_flag = entry->is_regular_file();
-                file_entry.m_sym_link_flag = entry->is_symlink();
-                file_entry.m_path = entry->path().c_str();
-                file_entry.m_name = entry->path().filename().string().c_str();
-                if (file_entry.m_reg_file_flag) {
-                    file_entry.m_file_size = entry->file_size();
+                file_entry.dir_flag_ = entry->is_directory();
+                file_entry.reg_file_flag_ = entry->is_regular_file();
+                file_entry.sym_link_flag_ = entry->is_symlink();
+                file_entry.path_ = entry->path().c_str();
+                file_entry.name_ = entry->path().filename().string().c_str();
+                if (file_entry.reg_file_flag_) {
+                    file_entry.file_size_ = entry->file_size();
                 }
                 else {
-                    file_entry.m_file_size = 0;
+                    file_entry.file_size_ = 0;
                 }
 
                 auto err = action(&file_entry, ref);

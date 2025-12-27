@@ -49,7 +49,7 @@ namespace Grain {
         };
 
     protected:
-        String m_delimiter = " ";       ///< Delimiter to use. Default is a space character
+        String m_delimiter{ " " };      ///< Delimiter to use. Default is a space character
         int32_t m_line_count = 0;       ///< Number of lines in file
         String m_line;                  ///< Buffer for line reading
         Vec3Fix m_last_coordinate;      ///< Buffer for coordinate reading
@@ -60,7 +60,7 @@ namespace Grain {
         double m_step_x = -1.0;         ///< Horizontal step size of first two values in x direction
         double m_step_y = -1.0;         ///< Vertical step size of first two values in y direction
         double m_mean_z = 0.0;          ///< Mean z value
-        bool m_scan_done = false;       ///< Signas, that scan is allready done
+        bool scan_done_ = false;        ///< Signas, that scan is allready done
         ErrorCode m_last_err_code = ErrorCode::None; ///< Code of the last error occured
 
     public:
@@ -82,7 +82,7 @@ namespace Grain {
             l << "y2: " << m_y2 << Log::endl;
             l << "step_x: " << m_step_x << Log::endl;
             l << "step_y: " << m_step_y << Log::endl;
-            l << "scan_done: " << m_scan_done << Log::endl;
+            l << "scan_done: " << scan_done_ << Log::endl;
             l << "last_err_code: " << (int)m_last_err_code << Log::endl;
         }
 

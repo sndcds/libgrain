@@ -162,7 +162,7 @@ namespace Grain {
     typedef struct {
         const char* m_unit_str;
         int32_t m_unit_str_len;
-        CSSUnit m_unit;
+        CSSUnit unit_;
         CSSUnitContext m_unit_context;
     } CSSUnitInfo;
 
@@ -170,18 +170,18 @@ namespace Grain {
     class CSSValue {
 
     protected:
-        CSSUnit m_unit = CSSUnit::Undefined;    ///< The CSSUnit of the vlaue.
+        CSSUnit unit_ = CSSUnit::Undefined;     ///< The CSSUnit of the vlaue.
         bool m_is_float = false;                ///< Flag indicating whether the number is an integer or a floating point number.
         Fix m_value = 0;                        ///< The value represented as Fix.
-        bool m_valid = false;                   ///< Flag indicating wether the value is valid and can be used.
+        bool valid_ = false;                   ///< Flag indicating wether the value is valid and can be used.
 
     public:
         CSSValue() = default;
 
         CSSValue(Fix value, CSSUnit unit) {
             m_value = value;
-            m_unit = unit;
-            m_valid = m_unit != CSSUnit::Undefined;
+            unit_ = unit;
+            valid_ = unit_ != CSSUnit::Undefined;
         }
 
         virtual const char* className() const noexcept { return "CSSValue"; }
@@ -192,7 +192,7 @@ namespace Grain {
         }
 
         friend std::ostream& operator << (std::ostream &os, const CSSValue &o) {
-            if (o.m_valid) {
+            if (o.valid_) {
                 os << o.m_value << " " << o.unitName();
             }
             else {
@@ -203,13 +203,13 @@ namespace Grain {
 
 
         bool validate() noexcept {
-            m_valid = m_unit != CSSUnit::Undefined;
-            return m_valid;
+            valid_ = unit_ != CSSUnit::Undefined;
+            return valid_;
         }
 
         void setDouble(double value, CSSUnit unit) noexcept {
             m_value.setDouble(value);
-            m_unit = unit;
+            unit_ = unit;
             validate();
         }
 
@@ -219,7 +219,7 @@ namespace Grain {
 
         void setInt32(int32_t value, CSSUnit unit) noexcept {
             m_value.setInt32(value);
-            m_unit = unit;
+            unit_ = unit;
             validate();
         }
 
@@ -232,28 +232,28 @@ namespace Grain {
 
         void undef() noexcept {
             m_value = 0.0;
-            m_unit = CSSUnit::Undefined;
+            unit_ = CSSUnit::Undefined;
             m_is_float = false;
-            m_valid = false;
+            valid_ = false;
         }
 
-        CSSUnit unit() const noexcept { return m_unit; }
+        CSSUnit unit() const noexcept { return unit_; }
         const char* unitName() const noexcept;
 
-        bool isColorLevelUnit() const noexcept { return m_unit == CSSUnit::Absolute || m_unit <= CSSUnit::Percentage; }
-        bool isAngleUnit() const noexcept { return m_unit == CSSUnit::Absolute || (m_unit >= CSSUnit::FirstAngle && m_unit <= CSSUnit::LastAngle); }
-        bool isWithoutUnitOrPercentage() const noexcept { return m_unit == CSSUnit::Absolute && m_unit <= CSSUnit::Percentage; }
-        bool isPercentage() const noexcept { return m_unit >= CSSUnit::Percentage; }
+        bool isColorLevelUnit() const noexcept { return unit_ == CSSUnit::Absolute || unit_ <= CSSUnit::Percentage; }
+        bool isAngleUnit() const noexcept { return unit_ == CSSUnit::Absolute || (unit_ >= CSSUnit::FirstAngle && unit_ <= CSSUnit::LastAngle); }
+        bool isWithoutUnitOrPercentage() const noexcept { return unit_ == CSSUnit::Absolute && unit_ <= CSSUnit::Percentage; }
+        bool isPercentage() const noexcept { return unit_ >= CSSUnit::Percentage; }
 
         /* TODO: ????
-        bool isAbsolute() const noexcept { return m_unit >= CSSUnit::FirstAbsolute && m_unit <= CSSUnit::LastAbsolute; }
-        bool isRelative() const noexcept { return m_unit >= CSSUnit::FirstRelativ && m_unit <= CSSUnit::LastRelative; }
-        bool isViewport() const noexcept { return m_unit >= CSSUnit::FirstViewport && m_unit <= CSSUnit::LastViewport; }
-        bool isContainer() const noexcept { return m_unit >= CSSUnit::FirstContainer && m_unit <= CSSUnit::LastContainer; }
-        bool isTime() const noexcept { return m_unit >= CSSUnit::FirstTime && m_unit <= CSSUnit::LastTime; }
-        bool isAngle() const noexcept { return m_unit >= CSSUnit::FirstAngle && m_unit <= CSSUnit::LastAngle; }
-        bool isFrequency() const noexcept { return m_unit >= CSSUnit::FirstFrequency && m_unit <= CSSUnit::LastFrequency; }
-        bool isResolution() const noexcept { return m_unit >= CSSUnit::FirstResolution && m_unit <= CSSUnit::LastResolution; }
+        bool isAbsolute() const noexcept { return unit_ >= CSSUnit::FirstAbsolute && unit_ <= CSSUnit::LastAbsolute; }
+        bool isRelative() const noexcept { return unit_ >= CSSUnit::FirstRelativ && unit_ <= CSSUnit::LastRelative; }
+        bool isViewport() const noexcept { return unit_ >= CSSUnit::FirstViewport && unit_ <= CSSUnit::LastViewport; }
+        bool isContainer() const noexcept { return unit_ >= CSSUnit::FirstContainer && unit_ <= CSSUnit::LastContainer; }
+        bool isTime() const noexcept { return unit_ >= CSSUnit::FirstTime && unit_ <= CSSUnit::LastTime; }
+        bool isAngle() const noexcept { return unit_ >= CSSUnit::FirstAngle && unit_ <= CSSUnit::LastAngle; }
+        bool isFrequency() const noexcept { return unit_ >= CSSUnit::FirstFrequency && unit_ <= CSSUnit::LastFrequency; }
+        bool isResolution() const noexcept { return unit_ >= CSSUnit::FirstResolution && unit_ <= CSSUnit::LastResolution; }
          */
 
         Fix value() const noexcept { return m_value; }
@@ -267,7 +267,7 @@ namespace Grain {
         double valueSVGPixel(double dpi = 96) const noexcept;
 
 
-        bool isValid() const noexcept { return m_valid; }
+        bool isValid() const noexcept { return valid_; }
     };
 
 

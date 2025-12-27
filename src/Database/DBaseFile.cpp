@@ -66,8 +66,7 @@ namespace Grain {
     void DBaseFile::readAll() {
         readHeaderInfo();
         readColumnsInfo();
-
-        m_curr_row_index = 0;
+        curr_row_index_ = 0;
     }
 
 
@@ -175,14 +174,14 @@ namespace Grain {
 
             field->m_type = (DBaseFieldType)readValue<uint8_t>();
             field->m_address = readValue<uint32_t>();
-            field->m_length = readValue<uint8_t>();
-            if (field->m_length == 0) {
+            field->length_ = readValue<uint8_t>();
+            if (field->length_ == 0) {
                 m_has_variable_length_fields = true;
             }
 
             field->m_decimals = readValue<uint8_t>();
             read(2, field->m_reserved1);
-            field->m_offset = readValue<uint32_t>();
+            field->offs_ = readValue<uint32_t>();
             read(7, field->m_reserved1);
             field->m_mdx = readValue<uint8_t>();
 
@@ -193,8 +192,8 @@ namespace Grain {
         int32_t offset = 1; // Skip first byte which indicates whether a record is deleted or not
 
         for (uint32_t i = 0; i < m_column_count; i++) {
-            m_columns[i].m_offset = offset;
-            offset += m_columns[i].m_length;
+            m_columns[i].offs_ = offset;
+            offset += m_columns[i].length_;
         }
     }
 

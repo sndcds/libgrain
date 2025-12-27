@@ -17,86 +17,50 @@
 
 namespace Grain {
 
-#if defined(__APPLE__) && defined(__MACH__)
-    FFTSetup FFT::g_fft_setups[kLogNResolutionCount] = { nullptr };
-#endif
-
-
     FFT::FFT(int32_t log_n) noexcept {
         if (log_n >= kLogNResolutionFirst && log_n <= kLogNResolutionLast) {
             m_log_n = log_n;
-            m_length = 1 << log_n;
-            m_half_length = m_length / 2;
-
+            m_len = 1 << log_n;
+            m_half_len = m_len / 2;
+            m_io_buffer = static_cast<float*>(fft_alloc(sizeof(float) * m_len));
 
 #if defined(__APPLE__) && defined(__MACH__)
-            m_data = static_cast<float*>(std::malloc(sizeof(float) * m_length * 4));
-
-            // Buffers for real (time-domain) input and output signals
-            int32_t offset = 0;
-            m_x_buffer = &m_data[offset]; offset += m_length;
-            m_y_buffer = &m_data[offset]; offset += m_length;
-            m_real_part = &m_data[offset]; offset += m_half_length;
-            m_imag_part = &m_data[offset]; offset += m_half_length;
-            m_mag = &m_data[offset]; offset += m_half_length;
-            m_phase = &m_data[offset]; offset += m_half_length;
-
-            m_fft_setup = _macos_fftSetup(log_n);
-            // We need complex buffers in two different formats!
-            m_temp_complex = (DSPComplex*)std::malloc(sizeof(DSPComplex) * m_half_length);
-            m_valid = m_fft_setup && m_data && m_temp_complex;
+            m_split_complex.realp = static_cast<float*>(fft_alloc(sizeof(float) * m_half_len));
+            m_split_complex.imagp = static_cast<float*>(fft_alloc(sizeof(float) * m_half_len));
+            vDSP_vclr(m_split_complex.imagp, 1, m_half_len); // Zero imaginary parts
+            m_fft_setup = vDSP_create_fftsetup(log_n, kFFTRadix2);
 #else
-            m_x_buffer = static_cast<float*>(std::malloc(sizeof(float) * m_length));
-            m_mag = static_cast<float*>(std::malloc(sizeof(float) * m_half_length));
-            m_phase = static_cast<float*>(std::malloc(sizeof(float) * m_half_length));
+            m_io_buffer = static_cast<float*>(std::malloc(sizeof(float) * m_len));
+            m_mag = static_cast<float*>(std::malloc(sizeof(float) * m_half_len));
+            m_phase = static_cast<float*>(std::malloc(sizeof(float) * m_half_len));
 
             // Allocate FFTW output once
-            m_out = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * (m_half_length + 1));
+            m_out = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * (m_half_len + 1));
 
             // Create plan once
-            m_plan = fftwf_plan_dft_r2c_1d(m_length, m_x_buffer, m_out, FFTW_ESTIMATE);
-            m_plan_inv = fftwf_plan_dft_c2r_1d(m_length, m_out, m_x_buffer, FFTW_ESTIMATE);
+            m_plan = fftwf_plan_dft_r2c_1d(m_len, m_io_buffer, m_out, FFTW_ESTIMATE);
+            m_plan_inv = fftwf_plan_dft_c2r_1d(m_len, m_out, m_io_buffer, FFTW_ESTIMATE);
 #endif
         }
     }
 
 
     FFT::~FFT() noexcept {
-
 #if defined(__APPLE__) && defined(__MACH__)
-        std::free(m_data);
-        std::free(m_x_buffer);
-        std::free(m_mag);
-        std::free(m_phase);
-        std::free(m_temp_complex);
+        if (m_split_complex.realp) { fft_free(m_split_complex.realp); m_split_complex.realp = nullptr; }
+        if (m_split_complex.imagp) { fft_free(m_split_complex.imagp); m_split_complex.imagp = nullptr; }
+        if (m_fft_setup) { vDSP_destroy_fftsetup(m_fft_setup); m_fft_setup = nullptr; }
+        if (m_io_buffer) { fft_free(m_io_buffer); m_io_buffer = nullptr; }
 #else
         fftwf_destroy_plan(m_plan);
         fftwf_destroy_plan(m_plan_inv);
         fftwf_free(m_out);
-        std::free(m_x_buffer);
         std::free(m_mag);
         std::free(m_phase);
+        fft_free(m_io_buffer);
 #endif
+
     }
-
-
-#if defined(__APPLE__) && defined(__MACH__)
-    FFTSetup FFT::_macos_fftSetup(int32_t log_n) noexcept {
-        FFTSetup fft_setup = nullptr;
-
-        if (log_n >= kLogNResolutionFirst && log_n <= kLogNResolutionLast) {
-            int32_t index = log_n - kLogNResolutionFirst;
-
-            if (!g_fft_setups[index]) {    // Must be initialized.
-                g_fft_setups[index] = vDSP_create_fftsetup(log_n, kFFTRadix2);
-            }
-
-            fft_setup = g_fft_setups[index];
-        }
-
-        return fft_setup;
-    }
-#endif
 
 
     /**
@@ -120,71 +84,52 @@ namespace Grain {
 
 
 #if defined(__APPLE__) && defined(__MACH__)
-    ErrorCode FFT::fft(float* data, Partials* out_partials) noexcept {
-        auto result = ErrorCode::None;
-
-        try {
-            if (!data || !out_partials)
-                Exception::throwStandard(ErrorCode::NullData);
-
-            if (FFT::logNFromResolution(out_partials->resolution() * 2) != m_log_n)
-                Exception::throwStandard(ErrorCode::BadArgs);
-
-            // Copy input data into FFT buffer
-            std::memcpy(m_x_buffer, data, sizeof(float) * m_length);
-
-            // Prepare split-complex structure
-            DSPSplitComplex temp_split_complex;
-            temp_split_complex.realp = m_real_part;
-            temp_split_complex.imagp = m_imag_part;
-
-            // Pack real input into split-complex format
-            vDSP_ctoz((DSPComplex*)m_x_buffer, 2, &temp_split_complex, 1, m_half_length);
-
-            // Perform real-to-complex FFT
-            vDSP_fft_zrip(m_fft_setup, &temp_split_complex, 1, m_log_n, kFFTDirection_Forward);
-
-            // Scaling factor (vDSP FFT is unscaled)
-            float scale = 0.5f;  // matches vDSP convention for forward real FFT
-
-            // Write Cartesian (real, imag) directly into Partials
-            out_partials->setCartesian();
-            auto out_real = out_partials->mutRealData();
-            auto out_imag = out_partials->mutImagData();
-            for (int32_t i = 0; i < m_half_length; i++) {
-                out_real[i] = temp_split_complex.realp[i] * scale;
-                out_imag[i] = temp_split_complex.imagp[i] * scale;
-            }
-
-        }
-        catch (const Exception& e) {
-            result = e.code();
+    ErrorCode FFT::fft(float* samples) noexcept {
+        if (!samples) {
+            return ErrorCode::NullData;
         }
 
-        return result;
+        // Convert real input (samples) into split-complex form
+        // Treat samples as interleaved complex (real + imag=0)
+        vDSP_ctoz(
+                reinterpret_cast<const DSPComplex*>(samples),
+                2, // stride through input (real+imag pairs)
+                &m_split_complex,
+                1, // stride through output split-complex
+                m_half_len); // number of complex samples (N/2)
+
+        // Perform in-place forward FFT
+        vDSP_fft_zrip(
+                m_fft_setup,
+                &m_split_complex,
+                1,
+                m_log_n,
+                kFFTDirection_Forward);
+
+        return ErrorCode::None;
     }
 #else
     ErrorCode FFT::fft(float* data, Partials* out_partials) noexcept {
         if (!data || !out_partials) {
             return ErrorCode::NullData;
         }
-        if (FFT::logNFromResolution(out_partials->resolution() * 2) != m_log_n) {
+        if (Math::log2IfPowerOfTwo(out_partials->resolution() * 2) != m_log_n) {
             return ErrorCode::BadArgs;
         }
 
         // Copy input into internal buffer used by plan
-        std::memcpy(m_x_buffer, data, sizeof(float) * m_length);
+        std::memcpy(m_io_buffer, data, sizeof(float) * m_len);
 
-        // Execute the pre-created r2c plan: m_x_buffer -> m_out
+        // Execute the pre-created r2c plan: m_io_buffer -> m_out
         fftwf_execute(m_plan);
 
         // Fill out_partials in CARTESIAN form (no scaling)
         out_partials->setCartesian();
-        float* out_real = out_partials->mutRealData();
-        float* out_imag = out_partials->mutImagData();
-        for (int32_t i = 0; i <= m_half_length; i++) {
-            out_real[i] = m_out[i][0];
-            out_imag[i] = m_out[i][1];
+        float* out_re = out_partials->mutRealData();
+        float* out_im = out_partials->mutImagData();
+        for (int32_t i = 0; i <= m_half_len; i++) {
+            out_re[i] = m_out[i][0];
+            out_im[i] = m_out[i][1];
         }
         return ErrorCode::None;
     }
@@ -192,36 +137,36 @@ namespace Grain {
 
 
 #if defined(__APPLE__) && defined(__MACH__)
-    ErrorCode FFT::ifft(Partials* partials, float* out_data) noexcept {
-        if (!partials || !out_data) {
+    ErrorCode FFT::ifft(float* out_samples) noexcept {
+        if (!out_samples) {
             return ErrorCode::NullData;
         }
 
-        if (!partials->isCartesian()) {
-            return ErrorCode::BadArgs; // or your custom error
-        }
+        // Inverse FFT in-place on split-complex
+        vDSP_fft_zrip(m_fft_setup,
+                      &m_split_complex,
+                      1,
+                      m_log_n,
+                      kFFTDirection_Inverse);
 
-        if (FFT::logNFromResolution(partials->resolution() * 2) != m_log_n) {
-            return ErrorCode::BadArgs;
-        }
+        // Scale the result by 1/N (vDSP does not scale automatically)
+        float scale = 1.0f / static_cast<float>(m_len);
+        vDSP_vsmul(m_split_complex.realp, 1, &scale, m_split_complex.realp, 1, m_half_len);
+        vDSP_vsmul(m_split_complex.imagp, 1, &scale, m_split_complex.imagp, 1, m_half_len);
 
-        // Wrap the Partials’ real/imag data into a split-complex structure
-        DSPSplitComplex temp_split_complex;
-        temp_split_complex.realp = partials->mutRealData();
-        temp_split_complex.imagp = partials->mutImagData();
+        // Convert split-complex back into interleaved complex
+        // This will produce {real, imag} pairs
+        vDSP_ztoc(
+                &m_split_complex,
+                1,
+                reinterpret_cast<DSPComplex*>(out_samples),
+                2,
+                m_half_len);
 
-        // Complex → real inverse FFT
-        vDSP_fft_zrip(m_fft_setup, &temp_split_complex, 1, m_log_n, kFFTDirection_Inverse);
-
-        // Convert packed format back into interleaved real vector
-        vDSP_ztoc(&temp_split_complex, 1, reinterpret_cast<DSPComplex*>(m_y_buffer), 2, m_half_length);
-
-        // Scale result (vDSP does not scale inverse FFTs automatically)
-        float scale = 0.5f / static_cast<float>(m_length);
-        vDSP_vsmul(m_y_buffer, 1, &scale, m_y_buffer, 1, m_length);
-
-        // Copy to output
-        std::memcpy(out_data, m_y_buffer, sizeof(float) * m_length);
+        // Now out_samples contains interleaved real/imag data,
+        // but since we started with purely real input,
+        // the real values are in out_samples[0], out_samples[2], ...
+        // and the imaginary parts should be ~0 in out_samples[1], out_samples[3], ...
 
         return ErrorCode::None;
     }
@@ -235,7 +180,7 @@ namespace Grain {
             return ErrorCode::BadArgs; // or your custom error
         }
 
-        if (FFT::logNFromResolution(partials->resolution() * 2) != m_log_n) {
+        if (Math::log2IfPowerOfTwo(partials->resolution() * 2) != m_log_n) {
             return ErrorCode::BadArgs;
         }
 
@@ -243,300 +188,150 @@ namespace Grain {
         float* imag = partials->mutImagData();
 
         // Fill FFTW complex input (m_out), same layout as FFT produced
-        for (int32_t i = 0; i <= m_half_length; i++) {
+        for (int32_t i = 0; i <= m_half_len; i++) {
             m_out[i][0] = real[i];
             m_out[i][1] = imag[i];
         }
 
-        // Execute c2r plan producing N real samples in m_x_buffer (unscaled: sum)
-        // reuse a plan cached for (m_out -> m_x_buffer) created via:
-        // fftwf_plan_dft_c2r_1d(m_length, m_out, m_x_buffer, FFTW_ESTIMATE)
+        // Execute c2r plan producing N real samples in m_io_buffer (unscaled: sum)
+        // reuse a plan cached for (m_out -> m_io_buffer) created via:
+        // fftwf_plan_dft_c2r_1d(m_len, m_out, m_io_buffer, FFTW_ESTIMATE)
         fftwf_execute(m_plan_inv);
 
         // Normalize: FFTW's inverse returns sum; divide by N
-        const float invN = 1.0f / static_cast<float>(m_length);
-        for (int i = 0; i < m_length; i++) {
-            m_x_buffer[i] *= invN;
+        const float invN = 1.0f / static_cast<float>(m_len);
+        for (int i = 0; i < m_len; i++) {
+            m_io_buffer[i] *= invN;
         }
 
         // Copy result to out_data (you can also write directly)
-        std::memcpy(out_data, m_x_buffer, sizeof(float) * m_length);
+        std::memcpy(out_data, m_io_buffer, sizeof(float) * m_len);
 
         return ErrorCode::None;
     }
 #endif
 
 
-    /**
-     *  @brief Computes the base-2 logarithm of a given FFT resolution.
-     *
-     *  This function calculates log2(resolution) by counting the number
-     *  of times the resolution can be divided by 2 until it reaches 0.
-     *
-     *  @note The function does not check if the resolution is a power of two.
-     *        Use FFT::isValidResolution() before calling this function if necessary.
-     *
-     *  @param resolution The FFT resolution (number of points).
-     *  @return int32_t The base-2 logarithm of the resolution.
-     *                  For example, if resolution = 1024, returns 10.
-     */
-    int32_t FFT::logNFromResolution(int32_t resolution) noexcept {
-        // Previous version: return isValidResolution(resolution) ? Math::pow_inverse(resolution) : -1;
-        int32_t log_n = 0;
-        while (resolution >>= 1) {
-            log_n++;
-        }
-        return log_n;
-    }
+    ErrorCode FFT::filter(const Partials* partials) noexcept {
+        m_split_complex.realp[0] *= partials->dc();
+        m_split_complex.imagp[0] *= partials->mag(partials->resolution() - 1);
 
-
-    /**
-     *  @brief Computes the FFT resolution from a base-2 logarithm.
-     *
-     *  Given the logarithm of the FFT length (log_n), this function returns
-     *  the corresponding number of points in the FFT.
-     *
-     *  @param log_n The base-2 logarithm of the FFT length.
-     *  @return int32_t The FFT resolution (number of points), equal to 2^log_n.
-     *                  For example, if log_n = 10, returns 1024.
-     */
-    int32_t FFT::resolutionFromLogN(int32_t log_n) noexcept {
-        return 1 << log_n;
-    }
-
-
-    int32_t FFT::nextPow2Int32(int32_t v) noexcept {
-        if (v <= 0) {
-            return 1;
-        }
-        --v;
-        v |= v >> 1;
-        v |= v >> 2;
-        v |= v >> 4;
-        v |= v >> 8;
-        v |= v >> 16;
-
-        return ++v;
-    }
-
-
-    FFT_FIR::FFT_FIR(int32_t log_n) noexcept {
-        m_log_n = std::clamp<int32_t>(log_n, FFT::kLogNResolutionFirst, FFT::kLogNResolutionLast);
-        m_step_length = 1 << m_log_n;
-
-        m_filter_length = m_step_length;
-        m_overlap_length = m_step_length;
-        m_signal_length = m_step_length + m_overlap_length;
-
-        // FFT length: next power of 2 of step + filter_length to avoid circular convolution
-        m_fft_length = static_cast<int32_t>(Math::next_pow2(m_step_length + m_filter_length));
-        m_fft_half_length = m_fft_length / 2;
-
-        // Allocate buffers
-        m_filter_samples = (float*)std::malloc(sizeof(float) * m_filter_length);
-        m_signal_samples = (float*)std::malloc(sizeof(float) * m_signal_length);
-        m_convolved_samples = (float*)std::malloc(sizeof(float) * m_signal_length);
-
-#if defined(__APPLE__) && defined(__MACH__)
-        m_filter_padded = (float*)std::malloc(sizeof(float) * m_fft_length);
-        m_signal_padded = (float*)std::malloc(sizeof(float) * m_fft_length);
-        m_filter_result = (float*)std::malloc(sizeof(float) * m_fft_length);
-        m_signal_real = (float*)std::malloc(sizeof(float) * m_fft_half_length);
-        m_signal_imag = (float*)std::malloc(sizeof(float) * m_fft_half_length);
-        m_fft_setup = FFT::_macos_fftSetup(static_cast<int32_t>(std::log2f(m_fft_length)));
-        m_filter_real = (float*)std::malloc(sizeof(float) * m_fft_length);
-        m_filter_imag = &m_filter_real[m_fft_half_length];
-        m_filter_split_complex.realp = m_filter_real;
-        m_filter_split_complex.imagp = m_filter_imag;
-#else
-        m_signal_padded = fftwf_alloc_real(m_fft_length);
-        m_signal_fft = fftwf_alloc_complex(m_fft_half_length + 1);
-        m_filter_padded = fftwf_alloc_real(m_fft_length);
-        m_filter_fft = fftwf_alloc_complex(m_fft_half_length + 1);
-        m_filter_result = fftwf_alloc_real(m_fft_length);
-
-        m_plan_fwd_signal = fftwf_plan_dft_r2c_1d(m_fft_length, m_signal_padded, m_signal_fft, FFTW_ESTIMATE);
-        m_plan_fwd_filter = fftwf_plan_dft_r2c_1d(m_fft_length, m_filter_padded, m_filter_fft, FFTW_ESTIMATE);
-        m_plan_inv_signal = fftwf_plan_dft_c2r_1d(m_fft_length, m_signal_fft, m_filter_result, FFTW_ESTIMATE);
-#endif
-    }
-
-
-    FFT_FIR::~FFT_FIR() noexcept {
-#if defined(__APPLE__) && defined(__MACH__)
-
-        std::cout << "free 1\n";
-        if (m_fft_setup) { vDSP_destroy_fftsetup(m_fft_setup); }
-
-        std::cout << "free 2\n";
-        std::free(m_filter_real);
-        std::cout << "free 3\n";
-        std::free(m_signal_real);
-        std::cout << "free 4\n";
-        std::free(m_signal_imag);
-
-        std::cout << "free 5\n";
-        std::free(m_filter_padded);
-        std::cout << "free 6\n";
-        std::free(m_signal_padded);
-        std::cout << "free 7\n";
-        std::free(m_filter_result);
-        std::cout << "free 8\n";
-
-        // macOS vDSP buffers
-
-
-
-#else
-        // Destroy FFTW plans
-        if (m_plan_fwd_signal) { fftwf_destroy_plan(m_plan_fwd_signal); }
-        if (m_plan_fwd_filter) { fftwf_destroy_plan(m_plan_fwd_filter); }
-        if (m_plan_inv_signal) { fftwf_destroy_plan(m_plan_inv_signal); }
-
-        // Free buffers
-        if (m_signal_fft) { fftwf_free(m_signal_fft); }
-        if (m_signal_padded) { fftwf_free(m_signal_padded); }
-        if (m_filter_padded) { fftwf_free(m_filter_padded); }
-        if (m_filter_fft) { fftwf_free(m_filter_fft); }
-        if (m_filter_result) { fftwf_free(m_filter_result); }
-#endif
-
-        std::free(m_filter_samples);
-        std::free(m_signal_samples);
-        std::free(m_convolved_samples);
-    }
-
-
-#if defined(__APPLE__) && defined(__MACH__)
-    void FFT_FIR::setFilter() noexcept {
-        float zero = 0;
-        vDSP_vfill(&zero, m_filter_padded, 1, m_fft_length);
-        cblas_scopy(m_filter_length, m_filter_samples, 1, m_filter_padded, 1);
-
-        vDSP_ctoz((DSPComplex*)m_filter_padded, 2, &m_filter_split_complex, 1, m_fft_half_length);
-        vDSP_fft_zrip(m_fft_setup, &m_filter_split_complex, 1, m_log_n, FFT_FORWARD);
-    }
-#else
-    void FFT_FIR::setFilter() noexcept {
-        // Zero-pad filter
-        std::memset(m_filter_padded, 0, sizeof(float) * m_fft_length);
-        cblas_scopy(m_filter_length, m_filter_samples, 1, m_filter_padded, 1);
-
-        // Compute H[k] = FFT{h[n]} into separate buffer
-        fftwf_execute(m_plan_fwd_filter);
-    }
-#endif
-
-
-#if defined(__APPLE__) && defined(__MACH__)
-    void FFT_FIR::filter() noexcept {
-        float zero = 0;
-        vDSP_vfill(&zero, m_signal_padded, 1, m_fft_length);
-        cblas_scopy(m_signal_length, m_signal_samples, 1, m_signal_padded, 1);
-
-        DSPSplitComplex signal_split_complex;
-        signal_split_complex.realp = m_signal_real;
-        signal_split_complex.imagp = m_signal_imag;
-
-        vDSP_ctoz((DSPComplex*)m_signal_padded, 2, &signal_split_complex, 1, m_fft_half_length);
-        vDSP_fft_zrip(m_fft_setup, &signal_split_complex, 1, m_log_n, FFT_FORWARD);
-
-        // The vDSP FFT stores the real value at nyquist in the first element in the
-        // imaginary array. The first imaginary element is always zero, so no information
-        // is lost by doing this. The only issue is that we are going to use a complex
-        // vector multiply function from vDSP and it doesn't handle this format very well.
-        // We calculate this multiplication ourselves and add it into our result later.
-
-        // We'll need this later
-        float nyquist_multiplied = m_filter_split_complex.imagp[0] * signal_split_complex.imagp[0];
-
-        // Set the values in the arrays to 0 so they don't affect the multiplication
-        m_filter_split_complex.imagp[0] = 0.0;
-        signal_split_complex.imagp[0] = 0.0;
-
-        // Complex multiply x_DFT by h_DFT and store the result in x_DFT
-        vDSP_zvmul(&signal_split_complex, 1, &m_filter_split_complex, 1, &signal_split_complex,1, m_fft_half_length, 1);
-
-        // Now we put our hand-calculated nyquist value back
-        signal_split_complex.imagp[0] = nyquist_multiplied;
-
-        // Do the inverse FFT of our result
-        vDSP_fft_zrip(m_fft_setup, &signal_split_complex, 1, m_log_n, FFT_INVERSE);
-
-        // Now we have to scale our result by 1 / (4 * fft_length)
-        // (This is Apple's convention) to get our correct result
-        float scale = 1.0f / (128.0f * m_fft_length);
-        vDSP_vsmul(signal_split_complex.realp, 1, &scale, signal_split_complex.realp, 1, m_fft_half_length);
-        vDSP_vsmul(signal_split_complex.imagp, 1, &scale, signal_split_complex.imagp, 1, m_fft_half_length);
-
-        // And convert split-complex format to real-valued
-        vDSP_ztoc(&signal_split_complex, 1, (DSPComplex*)m_filter_result, 2, m_fft_half_length);
-
-        /* TODO: !!!!!
-        // Now we have to scale our result by 1 / (4 * fft_length)
-        // (This is Apple's convention) to get our correct result
-        float scale = (1.0 / (4.0 * m_fft_length));
-        vDSP_vsmul(tempResult, 1, &scale, tempResult, 1, m_fft_length);  // m_fft_half_length
-         */
-
-        // write the final result to the output. use BLAS copy instead of loop
-        cblas_scopy(m_signal_length, m_filter_result, 1, m_convolved_samples, 1);
-    }
-#else
-    void FFT_FIR::filter() noexcept {
-        std::cout << m_log_n << " ... FFT_FIR::filter() ... " << (std::log2f(m_fft_length)) << std::endl;
-        // Zero-pad input
-        std::memset(m_signal_padded, 0, sizeof(float) * m_fft_length);
-        std::cout << "...... 1\n";
-        cblas_scopy(m_signal_length, m_signal_samples, 1, m_signal_padded, 1);
-
-        std::cout << "...... 2\n";
-        // Forward FFT: m_signal_padded -> m_signal_fft
-        fftwf_execute(m_plan_fwd_signal);
-
-        std::cout << "...... 3\n";
-        // Multiply spectra: X[k] *= H[k]
-        for (int k = 0; k <= m_fft_half_length; ++k) {
-            float xr = m_signal_fft[k][0];
-            float xi = m_signal_fft[k][1];
-            float hr = m_filter_fft[k][0];
-            float hi = m_filter_fft[k][1];
-
-            m_signal_fft[k][0] = xr*hr - xi*hi;
-            m_signal_fft[k][1] = xr*hi + xi*hr;
+        auto m = partials->mutMagPtr();
+        for (int k = 1; k < m_half_len; k++) {
+            m_split_complex.realp[k] *= *m;
+            m_split_complex.imagp[k] *= *m;
+            m++;
         }
 
-        std::cout << "...... 4\n";
-        // Inverse FFT: m_signal_fft -> m_filter_result
-        fftwf_execute(m_plan_inv_signal);
+        return ErrorCode::None;
+    }
 
-        std::cout << "...... 5\n";
-        // Scale result
-        const float scale = 1.0f / static_cast<float>(m_fft_length);
-        cblas_sscal(m_fft_length, scale, m_filter_result, 1);
 
-        std::cout << "...... 6\n";
-        // Copy valid samples to output
-        cblas_scopy(m_signal_length, m_filter_result, 1, m_convolved_samples, 1);
-        std::cout << "...... 7\n";
+#if defined(__APPLE__) && defined(__MACH__)
+    ErrorCode FFT::setPartials(const Partials* partials) noexcept {
+        if (!partials) {
+            return ErrorCode::NullPointer;
+        }
+
+        if (partials->resolution() != m_half_len) {
+            return ErrorCode::UnsupportedSettings;
+        }
+
+        auto scale = static_cast<float>(m_len) * 0.5f;
+
+        // DC component: purely real, no phase
+        m_split_complex.realp[0] = partials->dc() * scale;
+
+        // Nyquist component: purely real in FFT representation
+        m_split_complex.imagp[0] = partials->mag(m_half_len - 1) * scale;
+
+        auto m = partials->mutMagPtr();
+        auto p = partials->mutPhasePtr();
+
+        for (int k = 1; k < m_half_len; k++) {
+            float mag = m[k - 1];
+            float phase = p[k - 1];
+            float re = mag * std::cos(phase);
+            float im = mag * std::sin(phase);
+            m_split_complex.realp[k] = re * scale;
+            m_split_complex.imagp[k] = im * scale;
+        }
+
+        return ErrorCode::None;
+    }
+#else
+    ErrorCode FFT::setPartials(const Partials* partials) noexcept {
+        #pragma message("FFT::setFilter() must be implemented for Linux")
     }
 #endif
 
 
-    SlidingDFT::SlidingDFT(int32_t dft_length) noexcept {
-        m_dft_length = std::clamp(dft_length, 128, 100000);
+    ErrorCode FFT::getPartials(Partials* out_partials) noexcept {
+        if (!out_partials) {
+            return ErrorCode::NullPointer;
+        }
 
-        _m_x = (double*)std::malloc(sizeof(double) * m_dft_length);
-        _m_twiddle = (std::complex<double>*)std::malloc(sizeof(std::complex<double>) * m_dft_length);
-        _m_s = (std::complex<double>*)std::malloc(sizeof(std::complex<double>) * m_dft_length);
-        _m_dft = (std::complex<double>*)std::malloc(sizeof(std::complex<double>) * m_dft_length);
+        if (out_partials->resolution() != m_half_len) {
+            return ErrorCode::UnsupportedSettings;
+        }
+
+        float scale = 1.0f / static_cast<float>(m_len);
+
+        // DC component: purely real, no phase
+        out_partials->setDC(m_split_complex.realp[0] * scale);
+
+        // In vDSP, imagp[0] is actually the Nyquist component
+        out_partials->setMagNyquist(std::fabs(m_split_complex.imagp[0]) * scale);
+
+        auto m = out_partials->mutMagPtr();
+        auto p = out_partials->mutPhasePtr();
+
+        for (int k = 1; k < m_half_len; k++) {
+            float re = m_split_complex.realp[k] * scale;
+            float im = m_split_complex.imagp[k] * scale;
+            *m++ = std::sqrt(re * re + im * im);  // magnitude
+            *p++ = std::atan2(im, re);            // phase in radians (-π .. π)
+        }
+
+        return ErrorCode::None;
+    }
+
+
+#if defined(__APPLE__) && defined(__MACH__)
+    void FFT::shiftPhase(int32_t bin_index, float delta) noexcept {
+        if (bin_index >= 0 && bin_index < m_half_len - 1) {
+            float scale = 1.0f / static_cast<float>(m_len);
+            int32_t bi = bin_index + 1;
+            float re = m_split_complex.realp[bi] * scale;
+            float im = m_split_complex.imagp[bi] * scale;
+            float mag = std::sqrt(re * re + im * im);
+            float phase = std::atan2(im, re);
+            phase += delta;
+            m_split_complex.realp[bi] = mag * std::cos(phase) * m_len;
+            m_split_complex.imagp[bi] = mag * std::sin(phase) * m_len;
+        }
+    }
+#else
+    ErrorCode FFT::setPartials(const Partials* partials) noexcept {
+        #pragma message("FFT::shiftPhase() must be implemented for Linux")
+    }
+#endif
+
+
+    SlidingDFT::SlidingDFT(int32_t dft_len) noexcept {
+        m_dft_len = std::clamp(dft_len, 128, 100000);
+
+        _m_x = (double*)std::malloc(sizeof(double) * m_dft_len);
+        _m_twiddle = (std::complex<double>*)std::malloc(sizeof(std::complex<double>) * m_dft_len);
+        _m_s = (std::complex<double>*)std::malloc(sizeof(std::complex<double>) * m_dft_len);
+        _m_dft = (std::complex<double>*)std::malloc(sizeof(std::complex<double>) * m_dft_len);
         _m_damping_factor = std::nexttoward(1.0, 0.0);
 
         const std::complex<double> j(0.0, 1.0);
-        const double N = m_dft_length;
+        const double N = m_dft_len;
 
         // Compute the twiddle factors, and zero the x and S arrays
-        for (int32_t k = 0; k < m_dft_length; k++) {
+        for (int32_t k = 0; k < m_dft_len; k++) {
             double factor = std::numbers::pi * 2 * k / N;
             _m_twiddle[k] = std::exp(j * factor);
             _m_s[k] = 0;
@@ -561,7 +356,7 @@ namespace Grain {
      *  @return Frequency of the bin in Hz
      */
     double SlidingDFT::binFreq(uint32_t bin_index, double sample_rate) {
-        return (sample_rate * bin_index) / m_dft_length;
+        return (sample_rate * bin_index) / m_dft_len;
     }
 
 
@@ -577,22 +372,22 @@ namespace Grain {
 
         // Update the DFT
         const double r = _m_damping_factor;
-        const double r_to_n = std::pow(r, static_cast<double>(m_dft_length));
-        for (int32_t k = 0; k < m_dft_length; k++) {
+        const double r_to_n = std::pow(r, static_cast<double>(m_dft_len));
+        for (int32_t k = 0; k < m_dft_len; k++) {
             _m_s[k] = _m_twiddle[k] * (r * _m_s[k] - r_to_n * old_x + new_x);
         }
 
         // Apply the Hanning window
-        _m_dft[0] = 0.5 * _m_s[0] - 0.25 * (_m_s[m_dft_length - 1] + _m_s[1]);
-        for (int32_t k = 1; k < (m_dft_length - 1); k++) {
+        _m_dft[0] = 0.5 * _m_s[0] - 0.25 * (_m_s[m_dft_len - 1] + _m_s[1]);
+        for (int32_t k = 1; k < (m_dft_len - 1); k++) {
             _m_dft[k] = 0.5 * _m_s[k] - 0.25 * (_m_s[k - 1] + _m_s[k + 1]);
         }
 
-        _m_dft[m_dft_length - 1] = 0.5 * _m_s[m_dft_length - 1] - 0.25 * (_m_s[m_dft_length - 2] + _m_s[0]);
+        _m_dft[m_dft_len - 1] = 0.5 * _m_s[m_dft_len - 1] - 0.25 * (_m_s[m_dft_len - 2] + _m_s[0]);
 
         // Increment the counter
         _m_x_index++;
-        if (_m_x_index >= m_dft_length) {
+        if (_m_x_index >= m_dft_len) {
             _m_data_valid = true;
             _m_x_index = 0;
         }

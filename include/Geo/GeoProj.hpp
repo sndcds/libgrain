@@ -80,36 +80,36 @@ namespace Grain {
 
         void setSrcCrs(const char* src_str) noexcept {
             m_src_crs = src_str;
-            m_must_update = true;
+            must_update_ = true;
         }
 
         void setSrcCrs(const String& src_string) noexcept {
             m_src_crs = src_string;
-            m_must_update = true;
+            must_update_ = true;
         }
 
         void setSrcSRID(int32_t srid) noexcept {
             m_src_crs = "EPSG:";
             m_src_crs += srid;
-            m_must_update = true;
+            must_update_ = true;
         }
 
         ErrorCode setSrcCrsByFile(const String& file_path) noexcept;
 
         void setDstCrs(const char* dst_str) noexcept {
             m_dst_crs = dst_str;
-            m_must_update = true;
+            must_update_ = true;
         }
 
         void setDstCrs(const String& dst_string) noexcept {
             m_dst_crs = dst_string;
-            m_must_update = true;
+            must_update_ = true;
         }
 
         void setDstSRID(int32_t srid) noexcept {
             m_dst_crs = "EPSG:";
             m_dst_crs += srid;
-            m_must_update = true;
+            must_update_ = true;
         }
 
 
@@ -162,7 +162,7 @@ namespace Grain {
         static bool isWGS84Lat(double lat) { return lat >= -90.0 && lat <= 85.0511; }
 
         static bool isWGS84Pos(const Vec2d& pos) {
-            return isWGS84Lon(pos.m_x) && isWGS84Lat(pos.m_y);
+            return isWGS84Lon(pos.x_) && isWGS84Lat(pos.y_);
         }
 
         static bool isWGS84Pos(double lon, double lat) {
@@ -170,8 +170,8 @@ namespace Grain {
         }
 
         static bool isWGS84Bbox(const RangeRectd& bounding_box) {
-            return isWGS84Pos(bounding_box.m_min_x, bounding_box.m_min_y) &&
-                   isWGS84Pos(bounding_box.m_max_x, bounding_box.m_max_y);
+            return isWGS84Pos(bounding_box.min_x_, bounding_box.min_y_) &&
+                   isWGS84Pos(bounding_box.max_x_, bounding_box.max_y_);
         }
 
         static double ratioByMercatorBounds(const RangeRectd& bounds) noexcept;
@@ -187,8 +187,8 @@ namespace Grain {
         String m_src_crs;
         String m_dst_crs;
         GepProjTransformAction m_transform_action{};
-        bool m_must_update = true;
-        bool m_ignore = false;      // Ignore transformation, if `m_src_crs`and `m_dst_crs` are the same.
+        bool must_update_ = true;
+        bool m_ignore = false;      // Ignore transformation, if `src_crs_`and `dst_crs_` are the same.
 
         RemapRectd m_remap_rect;
     };

@@ -18,13 +18,14 @@
 
 #include "App/App.hpp"
 
+#include "Audio/AudioInterface.hpp"
+
 #include "2d/Line.hpp"
 #include "2d/Rect.hpp"
 #include "2d/Circle.hpp"
 #include "2d/Triangle.hpp"
 #include "2d/Quadrilateral.hpp"
 #include "2d/Polygon.hpp"
-#include "2d/RectEdges.hpp"
 #include "2d/Border.hpp"
 #include "2d/Dimension.hpp"
 #include "2d/GraphicPathPoint.hpp"
@@ -39,7 +40,6 @@
 #include "2d/Data/CVF2TileManager.hpp"
 #include "2d/Data/ValueGrid.hpp"
 #include "File/XYZFile.hpp"
-
 
 #include "3d/Cube.hpp"
 #include "3d/RangeCube.hpp"
@@ -69,12 +69,15 @@
 #include "CSS/CSSColor.hpp"
 #include "CSS/CSS.hpp"
 
+#include "Data/DataComposer.hpp"
+
 #include "Database/PostgreSQL.hpp"
 #include "Database/DBaseFile.hpp"
 
 #include "DSP/DSP.hpp"
 #include "DSP/FFT.hpp"
 #include "DSP/Freq.hpp"
+#include "DSP/LinearScaler.hpp"
 #include "DSP/LUT1.hpp"
 #include "DSP/Partials.hpp"
 #include "DSP/LevelCurve.hpp"
@@ -95,6 +98,7 @@
 #include "Geo/WKBParser.hpp"
 
 #include "Graphic/GraphicContext.hpp"
+#include "Graphic/AppleCGContext.hpp"
 #include "Graphic/CairoContext.hpp"
 #include "Graphic/Font.hpp"
 #include "Graphic/StrokeStyle.hpp"
@@ -110,6 +114,7 @@
 #include "GUI/Components/Checkbox.hpp"
 #include "GUI/Components/TextField.hpp"
 #include "GUI/Views/View.hpp"
+#include "GUI/Views/Viewport.hpp"
 #include "GUI/Views/ScrollView.hpp"
 #include "GUI/Views/SplitView.hpp"
 #include "GUI/GUIStyle.hpp"
@@ -139,6 +144,9 @@
 #include "Signal/SignalAllPassFilter.hpp"
 #include "Signal/SignalButterworthFilter.hpp"
 #include "Signal/SignalLadderFilter.hpp"
+#include "Signal/SignalFormantFilter.hpp"
+#include "Signal/SignalIR.hpp"
+#include "Signal/SignalWave.hpp"
 
 #include "String/String.hpp"
 #include "String/StringList.hpp"

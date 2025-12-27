@@ -45,7 +45,7 @@ namespace Grain {
      */
     struct CSSColorFunctionInfo {
         const char* m_signature;    ///< The system signature string, which represents the beginning of the color definition, including the opening bracket.
-        int32_t m_length;           ///< The length of the system signature string.
+        int32_t length_;            ///< The length of the system signature string.
         CSSColorFunction m_function;///< The color function.
         int32_t m_component_n;      ///< The number of color components required for the system.
         bool m_can_modern_syntax;   ///< Flag indicating wether the function supports modern CSS color syntax.
@@ -80,7 +80,7 @@ namespace Grain {
     protected:
         RGBA m_rgba;
         bool m_modern_syntax = false;
-        bool m_valid = false;
+        bool valid_ = false;
         CSSValue m_comp_values[kMaxValueComponents];
         int32_t m_parsed_comp_n = 0;
 
@@ -99,7 +99,7 @@ namespace Grain {
         bool parseFunctional(const char* str, ErrorCode& out_err) noexcept;
         ErrorCode parseColorComponents(const char* str, int32_t str_length, int32_t component_n) noexcept;
 
-        bool isValid() const noexcept { return m_valid; }
+        bool isValid() const noexcept { return valid_; }
         bool usesModernSyntax() const noexcept { return m_modern_syntax; }
         RGBA rgba() const noexcept { return m_rgba; }
         RGB rgb() const noexcept { return m_rgba; }

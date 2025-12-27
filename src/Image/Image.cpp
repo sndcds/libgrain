@@ -51,16 +51,16 @@ namespace Grain {
             m_pixel_type = image->m_pixel_type;
             m_component_count = image->componentCount();
 
-            m_width = image->m_width;
-            m_height = image->m_height;
+            width_ = image->width_;
+            height_ = image->height_;
 
             _m_pixel_data_ptr = image->mutPixelDataPtr();
             _m_curr_ptr = image->mutPixelDataPtr();
             _m_pixel_data_step = image->pixelDataStep();
             _m_row_data_step = image->bytesPerRow();
-            _m_plane_data_step = _m_row_data_step * m_height;
+            _m_plane_data_step = _m_row_data_step * height_;
 
-            setRegion(0, 0, m_width, m_height);
+            setRegion(0, 0, width_, height_);
 
             if (transfer_ptr) {
                 setTransferPtr_r32(transfer_ptr);
@@ -81,8 +81,8 @@ namespace Grain {
     ErrorCode ImageAccess::setBySetupInfo(const ImageAccessSetupInfo& info) {
         undefine();
 
-        m_width = info.m_width;
-        m_height = info.m_height;
+        width_ = info.width_;
+        height_ = info.height_;
         m_color_model = info.m_color_model;
         m_component_count = info.m_component_count;
         m_pixel_type = info.m_pixel_type;
@@ -92,11 +92,11 @@ namespace Grain {
         _m_row_data_step = info.m_row_data_step;
         _m_plane_data_step = info.m_plane_data_step;
 
-        setRegion(0, 0, m_width, m_height);
+        setRegion(0, 0, width_, height_);
 
         setTransferPtr_r32(_m_component_values_float);
 
-        if (m_width > 0 && m_height > 0 &&
+        if (width_ > 0 && height_ > 0 &&
             m_color_model != Color::Model::Undefined &&
             m_component_count > 0 &&
             m_pixel_type != Image::PixelType::Undefined &&
@@ -119,13 +119,13 @@ namespace Grain {
         m_image = nullptr;
         _m_transfer_read_func = &ImageAccess::_transfer_dummy;
         _m_transfer_write_func = &ImageAccess::_transfer_dummy;
-        m_x = m_y = m_width = m_height = 0;
+        x_ = y_ = width_ = height_ = 0;
     }
 
 
     bool ImageAccess::setPos(int32_t x, int32_t y) {
-        m_x = std::clamp<int32_t>(x, m_region_x1, m_region_x2);
-        m_y = std::clamp<int32_t>(y, m_region_y1, m_region_y2);
+        x_ = std::clamp<int32_t>(x, m_region_x1, m_region_x2);
+        y_ = std::clamp<int32_t>(y, m_region_y1, m_region_y2);
         _m_x_loop_start = true;
         _m_y_loop_start = true;
         _updatePtr();
@@ -134,15 +134,15 @@ namespace Grain {
 
 
     void ImageAccess::resetRegion() {
-        setRegion(0, 0, m_width, m_height);
+        setRegion(0, 0, width_, height_);
     }
 
 
     void ImageAccess::setRegion(int32_t x, int32_t y, int32_t width, int32_t height) {
-        m_region_x1 = std::clamp<int32_t>(x, 0, m_width - 1);
-        m_region_y1 = std::clamp<int32_t>(y, 0, m_height - 1);
-        m_region_x2 = std::clamp<int32_t>(x + width - 1, m_region_x1, m_width - 1);
-        m_region_y2 = std::clamp<int32_t>(y + height - 1, m_region_y1, m_height - 1);
+        m_region_x1 = std::clamp<int32_t>(x, 0, width_ - 1);
+        m_region_y1 = std::clamp<int32_t>(y, 0, height_ - 1);
+        m_region_x2 = std::clamp<int32_t>(x + width - 1, m_region_x1, width_ - 1);
+        m_region_y2 = std::clamp<int32_t>(y + height - 1, m_region_y1, height_ - 1);
         m_region_width = m_region_x2 - m_region_x1 + 1;
         m_region_height = m_region_y2 - m_region_y1 + 1;
         setPos(m_region_x1, m_region_y1);
@@ -150,8 +150,8 @@ namespace Grain {
 
 
     bool ImageAccess::stepX() {
-        if (m_x >= m_region_x2) {
-            m_x = m_region_x1;
+        if (x_ >= m_region_x2) {
+            x_ = m_region_x1;
             _m_x_loop_start = true;
             _updatePtr();
             return false;
@@ -160,7 +160,7 @@ namespace Grain {
             _m_x_loop_start = false;
         }
         else {
-            m_x++;
+            x_++;
             _m_curr_ptr += _m_pixel_data_step;
         }
         return true;
@@ -168,8 +168,8 @@ namespace Grain {
 
 
     bool ImageAccess::stepY() {
-        if (m_y >= m_region_y2) {
-            m_y = m_region_y1;
+        if (y_ >= m_region_y2) {
+            y_ = m_region_y1;
             _m_y_loop_start = true;
             _updatePtr();
             return false;
@@ -178,7 +178,7 @@ namespace Grain {
             _m_y_loop_start = false;
         }
         else {
-            m_y++;
+            y_++;
             _m_curr_ptr += _m_row_data_step;
         }
         return true;
@@ -386,7 +386,7 @@ namespace Grain {
 
 
     uint8_t* ImageAccess::ptrAt(int32_t x, int32_t y) {
-        if (x < 0 || x >= m_width || y < 0 || y >= m_height) {
+        if (x < 0 || x >= width_ || y < 0 || y >= height_) {
             return nullptr;
         }
         else {
@@ -399,12 +399,12 @@ namespace Grain {
         auto saved_ptr = _m_curr_ptr;
         auto vp = _m_value_ptr_float;
 
-        auto x0 = static_cast<int32_t>(pos.m_x);
-        auto y0 = static_cast<int32_t>(pos.m_y);
+        auto x0 = static_cast<int32_t>(pos.x_);
+        auto y0 = static_cast<int32_t>(pos.y_);
 
-        float xf1 = static_cast<float>(pos.m_x) - static_cast<float>(x0);
+        float xf1 = static_cast<float>(pos.x_) - static_cast<float>(x0);
         float xf0 = 1.0f - xf1;
-        float yf1 = static_cast<float>(pos.m_y) - static_cast<float>(y0);
+        float yf1 = static_cast<float>(pos.y_) - static_cast<float>(y0);
         float yf0 = 1.0f - yf1;
 
         float cooef[2][2] = {
@@ -464,10 +464,10 @@ namespace Grain {
 
 
     void ImageAccess::setRGB(const Vec2i& pos, const RGB& color, float alpha) noexcept {
-        int32_t x = pos.m_x;
-        int32_t y = pos.m_y;
+        int32_t x = pos.x_;
+        int32_t y = pos.y_;
 
-        if (x >= 0 && x < m_width && y >= 0 && y< m_height) {
+        if (x >= 0 && x < width_ && y >= 0 && y< height_) {
             auto saved_ptr = _m_curr_ptr;
             float alpha_inv = 1.0f - alpha;
             _m_curr_ptr = ptrAt(x, y);
@@ -485,27 +485,27 @@ namespace Grain {
 
 
     void ImageAccess::setRGBInterpolated(const Vec2d& pos, const RGB& color, float alpha) noexcept {
-        bool x_neg = pos.m_x < 0;
-        bool y_neg = pos.m_y < 0;
+        bool x_neg = pos.x_ < 0;
+        bool y_neg = pos.y_ < 0;
 
-        auto x0 = static_cast<int32_t>(pos.m_x);
+        auto x0 = static_cast<int32_t>(pos.x_);
         if (x_neg) {
             x0 -= 1;
         }
         int32_t x1 = x0 + 1;
-        auto y0 = static_cast<int32_t>(pos.m_y);
+        auto y0 = static_cast<int32_t>(pos.y_);
         if (y_neg) {
             y0 -= 1;
         }
         int32_t y1 = y0 + 1;
 
-        if (x0 >= m_width || x1 < 0 || y0 >= m_height || y1 < 0) {
+        if (x0 >= width_ || x1 < 0 || y0 >= height_ || y1 < 0) {
             return;
         }
 
-        float xf1 = static_cast<float>(pos.m_x) - static_cast<float>(x0);
+        float xf1 = static_cast<float>(pos.x_) - static_cast<float>(x0);
         float xf0 = 1.0f - xf1;
-        float yf1 = static_cast<float>(pos.m_y) - static_cast<float>(y0);
+        float yf1 = static_cast<float>(pos.y_) - static_cast<float>(y0);
         float yf0 = 1.0f - yf1;
 
         RGB* d = (RGB*)_m_value_ptr_float;
@@ -545,7 +545,7 @@ namespace Grain {
 
 
     void ImageAccess::_updatePtr() {
-        _m_curr_ptr = &_m_pixel_data_ptr[static_cast<int64_t>(m_x) * static_cast<int64_t>(_m_pixel_data_step) + static_cast<int64_t>(m_y) * static_cast<int64_t>(_m_row_data_step)];
+        _m_curr_ptr = &_m_pixel_data_ptr[static_cast<int64_t>(x_) * static_cast<int64_t>(_m_pixel_data_step) + static_cast<int64_t>(y_) * static_cast<int64_t>(_m_row_data_step)];
     }
 
 
@@ -945,7 +945,7 @@ namespace Grain {
      */
     Image::Image(const Image *image) noexcept : Object() {
         if (image) {
-            _set(image->m_color_model, image->m_width, image->m_height, image->m_pixel_type);
+            _set(image->m_color_model, image->width_, image->height_, image->m_pixel_type);
             _malloc();
         }
     }
@@ -1174,7 +1174,7 @@ namespace Grain {
 
     bool Image::sameSize(const Image *image) const noexcept {
 
-        return image && m_width == image->m_width && m_height == image->m_height;
+        return image && width_ == image->width_ && height_ == image->height_;
     }
 
 
@@ -1206,7 +1206,7 @@ namespace Grain {
                 Exception::throwStandard(ErrorCode::BadArgs);
             }
 
-            if (out_gc->m_magic != Type::fourcc('m', 'a', 'c', ' ')) {
+            if (out_gc->magic_ != Type::fourcc('m', 'a', 'c', ' ')) {
                 Exception::throwStandard(ErrorCode::BadArgs);
             }
 
@@ -1239,11 +1239,11 @@ namespace Grain {
                 }
 
                 CGBitmapInfo cg_bitmap_info = macos_cgBitmapInfo();
-                _m_cg_context_ref = CGBitmapContextCreate((void*)_m_pixel_data, m_width, m_height, bitsPerComponent(), bytesPerRow(), cg_color_space, cg_bitmap_info);
+                _m_cg_context_ref = CGBitmapContextCreate((void*)_m_pixel_data, width_, height_, bitsPerComponent(), bytesPerRow(), cg_color_space, cg_bitmap_info);
 
                 if (_m_cg_context_ref) {
                     CGColorSpaceRelease(cg_color_space);
-                    CGAffineTransform flipVertical = CGAffineTransformMake(1, 0, 0, -1, 0, m_height);
+                    CGAffineTransform flipVertical = CGAffineTransformMake(1, 0, 0, -1, 0, height_);
                     CGContextConcatCTM(_m_cg_context_ref, flipVertical);
                 }
 
@@ -1413,8 +1413,8 @@ namespace Grain {
 
         while (ia.stepY()) {
             while (ia.stepX()) {
-                float x = 0.5f - (float)(m_width - ia.x() - 1) / (m_width - 1);
-                float y = 0.5f - (float)(m_height - ia.y() - 1) / (m_height - 1);
+                float x = 0.5f - (float)(width_ - ia.x() - 1) / (width_ - 1);
+                float y = 0.5f - (float)(height_ - ia.y() - 1) / (height_ - 1);
 
                 float angle = (float)(std::atan2(x, y) * 180 / std::numbers::pi);
                 hsv_color.setHue(angle / 360);
@@ -1433,15 +1433,15 @@ namespace Grain {
 
         Vec3d p; // Position as x, y, z
         while (ia.stepY()) {
-            p.m_y = 2.0 * static_cast<double>(ia.y()) / (m_height - 1.0) - 1.0;
+            p.y_ = 2.0 * static_cast<double>(ia.y()) / (height_ - 1.0) - 1.0;
 
             while (ia.stepX()) {
-                p.m_x = 2.0 * static_cast<int32_t>(ia.x()) / (m_width - 1.0) - 1.0;
+                p.x_ = 2.0 * static_cast<int32_t>(ia.x()) / (width_ - 1.0) - 1.0;
                 Vec3d l = p.posToLoc();  // Location as angle, distance, elevation
-                color_ramp.lookupRing(l.m_x / 360.0f, pixel); // m_x = angle
+                color_ramp.lookupRing(l.x_ / 360.0f, pixel); // m_x = angle
 
                 // Desaturate color ralated to distance
-                float f = std::clamp<float>(l.m_y, 0.0f, 1.0f); // m_y = distance
+                float f = std::clamp<float>(l.y_, 0.0f, 1.0f); // y_ = distance
                 float f_inv = 1.0f - f;
                 pixel[0] = f * pixel[0] + f_inv;
                 pixel[1] = f * pixel[1] + f_inv;
@@ -1455,7 +1455,7 @@ namespace Grain {
 
     ErrorCode Image::drawImage(Image *image) noexcept {
 
-        return drawImage(image, Rectd(0, 0, m_width, m_height));
+        return drawImage(image, Rectd(0, 0, width_, height_));
     }
 
 
@@ -1706,7 +1706,7 @@ namespace Grain {
     Image *Image::extractRegion(const Recti& region) noexcept {
         Image *region_image = nullptr;
 
-        Recti image_rect(0, 0, m_width, m_height);
+        Recti image_rect(0, 0, width_, height_);
         auto intersection = image_rect.intersection(region);
 
         if (intersection.usable()) {
@@ -1717,7 +1717,7 @@ namespace Grain {
                 ImageAccess ia_des(region_image, pixel);
                 while (ia_des.stepY()) {
                     while (ia_des.stepX()) {
-                        ia_src.setPos(intersection.m_x + ia_des.x(), intersection.m_y + ia_des.y());
+                        ia_src.setPos(intersection.x_ + ia_des.x(), intersection.y_ + ia_des.y());
                         ia_src.read();
                         ia_des.write();
                     }
@@ -1820,7 +1820,7 @@ namespace Grain {
         float x_step = (float)temp_image->width() / (float)dst_width * (float)src_width / (float)(x_block_count * x_block_size);
 
         while (dst_access.stepY()) {
-            pos.m_x = 0.0f;
+            pos.x_ = 0.0f;
 
             while (dst_access.stepX()) {
                 ia_temp.readInterpolated(pos);
@@ -1839,10 +1839,10 @@ namespace Grain {
                 }
 
                 dst_access.write();
-                pos.m_x += x_step;
+                pos.x_ += x_step;
             }
 
-            pos.m_y += y_step;
+            pos.y_ += y_step;
         }
 
         delete temp_image;
@@ -1974,7 +1974,7 @@ namespace Grain {
         if (hasAlpha() && !use_alpha) {
             used_image = nullptr;
             if (colorModel() == Color::Model::RGBA) {
-                used_image = Image::createRGBFloat(m_width, m_height);
+                used_image = Image::createRGBFloat(width_, height_);
             }
 
             if (!used_image) {
@@ -2063,7 +2063,7 @@ namespace Grain {
         NSInteger spp = _m_components_per_pixel;
         BOOL has_alpha = NO;
         NSInteger pixel_bits = _m_components_per_pixel * bits_per_sample;
-        NSInteger row_bytes = m_width * (pixel_bits / 8);
+        NSInteger row_bytes = width_ * (pixel_bits / 8);
         NSString *color_space_name = nil;
 
 
@@ -2105,8 +2105,8 @@ namespace Grain {
 
         bitmap_rep =
         [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:planes
-        pixelsWide:m_width
-        pixelsHigh:m_height
+        pixelsWide:width_
+        pixelsHigh:height_
         bitsPerSample:bits_per_sample
         samplesPerPixel:spp
         hasAlpha:has_alpha
@@ -2231,7 +2231,7 @@ namespace Grain {
         CGBitmapInfo cg_bitmap_info = macos_cgBitmapInfo();
 
         _m_cg_image_ref = CGImageCreate(
-                m_width, m_height,
+                width_, height_,
                 bitsPerComponent(),
                 bitsPerPixel(),
                 bytesPerRow(),
@@ -2402,8 +2402,8 @@ namespace Grain {
                 break;
         }
 
-        TIFFSetField(tif, TIFFTAG_IMAGEWIDTH, m_width);
-        TIFFSetField(tif, TIFFTAG_IMAGELENGTH, m_height);
+        TIFFSetField(tif, TIFFTAG_IMAGEWIDTH, width_);
+        TIFFSetField(tif, TIFFTAG_IMAGELENGTH, height_);
         TIFFSetField(tif, TIFFTAG_BITSPERSAMPLE, bits_per_sample);
         TIFFSetField(tif, TIFFTAG_SAMPLEFORMAT, sample_format);
         TIFFSetField(tif, TIFFTAG_SAMPLESPERPIXEL, samples_per_pixel);
@@ -2421,7 +2421,7 @@ namespace Grain {
 
 
         // Write each scanline
-        for (int32_t row = 0; row < m_height; ++row) {
+        for (int32_t row = 0; row < height_; ++row) {
             void* row_data_ptr = pixelDataPtrAtRow(row);
             if (TIFFWriteScanline(tif, row_data_ptr, row, 0) < 0) {
                 result = ErrorCode::FileCantWrite;
@@ -2675,13 +2675,13 @@ namespace Grain {
             int32_t stride = 0;
             if (m_color_model == Color::Model::RGB) {
                 stride = 3;
-                byte_data = (uint8_t*)std::malloc(m_width * m_height * stride);
+                byte_data = (uint8_t*)std::malloc(width_ * height_ * stride);
             }
             else if (m_color_model == Color::Model::RGBA) {
                 has_alpha = use_alpha;
                 stride = use_alpha ? 4 : 3;
                 encode_with_alpha = use_alpha;
-                byte_data = (uint8_t*)std::malloc(m_width * m_height * stride);
+                byte_data = (uint8_t*)std::malloc(width_ * height_ * stride);
             }
             else if (m_color_model == Color::Model::Lumina) {
                 // Pixel data must be converted
@@ -2726,10 +2726,10 @@ namespace Grain {
                     }
                 }
                 if (lossless) {
-                    webp_size = WebPEncodeLosslessRGBA(byte_data, m_width, m_height, m_width * stride, &webp_data);
+                    webp_size = WebPEncodeLosslessRGBA(byte_data, width_, height_, width_ * stride, &webp_data);
                 }
                 else {
-                    webp_size = WebPEncodeRGBA(byte_data, m_width, m_height, m_width * stride, quality * 100, &webp_data);
+                    webp_size = WebPEncodeRGBA(byte_data, width_, height_, width_ * stride, quality * 100, &webp_data);
                 }
             }
             else {
@@ -2743,10 +2743,10 @@ namespace Grain {
                     }
                 }
                 if (lossless) {
-                    webp_size = WebPEncodeLosslessRGB(byte_data, m_width, m_height, m_width * stride, &webp_data);
+                    webp_size = WebPEncodeLosslessRGB(byte_data, width_, height_, width_ * stride, &webp_data);
                 }
                 else {
-                    webp_size = WebPEncodeRGB(byte_data, m_width, m_height, m_width * stride, quality * 100, &webp_data);
+                    webp_size = WebPEncodeRGB(byte_data, width_, height_, width_ * stride, quality * 100, &webp_data);
                 }
             }
 
@@ -2904,7 +2904,7 @@ namespace Grain {
 
 
     ErrorCode Image::copyImageData(const ImageAccess& src_image_access) noexcept {
-        if (src_image_access.width() != m_width || src_image_access.height() != m_height) {
+        if (src_image_access.width() != width_ || src_image_access.height() != height_) {
             return Error::specific(0);
         }
 
@@ -2953,7 +2953,7 @@ namespace Grain {
         }
 
         /*
-        auto &c = lr.imgdata.color;
+        auto& c = lr.imgdata.color;
         std::cout << "Cam → XYZFile:\n";
         for (int32_t i = 0; i < 3; i++) {
             for (int32_t j = 0; j < 3; j++) {
@@ -3011,7 +3011,7 @@ namespace Grain {
                 if (v != 0.0f) {
                     image->m_has_cam_to_xyz_matrix = true;
                 }
-                image->m_cam_to_xyz_matrix.m_data[i][j] = v;
+                image->m_cam_to_xyz_matrix.data_[i][j] = v;
             }
         }
 
@@ -3025,7 +3025,7 @@ namespace Grain {
                 if (v != 0.0f) {
                     image->m_has_rgb_to_cam_matrix = true;
                 }
-                image->m_rgb_to_cam_matrix.m_data[i][j] = v;
+                image->m_rgb_to_cam_matrix.data_[i][j] = v;
             }
         }
 
@@ -3114,7 +3114,7 @@ namespace Grain {
         uint16_t mmin[2][2] = { { 435, 451 }, { 451, 441 } };
         uint16_t mmax[2][2] = { { 16336, 16336 }, { 16336, 16336 } };
 
-        auto &c = lr.imgdata.color;
+        auto& c = lr.imgdata.color;
         float cfa_scale[2][2];
         for (int32_t y = 0; y < 2; y++) {
             for (int32_t x = 0; x < 2; x++) {
@@ -3160,7 +3160,7 @@ namespace Grain {
     noexcept {
 
         // TODO: Choose between 601 and 709 grayscale conversion!
-        auto image = new (std::nothrow) Image(color_model, m_width, m_height, data_type);
+        auto image = new (std::nothrow) Image(color_model, width_, height_, data_type);
 
         if (image) {
             Color::Model s_color_model = m_color_model;
@@ -3865,7 +3865,7 @@ namespace Grain {
                             auto d = (uint8_t*)image->_m_pixel_data;
                             for (uint32_t i = 0; i < _m_pixel_count; i++) {
                                 d[0] = d[1] = d[2] = static_cast<uint8_t>(s[0] >> 8);
-                                d[3] = static_cast<uint8_t>(s[1] >> 8);;
+                                d[3] = static_cast<uint8_t>(s[1] >> 8);
                                 s += s_step;
                                 d += d_step;
                             }
@@ -4776,15 +4776,15 @@ namespace Grain {
         int16_t depth = getPlaneCount();
         GLenum type = glGetType();
 
-        return GrGL::set2DTexture(textureUnitID, m_width, m_height, depth, getPixelDataPtr(), type, initMode);
+        return GrGL::set2DTexture(textureUnitID, width_, height_, depth, getPixelDataPtr(), type, initMode);
     }
 */
 
 
     void Image::_set(Color::Model color_model, int32_t width, int32_t height, PixelType data_type) {
         m_color_model = color_model;
-        m_width = width;
-        m_height = height;
+        width_ = width;
+        height_ = height;
         m_pixel_type = data_type;
 
         _m_int_min = _m_int_max = 0;

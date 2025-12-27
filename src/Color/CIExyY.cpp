@@ -15,45 +15,40 @@
 namespace Grain {
 
 
-    CIExyY::CIExyY(const RGB& rgb) noexcept {
+CIExyY::CIExyY(const RGB& rgb) noexcept {
+    set(rgb);
+}
 
-        set(rgb);
+
+CIExyY::CIExyY(const CIEXYZ& xyz) noexcept {
+    set(xyz);
+}
+
+
+void CIExyY::set(const RGB& rgb) noexcept{
+    CIEXYZ xyz(rgb);
+    set(xyz);
+}
+
+
+void CIExyY::set(const CIEXYZ& xyz) noexcept {
+    float sum = xyz.data_[0] + xyz.data_[1] + xyz.data_[2];
+    if (sum == 0.0f) {
+        m_pos.x_ = 0.0f;
+        m_pos.y_ = 0.0f;
+    }
+    else {
+        m_pos.x_ = xyz.data_[0] / sum;
+        m_pos.y_ = xyz.data_[1] / sum;
     }
 
-
-    CIExyY::CIExyY(const CIEXYZ& xyz) noexcept {
-
-        set(xyz);
-    }
+    y_ = xyz.data_[1];
+}
 
 
-    void CIExyY::set(const RGB& rgb) noexcept{
-
-        CIEXYZ xyz(rgb);
-        set(xyz);
-    }
-
-
-    void CIExyY::set(const CIEXYZ& xyz) noexcept {
-
-        float sum = xyz.m_data[0] + xyz.m_data[1] + xyz.m_data[2];
-        if (sum == 0.0f) {
-            m_pos.m_x = 0.0f;
-            m_pos.m_y = 0.0f;
-        }
-        else {
-            m_pos.m_x = xyz.m_data[0] / sum;
-            m_pos.m_y = xyz.m_data[1] / sum;
-        }
-
-        m_y = xyz.m_data[1];
-    }
-
-
-    void CIExyY::rotate(const Vec2f& pivot, float deg) noexcept {
-
-        m_pos.rotate(pivot, deg);
-    }
+void CIExyY::rotate(const Vec2f& pivot, float deg) noexcept {
+    m_pos.rotate(pivot, deg);
+}
 
 
 } // End of namespace Grain.

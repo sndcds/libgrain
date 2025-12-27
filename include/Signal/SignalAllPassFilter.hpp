@@ -20,7 +20,7 @@
 #ifndef SignalAllPassFilter_hpp
 #define SignalAllPassFilter_hpp
 
-#include "SignalFilter.hpp"
+#include "Signal/SignalFilter.hpp"
 
 
 namespace Grain {
@@ -31,13 +31,13 @@ namespace Grain {
         static constexpr int32_t kMaxStageCount = 10;
 
     public:
-        SignalAllPassFilter(int32_t sample_rate) noexcept;
-        ~SignalAllPassFilter() noexcept;
+        explicit SignalAllPassFilter(int32_t sample_rate) noexcept;
+        ~SignalAllPassFilter() noexcept override;
 
-        float freq() const noexcept override { return m_freq; }
-        float feedback() const noexcept override { return m_feedback_amount; }
-        int32_t stageCount() const noexcept override { return m_stage_count; }
-        bool feedbackPhaseInverted() const noexcept { return m_feedback_phase_inverted; }
+        [[nodiscard]] float freq() const noexcept override { return m_freq; }
+        [[nodiscard]] float feedback() const noexcept override { return m_feedback_amount; }
+        [[nodiscard]] int32_t stageCount() const noexcept override { return m_stage_count; }
+        [[nodiscard]] bool feedbackPhaseInverted() const noexcept { return m_feedback_phase_inverted; }
 
         void setFreq(float freq) noexcept override;
         void setFeedback(float amount, bool phase_inverted) noexcept override;

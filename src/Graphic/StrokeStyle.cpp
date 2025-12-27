@@ -16,10 +16,10 @@
 namespace Grain {
 
     StrokeStyle::StrokeStyle(uint32_t count, const float* pattern, float phase, float width) noexcept {
-        m_count = pattern == nullptr ? 2 : count;
-        m_pattern = (float*)std::malloc(m_count * sizeof(float));
+        count_ = pattern == nullptr ? 2 : count;
+        m_pattern = (float*)std::malloc(count_ * sizeof(float));
         m_phase = phase;
-        m_width = width;
+        width_ = width;
         m_capStyle = StrokeCapStyle::Butt;
         m_joinStyle = StrokeJoinStyle::Miter;
 

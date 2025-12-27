@@ -21,7 +21,8 @@
 #ifndef SignalButterworthFilter_hpp
 #define SignalButterworthFilter_hpp
 
-#include "SignalFilter.hpp"
+#include "Signal/SignalFilter.hpp"
+
 
 namespace Grain {
 

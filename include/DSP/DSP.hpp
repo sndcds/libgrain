@@ -42,9 +42,10 @@ namespace Grain {
             Last = Gauss,
         };
 
+        static float hanningWindow(float t) noexcept;
+        static float hanningLeft(float t) noexcept;
         static bool hanningWindowSymmetric(int32_t window_size, float* out_data) noexcept;
         static bool hanningWindowPeriodic(int32_t window_size, float* out_data) noexcept;
-        static bool normalizedHanningWindow(int32_t window_size, float* out_data) noexcept;
         static ErrorCode window(int32_t window_size, WindowType window_type, float alpha, float beta, bool unity_gain, float* out_data) noexcept;
     };
 

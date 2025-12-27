@@ -6,8 +6,6 @@
 //
 //  This file is part of GrainLib, see <https://grain.one>.
 //
-//  LastChecked: 20.08.2025
-//
 
 // TODO: Implement `toupper` and `tolower`
 // TODO: See TODOs in mm file!
@@ -20,10 +18,8 @@
 #include "Type/Fix.hpp"
 #include "Type/Range.hpp"
 #include "Type/Object.hpp"
-#include "Type/List.hpp"
 #include "Time/Timestamp.hpp"
 
-#include <cwchar>
 #include <cuchar>
 
 #if defined(__APPLE__) && defined(__MACH__)
@@ -53,7 +49,7 @@ namespace Grain {
             kMaskDelimiterAndWhiteSpace = kFlagDelimiter | kFlagDelimiter
         };
 
-        uint8_t m_flags[128]{};
+        uint8_t flags_[128]{};
     };
 
 
@@ -103,6 +99,20 @@ namespace Grain {
         };
 
         static constexpr char EOS = '\0';
+
+    protected:
+        char* data_ = nullptr;          ///< UTF-8 encoded string data
+        int64_t character_len_ = 0;     ///< Number of Unicode characters in `data_`
+        int64_t byte_len_ = 0;          ///< Number of bytes in `data_`
+        int64_t byte_capacity_ = 32;    ///< Number of possible bytes with the currently allocated memory
+        int64_t extra_grow_bytes_ = 32; ///< When buffer must grow, than grow with this amount of extra bytes
+        int32_t grow_count_ = 0;        ///< How often the memory buffer has grown
+
+        static const char* g_empty_data;    ///< Empty string with zero length
+        static const String g_empty_string;
+        static const char g_hex_chars[16];  ///< Possible chars of hex formatted values
+        static const char* g_ascii_8859_1[128];
+        static const char* g_ascii_windows1252[128];
 
     public:
         String() noexcept;
@@ -305,8 +315,8 @@ namespace Grain {
         [[nodiscard]] int32_t compareAscii(const String& string, uint32_t offs, uint32_t offs_other, int32_t length = std::numeric_limits<int32_t>::max()) const noexcept;
         [[nodiscard]] int32_t compareIgnoreCase(const char* str) const noexcept;
         [[nodiscard]] int32_t compareIgnoreCase(const String& string) const noexcept;
-        [[nodiscard]] bool isRGB() { return compareIgnoreCase("rgb") == 0; }
-        [[nodiscard]] bool isHSV() { return compareIgnoreCase("hsv") == 0; }
+        [[nodiscard]] bool isRGB() const { return compareIgnoreCase("rgb") == 0; }
+        [[nodiscard]] bool isHSV() const { return compareIgnoreCase("hsv") == 0; }
 
         int64_t csvSplit(char delimiter, char quote, TrimMode trim_mode, StringList& out_list) const noexcept;
         int64_t subString(int64_t start, int64_t end, String& out_string) const noexcept;
@@ -348,9 +358,12 @@ namespace Grain {
 
         [[nodiscard]] bool asBool() const noexcept;
         [[nodiscard]] int32_t asInt32() const noexcept;
+        [[nodiscard]] static int32_t asInt32(const char* str) noexcept;
         [[nodiscard]] int64_t asInt64() const noexcept;
+        [[nodiscard]] static int64_t asInt64(const char* str) noexcept;
         [[nodiscard]] float asFloat() const noexcept;
         [[nodiscard]] double asDouble() const noexcept;
+        [[nodiscard]] static double asDouble(const char* str) noexcept;
         [[nodiscard]] Fix asFix() const noexcept;
         void toFix(Fix& out_fix) const noexcept;
 
@@ -446,7 +459,7 @@ namespace Grain {
 
         static int32_t strHexToUInt8Array(const char* str, int32_t max_length, uint8_t* out_array) noexcept;
 
-        //
+        static int32_t utf8CodeToStr(uint32_t code, char out_str[5]) noexcept;
 
         [[nodiscard]] static int32_t indexForStrInArray(const char* str, const char** str_array) noexcept;
 
@@ -467,7 +480,7 @@ namespace Grain {
         [[nodiscard]] static uint64_t fnv1a_hash(const char* str) {
             uint64_t hash = 14695981039346656037ULL;  // FNV offset basis
             while (*str) {
-                hash ^= (unsigned char)(*str++);
+                hash ^= static_cast<unsigned char>(*str++);
                 hash *= 1099511628211ULL;  // FNV prime
             }
             return hash;
@@ -476,51 +489,37 @@ namespace Grain {
     private:
         bool _checkExtraCapacity(int64_t needed) noexcept;
         void _removeData(int64_t byte_index, int64_t byty_length, int64_t character_length) noexcept;
-
-    protected:
-        char* m_data = nullptr;             ///< UTF-8 encoded string data
-        int64_t m_character_length = 0;     ///< Number of Unicode characters in `m_data`
-        int64_t m_byte_length = 0;          ///< Number of bytes in `m_data
-        int64_t m_byte_capacity = 32;       ///< Number of possible bytes with the currently allocated memory
-        int64_t m_extra_grow_bytes = 32;    ///< When buffer must grow, than grow with this amount of extra bytes
-        int32_t m_grow_count = 0;           ///< How often the memory buffer has grown
-
-        static const char* g_empty_data;    ///< Empty string with zero length
-        static const String g_empty_string;
-        static const char g_hex_chars[16];  ///< Possible chars of hex formatted values
-        static const char* g_ascii_8859_1[128];
-        static const char* g_ascii_windows1252[128];
     };
 
     class StringRing : Object {
     protected:
-        uint32_t m_size = 0;
-        int32_t m_pos = -1;
-        int32_t m_index = -1;
-        String* *m_strings = nullptr;
+        uint32_t size_ = 0;
+        int32_t pos_ = -1;
+        int32_t index_ = -1;
+        String* *strings_ = nullptr;
 
     public:
-        StringRing(uint32_t size) : Object() {
-            m_size = size < 8 ? 8 : size;
-            m_strings = (String**)std::malloc(sizeof(String*) * size);
-            if (m_strings) {
+        explicit StringRing(uint32_t size) : Object() {
+            size_ = size < 8 ? 8 : size;
+            strings_ = static_cast<String**>(std::malloc(sizeof(String*) * size));
+            if (strings_) {
                 for (uint32_t i = 0; i < size; i++) {
-                    m_strings[i] = nullptr;
+                    strings_[i] = nullptr;
                 }
             }
         }
 
         ~StringRing() override {
-            if (m_strings) {
-                for (uint32_t i = 0; i < m_size; i++) {
-                    delete m_strings[i];
+            if (strings_) {
+                for (uint32_t i = 0; i < size_; i++) {
+                    delete strings_[i];
                 }
-                free(m_strings);
+                free(strings_);
             }
         }
 
         friend std::ostream& operator << (std::ostream& os, const StringRing& o) {
-            for (int32_t i = 0; i < static_cast<int32_t>(o.m_size); i++) {
+            for (int32_t i = 0; i < static_cast<int32_t>(o.size_); i++) {
                 std::cout << i << ": " << o.read(i) << std::endl;
             }
             return os;
@@ -531,7 +530,7 @@ namespace Grain {
             return os;
         }
 
-        [[nodiscard]] uint32_t size() const noexcept { return m_size; }
+        [[nodiscard]] uint32_t size() const noexcept { return size_; }
 
         void write(const String& string) noexcept;
         void write(const char* str) noexcept;

@@ -67,8 +67,9 @@ namespace Grain {
             Time,
             DateTime,
             Count,
-            Last = Count -1
+            Last = Count - 1
         };
+
     protected:
         toml::node_view<const toml::node> _m_tpp_node_view;
 
@@ -80,12 +81,12 @@ namespace Grain {
             _m_tpp_node_view = ttp_node_view;
         }
 
-        friend std::ostream& operator << (std::ostream& os, const TomlNode* o) {
+        friend std::ostream &operator <<(std::ostream &os, const TomlNode *o) {
             o == nullptr ? os << "TomlNode nullptr" : os << *o;
             return os;
         }
 
-        friend std::ostream& operator << (std::ostream& os, const TomlNode& o) {
+        friend std::ostream &operator <<(std::ostream &os, const TomlNode &o) {
             os << "TomlNode type: " << o.typeName();
             return os;
         }
@@ -99,13 +100,13 @@ namespace Grain {
         }
 
         [[nodiscard]] Type type() const {
-            return _m_tpp_node_view ? (Type)_m_tpp_node_view.type() : Type::None;
+            return _m_tpp_node_view ? (Type) _m_tpp_node_view.type() : Type::None;
         }
 
-        [[nodiscard]] const char* typeName() const {
-            constexpr const char* names[] = {
-                    "None", "Table", "Array", "String", "Integer", "FloatingPoint",
-                    "Boolean", "Date", "Time", "DateTime"
+        [[nodiscard]] const char *typeName() const {
+            constexpr const char *names[] = {
+                "None", "Table", "Array", "String", "Integer", "FloatingPoint",
+                "Boolean", "Date", "Time", "DateTime"
             };
             auto t = type();
             return t >= Type::None && t < Type::Count ? names[static_cast<int32_t>(t)] : names[0];
@@ -113,8 +114,8 @@ namespace Grain {
 
         [[nodiscard]] TomlPos position() {
             TomlPos pos;
-            if (const toml::node* node = _m_tpp_node_view.node()) {
-                toml::source_region src = node->source();  // just assign directly
+            if (const toml::node *node = _m_tpp_node_view.node()) {
+                toml::source_region src = node->source(); // just assign directly
                 pos.m_line = src.begin.line;
                 pos.m_column = src.begin.column;
             }
@@ -125,13 +126,14 @@ namespace Grain {
         [[nodiscard]] bool asBoolean() const { return _m_tpp_node_view.as_boolean(); }
 
         [[nodiscard]] bool isString() const { return _m_tpp_node_view.is_string(); }
-        [[nodiscard]] const char* asString () const { return _m_tpp_node_view.as_string()->get().c_str(); };
-        [[nodiscard]] bool stringIsEqualTo(const char* str) const { return strcmp(asString(), str) == 0; }
+        [[nodiscard]] const char *asString() const { return _m_tpp_node_view.as_string()->get().c_str(); };
+        [[nodiscard]] bool stringIsEqualTo(const char *str) const { return strcmp(asString(), str) == 0; }
 
         [[nodiscard]] bool isTable() const { return _m_tpp_node_view.is_table(); }
-        void asTable(TomlTable& out_table) const;
 
-        bool asStringForced(String& out_string) const {
+        void asTable(TomlTable &out_table) const;
+
+        bool asStringForced(String &out_string) const {
             if (!_m_tpp_node_view) {
                 out_string = "";
             }
@@ -313,25 +315,28 @@ namespace Grain {
         [[nodiscard]] bool hasItemThrowIfRequired(const char* name, bool required) const;
         [[nodiscard]] bool itemByName(const char* name, TomlTableItem& out_table_item);
 
-        void tableOrThrow(const char* name, TomlTable& out_table) const;
-        void arrayOrThrow(const char* name, TomlArray& out_array) const;
+        void asTableThrow(const char* name, TomlTable& out_table) const;
+        void asArrayThrow(const char* name, TomlArray& out_array) const;
 
-        [[nodiscard]] const char* stringOr(const char* name, const char* fallback) const;
-        [[nodiscard]] const char* stringOrThrow(const char* name) const;
+        [[nodiscard]] const char* asString(const char* name, const char* fallback) const;
+        [[nodiscard]] const char* asStringThrow(const char* name) const;
 
-        [[nodiscard]] bool booleanOr(const char* name, bool fallback) const;
-        [[nodiscard]] bool booleanOrThrow(const char* name) const;
+        [[nodiscard]] bool asBool(const char* name, bool fallback) const;
+        [[nodiscard]] bool asBoolThrow(const char* name) const;
 
-        [[nodiscard]] int64_t integerOr(const char* name, int64_t fallback) const;
-        [[nodiscard]] int64_t integerOrThrow(const char* name) const;
+        [[nodiscard]] int32_t asInt32(const char* name, int32_t fallback) const;
+        [[nodiscard]] int32_t asInt32Throw(const char* name) const;
 
-        [[nodiscard]] double doubleOr(const char* name, double fallback) const;
-        [[nodiscard]] double doubleOrThrow(const char* name) const;
+        [[nodiscard]] int64_t asInt64(const char* name, int64_t fallback) const;
+        [[nodiscard]] int64_t asInt64Throw(const char* name) const;
 
-        [[nodiscard]] int32_t doublesOrThrow(const char* name, int32_t max_values, double* out_values);
+        [[nodiscard]] double asDouble(const char* name, double fallback) const;
+        [[nodiscard]] double asDoubleThrow(const char* name) const;
 
-        const RGB rgbOr(const char* name, const RGB& fallback);
-        const RGB rgbOrThrow(const char* name);
+        [[nodiscard]] int32_t asDoublesThrow(const char* name, int32_t max_values, double* out_values);
+
+        const RGB asRGB(const char* name, const RGB& fallback);
+        const RGB asRGBThrow(const char* name);
 
     };
 
@@ -429,7 +434,6 @@ namespace Grain {
 
 
     class Toml : public Object {
-
     public:
         enum class DataType {
             None = 0,
@@ -458,47 +462,51 @@ namespace Grain {
         static constexpr bool kRequired = true;
 
     protected:
-        toml::parse_result _m_tpp_parse_result;  ///< toml++ parse result
+        toml::parse_result _m_tpp_parse_result; ///< toml++ parse result
 
         int32_t m_included_files_count = 0; ///< Number of includes in TOML file ([[include]])
-        int64_t m_included_files_total_size = 0;  ///< Number of bytes in all included files
+        int64_t m_included_files_total_size = 0; ///< Number of bytes in all included files
 
         ErrorCode m_last_err_code = ErrorCode::None;
-        String m_last_err_message;      ///< Last error message
-        int32_t m_line = -1;            ///< Line where error begins
-        int32_t m_column = -1;          ///< Column where error begins
+        String m_last_err_message; ///< Last error message
+        int32_t m_line = -1; ///< Line where error begins
+        int32_t m_column = -1; ///< Column where error begins
 
     public:
         Toml();
+
         ~Toml();
 
-        void parseFile(const String& file_path, Option options = Option::None);
-        void parse(const char* str);
+        void parseFile(const String &file_path, Option options = Option::None);
+
+        void parse(const char *str);
 
         ErrorCode lastErrorCode() const noexcept { return m_last_err_code; }
         int32_t lastErrorLine() const noexcept { return m_line; }
         int32_t lastErrorColumn() const noexcept { return m_column; }
-        const char* lastErrorMessage() const noexcept { return m_last_err_message.utf8(); }
+        const char *lastErrorMessage() const noexcept { return m_last_err_message.utf8(); }
 
-        void _tppParserError(const toml::parse_error& err, String& out_message);
+        void _tppParserError(const toml::parse_error &err, String &out_message);
 
-        void logError(Log& l);
+        void logError(Log &l);
 
         toml::parse_result _ttpParseResult() { return _m_tpp_parse_result; }
-
-        TomlArray arrayByName(const char* name) noexcept;
-        TomlArray arrayByNameOrThrow(const char* name);
 
         void asTable(TomlTable& out_table) {
             out_table._m_tpp_table_ptr = _m_tpp_parse_result.as_table();
         }
 
-        void throwTomlParseError(const toml::source_region& region);
+        TomlArray arrayByName(const char *name) noexcept;
 
-        static void throwParserError(const char* str);
-        static void throwParserErrorFileLine(const char* file, int32_t line);
+        TomlArray arrayByNameOrThrow(const char *name);
 
-        ErrorCode toJson(String& out_string);
+        void throwTomlParseError(const toml::source_region &region);
+
+        static void throwParserError(const char *str);
+
+        static void throwParserErrorFileLine(const char *file, int32_t line);
+
+        ErrorCode toJson(String &out_string);
     };
 
 

@@ -67,7 +67,7 @@ namespace Grain {
 
         struct FieldInfo {
             int64_t m_offs;
-            int64_t m_length;
+            int64_t length_;
         };
 
         static constexpr int32_t kDefaultBufferLength = 10000;  // TODO: size ok?
@@ -76,9 +76,9 @@ namespace Grain {
     private:
         const char* m_data = nullptr;
         int64_t m_data_read_pos = 0;
-        int64_t m_length = 0;
+        int64_t length_ = 0;
         int32_t m_err = kErrNone;           ///< Last error occured
-        int64_t m_err_data_offs = -1;       ///< Potition in `m_data`, where error occured
+        int64_t m_err_data_offs = -1;       ///< Potition in `data_`, where error occured
 
         CharSet m_char_set = CharSet::UTF8;
         char m_delimiter = ',';
@@ -113,7 +113,7 @@ namespace Grain {
 
 
         [[nodiscard]] const char* dataPtr() const noexcept { return m_data; }
-        [[nodiscard]] int64_t length() const noexcept { return m_length; }
+        [[nodiscard]] int64_t length() const noexcept { return length_; }
         [[nodiscard]] bool isLineFinished() const noexcept { return m_line_finished; }
 
         [[nodiscard]] int32_t parsedFieldsCount() const noexcept { return m_curr_field_index + 1; }

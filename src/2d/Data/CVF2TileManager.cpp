@@ -26,7 +26,7 @@ namespace Grain {
      *  @return true if a ValueGrid exists for the tile; otherwise, false.
      */
     bool CVF2Tile::hasValueGrid() noexcept {
-        return m_value_grid != nullptr;
+        return value_grid_ != nullptr;
     }
 
 
@@ -48,11 +48,11 @@ namespace Grain {
             return ErrorCode::NullData;
         }
 
-        int32_t w = manager->m_tile_width;
-        int32_t h = manager->m_tile_height;
+        int32_t w = manager->tile_width_;
+        int32_t h = manager->tile_height_;
 
-        if (m_value_grid) {
-            if (m_value_grid->width() == w && m_value_grid->height() == h) {
+        if (value_grid_) {
+            if (value_grid_->width() == w && value_grid_->height() == h) {
                 // ValueGrid has the correct size and can be reused
                 return ErrorCode::None;
             }
@@ -63,9 +63,9 @@ namespace Grain {
         }
 
         // Attempt to allocate a new ValueGrid with the required dimensions
-        m_value_grid = new (std::nothrow) ValueGridf(w, h);
-        if (m_value_grid) {
-            m_value_grid->setInvalidValueDefault();
+        value_grid_ = new (std::nothrow) ValueGridf(w, h);
+        if (value_grid_) {
+            value_grid_->setInvalidValueDefault();
             return ErrorCode::None;
         }
         else {
@@ -95,17 +95,17 @@ namespace Grain {
             auto err = checkValueGrid(manager);
             if (err != ErrorCode::None) { throw err; }
 
-            m_value_grid->invalidate();
+            value_grid_->invalidate();
 
             // Read data from CVF2File
 
-            CVF2File cvf2_file(m_file_path);
+            CVF2File cvf2_file(file_path_);
             cvf2_file.startRead();
 
             for (int32_t y = 0; y < static_cast<int32_t>(cvf2_file.height()); y++) {
                 cvf2_file.readRow(y);
-                int64_t* src = cvf2_file.m_row_values;
-                float* dst = m_value_grid->mutPtrAtXY(m_x_offset, y + m_y_offset);
+                int64_t* src = cvf2_file.row_values_;
+                float* dst = value_grid_->mutPtrAtXY(x_offs_, y + y_offs_);
                 if (!src || !dst) {
                     throw ErrorCode::Fatal;
                 }
@@ -117,10 +117,10 @@ namespace Grain {
 
             // Update value grid information
 
-            m_value_grid->setXIndex(m_x_index);
-            m_value_grid->setYIndex(m_y_index);
-            m_value_grid->updateMinMax();
-            m_value_grid->setGeoInfo(manager->m_tile_srid, m_bbox.minX(), m_bbox.minY(), m_bbox.maxX(), m_bbox.maxY());
+            value_grid_->setXIndex(x_index_);
+            value_grid_->setYIndex(y_index_);
+            value_grid_->updateMinMax();
+            value_grid_->setGeoInfo(manager->tile_srid_, bbox_.minX(), bbox_.minY(), bbox_.maxX(), bbox_.maxY());
         }
         catch (ErrorCode err) {
             result = err;
@@ -141,9 +141,9 @@ namespace Grain {
      */
     void CVF2Tile::freeValueGrid() noexcept {
 
-        if (m_value_grid) {
-            delete m_value_grid;
-            m_value_grid = nullptr;
+        if (value_grid_) {
+            delete value_grid_;
+            value_grid_ = nullptr;
         }
     }
 
@@ -163,24 +163,24 @@ namespace Grain {
      */
     CVF2TileManager::CVF2TileManager(const String& dir_path, int32_t tile_width, int32_t tile_height, int32_t open_files_capacity) {
 
-        m_dir_path = dir_path;
-        m_tile_width = tile_width;
-        m_tile_height = tile_height;
-        m_file_slot_capacity = std::max(open_files_capacity, 16);
-        m_file_slots = nullptr;
+        dir_path_ = dir_path;
+        tile_width_ = tile_width;
+        tile_height_ = tile_height;
+        file_slot_capacity_ = std::max(open_files_capacity, 16);
+        file_slots_ = nullptr;
     }
 
 
     CVF2TileManager::~CVF2TileManager() {
 
-        if (m_file_slots) {
-            for (int32_t i = 0; i < m_file_slot_capacity; i++) {
-                if (m_file_slots[i].m_file) {
-                    delete m_file_slots[i].m_file;
+        if (file_slots_) {
+            for (int32_t i = 0; i < file_slot_capacity_; i++) {
+                if (file_slots_[i].file_) {
+                    delete file_slots_[i].file_;
                 }
             }
 
-            std::free(m_file_slots);
+            std::free(file_slots_);
         }
     }
 
@@ -197,14 +197,14 @@ namespace Grain {
      */
     ErrorCode CVF2TileManager::scan(const RangeRectd& bbox, int32_t bbox_srid) noexcept {
 
-        m_provided_bbox = bbox;
-        m_provided_bbox_srid = bbox_srid;
-        m_bbox_used = true;
+        provided_bbox_ = bbox;
+        provided_bbox_srid_ = bbox_srid;
+        bbox_used_ = true;
 
-        // If `m_tile_srid` has been set in advance the bounding box can be projected to `m_tile_srid`
-        if (m_tile_srid != 0) {
-            m_wgs84_to_tile_proj.setSrcSRID(4326);
-            m_wgs84_to_tile_proj.setDstSRID(m_tile_srid);
+        // If `tile_srid_` has been set in advance the bounding box can be projected to `tile_srid_`
+        if (tile_srid_ != 0) {
+            wgs84_to_tile_proj_.setSrcSRID(4326);
+            wgs84_to_tile_proj_.setDstSRID(tile_srid_);
             auto err = _projectBbox();
             if (err != ErrorCode::None) {
                 return err;
@@ -219,25 +219,25 @@ namespace Grain {
 
         auto result = ErrorCode::None;
 
-        if (m_scan_done) {
+        if (scan_done_) {
             return ErrorCode::None;
         }
 
         // Time measuring
-        m_scan_ts1 = Timestamp::currentMillis();
+        scan_ts1_ = Timestamp::currentMillis();
 
         // Init results
-        m_scan_xy_range.initForMinMaxSearch();
-        m_scan_total_min = std::numeric_limits<int64_t>::max();
-        m_scan_total_max = std::numeric_limits<int64_t>::min();
-        m_scan_files_n = 0;
-        m_scan_files_ignored_n = 0;
-        m_scan_total_undefined_values_n = 0;
-        m_scan_file_err_count = 0;
-        m_scan_incomplete_files_n = 0;
-        m_scan_wrong_dimension_files_n = 0;
-        m_start_tile_multi_inititialized_n = 0;
-        m_start_error_n = 0;
+        scan_xy_range_.initForMinMaxSearch();
+        scan_total_min_ = std::numeric_limits<int64_t>::max();
+        scan_total_max_ = std::numeric_limits<int64_t>::min();
+        scan_files_n_ = 0;
+        scan_files_ignored_n_ = 0;
+        scan_total_undefined_values_n_ = 0;
+        scan_file_err_count_ = 0;
+        scan_incomplete_files_n_ = 0;
+        scan_wrong_dimension_files_n_ = 0;
+        start_tile_multi_inititialized_n_ = 0;
+        start_error_n_ = 0;
 
         Log log;
 
@@ -252,40 +252,40 @@ namespace Grain {
                 throw ErrorCode::ClassInstantiationFailed;
             }
 
-            m_scan_files_n = File::fileNameList(m_dir_path, "cvf", m_min_cvf2_file_size, m_max_cvf2_file_size, &m_scan_files_ignored_n, *file_list);
-            if (m_scan_files_n < 0) { throw Error::specific(kErrNoCVF2FilesInDir); }
+            scan_files_n_ = File::fileNameList(dir_path_, "cvf", min_cvf2_file_size_, max_cvf2_file_size_, &scan_files_ignored_n_, *file_list);
+            if (scan_files_n_ < 0) { throw Error::specific(kErrNoCVF2FilesInDir); }
 
-            log << "m_scan_files_n: " << m_scan_files_n << std::endl;
+            log << "scan_files_n: " << scan_files_n_ << std::endl;
 
             // Go through all files in list
             int32_t index = 0;
-            m_scan_file_err_count = 0;
+            scan_file_err_count_ = 0;
             for (const auto file_name : *file_list) {
-                if (m_verbose_level > 0 && (index % 1000) == 0) {
-                    log << "CVF2TileManager::scan(): " << index << " of " << m_scan_files_n << std::endl;
+                if (verbose_level_ > 0 && (index % 1000) == 0) {
+                    log << "CVF2TileManager::scan(): " << index << " of " << scan_files_n_ << std::endl;
                 }
                 try {
-                    _scanFile(m_dir_path, *file_name);
+                    _scanFile(dir_path_, *file_name);
                 }
                 catch (ErrorCode err) {
-                    m_scan_file_err_count++;
+                    scan_file_err_count_++;
                 }
                 index++;
             }
 
-            m_scan_xy_range_dbl = m_scan_xy_range;
-            if (m_scan_xy_range_dbl.width() < std::numeric_limits<float>::epsilon() || m_scan_xy_range_dbl.height() < std::numeric_limits<float>::epsilon()) {
+            scan_xy_range_dbl_ = scan_xy_range_;
+            if (scan_xy_range_dbl_.width() < std::numeric_limits<float>::epsilon() || scan_xy_range_dbl_.height() < std::numeric_limits<float>::epsilon()) {
                 throw Error::specific(kErrRangeNotValid);
             }
 
-            m_x_tile_count = static_cast<int32_t>(floor(m_scan_xy_range_dbl.width() / m_tile_width)) + 1;
-            m_y_tile_count = static_cast<int32_t>(floor(m_scan_xy_range_dbl.height() / m_tile_height)) + 1;
-            m_tile_count = m_x_tile_count * m_y_tile_count;
+            x_tile_count_ = static_cast<int32_t>(floor(scan_xy_range_dbl_.width() / tile_width_)) + 1;
+            y_tile_count_ = static_cast<int32_t>(floor(scan_xy_range_dbl_.height() / tile_height_)) + 1;
+            tile_count_ = x_tile_count_ * y_tile_count_;
 
-            if (m_tile_count > m_tile_count_limit) { throw Error::specific(kErrToManyTilesFound); }
+            if (tile_count_ > tile_count_limit_) { throw Error::specific(kErrToManyTilesFound); }
 
-            m_scan_ts2 = Timestamp::currentMillis();
-            m_scan_done = true;
+            scan_ts2_ = Timestamp::currentMillis();
+            scan_done_ = true;
         }
         catch (ErrorCode err) {
             result = err;
@@ -306,46 +306,46 @@ namespace Grain {
 
         file->startRead();
 
-        if (m_tile_srid == 0) {
-            m_tile_srid = file->srid();
-            m_wgs84_to_tile_proj.setSrcSRID(4326);
-            m_wgs84_to_tile_proj.setDstSRID(m_tile_srid);
+        if (tile_srid_ == 0) {
+            tile_srid_ = file->srid();
+            wgs84_to_tile_proj_.setSrcSRID(4326);
+            wgs84_to_tile_proj_.setDstSRID(tile_srid_);
 
             auto err = _projectBbox();
             if (err != ErrorCode::None) { throw err; }
         }
         else {
-            if (m_tile_srid != file->srid()) {
+            if (tile_srid_ != file->srid()) {
                 throw Error::specific(kErrTileCrsMismatch);
             }
         }
 
-        if (!m_bbox_used || file->hitBbox(m_bbox)) {
+        if (!bbox_used_ || file->hitBbox(bbox_)) {
 
             // Extend the total range covered by the tiles
-            m_scan_xy_range.add(file->range());
+            scan_xy_range_.add(file->range());
 
             // Update min and max values
-            if (file->minValue() < m_scan_total_min) {
-                m_scan_total_min = file->minValue();
+            if (file->minValue() < scan_total_min_) {
+                scan_total_min_ = file->minValue();
             }
 
-            if (file->maxValue() > m_scan_total_max) {
-                m_scan_total_max = file->maxValue();
+            if (file->maxValue() > scan_total_max_) {
+                scan_total_max_ = file->maxValue();
             }
 
             // Update statistical values
             if (file->undefinedValuesCount() > 0) {
-                m_scan_incomplete_files_n++;
-                m_scan_total_undefined_values_n += file->undefinedValuesCount();
+                scan_incomplete_files_n_++;
+                scan_total_undefined_values_n_ += file->undefinedValuesCount();
             }
 
-            if (m_tile_width != static_cast<int32_t>(file->width()) ||
-                m_tile_height != static_cast<int32_t>(file->height())) {
-                m_scan_wrong_dimension_files_n++;
+            if (tile_width_ != static_cast<int32_t>(file->width()) ||
+                tile_height_ != static_cast<int32_t>(file->height())) {
+                scan_wrong_dimension_files_n_++;
             }
 
-            m_scanned_tile_count++;
+            scanned_tile_count_++;
         }
 
         file->close();
@@ -354,10 +354,9 @@ namespace Grain {
 
 
     ErrorCode CVF2TileManager::start() noexcept {
-
         auto result = ErrorCode::None;
 
-        if (m_running) {
+        if (running_) {
             return ErrorCode::None;
         }
 
@@ -365,49 +364,49 @@ namespace Grain {
         StringList* file_list = nullptr;
 
         try {
-            if (!m_scan_done) { throw Error::specific(kErrNotScanned); }
-            if (m_scan_files_n < 1) { throw Error::specific(kErrNoCVF2FilesInDir); }
-            if (m_tile_count < 1) { throw Error::specific(kErrNoTiles); }
+            if (!scan_done_) { throw Error::specific(kErrNotScanned); }
+            if (scan_files_n_ < 1) { throw Error::specific(kErrNoCVF2FilesInDir); }
+            if (tile_count_ < 1) { throw Error::specific(kErrNoTiles); }
 
-            m_start_ts1 = Timestamp::currentMillis();
+            start_ts1_ = Timestamp::currentMillis();
 
             // Allocate file slots
-            m_file_slots = (CVF2ManagerFileSlot*)calloc(m_file_slot_capacity, sizeof(CVF2ManagerFileSlot));
-            if (!m_file_slots) {
+            file_slots_ = (CVF2ManagerFileSlot*)calloc(file_slot_capacity_, sizeof(CVF2ManagerFileSlot));
+            if (!file_slots_) {
                 throw ErrorCode::MemCantAllocate;
             }
 
             // Initialize file slots
-            for (int32_t i = 0; i < m_file_slot_capacity; i++) {
-                m_file_slots[i].m_tile_index = -1;
-                m_file_slots[i].m_timestamp = std::numeric_limits<int64_t>::min();
-                m_file_slots[i].m_file = nullptr;
+            for (int32_t i = 0; i < file_slot_capacity_; i++) {
+                file_slots_[i].tile_index_ = -1;
+                file_slots_[i].timestamp_ = std::numeric_limits<int64_t>::min();
+                file_slots_[i].file_ = nullptr;
             }
 
-            m_cvf2_file_open_n = 0;
-            m_cvf2_file_close_n = 0;
-            m_cvf2_file_open_failed_n = 0;
+            cvf2_file_open_n_ = 0;
+            cvf2_file_close_n_ = 0;
+            cvf2_file_open_failed_n_ = 0;
 
             // Prepare tiles memory
-            m_tiles.reserve(m_tile_count);
+            tiles.reserve(tile_count_);
             int32_t tile_index = 0;
-            for (int32_t y = 0; y < m_y_tile_count; y++) {
-                for (int32_t x = 0; x < m_x_tile_count; x++) {
+            for (int32_t y = 0; y < y_tile_count_; y++) {
+                for (int32_t x = 0; x < x_tile_count_; x++) {
                     auto tile = new (std::nothrow) CVF2Tile(tile_index);
                     if (!tile) { throw Error::specific(kErrTileTileInstantiationFailed); }
-                    m_tiles.push(tile);
-                    tile->m_x_index = x;
-                    tile->m_y_index = y;
+                    tiles.push(tile);
+                    tile->x_index_ = x;
+                    tile->y_index_ = y;
                     tile_index++;
                 }
             }
 
-            if (m_tiles.size() != m_tile_count) {
+            if (tiles.size() != tile_count_) {
                 throw Error::specific(kErrTileListInitFailed);
             }
 
-            m_started_tile_list.reserve(m_scanned_tile_count);
-            if (m_started_tile_list.capacity() != m_scanned_tile_count) {
+            started_tile_list_.reserve(scanned_tile_count_);
+            if (started_tile_list_.capacity() != scanned_tile_count_) {
                 throw ErrorCode::MemCantAllocate;
             }
 
@@ -417,23 +416,23 @@ namespace Grain {
                 throw ErrorCode::ClassInstantiationFailed;
             }
 
-            m_scan_files_n = File::fileNameList(m_dir_path, "cvf", m_min_cvf2_file_size, m_max_cvf2_file_size, &m_scan_files_ignored_n, *file_list);
+            scan_files_n_ = File::fileNameList(dir_path_, "cvf", min_cvf2_file_size_, max_cvf2_file_size_, &scan_files_ignored_n_, *file_list);
 
 
             // Iterate over all files in list
-            m_start_file_err_count = 0;
+            start_file_err_count_ = 0;
             for (const auto file_name : *file_list) {
                 try {
-                    _startFile(m_dir_path, *file_name);
+                    _startFile(dir_path_, *file_name);
                 }
                 catch (ErrorCode err) {
-                    m_start_file_err_count++;
+                    start_file_err_count_++;
                     throw err;
                 }
             }
 
-            m_start_ts2 = Timestamp::currentMillis();
-            m_running = true;
+            start_ts2_ = Timestamp::currentMillis();
+            running_ = true;
         }
         catch (ErrorCode err) {
             result = err;
@@ -453,7 +452,7 @@ namespace Grain {
 
         file->startRead();
 
-        if (!m_bbox_used || file->hitBbox(m_bbox)) {
+        if (!bbox_used_ || file->hitBbox(bbox_)) {
 
             Vec2i tile_xy_index;
             Vec2d center = file->centerAsVec2d();
@@ -469,80 +468,80 @@ namespace Grain {
             }
 
 
-            // Remember pointer to tile in `m_started_tile_list`
-            bool success = m_started_tile_list.push(tile);
+            // Remember pointer to tile in `started_tile_list_`
+            bool success = started_tile_list_.push(tile);
             if (!success) {
                 throw ErrorCode::Fatal;
             }
 
 
-            if (tile->m_init_counter > 0) {
-                tile->m_init_counter++;
-                m_start_tile_multi_inititialized_n++;
-                m_start_error_n++;
+            if (tile->init_counter_ > 0) {
+                tile->init_counter_++;
+                start_tile_multi_inititialized_n_++;
+                start_error_n_++;
             }
             else {
-                tile->m_init_counter++;
-                tile->m_valid = true;
+                tile->init_counter_++;
+                tile->valid_ = true;
 
-                tile->m_bbox.m_min_x = file->minX();
-                tile->m_bbox.m_max_x = file->maxX();
-                tile->m_bbox.m_min_y = file->minY();
-                tile->m_bbox.m_max_y = file->maxY();
+                tile->bbox_.min_x_ = file->minX();
+                tile->bbox_.max_x_ = file->maxX();
+                tile->bbox_.min_y_ = file->minY();
+                tile->bbox_.max_y_ = file->maxY();
 
-                tile->m_bbox_dbl.m_min_x = file->minX().asDouble();
-                tile->m_bbox_dbl.m_max_x = file->maxX().asDouble();
-                tile->m_bbox_dbl.m_min_y = file->minY().asDouble();
-                tile->m_bbox_dbl.m_max_y = file->maxY().asDouble();
+                tile->bbox_dbl_.min_x_ = file->minX().asDouble();
+                tile->bbox_dbl_.max_x_ = file->maxX().asDouble();
+                tile->bbox_dbl_.min_y_ = file->minY().asDouble();
+                tile->bbox_dbl_.max_y_ = file->maxY().asDouble();
 
                 /* TODO: Should these be handled as errors?
-                if (tile_xy_index.m_x != tile->m_x_index) {
+                if (tile_xy_index.x_ != tile->x_index_) {
                 }
-                if (tile_xy_index.m_y != tile->m_y_index) {
+                if (tile_xy_index.m_y != tile->y_index_) {
                 }
                  */
 
-                Fix tile_x_offset = file->minX() - m_scan_xy_range.minX() - (tile_xy_index.m_x * m_tile_width);
-                Fix tile_y_offset = file->minY() - m_scan_xy_range.minY() - (tile_xy_index.m_y * m_tile_height);
+                Fix tile_x_offset = file->minX() - scan_xy_range_.minX() - (tile_xy_index.x_ * tile_width_);
+                Fix tile_y_offset = file->minY() - scan_xy_range_.minY() - (tile_xy_index.y_ * tile_height_);
 
-                tile->m_x_offset = tile_x_offset.asInt32();
-                tile->m_y_offset = tile_y_offset.asInt32();
+                tile->x_offs_ = tile_x_offset.asInt32();
+                tile->y_offs_ = tile_y_offset.asInt32();
 
-                tile->m_width = file->width();
-                tile->m_height = file->height();
-                tile->m_undefined_values_count = file->undefinedValuesCount();
+                tile->width_ = file->width();
+                tile->height_ = file->height();
+                tile->undefined_values_count_ = file->undefinedValuesCount();
 
-                tile->m_file_name = file_name;
-                tile->m_file_path = file_path;
+                tile->file_name_ = file_name;
+                tile->file_path_ = file_path;
 
 
                 // Set file handle to be undefined
-                tile->m_cache_cvf2_file_index = -1;
+                tile->cache_cvf2_file_index_ = -1;
 
-                tile->m_error_flags.clear();
+                tile->error_flags_.clear();
 
-                if (tile->m_x_offset < 0 || tile->m_y_offset < 0) {
-                    tile->m_valid = false;
-                    tile->m_last_err_code = Error::specific(kErrTileOffsetOutOfRange);
-                    tile->m_error_flags.setFlag(0);
+                if (tile->x_offs_ < 0 || tile->y_offs_ < 0) {
+                    tile->valid_ = false;
+                    tile->last_err_code_ = Error::specific(kErrTileOffsetOutOfRange);
+                    tile->error_flags_.setFlag(0);
                 }
 
-                if (static_cast<int32_t>(tile->m_width) > m_tile_width ||
-                    static_cast<int32_t>(tile->m_height) > m_tile_height) {
-                    tile->m_valid = false;
-                    tile->m_last_err_code = Error::specific(kErrTileSizeOutOfRange);
-                    tile->m_error_flags.setFlag(1);
+                if (static_cast<int32_t>(tile->width_) > tile_width_ ||
+                    static_cast<int32_t>(tile->height_) > tile_height_) {
+                    tile->valid_ = false;
+                    tile->last_err_code_ = Error::specific(kErrTileSizeOutOfRange);
+                    tile->error_flags_.setFlag(1);
                 }
 
-                if (tile->m_x_offset + static_cast<int32_t>(tile->m_width) > m_tile_width ||
-                    tile->m_y_offset + static_cast<int32_t>(tile->m_height) > m_tile_height) {
-                    tile->m_valid = false;
-                    tile->m_last_err_code = Error::specific(kErrTileOffsetOutOfRange);
-                    tile->m_error_flags.setFlag(2);
+                if (tile->x_offs_ + static_cast<int32_t>(tile->width_) > tile_width_ ||
+                    tile->y_offs_ + static_cast<int32_t>(tile->height_) > tile_height_) {
+                    tile->valid_ = false;
+                    tile->last_err_code_ = Error::specific(kErrTileOffsetOutOfRange);
+                    tile->error_flags_.setFlag(2);
                 }
 
                 if (tile_x_offset.isFloat() || tile_y_offset.isFloat()) {
-                    tile->m_error_flags.setFlag(3);
+                    tile->error_flags_.setFlag(3);
                 }
             }
         }
@@ -554,7 +553,7 @@ namespace Grain {
 
     int64_t CVF2TileManager::valueAtWGS84Pos(const Vec2d& lonlat) noexcept {
         Vec2d pos;
-        m_wgs84_to_tile_proj.transform(lonlat, pos);
+        wgs84_to_tile_proj_.transform(lonlat, pos);
         return valueAtPos(pos);
     }
 
@@ -579,7 +578,7 @@ namespace Grain {
         }
         std::cout << tile << std::endl;
 
-        if (!tile->m_valid) {
+        if (!tile->valid_) {
             return CVF2::kUndefinedValue;
         }
 
@@ -592,7 +591,7 @@ namespace Grain {
         Vec2i tile_xy;  // Position in Tile space
         tile->crsPosToTileXY(pos, tile_xy);
         std::cout << "tile_xy: " << tile_xy << std::endl;
-        int64_t value = cvf2_file->valueAtPos(tile_xy, m_cache_tile_flag);
+        int64_t value = cvf2_file->valueAtPos(tile_xy, cache_tile_flag_);
 
         return value;
     }
@@ -607,17 +606,17 @@ namespace Grain {
      */
     int64_t CVF2TileManager::tileIndexAtTileManagerPos(const Vec2d& pos, Vec2i& out_tile_xy_index) noexcept {
 
-        int32_t xi = static_cast<int32_t>((pos.m_x - m_scan_xy_range_dbl.m_min_x) / m_tile_width);
-        int32_t yi = static_cast<int32_t>((pos.m_y - m_scan_xy_range_dbl.m_min_y) / m_tile_height);
+        int32_t xi = static_cast<int32_t>((pos.x_ - scan_xy_range_dbl_.min_x_) / tile_width_);
+        int32_t yi = static_cast<int32_t>((pos.y_ - scan_xy_range_dbl_.min_y_) / tile_height_);
 
-        if (xi >= 0 && xi < m_x_tile_count && yi >= 0 && yi < m_y_tile_count) {
-            out_tile_xy_index.m_x = xi;
-            out_tile_xy_index.m_y = yi;
-            return static_cast<int64_t>(yi) * m_x_tile_count + xi;
+        if (xi >= 0 && xi < x_tile_count_ && yi >= 0 && yi < y_tile_count_) {
+            out_tile_xy_index.x_ = xi;
+            out_tile_xy_index.y_ = yi;
+            return static_cast<int64_t>(yi) * x_tile_count_ + xi;
         }
         else {
-            out_tile_xy_index.m_x = -1;
-            out_tile_xy_index.m_y = -1;
+            out_tile_xy_index.x_ = -1;
+            out_tile_xy_index.y_ = -1;
             return -1;
         }
     }
@@ -632,14 +631,14 @@ namespace Grain {
      */
     int64_t CVF2TileManager::tileIndexAtLonlat(const Vec2d& lonlat, Vec2i& out_tile_xy_index) noexcept {
 
-        if (m_tile_srid == 0) {
-            out_tile_xy_index.m_x = -1;
-            out_tile_xy_index.m_y = -1;
+        if (tile_srid_ == 0) {
+            out_tile_xy_index.x_ = -1;
+            out_tile_xy_index.y_ = -1;
             return -1;
         }
         else {
             Vec2d xy;
-            m_wgs84_to_tile_proj.transform(lonlat, xy);
+            wgs84_to_tile_proj_.transform(lonlat, xy);
             return tileIndexAtTileManagerPos(xy, out_tile_xy_index);
         }
     }
@@ -647,7 +646,7 @@ namespace Grain {
 
     CVF2Tile* CVF2TileManager::tileAtIndex(int64_t index) noexcept {
 
-        return m_tiles.elementAtIndex(index);
+        return tiles.elementAtIndex(index);
     }
 
 
@@ -658,14 +657,14 @@ namespace Grain {
                 throw ErrorCode::NullData;
             }
 
-            if (tile->m_cache_cvf2_file_index >= 0) {
+            if (tile->cache_cvf2_file_index_ >= 0) {
 
                 // CVF2 file is open and in cache
                 // Set new timestamp and return pointer to file
 
-                auto slot = &m_file_slots[tile->m_cache_cvf2_file_index];
-                slot->m_timestamp = Timestamp::currentMillis();
-                return slot->m_file;
+                auto slot = &file_slots_[tile->cache_cvf2_file_index_];
+                slot->timestamp_ = Timestamp::currentMillis();
+                return slot->file_;
             }
             else {
 
@@ -675,18 +674,18 @@ namespace Grain {
                 auto ts = Timestamp::currentMillis();
                 timestamp_t max_delta = std::numeric_limits<int64_t>::min();
 
-                // bool free_slot_flag = false;  // Will be true, if a free slot was found, unused
+                // bool free_slot_flag = false; // Will be true, if a free slot was found, unused
 
-                int32_t slot_index = -1;  // Will become the slot index to use
-                for (int32_t i = 0; i < m_file_slot_capacity; i++) {
-                    auto slot = &m_file_slots[i];
-                    if (slot->m_tile_index < 0) {  // This is a free slot
+                int32_t slot_index = -1; // Will become the slot index to use
+                for (int32_t i = 0; i < file_slot_capacity_; i++) {
+                    auto slot = &file_slots_[i];
+                    if (slot->tile_index_ < 0) { // This is a free slot
                         slot_index = i;
                         // free_slot_flag = true; // Unused
                         break;
                     }
                     else {
-                        timestamp_t ts_delta = ts - slot->m_timestamp;
+                        timestamp_t ts_delta = ts - slot->timestamp_;
                         if (ts_delta > max_delta) {
                             max_delta = ts_delta;
                             slot_index = i;
@@ -697,36 +696,36 @@ namespace Grain {
                 if (slot_index >= 0) {
 
                     // The slot to be used is found
-                    auto slot = &m_file_slots[slot_index];
-                    if (slot->m_file) {
+                    auto slot = &file_slots_[slot_index];
+                    if (slot->file_) {
                         // Current CVF2 file must be closed and deleted first
-                        slot->m_file->close();
+                        slot->file_->close();
 
-                        auto t = tileAtIndex(slot->m_tile_index);
+                        auto t = tileAtIndex(slot->tile_index_);
                         if (t) {
-                            t->m_cache_cvf2_file_index = -1;
+                            t->cache_cvf2_file_index_ = -1;
                         }
 
-                        delete slot->m_file;
+                        delete slot->file_;
 
-                        slot->m_file = nullptr;
-                        slot->m_tile_index = -1;
-                        m_cvf2_file_close_n++;
+                        slot->file_ = nullptr;
+                        slot->tile_index_ = -1;
+                        cvf2_file_close_n_++;
                     }
 
-                    slot->m_file = new (std::nothrow) CVF2File(tile->m_file_path);
+                    slot->file_ = new (std::nothrow) CVF2File(tile->file_path_);
 
-                    if (slot->m_file) {
-                        slot->m_file->startRead();
-                        slot->m_tile_index = tile->m_index;
-                        slot->m_timestamp = Timestamp::currentMillis();
-                        tile->m_cache_cvf2_file_index = slot_index;
-                        m_cvf2_file_open_n++;
+                    if (slot->file_) {
+                        slot->file_->startRead();
+                        slot->tile_index_ = tile->index_;
+                        slot->timestamp_ = Timestamp::currentMillis();
+                        tile->cache_cvf2_file_index_ = slot_index;
+                        cvf2_file_open_n_++;
 
-                        return slot->m_file;
+                        return slot->file_;
                     }
                     else {
-                        m_cvf2_file_open_failed_n++;
+                        cvf2_file_open_failed_n_++;
                     }
                 }
             }
@@ -742,31 +741,30 @@ namespace Grain {
      *  TODO: Documentation
      */
     ErrorCode CVF2TileManager::generateRawTiles() noexcept {
-
         auto result = ErrorCode::None;
 
         try {
-            if (!m_running) {
+            if (!running_) {
                 throw Error::specific(kErrTileManagerNotRunning);
             }
 
-            String raw_dir_path = m_dir_path + "/raw/1";
+            String raw_dir_path = dir_path_ + "/raw/1";
             File::makeDirs(raw_dir_path);
             if (File::isDir(raw_dir_path) != true) {
                 throw ErrorCode::FileDirNotFound;
             }
 
-            for (const auto tile : m_tiles) {
+            for (const auto tile : tiles) {
 
                 if (tile->isValid()) {
 
                     auto err = tile->generateValueGrid(this);
                     if (err != ErrorCode::None) { throw err; }
 
-                    auto value_grid = tile->m_value_grid;
+                    auto value_grid = tile->value_grid_;
 
                     String file_path;
-                    file_path.setFormatted(1000, "%s/%d_%d.vgr", raw_dir_path.utf8(), tile->m_y_index, tile->m_x_index);
+                    file_path.setFormatted(1000, "%s/%d_%d.vgr", raw_dir_path.utf8(), tile->y_index_, tile->x_index_);
                     value_grid->writeFile(file_path);
 
                     tile->freeValueGrid();
@@ -840,10 +838,10 @@ namespace Grain {
             raw_file->readToString(16, tile_crs);
 
             RangeRectFix tile_crs_range;
-            raw_file->readFix(tile_crs_range.m_min_x);
-            raw_file->readFix(tile_crs_range.m_min_y);
-            raw_file->readFix(tile_crs_range.m_max_x);
-            raw_file->readFix(tile_crs_range.m_max_y);
+            raw_file->readFix(tile_crs_range.min_x_);
+            raw_file->readFix(tile_crs_range.min_y_);
+            raw_file->readFix(tile_crs_range.max_x_);
+            raw_file->readFix(tile_crs_range.max_y_);
 
             // Copy pixel data
             float pixel[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -911,7 +909,7 @@ namespace Grain {
             }
 
             GeoProj proj;
-            proj.setSrcSRID(m_tile_srid);
+            proj.setSrcSRID(tile_srid_);
             proj.setDstSRID(bbox_srid);
 
             RangeRectd total_bounds;
@@ -919,13 +917,13 @@ namespace Grain {
 
             ObjectList<CVF2Tile*> tiles_involved;
 
-            for (auto tile : m_tiles) {
-                if (tile->m_valid) {
-                    Quadrilateral quadrilateral(tile->m_bbox_dbl);
+            for (auto tile : tiles) {
+                if (tile->valid_) {
+                    Quadrilateral quadrilateral(tile->bbox_dbl_);
                     proj.transform(quadrilateral);
                     auto tile_aabb = quadrilateral.axisAlignedBbox();
                     if (tile_aabb.overlaps(bbox)) {
-                        total_bounds.add(tile->m_bbox_dbl);
+                        total_bounds.add(tile->bbox_dbl_);
                         tiles_involved.push(tile);
                     }
                 }
@@ -958,10 +956,10 @@ namespace Grain {
 
                 if (!tile_image) { throw ErrorCode::Fatal; }
 
-                Rectd tile_image_rect(tile->m_bbox_dbl.m_min_x - total_bounds.m_min_x,
-                                      (total_bounds.height() + 1) - (tile->m_bbox_dbl.m_min_y - total_bounds.m_min_y) - (tile->m_bbox_dbl.height() + 1),
-                                      tile->m_bbox_dbl.width() + 1,
-                                      tile->m_bbox_dbl.height() + 1);
+                Rectd tile_image_rect(tile->bbox_dbl_.min_x_ - total_bounds.min_x_,
+                                      (total_bounds.height() + 1) - (tile->bbox_dbl_.min_y_ - total_bounds.min_y_) - (tile->bbox_dbl_.height() + 1),
+                                      tile->bbox_dbl_.width() + 1,
+                                      tile->bbox_dbl_.height() + 1);
 
                 err = image->drawImage(tile_image, tile_image_rect);
 
@@ -1020,7 +1018,7 @@ namespace Grain {
 
             GeoProj proj_dst_to_tm;
             proj_dst_to_tm.setSrcSRID(srid);
-            proj_dst_to_tm.setDstSRID(m_tile_srid);
+            proj_dst_to_tm.setDstSRID(tile_srid_);
             if (!proj_dst_to_tm.isValid()) {
                 // TODO: Save error message!
                 throw ErrorCode::InvalidProjection;
@@ -1051,8 +1049,8 @@ namespace Grain {
                         double value = 0.0;
                         for (int32_t aa_y = 0; aa_y < antialias_level; aa_y++) {
                             for (int32_t aa_x = 0; aa_x < antialias_level; aa_x++) {
-                                pos_vg.m_x = x + aa_x * aa_scale;
-                                pos_vg.m_y = h - 1 - y +  aa_y * aa_scale;
+                                pos_vg.x_ = x + aa_x * aa_scale;
+                                pos_vg.y_ = h - 1 - y +  aa_y * aa_scale;
                                 remap_vg_to_tm.mapVec2(pos_vg, pos_dst);
                                 proj_dst_to_tm.transform(pos_dst, pos_tm);
                                 value += valueAtPos(pos_tm);
@@ -1067,8 +1065,8 @@ namespace Grain {
                 // No antialiasing applied
                 for (int32_t y = 0; y < h; y++) {
                     for (int32_t x = 0; x < w; x++) {
-                        pos_vg.m_x = x;
-                        pos_vg.m_y = h - 1 - y;
+                        pos_vg.x_ = x;
+                        pos_vg.y_ = h - 1 - y;
                         remap_vg_to_tm.mapVec2(pos_vg, pos_dst);
                         proj_dst_to_tm.transform(pos_dst, pos_tm);
                         auto value = valueAtPos(pos_tm);
@@ -1100,28 +1098,28 @@ namespace Grain {
             file.startWriteAsciiOverwrite();
 
             file.writeStr("crs,range_min_x,range_min_y,range_max_x,range_max_y,width,height,undefined_values,file_name,errors");
-            for (auto tile : m_tiles) {
-                if (tile->m_valid) {
+            for (auto tile : tiles) {
+                if (tile->valid_) {
                     file.writeNewLine();
-                    file.writeTextInt32(m_tile_srid);
+                    file.writeTextInt32(tile_srid_);
                     file.writeComma();
-                    file.writeTextFix(tile->m_bbox.minX());
+                    file.writeTextFix(tile->bbox_.minX());
                     file.writeComma();
-                    file.writeTextFix(tile->m_bbox.minY());
+                    file.writeTextFix(tile->bbox_.minY());
                     file.writeComma();
-                    file.writeTextFix(tile->m_bbox.maxX());
+                    file.writeTextFix(tile->bbox_.maxX());
                     file.writeComma();
-                    file.writeTextFix(tile->m_bbox.maxY());
+                    file.writeTextFix(tile->bbox_.maxY());
                     file.writeComma();
-                    file.writeTextUInt32(tile->m_width);
+                    file.writeTextUInt32(tile->width_);
                     file.writeComma();
-                    file.writeTextUInt32(tile->m_height);
+                    file.writeTextUInt32(tile->height_);
                     file.writeComma();
-                    file.writeTextInt32(tile->m_undefined_values_count);
+                    file.writeTextInt32(tile->undefined_values_count_);
                     file.writeComma();
-                    file.writeString(tile->m_file_name);
+                    file.writeString(tile->file_name_);
                     file.writeComma();
-                    file.writeTextFlags(tile->m_error_flags);
+                    file.writeTextFlags(tile->error_flags_);
                 }
             }
 
@@ -1191,10 +1189,10 @@ namespace Grain {
                 Vec2d bottom_right;
                 Geo::wgs84FromTileIndex(zoom, tile_index, top_left);
                 Geo::wgs84FromTileIndex(zoom, tile_index + Vec2i(mtr.gridSize(), mtr.gridSize()), bottom_right);
-                RangeRectd tile_bbox = { top_left.m_x, bottom_right.m_y, bottom_right.m_x, top_left.m_y };
+                RangeRectd tile_bbox = { top_left.x_, bottom_right.y_, bottom_right.x_, top_left.y_ };
 
                 RangeRectd tile_bbox_crs;
-                m_wgs84_to_tile_proj.transform(tile_bbox, tile_bbox_crs);
+                wgs84_to_tile_proj_.transform(tile_bbox, tile_bbox_crs);
 
 
                 // Render to a value grid
@@ -1368,40 +1366,40 @@ namespace Grain {
 
             Log log(*log_file.stream());
 
-            log << "scan_done: " << m_scan_done << log.endl;
-            log << "running: " << m_running << log.endl;
-            log << "file_slot_capacity: " << m_file_slot_capacity << log.endl;
+            log << "scan_done: " << scan_done_ << log.endl;
+            log << "running: " << running_ << log.endl;
+            log << "file_slot_capacity: " << file_slot_capacity_ << log.endl;
 
-            log << "dir_path: " << m_dir_path << log.endl;
-            log << "tile_dimensions: " << m_tile_width << " x " << m_tile_height << log.endl;
-            log << "tile_count x: " << m_x_tile_count << ", y: " << m_y_tile_count << log.endl;
-            log << "tile_count: " << m_tile_count << ", tile_count_limit: " << m_tile_count_limit << log.endl;
+            log << "dir_path: " << dir_path_ << log.endl;
+            log << "tile_dimensions: " << tile_width_ << " x " << tile_height_ << log.endl;
+            log << "tile_count x: " << x_tile_count_ << ", y: " << y_tile_count_ << log.endl;
+            log << "tile_count: " << tile_count_ << ", tile_count_limit: " << tile_count_limit_ << log.endl;
 
             log << "Scan results:\n";
-            log << "  duration: " << Timestamp::elapsedSeconds(m_scan_ts1, m_scan_ts2) << " sec.\n";
-            log << "  files: " << m_scan_files_n << log.endl;
-            log << "  files ignored: " << m_scan_files_ignored_n << log.endl;
-            log << "  files incomplete: " << m_scan_incomplete_files_n << log.endl;
-            log << "  files with wrong dimensions: " << m_scan_wrong_dimension_files_n << log.endl;
-            log << "  xy range: " << m_scan_xy_range << log.endl;
-            log << "  value min: " << m_scan_total_min << ", max: " << m_scan_total_max << log.endl;
-            log << "  undefined values: " << m_scan_total_undefined_values_n << log.endl;
-            log << "  overlapping tiles: " << m_start_tile_multi_inititialized_n << log.endl;
+            log << "  duration: " << Timestamp::elapsedSeconds(scan_ts1_, scan_ts2_) << " sec.\n";
+            log << "  files: " << scan_files_n_ << log.endl;
+            log << "  files ignored: " << scan_files_ignored_n_ << log.endl;
+            log << "  files incomplete: " << scan_incomplete_files_n_ << log.endl;
+            log << "  files with wrong dimensions: " << scan_wrong_dimension_files_n_ << log.endl;
+            log << "  xy range: " << scan_xy_range_ << log.endl;
+            log << "  value min: " << scan_total_min_ << ", max: " << scan_total_max_ << log.endl;
+            log << "  undefined values: " << scan_total_undefined_values_n_ << log.endl;
+            log << "  overlapping tiles: " << start_tile_multi_inititialized_n_ << log.endl;
 
             log << "\nStart results:\n";
-            if (!m_running) {
+            if (!running_) {
                 log << "  Not started.\n";
             }
             else {
-                log << "  duration: " << Timestamp::elapsedSeconds(m_start_ts1, m_start_ts2) << " sec.\n";
-                log << "  cvf2 files open calls: " << m_cvf2_file_open_n << log.endl;
-                log << "  cvf2 files close calls: " << m_cvf2_file_close_n << log.endl;
-                log << "  cvf2 files open failed: " << m_cvf2_file_open_failed_n << log.endl;
-                log << "  number of errors: " << m_start_error_n << log.endl;
+                log << "  duration: " << Timestamp::elapsedSeconds(start_ts1_, start_ts2_) << " sec.\n";
+                log << "  cvf2 files open calls: " << cvf2_file_open_n_ << log.endl;
+                log << "  cvf2 files close calls: " << cvf2_file_close_n_ << log.endl;
+                log << "  cvf2 files open failed: " << cvf2_file_open_failed_n_ << log.endl;
+                log << "  number of errors: " << start_error_n_ << log.endl;
 
                 log << "\nErrors:\n";
-                if (m_tiles.size() != m_tile_count) {
-                    log << "  Tiles buffer does not match tile count: " <<  m_tiles.size() << log.endl;
+                if (tiles.size() != tile_count_) {
+                    log << "  Tiles buffer does not match tile count: " <<  tiles.size() << log.endl;
                 }
             }
         }
@@ -1413,23 +1411,23 @@ namespace Grain {
 
     ErrorCode CVF2TileManager::_projectBbox() noexcept {
 
-        if (m_tile_srid == 0) {
+        if (tile_srid_ == 0) {
             return Error::specific(kErrTileSRIDMissing);
         }
 
-        if (m_provided_bbox_srid == 0) {
+        if (provided_bbox_srid_ == 0) {
             return Error::specific(kErrTileProvidedBboxSRIDMissing);
         }
 
         GeoProj proj;
-        proj.setSrcSRID(m_provided_bbox_srid);
-        proj.setDstSRID(m_tile_srid);
+        proj.setSrcSRID(provided_bbox_srid_);
+        proj.setDstSRID(tile_srid_);
 
         if (!proj.isValid()) {
             return Error::specific(kErrBboxTransformFailed);
         }
 
-        proj.transform(m_provided_bbox, m_bbox);
+        proj.transform(provided_bbox_, bbox_);
 
         return ErrorCode::None;
     }

@@ -18,19 +18,19 @@ namespace Grain {
 
     Bezier::Bezier(double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3)  noexcept {
 
-        m_pos[0].set(x0, y0);
-        m_pos[1].set(x1, y1);
-        m_pos[2].set(x2, y2);
-        m_pos[3].set(x3, y3);
+        pos_[0].set(x0, y0);
+        pos_[1].set(x1, y1);
+        pos_[2].set(x2, y2);
+        pos_[3].set(x3, y3);
     }
 
 
     Bezier::Bezier(const Vec2d& p0, const Vec2d& p1, const Vec2d& p2, const Vec2d& p3) noexcept {
 
-        m_pos[0] = p0;
-        m_pos[1] = p1;
-        m_pos[2] = p2;
-        m_pos[3] = p3;
+        pos_[0] = p0;
+        pos_[1] = p1;
+        pos_[2] = p2;
+        pos_[3] = p3;
     }
 
 
@@ -43,20 +43,20 @@ namespace Grain {
     Bezier::Bezier(const Vec2d* pos_array) noexcept {
 
         if (pos_array) {
-            m_pos[0] = pos_array[0];
-            m_pos[1] = pos_array[1];
-            m_pos[2] = pos_array[2];
-            m_pos[3] = pos_array[3];
+            pos_[0] = pos_array[0];
+            pos_[1] = pos_array[1];
+            pos_[2] = pos_array[2];
+            pos_[3] = pos_array[3];
         }
     }
 
 
     Bezier::Bezier(const BezierValueCurvePoint& p0, const BezierValueCurvePoint& p1) noexcept {
 
-        m_pos[0] = p0.m_pos;
-        m_pos[1] = p0.usesRightControl() ?  p0.m_used_right_pos : p0.m_pos;
-        m_pos[2] = p1.usesLeftControl() ? p1.m_used_left_pos : p1.m_pos;
-        m_pos[3] = p1.m_pos;
+        pos_[0] = p0.pos_;
+        pos_[1] = p0.usesRightControl() ?  p0.used_right_pos_ : p0.pos_;
+        pos_[2] = p1.usesLeftControl() ? p1.used_left_pos_ : p1.pos_;
+        pos_[3] = p1.pos_;
     }
 
 
@@ -67,23 +67,23 @@ namespace Grain {
      */
     Rectd Bezier::bounds() const noexcept {
 
-        Vec2d p0 = m_pos[0];
-        Vec2d p1 = m_pos[1];
-        Vec2d p2 = m_pos[2];
-        Vec2d p3 = m_pos[3];
+        Vec2d p0 = pos_[0];
+        Vec2d p1 = pos_[1];
+        Vec2d p2 = pos_[2];
+        Vec2d p3 = pos_[3];
 
         RangeRectd range;
-        range = m_pos[0];
-        range += m_pos[3];
+        range = pos_[0];
+        range += pos_[3];
 
         {
-            double b = (6.0 * p0.m_x - 12.0 * p1.m_x + 6.0 * p2.m_x);
-            double a = (-3.0 * p0.m_x + 9.0 * p1.m_x - 9.0 * p2.m_x + 3.0 * p3.m_x);
-            double c = (3.0 * p1.m_x - 3.0 * p0.m_x);
+            double b = (6.0 * p0.x_ - 12.0 * p1.x_ + 6.0 * p2.x_);
+            double a = (-3.0 * p0.x_ + 9.0 * p1.x_ - 9.0 * p2.x_ + 3.0 * p3.x_);
+            double c = (3.0 * p1.x_ - 3.0 * p0.x_);
             if (a != 0.0 && b != 0.0) {
                 double t = -c / b;
                 if (0.0 < t && t < 1.0) {
-                    range.addX(_bounds_f(t, p0.m_x, p1.m_x, p2.m_x, p3.m_x));
+                    range.addX(_bounds_f(t, p0.x_, p1.x_, p2.x_, p3.x_));
                 }
             }
 
@@ -91,23 +91,23 @@ namespace Grain {
             if (b2ac >= 0.0) {
                 double t1 = (-b + std::sqrt(b2ac)) / (2.0 * a);
                 if (0.0 < t1 && t1 < 1.0) {
-                    range.addX(_bounds_f(t1, p0.m_x, p1.m_x, p2.m_x, p3.m_x));
+                    range.addX(_bounds_f(t1, p0.x_, p1.x_, p2.x_, p3.x_));
                 }
                 double t2 = (-b - std::sqrt(b2ac)) / (2 * a);
                 if (0.0 < t2 && t2 < 1.0) {
-                    range.addX(_bounds_f(t2, p0.m_x, p1.m_x, p2.m_x, p3.m_x));
+                    range.addX(_bounds_f(t2, p0.x_, p1.x_, p2.x_, p3.x_));
                 }
             }
         }
 
         {
-            double b = (6.0 * p0.m_y - 12.0 * p1.m_y + 6.0 * p2.m_y);
-            double a = (-3.0 * p0.m_y + 9.0 * p1.m_y - 9.0 * p2.m_y + 3.0 * p3.m_y);
-            double c = (3.0 * p1.m_y - 3.0 * p0.m_y);
+            double b = (6.0 * p0.y_ - 12.0 * p1.y_ + 6.0 * p2.y_);
+            double a = (-3.0 * p0.y_ + 9.0 * p1.y_ - 9.0 * p2.y_ + 3.0 * p3.y_);
+            double c = (3.0 * p1.y_ - 3.0 * p0.y_);
             if (a != 0.0 && b != 0.0) {
                 double t = -c / b;
                 if (0.0 < t && t < 1.0) {
-                    range.addY(_bounds_f(t, p0.m_y, p1.m_y, p2.m_y, p3.m_y));
+                    range.addY(_bounds_f(t, p0.y_, p1.y_, p2.y_, p3.y_));
                 }
             }
 
@@ -115,11 +115,11 @@ namespace Grain {
             if (b2ac >= 0.0) {
                 double t1 = (-b + std::sqrt(b2ac)) / (2.0 * a);
                 if (0.0 < t1 && t1 < 1.0) {
-                    range.addY(_bounds_f(t1, p0.m_y, p1.m_y, p2.m_y, p3.m_y));
+                    range.addY(_bounds_f(t1, p0.y_, p1.y_, p2.y_, p3.y_));
                 }
                 double t2 = (-b - std::sqrt(b2ac)) / (2 * a);
                 if (0.0 < t2 && t2 < 1.0) {
-                    range.addY(_bounds_f(t2, p0.m_y, p1.m_y, p2.m_y, p3.m_y));
+                    range.addY(_bounds_f(t2, p0.y_, p1.y_, p2.y_, p3.y_));
                 }
             }
         }
@@ -151,49 +151,49 @@ namespace Grain {
 
     void Bezier::set(const Vec2d& p0, const Vec2d& p1, const Vec2d& p2, const Vec2d& p3) noexcept {
 
-        m_pos[0] = p0;
-        m_pos[1] = p1;
-        m_pos[2] = p2;
-        m_pos[3] = p3;
+        pos_[0] = p0;
+        pos_[1] = p1;
+        pos_[2] = p2;
+        pos_[3] = p3;
     }
 
 
     void Bezier::setQuadratic(const Vec2d& p0, const Vec2d& p1, const Vec2d& p2) noexcept {
 
-        m_pos[0] = p0;
-        m_pos[1] = p0 + (p1 - p0) * (2.0 / 3);
-        m_pos[2] = p2 + (p1 - p2) * (2.0 / 3);
-        m_pos[3] = p2;
+        pos_[0] = p0;
+        pos_[1] = p0 + (p1 - p0) * (2.0 / 3);
+        pos_[2] = p2 + (p1 - p2) * (2.0 / 3);
+        pos_[3] = p2;
     }
 
 
     void Bezier::set(double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3) noexcept {
 
-        m_pos[0].set(x0, y0);
-        m_pos[1].set(x1, y1);
-        m_pos[2].set(x2, y2);
-        m_pos[3].set(x3, y3);
+        pos_[0].set(x0, y0);
+        pos_[1].set(x1, y1);
+        pos_[2].set(x2, y2);
+        pos_[3].set(x3, y3);
     }
 
 
     void Bezier::setPointAtIndex(int32_t index, const Vec2d& p) noexcept {
 
         if (index >= 0 && index <= 3) {
-            m_pos[index] = p;
+            pos_[index] = p;
         }
     }
 
 
     void Bezier::setHorizontalSegment(const Vec2d& p_left, const Vec2d& p_right, const Vec2d& left_f, const Vec2d& right_f) noexcept {
 
-        double w = p_right.m_x - p_left.m_x;
-        double h = p_right.m_y - p_left.m_y;
-        m_pos[0] = p_left;
-        m_pos[1].m_x = p_left.m_x + left_f.m_x * w;
-        m_pos[1].m_y = p_left.m_y + left_f.m_y * h;
-        m_pos[2].m_x = p_right.m_x - right_f.m_x * w;
-        m_pos[2].m_y = p_right.m_y - right_f.m_y * h;
-        m_pos[3] = p_right;
+        double w = p_right.x_ - p_left.x_;
+        double h = p_right.y_ - p_left.y_;
+        pos_[0] = p_left;
+        pos_[1].x_ = p_left.x_ + left_f.x_ * w;
+        pos_[1].y_ = p_left.y_ + left_f.y_ * h;
+        pos_[2].x_ = p_right.x_ - right_f.x_ * w;
+        pos_[2].y_ = p_right.y_ - right_f.y_ * h;
+        pos_[3] = p_right;
     }
 
 
@@ -202,16 +202,16 @@ namespace Grain {
         Vec2d chord = p3 - p0;
         double d = chord.length() / 3.0;
 
-        m_pos[0] = p0;
-        m_pos[1] = p0 + t1.normalized() * d;
-        m_pos[2] = p3 - t2.normalized() * d;
-        m_pos[3] = p3;
+        pos_[0] = p0;
+        pos_[1] = p0 + t1.normalized() * d;
+        pos_[2] = p3 - t2.normalized() * d;
+        pos_[3] = p3;
     }
 
 
     Vec2d Bezier::posAtPointIndex(int32_t index) const noexcept {
 
-        return m_pos[std::clamp<int32_t>(index, 0, 3)];
+        return pos_[std::clamp<int32_t>(index, 0, 3)];
     }
 
 
@@ -228,8 +228,8 @@ namespace Grain {
         double f3 = 3.0 * d * t_sq;
         double f4 = t * t_sq;
 
-        pos.m_x = m_pos[0].m_x * f1 + m_pos[1].m_x * f2 + m_pos[2].m_x * f3 + m_pos[3].m_x * f4;
-        pos.m_y = m_pos[0].m_y * f1 + m_pos[1].m_y * f2 + m_pos[2].m_y * f3 + m_pos[3].m_y * f4;
+        pos.x_ = pos_[0].x_ * f1 + pos_[1].x_ * f2 + pos_[2].x_ * f3 + pos_[3].x_ * f4;
+        pos.y_ = pos_[0].y_ * f1 + pos_[1].y_ * f2 + pos_[2].y_ * f3 + pos_[3].y_ * f4;
 
         return pos;
     }
@@ -249,11 +249,10 @@ namespace Grain {
      *  @return Index of the closest control point if within radius, or -1 if none are close enough.
      */
     int32_t Bezier::hitPoint(const Vec2d& pos, double radius) const noexcept {
-
         int32_t index = -1;
         double distance = DBL_MAX;
         for (int32_t i = 0; i < 4; i++) {
-            double d = pos.distance(m_pos[i]);
+            double d = pos.distance(pos_[i]);
             if (d < distance) {
                 distance = d;
                 index = i;
@@ -270,11 +269,9 @@ namespace Grain {
 
 
     double Bezier::hit(const Vec2d& pos, double radius) const noexcept {
-
         double t_result = DBL_MAX;
 
         if (hitBounds(pos, radius)) {
-
             int32_t resolution = 8;
             int32_t recursion_depth = 16;
 
@@ -327,32 +324,30 @@ namespace Grain {
 
 
     bool Bezier::split(double t, Bezier& out_bezier1, Bezier& out_bezier2) const noexcept {
-
         t = std::clamp<double>(t, 0.0, 1.0);
 
-        Vec2d a = (m_pos[1] - m_pos[0]) * t + m_pos[0];
-        Vec2d b = (m_pos[2] - m_pos[1]) * t + m_pos[1];
-        Vec2d c = (m_pos[3] - m_pos[2]) * t + m_pos[2];
+        Vec2d a = (pos_[1] - pos_[0]) * t + pos_[0];
+        Vec2d b = (pos_[2] - pos_[1]) * t + pos_[1];
+        Vec2d c = (pos_[3] - pos_[2]) * t + pos_[2];
         Vec2d ab = (b - a) * t + a;
         Vec2d bc = (c - b) * t + b;
         Vec2d abc = (bc - ab) * t + ab;
 
-        out_bezier1.m_pos[0] = m_pos[0];
-        out_bezier1.m_pos[1] = a;
-        out_bezier1.m_pos[2] = ab;
-        out_bezier1.m_pos[3] = abc;
+        out_bezier1.pos_[0] = pos_[0];
+        out_bezier1.pos_[1] = a;
+        out_bezier1.pos_[2] = ab;
+        out_bezier1.pos_[3] = abc;
 
-        out_bezier2.m_pos[0] = abc;
-        out_bezier2.m_pos[1] = bc;
-        out_bezier2.m_pos[2] = c;
-        out_bezier2.m_pos[3] = m_pos[3];
+        out_bezier2.pos_[0] = abc;
+        out_bezier2.pos_[1] = bc;
+        out_bezier2.pos_[2] = c;
+        out_bezier2.pos_[3] = pos_[3];
 
         return true;
     }
 
 
     bool Bezier::truncate(double t_start, double t_end, Bezier& out_bezier) const noexcept {
-
         double t0 = t_start < 0.0 ? 0.0 : t_start > 1.0 ? 1.0 : t_start;
         double t1 = t_end < 0.0 ? 0.0 : t_end > 1.0 ? 1.0 : t_end;
         if (t0 >= t1) {
@@ -362,32 +357,31 @@ namespace Grain {
         double u0 = 1.0 - t0;
         double u1 = 1.0 - t1;
 
-        double qxa = m_pos[0].m_x * u0 * u0 + m_pos[1].m_x * 2 * t0 * u0 + m_pos[2].m_x * t0 * t0;
-        double qxb = m_pos[0].m_x * u1 * u1 + m_pos[1].m_x * 2 * t1 * u1 + m_pos[2].m_x * t1 * t1;
-        double qxc = m_pos[1].m_x * u0 * u0 + m_pos[2].m_x * 2 * t0 * u0 + m_pos[3].m_x * t0 * t0;
-        double qxd = m_pos[1].m_x * u1 * u1 + m_pos[2].m_x * 2 * t1 * u1 + m_pos[3].m_x * t1 * t1;
+        double qxa = pos_[0].x_ * u0 * u0 + pos_[1].x_ * 2 * t0 * u0 + pos_[2].x_ * t0 * t0;
+        double qxb = pos_[0].x_ * u1 * u1 + pos_[1].x_ * 2 * t1 * u1 + pos_[2].x_ * t1 * t1;
+        double qxc = pos_[1].x_ * u0 * u0 + pos_[2].x_ * 2 * t0 * u0 + pos_[3].x_ * t0 * t0;
+        double qxd = pos_[1].x_ * u1 * u1 + pos_[2].x_ * 2 * t1 * u1 + pos_[3].x_ * t1 * t1;
 
-        double qya = m_pos[0].m_y * u0 * u0 + m_pos[1].m_y * 2 * t0 * u0 + m_pos[2].m_y * t0 * t0;
-        double qyb = m_pos[0].m_y * u1 * u1 + m_pos[1].m_y * 2 * t1 * u1 + m_pos[2].m_y * t1 * t1;
-        double qyc = m_pos[1].m_y * u0 * u0 + m_pos[2].m_y * 2 * t0 * u0 + m_pos[3].m_y * t0 * t0;
-        double qyd = m_pos[1].m_y * u1 * u1 + m_pos[2].m_y * 2 * t1 * u1 + m_pos[3].m_y * t1 * t1;
+        double qya = pos_[0].y_ * u0 * u0 + pos_[1].y_ * 2 * t0 * u0 + pos_[2].y_ * t0 * t0;
+        double qyb = pos_[0].y_ * u1 * u1 + pos_[1].y_ * 2 * t1 * u1 + pos_[2].y_ * t1 * t1;
+        double qyc = pos_[1].y_ * u0 * u0 + pos_[2].y_ * 2 * t0 * u0 + pos_[3].y_ * t0 * t0;
+        double qyd = pos_[1].y_ * u1 * u1 + pos_[2].y_ * 2 * t1 * u1 + pos_[3].y_ * t1 * t1;
 
-        out_bezier.m_pos[0].m_x = qxa * u0 + qxc * t0;
-        out_bezier.m_pos[1].m_x = qxa * u1 + qxc * t1;
-        out_bezier.m_pos[2].m_x = qxb * u0 + qxd * t0;
-        out_bezier.m_pos[3].m_x = qxb * u1 + qxd * t1;
+        out_bezier.pos_[0].x_ = qxa * u0 + qxc * t0;
+        out_bezier.pos_[1].x_ = qxa * u1 + qxc * t1;
+        out_bezier.pos_[2].x_ = qxb * u0 + qxd * t0;
+        out_bezier.pos_[3].x_ = qxb * u1 + qxd * t1;
 
-        out_bezier.m_pos[0].m_y = qya * u0 + qyc * t0;
-        out_bezier.m_pos[1].m_y = qya * u1 + qyc * t1;
-        out_bezier.m_pos[2].m_y = qyb * u0 + qyd * t0;
-        out_bezier.m_pos[3].m_y = qyb * u1 + qyd * t1;
+        out_bezier.pos_[0].y_ = qya * u0 + qyc * t0;
+        out_bezier.pos_[1].y_ = qya * u1 + qyc * t1;
+        out_bezier.pos_[2].y_ = qyb * u0 + qyd * t0;
+        out_bezier.pos_[3].y_ = qyb * u1 + qyd * t1;
 
         return true;
     }
 
 
     void Bezier::buildVec2LUT(Vec2d* lut, int32_t resolution) const noexcept {
-
         if (lut && resolution > 1) {
             for (int32_t i = 0; i < resolution; i++) {
                 lut[i] = posOnCurve(static_cast<double>(i) / static_cast<double>(resolution - 1));
@@ -397,67 +391,59 @@ namespace Grain {
 
 
     void Bezier::translate(double tx, double ty) noexcept {
-
         for (int32_t i = 0; i < 4; i++) {
-            m_pos[i].m_x += tx;
-            m_pos[i].m_y += ty;
+            pos_[i].x_ += tx;
+            pos_[i].y_ += ty;
         }
     }
 
 
     void Bezier::translate(const Vec2d& tv) noexcept {
-
         for (int32_t i = 0; i < 4; i++) {
-            m_pos[i] += tv;
+            pos_[i] += tv;
         }
     }
 
 
     void Bezier::translateX(double tx) noexcept {
-
         for (int32_t i = 0; i < 4; i++) {
-            m_pos[i].m_x += tx;
+            pos_[i].x_ += tx;
         }
     }
 
 
     void Bezier::translateY(double ty) noexcept {
-
         for (int32_t i = 0; i < 4; i++) {
-            m_pos[i].m_y += ty;
+            pos_[i].y_ += ty;
         }
     }
 
 
     void Bezier::scale(double sx, double sy) noexcept {
-
         for (int32_t i = 0; i < 4; i++) {
-            m_pos[i].m_x *= sx;
-            m_pos[i].m_y *= sy;
+            pos_[i].x_ *= sx;
+            pos_[i].y_ *= sy;
         }
     }
 
 
     void Bezier::scale(const Vec2d& sv) noexcept {
-
         for (int32_t i = 0; i < 4; i++) {
-            m_pos[i] *= sv;
+            pos_[i] *= sv;
         }
     }
 
 
     void Bezier::scaleX(double sx) noexcept {
-
         for (int32_t i = 0; i < 4; i++) {
-            m_pos[i].m_x *= sx;
+            pos_[i].x_ *= sx;
         }
     }
 
 
     void Bezier::scaleY(double sy) noexcept {
-
         for (int32_t i = 0; i < 4; i++) {
-            m_pos[i].m_y *= sy;
+            pos_[i].y_ *= sy;
         }
     }
 
@@ -471,7 +457,6 @@ namespace Grain {
      *  @param rect The target rectangle defining the desired position and size of the Bézier curve.
      */
     void Bezier::transformByRect(const Rectd& rect) noexcept {
-
         scale(rect.width(), rect.height());
         translate(rect.x(), rect.y());
     }
@@ -530,7 +515,7 @@ namespace Grain {
      */
     void Bezier::approximateQuadraticBezierControlPos(Vec2d& out_control_pos) const noexcept {
 
-        out_control_pos = (m_pos[1] + m_pos[2]) * (3.0 / 4.0) - (m_pos[0] + m_pos[3]) * (1.0 / 4.0);
+        out_control_pos = (pos_[1] + pos_[2]) * (3.0 / 4.0) - (pos_[0] + pos_[3]) * (1.0 / 4.0);
     }
 
 
@@ -540,16 +525,16 @@ namespace Grain {
     int32_t Bezier::arcToBezierPosArray(const Vec2d& start_pos, const Vec2d& radii, double rotation, bool large_arc_flag, bool sweep_flag, const Vec2d& end_pos, int32_t max_segment_n, Vec2d* out_pos_array) noexcept {
 
         // Step 1: Handle special cases where radii are zero or the start and end positions are identical
-        if (radii.m_x == 0.0 || radii.m_y == 0.0 || (start_pos.distance(end_pos) < std::numeric_limits<float>::epsilon())) {
+        if (radii.x_ == 0.0 || radii.y_ == 0.0 || (start_pos.distance(end_pos) < std::numeric_limits<float>::epsilon())) {
             return 0;
         }
 
         // Step 2: Apply transformations to center the arc
-        double rx = std::abs(radii.m_x);
-        double ry = std::abs(radii.m_y);
+        double rx = std::abs(radii.x_);
+        double ry = std::abs(radii.y_);
 
-        double dx = (start_pos.m_x - end_pos.m_x) / 2.0;
-        double dy = (start_pos.m_y - end_pos.m_y) / 2.0;
+        double dx = (start_pos.x_ - end_pos.x_) / 2.0;
+        double dy = (start_pos.y_ - end_pos.y_) / 2.0;
 
         double rotation_rad = rotation * std::numbers::pi / 180.0;
         double cos_angle = std::cos(rotation_rad);
@@ -582,8 +567,8 @@ namespace Grain {
         double cyp = sign * std::sqrt(sq) * (-ry * x1p / rx);
 
         // Transform the center back to the global coordinate system
-        double cx = cos_angle * cxp - sin_angle * cyp + (start_pos.m_x + end_pos.m_x) / 2.0;
-        double cy = sin_angle * cxp + cos_angle * cyp + (start_pos.m_y + end_pos.m_y) / 2.0;
+        double cx = cos_angle * cxp - sin_angle * cyp + (start_pos.x_ + end_pos.x_) / 2.0;
+        double cy = sin_angle * cxp + cos_angle * cyp + (start_pos.y_ + end_pos.y_) / 2.0;
 
         // Step 4: Calculate start and end angles
         auto vector_angle = [](double ux, double uy, double vx, double vy) {
@@ -626,14 +611,14 @@ namespace Grain {
 
             Vec2d p0, p1, p2, p3;
 
-            p0.m_x = cx + cos_angle * (rx * cos_t0) - sin_angle * (ry * sin_t0);
-            p0.m_y = cy + sin_angle * (rx * cos_t0) + cos_angle * (ry * sin_t0);
-            p3.m_x = cx + cos_angle * (rx * cos_t1) - sin_angle * (ry * sin_t1);
-            p3.m_y = cy + sin_angle * (rx * cos_t1) + cos_angle * (ry * sin_t1);
-            p1.m_x = p0.m_x - alpha * cos_angle * (rx * sin_t0) - alpha * sin_angle * (ry * cos_t0);
-            p1.m_y = p0.m_y - alpha * sin_angle * (rx * sin_t0) + alpha * cos_angle * (ry * cos_t0);
-            p2.m_x = p3.m_x + alpha * cos_angle * (rx * sin_t1) + alpha * sin_angle * (ry * cos_t1);
-            p2.m_y = p3.m_y + alpha * sin_angle * (rx * sin_t1) - alpha * cos_angle * (ry * cos_t1);
+            p0.x_ = cx + cos_angle * (rx * cos_t0) - sin_angle * (ry * sin_t0);
+            p0.y_ = cy + sin_angle * (rx * cos_t0) + cos_angle * (ry * sin_t0);
+            p3.x_ = cx + cos_angle * (rx * cos_t1) - sin_angle * (ry * sin_t1);
+            p3.y_ = cy + sin_angle * (rx * cos_t1) + cos_angle * (ry * sin_t1);
+            p1.x_ = p0.x_ - alpha * cos_angle * (rx * sin_t0) - alpha * sin_angle * (ry * cos_t0);
+            p1.y_ = p0.y_ - alpha * sin_angle * (rx * sin_t0) + alpha * cos_angle * (ry * cos_t0);
+            p2.x_ = p3.x_ + alpha * cos_angle * (rx * sin_t1) + alpha * sin_angle * (ry * cos_t1);
+            p2.y_ = p3.y_ + alpha * sin_angle * (rx * sin_t1) - alpha * cos_angle * (ry * cos_t1);
 
             if (i == 0) {
                 *p++ = p0;
@@ -691,8 +676,8 @@ namespace Grain {
         t[0] = 0;
         double total = 0;
         for (int i = 1; i < point_count; ++i) {
-            double dx = points[i].m_x - points[i - 1].m_x;
-            double dy = points[i].m_y - points[i - 1].m_y;
+            double dx = points[i].x_ - points[i - 1].x_;
+            double dy = points[i].y_ - points[i - 1].y_;
             total += std::sqrt(dx * dx + dy * dy);
             t[i] = total;
         }
@@ -701,8 +686,8 @@ namespace Grain {
             t[i] /= total;
         }
 
-        m_pos[0] = points[0];
-        m_pos[3] = points[point_count - 1];
+        pos_[0] = points[0];
+        pos_[3] = points[point_count - 1];
 
         // Build matrix and RHS for least squares
         double _c[2][2] = {};  // Coefficient matrix
@@ -718,17 +703,17 @@ namespace Grain {
             // Vec2d A1 = { b1, 0 };
             // Vec2d A2 = { b2, 0 };
 
-            Vec2d tmp = points[i] - (m_pos[0] * b0 + m_pos[3] * b3);
+            Vec2d tmp = points[i] - (pos_[0] * b0 + pos_[3] * b3);
 
             _c[0][0] += b1 * b1;
             _c[0][1] += b1 * b2;
             _c[1][0] += b1 * b2;
             _c[1][1] += b2 * b2;
 
-            _x[0].m_x += b1 * tmp.m_x;
-            _x[0].m_y += b1 * tmp.m_y;
-            _x[1].m_x += b2 * tmp.m_x;
-            _x[1].m_y += b2 * tmp.m_y;
+            _x[0].x_ += b1 * tmp.x_;
+            _x[0].y_ += b1 * tmp.y_;
+            _x[1].x_ += b2 * tmp.x_;
+            _x[1].y_ += b2 * tmp.y_;
         }
 
         // Solve 2x2 system for control points
@@ -738,18 +723,18 @@ namespace Grain {
             double invDet = 1.0 / det;
 
             for (int d = 0; d < 2; ++d) {
-                double x0 = (_x[0].m_x * _c[1][1] - _x[1].m_x * _c[0][1]) * invDet;
-                double x1 = (_x[1].m_x * _c[0][0] - _x[0].m_x * _c[1][0]) * invDet;
-                double y0 = (_x[0].m_y * _c[1][1] - _x[1].m_y * _c[0][1]) * invDet;
-                double y1 = (_x[1].m_y * _c[0][0] - _x[0].m_y * _c[1][0]) * invDet;
-                m_pos[1].set(x0, y0);
-                m_pos[2].set(x1, y1);
+                double x0 = (_x[0].x_ * _c[1][1] - _x[1].x_ * _c[0][1]) * invDet;
+                double x1 = (_x[1].x_ * _c[0][0] - _x[0].x_ * _c[1][0]) * invDet;
+                double y0 = (_x[0].y_ * _c[1][1] - _x[1].y_ * _c[0][1]) * invDet;
+                double y1 = (_x[1].y_ * _c[0][0] - _x[0].y_ * _c[1][0]) * invDet;
+                pos_[1].set(x0, y0);
+                pos_[2].set(x1, y1);
             }
         }
         else {
             // Fallback to straight line control points
-            m_pos[1] = m_pos[0] + (m_pos[3] - m_pos[0]) * (1.0 / 3);
-            m_pos[2] = m_pos[0] + (m_pos[3] - m_pos[0]) * (2.0 / 3);
+            pos_[1] = pos_[0] + (pos_[3] - pos_[0]) * (1.0 / 3);
+            pos_[2] = pos_[0] + (pos_[3] - pos_[0]) * (2.0 / 3);
         }
 
         if (allocate_flag) {

@@ -37,11 +37,11 @@ namespace Grain {
     float Freq::freqToPos(float freq, float low_freq, float high_freq, float low_pos, float high_pos) noexcept {
 
         if (low_freq >= high_freq || low_freq <= 0.0) {
-            return -1.0;
+            return 0.0;
         }
         else {
             const float f_max = std::log(high_freq / low_freq) / static_cast<float>(std::numbers::ln2);
-            const float f = (std::log(freq / low_freq) / static_cast<float>(std::numbers::ln2)) / f_max;
+            float f = (std::log(freq / low_freq) / static_cast<float>(std::numbers::ln2)) / f_max;
             return low_pos + f * (high_pos - low_pos);
         }
     }
@@ -320,21 +320,19 @@ namespace Grain {
 
 
     void FreqBands::set(float left_freq, float center_freq, float right_freq) noexcept {
-
-        m_left_freq = left_freq;
-        m_center_freq = center_freq;
-        m_right_freq = right_freq;
+        left_freq_ = left_freq;
+        center_freq_ = center_freq;
+        right_freq_ = right_freq;
     }
 
 
     void FreqBands::setupBands(float bands_per_octave, float start_freq, float end_freq) noexcept {
+        bands_per_octave_ = std::clamp(bands_per_octave, 0.0f, 1000.0f);
+        band_start_freq_ = std::clamp(start_freq, 10.0f, 20000.0f);
+        band_end_freq_ = std::clamp(end_freq, 10.0f, 20000.0f);
 
-        m_bands_per_octave = std::clamp(bands_per_octave, 0.0f, 1000.0f);
-        m_band_start_freq = std::clamp(start_freq, 10.0f, 20000.0f);
-        m_band_end_freq = std::clamp(end_freq, 10.0f, 20000.0f);
-
-        if (m_band_start_freq > m_band_end_freq) {
-            std::swap(m_band_start_freq, m_band_end_freq);
+        if (band_start_freq_ > band_end_freq_) {
+            std::swap(band_start_freq_, band_end_freq_);
         }
 
         int32_t band_index = 0;
@@ -342,7 +340,7 @@ namespace Grain {
             float a = std::pow(2.0f, 1.0f / bands_per_octave);
             float c_freq = start_freq * std::pow(a, static_cast<float>(band_index));
             if (c_freq > end_freq) {
-                m_band_count = band_index + 1;
+                band_count_ = band_index + 1;
                 break;
             }
             band_index++;
@@ -352,12 +350,12 @@ namespace Grain {
 
     bool FreqBands::setBand(int32_t index) noexcept {
 
-        if (index >= 0 && index < m_band_count) {
-            float a = std::pow(2.0f, 1.0f / m_bands_per_octave);
+        if (index >= 0 && index < band_count_) {
+            float a = std::pow(2.0f, 1.0f / bands_per_octave_);
 
-            m_center_freq = m_band_start_freq * std::pow(a, static_cast<float>(index));
-            m_left_freq = m_center_freq / a;
-            m_right_freq = m_center_freq * a;
+            center_freq_ = band_start_freq_ * std::pow(a, static_cast<float>(index));
+            left_freq_ = center_freq_ / a;
+            right_freq_ = center_freq_ * a;
 
             return true;
         }
@@ -374,9 +372,9 @@ namespace Grain {
 
         float a = std::pow(2.0f, octave_range);
 
-        m_center_freq = center_freq;
-        m_left_freq = a != 0.0f ? center_freq / a : 0.0f;
-        m_right_freq = center_freq * a;
+        center_freq_ = center_freq;
+        left_freq_ = a != 0.0f ? center_freq / a : 0.0f;
+        right_freq_ = center_freq * a;
     }
 
 

@@ -41,14 +41,14 @@ namespace Grain {
 
     void _macosView_setNeedsDisplay(const Component* component) {
         const auto& rect = component->boundsRect();
-        NSRect ns_rect = NSMakeRect(rect.m_x, rect.m_y, rect.m_width, rect.m_height);
+        NSRect ns_rect = NSMakeRect(rect.x_, rect.y_, rect.width_, rect.height_);
         [(NSView*)component->nsView() setNeedsDisplayInRect:ns_rect];
         // [(NSView*)component->nsView() setNeedsDisplay:YES];
     }
 
     void _macosView_forcedDisplay(const Component* component) {
         const auto& rect = component->boundsRect();
-        NSRect ns_rect = NSMakeRect(rect.m_x, rect.m_y, rect.m_width, rect.m_height);
+        NSRect ns_rect = NSMakeRect(rect.x_, rect.y_, rect.width_, rect.height_);
         [(NSView*)component->nsView() setNeedsDisplayInRect:ns_rect];
         [(NSView*)component->nsView() displayIfNeeded];
     }
@@ -92,7 +92,7 @@ namespace Grain {
     }
 
     void _macosView_setFrame(Component* component, Rectd& rect) {
-        NSRect frame = NSMakeRect(rect.m_x, rect.m_y, rect.m_width, rect.m_height);
+        NSRect frame = NSMakeRect(rect.x_, rect.y_, rect.width_, rect.height_);
         [(NSView*)component->nsView() setFrame:frame];
     }
 
@@ -107,6 +107,23 @@ namespace Grain {
     void _macosView_setContextByComponent(AppleCGContext* gc, Component* component) {
         gc->setCGContextByComponent([[NSGraphicsContext currentContext] CGContext], component);
     }
+
+    void _macosView_updateCGContext(Component* component) noexcept {
+        if (!component) return;
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+            auto ns_view = static_cast<NSView*>(component->nsView());
+            if (!ns_view) return;
+
+            CGContextRef cgContext = [[NSGraphicsContext currentContext] CGContext];
+            if (!cgContext) return;
+
+            auto agc = dynamic_cast<AppleCGContext*>(component->graphicContextPtr());
+            if (agc) {
+                agc->setCGContext(cgContext);
+            }
+        });
+    }
 }
 
 
@@ -114,7 +131,7 @@ namespace Grain {
 
 - (id)initForUI:(Grain::Component*)component rect:(Grain::Rectd)rect {
     m_component = component;
-    self = [super initWithFrame: NSMakeRect(rect.m_x, rect.m_y, rect.m_width, rect.m_height)];
+    self = [super initWithFrame: NSMakeRect(rect.x_, rect.y_, rect.width_, rect.height_)];
     [self setClipsToBounds: TRUE];
 
     return self;

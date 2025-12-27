@@ -6,8 +6,6 @@
 //
 //  This file is part of GrainLib, see <https://grain.one>.
 //
-//  LastChecked: 25.07.2025
-//
 
 
 #ifndef GrainCIExyY_hpp
@@ -20,9 +18,8 @@
 
 namespace Grain {
 
-
-    class RGB;
-    class CIEXYZ;
+class RGB;
+class CIEXYZ;
 
 
 /**
@@ -36,65 +33,63 @@ namespace Grain {
  *  CIE xyY is used to describe color perception independently of luminance. It provides a compact
  *  representation for color analysis and allows color transformations between different color spaces.
  */
-    class CIExyY {
+class CIExyY {
 
-    public:
-        Vec2f m_pos{};
-        float m_y = 0.0f;
+public:
+    Vec2f m_pos{};
+    float y_ = 0.0f;
 
-    public:
-        CIExyY() noexcept {}
-        CIExyY(float x, float y, float Y) noexcept : m_pos(x, y), m_y(Y) {}
-        CIExyY(const RGB& rgb) noexcept;
-        CIExyY(const CIEXYZ &xyz) noexcept;
+public:
+    CIExyY() noexcept = default;
+    CIExyY(float x, float y, float Y) noexcept : m_pos(x, y), y_(Y) {}
+    explicit CIExyY(const RGB& rgb) noexcept;
+    explicit CIExyY(const CIEXYZ& xyz) noexcept;
 
-        ~CIExyY() noexcept {}
+    ~CIExyY() noexcept = default;
 
-        virtual const char *className() const noexcept { return "CIExyY"; }
+    [[nodiscard]] virtual const char *className() const noexcept { return "CIExyY"; }
 
-        friend std::ostream& operator << (std::ostream &os, const CIExyY *o) {
-            o == nullptr ? os << "CIExyY nullptr" : os << *o;
-            return os;
-        }
+    friend std::ostream& operator << (std::ostream& os, const CIExyY *o) {
+        o == nullptr ? os << "CIExyY nullptr" : os << *o;
+        return os;
+    }
 
-        friend std::ostream& operator << (std::ostream &os, const CIExyY &o) {
-            os << o.m_pos << ", " << o.m_y;
-            return os;
-        }
+    friend std::ostream& operator << (std::ostream& os, const CIExyY& o) {
+        os << o.m_pos << ", " << o.y_;
+        return os;
+    }
 
+    bool operator == (const CIExyY& v) const {
+        return m_pos.x_ == v.m_pos.x_ && m_pos.y_ == v.m_pos.y_ && y_ == v.y_;
+    }
 
-        bool operator == (const CIExyY &v) const {
-            return m_pos.m_x == v.m_pos.m_x && m_pos.m_y == v.m_pos.m_y && m_y == v.m_y;
-        }
+    bool operator != (const CIExyY& v) const {
+        return m_pos.x_ != v.m_pos.x_ || m_pos.y_ != v.m_pos.y_ || y_ == v.y_;
+    }
 
-        bool operator != (const CIExyY &v) const {
-            return m_pos.m_x != v.m_pos.m_x || m_pos.m_y != v.m_pos.m_y || m_y == v.m_y;
-        }
+    [[nodiscard]] Vec2f pos() const noexcept { return m_pos; }
+    [[nodiscard]] float yValue() const noexcept { return y_; }
 
+    void setPos(Vec2f& pos) noexcept { m_pos = pos; }
+    void setY(float y) noexcept { y_ = y; }
 
-        Vec2f pos() const noexcept { return m_pos; }
-        float yValue() const noexcept { return m_y; }
+    void set(float x, float y, float Y) noexcept { m_pos.x_ = x; m_pos.y_ = y; y_ = Y; }
+    void set(const RGB& rgb) noexcept;
+    void set(const CIEXYZ& xyz) noexcept;
 
-        void setPos(Vec2f &pos) noexcept { m_pos = pos; }
-        void setY(float y) noexcept { m_y = y; }
+    void translate(float tx, float ty) noexcept { m_pos.x_ += tx; m_pos.y_ += ty; }
+    void rotate(const Vec2f& pivot, float deg) noexcept;
 
-        void set(float x, float y, float Y) noexcept { m_pos.m_x = x; m_pos.m_y = y; m_y = Y; }
-        void set(const RGB& rgb) noexcept;
-        void set(const CIEXYZ &xyz) noexcept;
-
-        void translate(float tx, float ty) noexcept { m_pos.m_x += tx; m_pos.m_y += ty; }
-        void rotate(const Vec2f &pivot, float deg) noexcept;
-
-        CIExyY blend(const CIExyY &xyz, float t) noexcept {
-            if (t < 0.0f) t = 0.0f; else if (t > 1.0f) t = 1.0f;
-            float ti = 1.0f - t;
-            CIExyY result;
-            result.m_pos.m_x = m_pos.m_x * ti + xyz.m_pos.m_x * t;
-            result.m_pos.m_y = m_pos.m_y * ti + xyz.m_pos.m_y * t;
-            result.m_y = m_y * ti + xyz.m_y * t;
-            return result;
-        }
-    };
+    CIExyY blend(const CIExyY& xyz, float t) const noexcept {
+        if (t < 0.0f) t = 0.0f; else if (t > 1.0f) t = 1.0f;
+        float ti = 1.0f - t;
+        CIExyY result;
+        result.m_pos.x_ = m_pos.x_ * ti + xyz.m_pos.x_ * t;
+        result.m_pos.y_ = m_pos.y_ * ti + xyz.m_pos.y_ * t;
+        result.y_ = y_ * ti + xyz.y_ * t;
+        return result;
+    }
+};
 
 
 } // End of namespace Grain

@@ -99,8 +99,8 @@ namespace Grain {
                     if (m_shape->m_point_count < 0) {
                         Exception::throwSpecific(kErrNothingToRead);
                     }
-                    m_shape->m_points.reserve(m_shape->m_point_count);
-                    if (m_shape->m_points.capacity() != m_shape->m_point_count) {
+                    m_shape->points_.reserve(m_shape->m_point_count);
+                    if (m_shape->points_.capacity() != m_shape->m_point_count) {
                         throw ErrorCode::MemCantAllocate;
                     }
                     break;
@@ -143,7 +143,7 @@ namespace Grain {
                                 Exception::throwSpecific(kErrWantsToReadMoreThanExpected);
                             }
                             point.readFromFile(*this);
-                            m_shape->m_points.push_back(point);
+                            m_shape->points_.push_back(point);
                             m_shape->addPointToRange(point);
                             break;
                     }
@@ -273,7 +273,7 @@ namespace Grain {
                             Exception::throwSpecific(kErrWrongShapeType);
                         }
 
-                        poly.m_bbox.readFromFile(*this);
+                        poly.bbox_.readFromFile(*this);
 
                         poly.m_part_count = this->readValue<int32_t>();
                         poly.m_point_count = this->readValue<int32_t>();
@@ -289,7 +289,7 @@ namespace Grain {
                         for (int32_t i = 0; i < poly.m_point_count; i++) {
                             Vec2d point;
                             point.readFromFile(*this);
-                            m_shape->m_points.push_back(point);
+                            m_shape->points_.push_back(point);
                             m_shape->addPointToRange(point);
                             point_index++;
                         }
@@ -410,7 +410,7 @@ namespace Grain {
             }
 
             // Check if projection file exists
-            String prj_file_path = m_file_path;
+            String prj_file_path = file_path_;
             prj_file_path.replace(".shp", ".prj");
             if (!File::fileExists(prj_file_path)) {
                 Exception::throwStandard(ErrorCode::FileNotFound);

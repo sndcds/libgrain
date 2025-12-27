@@ -19,29 +19,29 @@
 namespace Grain {
 
     Checkbox::Checkbox(const Rectd& rect, const char* text, int32_t tag) noexcept : Button(rect, text, tag) {
-        m_type = ComponentType::CheckBox;
-        m_is_toggle_mode = true;
+        type_ = ComponentType::CheckBox;
+        is_toggle_mode_ = true;
         m_check_size = 12;
-        m_radio_group = 0;
-        m_radio_value = 0;
-        m_draws_as_button = false;
+        radio_group_ = 0;
+        radio_value_ = 0;
+        draws_as_button_ = false;
 
         setText(text);
     }
 
 
     int32_t Checkbox::selectedRadioValue() const noexcept {
-        Component* parent_component = m_parent;
+        Component* parent_component = parent_;
 
-        if (m_parent && parent_component->componentType() != ComponentType::View) {
-            View* parent_view = (View*)m_parent;
+        if (parent_ && parent_component->componentType() != ComponentType::View) {
+            View* parent_view = (View*)parent_;
 
             for (auto component : parent_view->components()) {
 
                 if (component->componentType() == ComponentType::CheckBox) {
                     Checkbox* check_box = (Checkbox*)component;
 
-                    if (check_box->radioGroup() == m_radio_group && check_box->isSelected()) {
+                    if (check_box->radioGroup() == radio_group_ && check_box->isSelected()) {
                         return check_box->radioValue();
                     }
                 }
@@ -106,15 +106,15 @@ namespace Grain {
 
         if (hasText()) {
             Rectd text_rect = bounds_rect;
-            text_rect.m_x += check_size + style->labelGap();
-            text_rect.m_width -= check_size + style->labelGap();
-            gc->drawTextInRect(m_text->utf8(), text_rect, Alignment::Left, style->font(), style->labelColor());
+            text_rect.x_ += check_size + style->labelGap();
+            text_rect.width_ -= check_size + style->labelGap();
+            gc->drawTextInRect(text_->utf8(), text_rect, Alignment::Left, style->font(), style->labelColor());
         }
 
-        Rectd check_rect(0, (bounds_rect.m_height - check_size) / 2, check_size, check_size);
+        Rectd check_rect(0, (bounds_rect.height_ - check_size) / 2, check_size, check_size);
 
         if (radio_group != 0) {
-            radius = check_rect.m_width / 2;
+            radius = check_rect.width_ / 2;
         }
 
         gc->setFillRGBA(background_color);

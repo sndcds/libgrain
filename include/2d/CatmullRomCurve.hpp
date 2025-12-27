@@ -6,8 +6,6 @@
 //
 //  This file is part of GrainLib, see <https://grain.one>.
 //
-//  LastChecked: 25.07.2025
-//
 
 #ifndef GrainCatmullRomCurve_hpp
 #define GrainCatmullRomCurve_hpp
@@ -19,62 +17,70 @@
 
 namespace Grain {
 
-    /**
-     *  @brief Centripetal Catmull–Rom spline curve.
-     */
-    class CatmullRomCurve {
-    public:
-    protected:
-        List<Vec2d> m_points;
-        float m_alpha = 0.5f;
-        double m_point_distance_threshold = 0.01;
-        int32_t m_default_res = 1000;
+/**
+ *  @brief Centripetal Catmull–Rom spline curve.
+ */
+class CatmullRomCurve {
 
-    public:
-        CatmullRomCurve() noexcept;
-        CatmullRomCurve(int32_t point_capacity) noexcept;
-        ~CatmullRomCurve() noexcept;
+protected:
+    List<Vec2d> points_;
+    float alpha_ = 0.5f;
+    double point_distance_threshold_ = 0.01;
+    int32_t default_resolution_ = 1000;
 
-        friend std::ostream& operator << (std::ostream &os, const CatmullRomCurve &o) {
-            os << "CatmullRomCurve:\n";
-            os << "  points: " << o.m_points.size() << '\n';
-            os << "  segments: " << o.segmentCount() << '\n';
-            os << "  alpha: " << o.m_alpha << '\n';
-            os << "  point distance threshold: " << o.m_point_distance_threshold << '\n';
-            return os;
-        }
+public:
+    CatmullRomCurve() noexcept;
+    explicit CatmullRomCurve(int32_t point_capacity) noexcept;
+    ~CatmullRomCurve() noexcept;
 
-        ErrorCode addPoint(const Vec2d &point) noexcept;
-        ErrorCode extend() noexcept;
+    [[nodiscard]] static const char *className() noexcept {
+        return "CatmullRomCurve";
+    }
 
-        void reset() noexcept {
-            m_points.clear();
-        }
+    friend std::ostream& operator << (std::ostream& os, const CatmullRomCurve* o) {
+        o == nullptr ? os << "CatmullRomCurve nullptr" : os << *o;
+        return os;
+    }
 
-        bool setPointCapacity(int32_t capacity) noexcept { return m_points.reserve(capacity); }
+    friend std::ostream& operator << (std::ostream &os, const CatmullRomCurve &o) {
+        os << "points: " << o.points_.size();
+        os << ", segments: " << o.segmentCount();
+        os << ", alpha: " << o.alpha_;
+        os << ", point distance threshold: " << o.point_distance_threshold_;
+        return os;
+    }
+
+    ErrorCode addPoint(const Vec2d &point) noexcept;
+    ErrorCode extend() noexcept;
+
+    void reset() noexcept {
+        points_.clear();
+    }
+
+    bool setPointCapacity(int32_t capacity) noexcept { return points_.reserve(capacity); }
 
 
-        Vec2d pointAtIndex(int32_t index) noexcept;
+    Vec2d pointAtIndex(int32_t index) noexcept;
 
-        [[nodiscard]] int32_t lastPointIndex() const noexcept { return static_cast<int32_t>(m_points.lastIndex()); }
-        [[nodiscard]] int32_t pointCount() const noexcept { return static_cast<int32_t>(m_points.size()); }
-        [[nodiscard]] int32_t segmentCount() const noexcept { return pointCount() - 3; }
-        [[nodiscard]] int32_t lastSegmentIndex() const noexcept { return pointCount() - 4; }
+    [[nodiscard]] int32_t lastPointIndex() const noexcept { return static_cast<int32_t>(points_.lastIndex()); }
+    [[nodiscard]] int32_t pointCount() const noexcept { return static_cast<int32_t>(points_.size()); }
+    [[nodiscard]] int32_t segmentCount() const noexcept { return pointCount() - 3; }
+    [[nodiscard]] int32_t lastSegmentIndex() const noexcept { return pointCount() - 4; }
 
-        [[nodiscard]] float alpha() const noexcept { return m_alpha; }
-        void setAlpha(float alpha) noexcept { m_alpha = alpha; }
+    [[nodiscard]] float alpha() const noexcept { return alpha_; }
+    void setAlpha(float alpha) noexcept { alpha_ = alpha; }
 
-        [[nodiscard]] int32_t defaultResolution() const noexcept { return m_default_res; }
-        void setDefaultResolution(int32_t resolution) noexcept { m_default_res = resolution; }
+    [[nodiscard]] int32_t defaultResolution() const noexcept { return default_resolution_; }
+    void setDefaultResolution(int32_t resolution) noexcept { default_resolution_ = resolution; }
 
-        double rawLength() const noexcept;
+    [[nodiscard]] double rawLength() const noexcept;
 
-        void pointOnCurve(double t, Vec2d &out_point) const noexcept;
+    void pointOnCurve(double t, Vec2d &out_point) const noexcept;
 
-        double _getT(double t, float alpha, const Vec2d &p0, const Vec2d &p1) const noexcept;
-        void _getPoint(const Vec2d &p0, const Vec2d &p1, const Vec2d &p2, const Vec2d &p3, double t, float alpha, Vec2d &out_point) const noexcept;
-        void _getPoint(int32_t segment_index, double t, float alpha, Vec2d &out_point) const noexcept;
-    };
+    [[nodiscard]] double _getT(double t, float alpha, const Vec2d &p0, const Vec2d &p1) const noexcept;
+    void _getPoint(const Vec2d &p0, const Vec2d &p1, const Vec2d &p2, const Vec2d &p3, double t, float alpha, Vec2d &out_point) const noexcept;
+    void _getPoint(int32_t segment_index, double t, float alpha, Vec2d &out_point) const noexcept;
+};
 
 
 } // End of namespace Grain

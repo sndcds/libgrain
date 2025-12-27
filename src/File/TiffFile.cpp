@@ -118,7 +118,7 @@ namespace Grain {
 
             String random_name;
             random_name.randomName(8);
-            m_temp_data_file_path = m_file_path.fileDirPath() + "/_" + random_name + ".dat";
+            m_temp_data_file_path = file_path_.fileDirPath() + "/_" + random_name + ".dat";
             m_temp_data_file = new (std::nothrow) File(m_temp_data_file_path);
             if (!m_temp_data_file) {
                 throw ErrorCode::ClassInstantiationFailed;
@@ -127,7 +127,7 @@ namespace Grain {
             m_temp_data_file->setBigEndian(isBigEndian()); // Use same endianess!
 
 
-            m_temp_geo_data_file_path = m_file_path.fileDirPath() + "/_" + random_name + "_geo.dat";
+            m_temp_geo_data_file_path = file_path_.fileDirPath() + "/_" + random_name + "_geo.dat";
             m_temp_geo_data_file = new (std::nothrow) File(m_temp_geo_data_file_path);
             if (!m_temp_geo_data_file) {
                 throw ErrorCode::ClassInstantiationFailed;
@@ -136,7 +136,7 @@ namespace Grain {
             m_temp_geo_data_file->setBigEndian(isBigEndian()); // Use same endianess!
 
             // Write header
-            if (m_big_endian) {
+            if (big_endian_) {
                 char buffer[4] = { 'M', 'M', 0, 42 };
                 writeChars(buffer, 4);
             }
@@ -306,23 +306,23 @@ namespace Grain {
         auto e = &entry_preparation.m_entry;
         writeValue<uint16_t>(static_cast<uint16_t>(e->m_tag));
         writeValue<uint16_t>(static_cast<uint16_t>(e->m_type));
-        writeValue<uint32_t>(e->m_count);
+        writeValue<uint32_t>(e->count_);
 
         if (entry_preparation.m_temp_file_pos < 0) {
             switch (bytesForType(e->m_type)) {
                 case 1:
-                    writeValue<uint32_t>(e->m_offset << 24);
+                    writeValue<uint32_t>(e->offs_ << 24);
                     break;
                 case 2:
-                    writeValue<uint32_t>(e->m_offset << 16);
+                    writeValue<uint32_t>(e->offs_ << 16);
                     break;
                 case 4:
-                    writeValue<uint32_t>(e->m_offset);
+                    writeValue<uint32_t>(e->offs_);
                     break;
             }
         }
         else {
-            writeValue<uint32_t>(e->m_offset);
+            writeValue<uint32_t>(e->offs_);
         }
     }
 
@@ -330,8 +330,8 @@ namespace Grain {
     void TiffFile::writeGeoEntry(GeoTiffEntry& entry) {
         writeValue<uint16_t>(static_cast<uint16_t>(entry.m_key));
         writeValue<uint16_t>(static_cast<uint16_t>(entry.m_location));
-        writeValue<uint16_t>(entry.m_count);
-        writeValue<uint16_t>(entry.m_offset);
+        writeValue<uint16_t>(entry.count_);
+        writeValue<uint16_t>(entry.offs_);
 
         // TODO: Implement offset
     }
@@ -341,17 +341,17 @@ namespace Grain {
         TiffEntryPreparation ep;
         ep.m_entry.m_tag = tag;
         ep.m_entry.m_type = type;
-        ep.m_entry.m_count = count;
+        ep.m_entry.count_ = count;
         ep.m_temp_file_pos = temp_file_pos;
 
         int64_t data_size = bytesForType(type) * count;
 
         if (data_size <= 4) {
-            ep.m_entry.m_offset = value;
+            ep.m_entry.offs_ = value;
             ep.m_data_size = 0;
         }
         else {
-            ep.m_entry.m_offset = 0;  // Not set.
+            ep.m_entry.offs_ = 0; // Not set
             ep.m_data_size = data_size;
         }
 
@@ -363,18 +363,18 @@ namespace Grain {
         GeoTiffEntryPreparation gep;
         gep.m_entry.m_key = key;
         gep.m_entry.m_location = location;
-        gep.m_entry.m_count = count;
+        gep.m_entry.count_ = count;
         gep.m_temp_file_pos = temp_file_pos;
 
         int64_t data_size = geoKeyBytes(key) * count;
 
         if (location == 0) {
-            gep.m_entry.m_offset = offset;
+            gep.m_entry.offs_ = offset;
             gep.m_pos_in_file = -1; // Not used
             gep.m_data_size = 0;
         }
         else {
-            gep.m_entry.m_offset = 0;  // Not set
+            gep.m_entry.offs_ = 0; // Not set
             gep.m_pos_in_file = 0; // Not set
             gep.m_data_size = data_size;
             m_data_size += data_size;
@@ -406,7 +406,7 @@ namespace Grain {
         for (auto& ep : m_entry_preparations) {
             ep.m_pos_in_file = pos();
             if (ep.m_temp_file_pos >= 0) {
-                ep.m_entry.m_offset = static_cast<uint32_t>(ep.m_temp_file_pos + data_offset);
+                ep.m_entry.offs_ = static_cast<uint32_t>(ep.m_temp_file_pos + data_offset);
             }
 
             writeEntry(ep);

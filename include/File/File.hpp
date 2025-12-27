@@ -6,8 +6,6 @@
 //
 //  This file is part of GrainLib, see <https://grain.one>.
 //
-//  LastChecked: 28.08.2025
-//
 
 #ifndef GrainFile_hpp
 #define GrainFile_hpp
@@ -45,12 +43,12 @@ namespace Grain {
      *  @brief Represents a file or directory entry with metadata.
      */
     struct FileEntry : public Object {
-        String m_path;              ///< Absolute full path to the file or directory
-        String m_name;              ///< Name of the file or directory
-        uint64_t m_file_size;       ///< Size of the file in bytes (0 for directories)
-        bool m_dir_flag;            ///< True if the entry is a directory
-        bool m_reg_file_flag;       ///< True if the entry is a regular file
-        bool m_sym_link_flag;       ///< True if the entry is a symbolic link
+        String path_;           ///< Absolute full path to the file or directory
+        String name_;           ///< Name of the file or directory
+        uint64_t file_size_;    ///< Size of the file in bytes (0 for directories)
+        bool dir_flag_;         ///< True if the entry is a directory
+        bool reg_file_flag_;    ///< True if the entry is a regular file
+        bool sym_link_flag_;    ///< True if the entry is a symbolic link
     };
 
     std::ostream& operator << (std::ostream& os, const FileEntry* o);
@@ -159,13 +157,13 @@ namespace Grain {
 
         int64_t _updateFileSize() noexcept;
 
-        [[nodiscard]] int32_t currLineIndex() const noexcept { return m_curr_line_index; }
+        [[nodiscard]] int32_t currLineIndex() const noexcept { return curr_line_index_; }
 
-        [[nodiscard]] bool isBigEndian() const noexcept { return m_big_endian; }
-        [[nodiscard]] bool isLittleEndian() const noexcept { return !m_big_endian; }
+        [[nodiscard]] bool isBigEndian() const noexcept { return big_endian_; }
+        [[nodiscard]] bool isLittleEndian() const noexcept { return !big_endian_; }
 
-        void setLittleEndian() noexcept { m_big_endian = false; }
-        void setBigEndian(bool bigEndian = true) noexcept { m_big_endian = bigEndian; }
+        void setLittleEndian() noexcept { big_endian_ = false; }
+        void setBigEndian(bool bigEndian = true) noexcept { big_endian_ = bigEndian; }
 
         /**
          * @brief Determines if a given 2-character signature indicates big-endian byte order.
@@ -193,10 +191,10 @@ namespace Grain {
                 Exception::throwStandard(ErrorCode::NullData);
             }
             if (buffer[0] == 'I' && buffer[1] == 'I') {
-                m_big_endian = false;
+                big_endian_ = false;
             }
             else if (buffer[0] == 'M' && buffer[1] == 'M') {
-                m_big_endian = true;
+                big_endian_ = true;
             }
             else {
                 Exception::throwStandard(ErrorCode::UnsupportedEndianess);
@@ -210,12 +208,12 @@ namespace Grain {
         }
 
         [[nodiscard]] bool canRead() const noexcept {
-            return m_read_flag && m_file_stream && m_file_size > 0;
+            return read_flag_ && file_stream_ && file_size_ > 0;
         }
 
         [[nodiscard]] bool canWrite() const noexcept {
-            if (m_write_flag && m_file_stream) {
-                return !m_file_exists || m_can_overwrite;
+            if (write_flag_ && file_stream_) {
+                return !file_exists_ || can_overwrite_;
             }
             else {
                 return false;
@@ -240,35 +238,35 @@ namespace Grain {
         void checkBeforeReading() const;
         void checkBeforeWriting() const;
 
-        [[nodiscard]] String filePath() { return m_file_path; }
-        [[nodiscard]] String dirPath() { return m_file_path.fileDirPath(); }
-        [[nodiscard]] int64_t size() const { return m_file_size; }
-        [[nodiscard]] bool isPosAtEnd() { return pos() >= m_file_size; }
-        [[nodiscard]] int64_t bytesLeft() { return m_file_size - pos() - 1; }
+        [[nodiscard]] String filePath() { return file_path_; }
+        [[nodiscard]] String dirPath() { return file_path_.fileDirPath(); }
+        [[nodiscard]] int64_t size() const { return file_size_; }
+        [[nodiscard]] bool isPosAtEnd() { return pos() >= file_size_; }
+        [[nodiscard]] int64_t bytesLeft() { return file_size_ - pos() - 1; }
 
-        void flush() { m_file_stream.flush(); }
+        void flush() { file_stream_.flush(); }
 
         virtual void close();
 
         void savePos() {
-            _m_pos_stack.push(pos());
+            pos_stack_.push(pos());
         }
 
         void restorePos() {
             int64_t pos;
-            if (_m_pos_stack.pop(&pos)) {
+            if (pos_stack_.pop(&pos)) {
                 setPos(pos);
             }
         }
 
-        std::fstream* stream() { return &m_file_stream; }
+        std::fstream* stream() { return &file_stream_; }
 
         [[nodiscard]] int64_t pos();
 
         void rewind() {
-            m_file_stream.clear();
+            file_stream_.clear();
             setPos(0);
-            m_curr_line_index = -1;
+            curr_line_index_ = -1;
         }
 
         void setPos(int64_t pos);
@@ -284,11 +282,11 @@ namespace Grain {
         [[nodiscard]] bool lastUtf8SymbolIsWhiteSpace() noexcept;
         [[nodiscard]] bool compareLastUtf8Symbol(const char* symbol) noexcept;
 
-        int32_t indent() const noexcept { return m_indent; }
+        int32_t indent() const noexcept { return indent_; }
         void setIndent(int32_t value) noexcept {
-            m_indent += value;
-            if (m_indent < 0)
-                m_indent = 0;
+            indent_ += value;
+            if (indent_ < 0)
+                indent_ = 0;
         }
         void moveIndentRight() noexcept { setIndent(1); }
         void moveIndentLeft() noexcept { setIndent(-1); }
@@ -350,8 +348,8 @@ namespace Grain {
         void _writeDataType(const uint8_t* data, int64_t size);
 
         void writeChar(char c) {
-            m_file_stream.write(&c, 1);
-            if (m_file_stream.fail()) {
+            file_stream_.write(&c, 1);
+            if (file_stream_.fail()) {
                 Exception::throwStandard(ErrorCode::FileCantWrite);
             }
         }
@@ -602,34 +600,34 @@ namespace Grain {
 #endif
 
     protected:
-        String m_file_path;                 ///< File path as a string
-        std::fstream m_file_stream;         ///< File stream for reading/writing
-        int64_t m_file_size = 0;            ///< File size in bytes
+        String file_path_;              ///< File path as a string
+        std::fstream file_stream_;      ///< File stream for reading/writing
+        int64_t file_size_ = 0;         ///< File size in bytes
 
-        bool m_big_endian = false;          ///< Indicates if the file uses big-endian format
-        bool m_read_flag = false;           ///< True if the file is opened for reading
-        bool m_write_flag = false;          ///< True if the file is opened for writing
-        bool m_append_flag = false;         ///< True if the file is opened in append mode
-        bool m_binary_flag = false;         ///< True if the file is opened in binary mode
-        bool m_file_exists = false;         ///< True if the file exists
-        bool m_can_overwrite = false;       ///< True if overwriting is allowed
+        bool big_endian_ = false;       ///< Indicates if the file uses big-endian format
+        bool read_flag_ = false;        ///< True if the file is opened for reading
+        bool write_flag_ = false;       ///< True if the file is opened for writing
+        bool append_flag_ = false;      ///< True if the file is opened in append mode
+        bool binary_flag_ = false;      ///< True if the file is opened in binary mode
+        bool file_exists_ = false;      ///< True if the file exists
+        bool can_overwrite_ = false;    ///< True if overwriting is allowed
 
-        ErrorCode m_last_err_code = ErrorCode::None;    ///< Last encountered error code
-        String m_last_err_message;          ///< Last encountered error message
+        ErrorCode last_err_code_ = ErrorCode::None;    ///< Last encountered error code
+        String last_err_message_;       ///< Last encountered error message
 
-        int32_t m_indent = 0;               ///< Indentation level for formatted output
+        int32_t indent_ = 0;            ///< Indentation level for formatted output
 
-        int32_t _m_utf8_seq_length = 0;     ///< Length of the current UTF-8 sequence
-        char _m_utf8_buffer[5]{};           ///< Buffer for UTF-8 character processing
+        int32_t utf8_seq_len_ = 0;      ///< Length of the current UTF-8 sequence
+        char utf8_buffer_[5]{};         ///< Buffer for UTF-8 character processing
 
-        Base64Data _m_base64_encoder;       ///< Base64 encoder instance
-        bool _m_base64_encode_flag = false; ///< True if Base64 encoding is enabled
+        Base64Data base64_encoder_;     ///< Base64 encoder instance
+        bool base64_encode_flag_ = false; ///< True if Base64 encoding is enabled
 
-        char _m_write_buffer[kWriteBufferSize]{}; ///< Buffer for writing formatted strings
+        char write_buffer_[kWriteBufferSize]{}; ///< Buffer for writing formatted strings
 
-        List<int64_t> _m_pos_stack;         ///< Stack for storing file positions
-        int32_t m_pos_stack_index = -1;     ///< Index of the current position in the stack
-        int32_t m_curr_line_index = -1;
+        List<int64_t> pos_stack_;       ///< Stack for storing file positions
+        int32_t pos_stack_index_ = -1;  ///< Index of the current position in the stack
+        int32_t curr_line_index_ = -1;
     };
 
 

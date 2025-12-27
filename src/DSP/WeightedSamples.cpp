@@ -15,9 +15,7 @@
 
 namespace Grain {
 
-
     WeightedSamples::WeightedSamples(int32_t resolution) noexcept {
-
         resolution = std::clamp<int32_t>(resolution, MIN_RESOLUTION, MAX_RESOLUTION);
 
         m_resolution = 0;
@@ -35,7 +33,6 @@ namespace Grain {
 
 
     WeightedSamples::WeightedSamples(int32_t resolution, float *mem) noexcept {
-
         m_resolution = resolution;
         m_max_resolution = resolution;
         m_samples = mem;
@@ -45,7 +42,6 @@ namespace Grain {
 
 
     WeightedSamples::~WeightedSamples() noexcept {
-
         if (!m_use_extern_mem) {
             std::free(m_samples);
         }
@@ -53,7 +49,6 @@ namespace Grain {
 
 
     ErrorCode WeightedSamples::setResolution(int32_t resolution) noexcept {
-
         if (resolution == m_resolution) {
             // Nothing changed, simply return
             return ErrorCode::None;
@@ -77,7 +72,7 @@ namespace Grain {
         // Memory must grow
         auto err = ErrorCode::None;
 
-        float *new_samples = nullptr;
+        float* new_samples = nullptr;
         size_t new_size = sizeof(float) * 2 * resolution;
 
         if (!m_samples) {
@@ -102,13 +97,11 @@ namespace Grain {
 
 
     void WeightedSamples::clear() noexcept {
-
         Type::clearArray<float>(m_samples, m_resolution * 2);
     }
 
 
     void WeightedSamples::setSample(int32_t index, float value) noexcept {
-
         if (m_samples && index >= 0 && index < m_resolution) {
             m_samples[index] = value;
         }
@@ -116,13 +109,11 @@ namespace Grain {
 
 
     float WeightedSamples::sampleAtIndex(int32_t index) const noexcept {
-
         return m_samples && index >= 0 && index < m_resolution ? m_samples[index] : 0;
     }
 
 
     void WeightedSamples::setWeight(int32_t index, float weight) noexcept {
-
         if (m_weights && index >= 0 && index < m_resolution) {
             m_weights[index] = weight;
         }
@@ -130,7 +121,6 @@ namespace Grain {
 
 
     void WeightedSamples::addSample(float value, int32_t index, int32_t resolution) noexcept {
-
         if (m_weights && m_samples && index >= 0 && index < resolution && resolution > 0) {
 
             float t = static_cast<float>(index) / resolution;
@@ -155,7 +145,6 @@ namespace Grain {
 
 
     void WeightedSamples::addWeightedSample(int32_t index, float value, float weight) noexcept {
-
         if (m_samples && m_weights && index >= 0 && index < m_resolution) {
             m_samples[index] += value;
             m_weights[index] += weight;
@@ -169,7 +158,6 @@ namespace Grain {
 
 
     void WeightedSamples::minMaxY(float *out_min_y, float *out_max_y) const noexcept {
-
         float min = std::numeric_limits<float>::max();
         float max = std::numeric_limits<float>::lowest();
 
@@ -193,7 +181,6 @@ namespace Grain {
 
 
     float WeightedSamples::lookup(float t) const noexcept {
-
         float pos = t * m_resolution;
         int32_t index0 = std::floor(pos);
         int32_t index1 = index0 + 1;
@@ -218,29 +205,27 @@ namespace Grain {
         return 0;
     }
 
-    void WeightedSamples::addBezier(const Bezier &bezier, int32_t bezier_resolution) noexcept {
-
+    void WeightedSamples::addBezier(const Bezier& bezier, int32_t bezier_resolution) noexcept {
         if (!m_samples && bezier_resolution < 1) {
             return;
         }
 
         for (int32_t i = 0; i <= bezier_resolution; i++) {
-
             Vec2d sample = bezier.posOnCurve(static_cast<float>(i) / bezier_resolution);
 
-            float t = sample.m_x * m_resolution;
+            float t = sample.x_ * m_resolution;
             int32_t index1 = std::floor(t);
             int32_t index2 = index1 + 1;
             float f2 = t - index1;
             float f1 = 1.0f - f2;
 
             if (index1 >= 0 && index1 < m_resolution) {
-                m_samples[index1] += f1 * sample.m_y;
+                m_samples[index1] += f1 * sample.y_;
                 m_weights[index1] += f1;
             }
 
             if (index2 >= 0 && index2 < m_resolution) {
-                m_samples[index2] += f2 * sample.m_y;
+                m_samples[index2] += f2 * sample.y_;
                 m_weights[index2] += f2;
             }
         }
@@ -248,7 +233,6 @@ namespace Grain {
 
 
     void WeightedSamples::finish() noexcept {
-
         if (!m_samples) {
             return;
         }
@@ -263,7 +247,6 @@ namespace Grain {
         int32_t prev_index = -1;
 
         for (int32_t i = 0; i < m_resolution; i++) {
-
             if (m_samples[i] == std::numeric_limits<float>::max()) {    // Missing value.
                 if (n == 0) {
                     prev_index = i - 1;

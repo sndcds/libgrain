@@ -12,7 +12,7 @@
 #ifndef SignalLowPassFilter_hpp
 #define SignalLowPassFilter_hpp
 
-#include "SignalFilter.hpp"
+#include "Signal/SignalFilter.hpp"
 
 
 namespace Grain {

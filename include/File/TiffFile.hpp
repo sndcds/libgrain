@@ -158,15 +158,15 @@ namespace Grain {
     struct TiffEntry {
         TiffTag m_tag;
         TiffType m_type;
-        uint32_t m_count;
-        uint32_t m_offset;
+        uint32_t count_;
+        uint32_t offs_;
     };
 
     struct GeoTiffEntry {
         GeoTiffKey m_key;
         uint16_t m_location;
-        uint16_t m_count;
-        uint16_t m_offset;
+        uint16_t count_;
+        uint16_t offs_;
     };
 
     struct TiffEntryPreparation {

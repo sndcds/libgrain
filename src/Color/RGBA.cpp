@@ -47,7 +47,7 @@ namespace Grain {
             m_data[0] = comp[0];
             m_data[1] = comp[1];
             m_data[2] = comp[2];
-            m_alpha = comp[3];
+            alpha_ = comp[3];
         }
     }
 
@@ -57,7 +57,7 @@ namespace Grain {
             m_data[0] = comp[0] * scale;
             m_data[1] = comp[1] * scale;
             m_data[2] = comp[2] * scale;
-            m_alpha = comp[3] * scale;
+            alpha_ = comp[3] * scale;
         }
     }
 
@@ -77,7 +77,7 @@ namespace Grain {
      *             (e.g., "0.1,0.2,0.3,0.4", "128,64,255,128,255", or just "0.5").
      *  @return The number of values parsed from the string.
      *
-     *  @note If @p csv is nullptr, the color is set to black.
+     *  @note If `csv` is nullptr, the color is set to black.
      */
     int32_t RGBA::setByCSV(const char* csv) noexcept {
 
@@ -95,40 +95,40 @@ namespace Grain {
         if (n == 1) {
             // Grey
             m_data[0] = m_data[1] = m_data[2] = values[0];
-            m_alpha = 1.0f;
+            alpha_ = 1.0f;
         }
         else if (n == 2) {
             // Grey with alpha
             m_data[0] = m_data[1] = m_data[2] = values[0];
-            m_alpha = values[1];
+            alpha_ = values[1];
         }
         else if (n == 3) {
             // RGB
             m_data[0] = values[0];
             m_data[1] = values[1];
             m_data[2] = values[2];
-            m_alpha = 1.0f;
+            alpha_ = 1.0f;
         }
         else if (n == 4) {
             // RGBA
             m_data[0] = values[0];
             m_data[1] = values[1];
             m_data[2] = values[2];
-            m_alpha = values[3];
+            alpha_ = values[3];
         }
         else if (n == 5) {
             // RGBA, scaled
             m_data[0] = values[0];
             m_data[1] = values[1];
             m_data[2] = values[2];
-            m_alpha = values[3];
+            alpha_ = values[3];
             float max = values[4];
             if (max > std::numeric_limits<float>::epsilon()) {
                 float scale = 1.0f / max;
                 m_data[0] *= scale;
                 m_data[1] *= scale;
                 m_data[2] *= scale;
-                m_alpha *= scale;
+                alpha_ *= scale;
             }
         }
 
@@ -151,7 +151,7 @@ namespace Grain {
             (static_cast<uint32_t>(Type::floatToUInt8(m_data[0])) << 24) +
             (static_cast<uint32_t>(Type::floatToUInt8(m_data[1])) << 16) +
             (static_cast<uint32_t>(Type::floatToUInt8(m_data[2])) << 8) +
-            static_cast<uint32_t>(Type::floatToUInt8(m_alpha));
+            static_cast<uint32_t>(Type::floatToUInt8(alpha_));
     }
 
 
@@ -160,7 +160,7 @@ namespace Grain {
             out_values[0] = m_data[0];
             out_values[1] = m_data[1];
             out_values[2] = m_data[2];
-            out_values[3] = m_alpha;
+            out_values[3] = alpha_;
         }
     }
 
@@ -170,7 +170,7 @@ namespace Grain {
         return (std::fabs(m_data[0] - rgba.m_data[0]) <= tolerance &&
                 std::fabs(m_data[1] - rgba.m_data[1]) <= tolerance &&
                 std::fabs(m_data[2] - rgba.m_data[2]) <= tolerance &&
-                std::fabs(m_alpha - rgba.m_alpha) <= tolerance);
+                std::fabs(alpha_ - rgba.alpha_) <= tolerance);
     }
 
 
@@ -180,7 +180,7 @@ namespace Grain {
         m_data[0] = m_data[0] * f1 + other.m_data[0] * f2;
         m_data[1] = m_data[1] * f1 + other.m_data[1] * f2;
         m_data[2] = m_data[2] * f1 + other.m_data[2] * f2;
-        m_alpha = m_alpha * f1 + other.m_alpha * f2;
+        alpha_ = alpha_ * f1 + other.alpha_ * f2;
     }
 
 
@@ -190,7 +190,7 @@ namespace Grain {
         m_data[0] = a.m_data[0] * f1 + b.m_data[0] * f2;
         m_data[1] = a.m_data[1] * f1 + b.m_data[1] * f2;
         m_data[2] = a.m_data[2] * f1 + b.m_data[2] * f2;
-        m_alpha = a.m_alpha * f1 + b.m_alpha * f2;
+        alpha_ = a.alpha_ * f1 + b.alpha_ * f2;
     }
 
 
@@ -206,7 +206,7 @@ namespace Grain {
             lmix[i] = ti * l1[i] + t * l2[i];
         }
         mixbox_latent_to_float_rgb(lmix, &m_data[0], &m_data[1], &m_data[2]);
-        m_alpha = color1.m_alpha * (1.0 - t) + color2.m_alpha * t;
+        alpha_ = color1.alpha_ * (1.0 - t) + color2.alpha_ * t;
     }
 
 
@@ -215,7 +215,7 @@ namespace Grain {
         m_data[0] *= scale;
         m_data[1] *= scale;
         m_data[2] *= scale;
-        m_alpha *= scale;
+        alpha_ *= scale;
     }
 
 

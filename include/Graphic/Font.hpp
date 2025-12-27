@@ -161,7 +161,7 @@ namespace Grain {
         double m_underline_thickness = 0.0;
 
         RGB m_color;
-        float m_alpha = 1;
+        float alpha_ = 1.0f;
 
         /* TODO: macOS ...
         NSDictionary* mNSAttributes = nil;

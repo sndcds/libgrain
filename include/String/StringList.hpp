@@ -15,6 +15,7 @@
 
 #include "Grain.hpp"
 #include "String.hpp"
+#include "Type/List.hpp"
 
 
 namespace Grain {
@@ -101,7 +102,7 @@ namespace Grain {
                 }
             }
             else if (new_size < size()) {
-                m_size = new_size;
+                size_ = new_size;
             }
             return true;
         }
@@ -114,12 +115,12 @@ namespace Grain {
                 auto string_to_remove = elementAtIndex(index);
                 GRAIN_RELEASE(string_to_remove);
 
-                m_size--;
+                size_--;
 
                 // Reorganize data if necessary
-                if (index < m_size) {
-                    for (int64_t i = index; i < m_size; i++) {
-                        m_data[i] = m_data[i + 1];
+                if (index < size_) {
+                    for (int64_t i = index; i < size_; i++) {
+                        data_[i] = data_[i + 1];
                     }
                 }
 
@@ -135,11 +136,11 @@ namespace Grain {
          *  @return An `ErrorCode` representing the result of the insertion.
          */
         ErrorCode insertAtIndex(int64_t index, const String& string) noexcept {
-            if (index < 0 || index > m_size) {
+            if (index < 0 || index > size_) {
                 return ErrorCode::BadArgs;
             }
-            if (m_size >= m_capacity) {
-                auto flag = reserve(m_capacity + m_grow_step);
+            if (size_ >= capacity_) {
+                auto flag = reserve(capacity_ + grow_step_);
                 if (!flag) {
                     return ErrorCode::MemCantGrow;
                 }
@@ -153,26 +154,26 @@ namespace Grain {
             auto data = mutDataPtr();
 
             // Move all references behind index position to the right
-            for (int64_t i = m_size; i > index; i--) {
+            for (int64_t i = size_; i > index; i--) {
                 data[i] = data[i - 1];
             }
 
             // Insert the new reference
             data[index] = string_to_insert;
-            m_size++;
+            size_++;
 
             return ErrorCode::None;
         }
 
         void sortAsc() noexcept {
             if (size() > 1) {
-                qsort(mutDataPtr(), size(), elementSize(), _sortAsc);
+                std::qsort(mutDataPtr(), size(), elementSize(), _sortAsc);
             }
         }
 
         void sortDesc() noexcept {
             if (size() > 1) {
-                qsort(mutDataPtr(), size(), elementSize(), _sortDesc);
+                std::qsort(mutDataPtr(), size(), elementSize(), _sortDesc);
             }
         }
 

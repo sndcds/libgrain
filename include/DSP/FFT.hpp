@@ -32,6 +32,68 @@ namespace Grain {
 
     class Partials;
 
+    class FFTComplexSplit : Object {
+    public:
+        int32_t m_half_len = 0;
+        float* m_real = nullptr;
+        float* m_imag = nullptr;
+
+        explicit FFTComplexSplit(int32_t half_len) {
+            m_half_len = half_len;
+            if (half_len > 0) {
+                m_real = static_cast<float *>(std::calloc(half_len, sizeof(float)));
+                m_imag = static_cast<float *>(std::calloc(half_len, sizeof(float)));
+            }
+        }
+
+        ~FFTComplexSplit() override {
+            std::free(m_real);
+            std::free(m_imag);
+        }
+
+        void clear() {
+            std::fill(m_real, &m_real[m_half_len], 0.0f);
+            std::fill(m_imag, &m_imag[m_half_len], 0.0f);
+        }
+    };
+
+    class FFTComplexSplitArray {
+    public:
+        int32_t m_split_count = 0;
+        bool valid_ = true;
+        FFTComplexSplit** m_split_array = nullptr;
+
+        explicit FFTComplexSplitArray(int32_t n, int32_t half_len) {
+            m_split_count = n;
+            if (n > 0) {
+                m_split_array = static_cast<FFTComplexSplit **>(std::calloc(n, sizeof(FFTComplexSplit *)));
+                if (m_split_array) {
+                    for (int32_t i = 0; i < m_split_count; i++) {
+                        m_split_array[i] = new (std::nothrow) FFTComplexSplit(half_len);
+                        if (!m_split_array[i]) {
+                            valid_ = false;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        ~FFTComplexSplitArray() {
+            if (m_split_array) {
+                for (int32_t i = 0; i < m_split_count; i++) {
+                    std::free(m_split_array[i]);
+                }
+                std::free(m_split_array);
+            }
+        }
+
+       [[nodiscard]] FFTComplexSplit* splitAtIndex(int32_t index) const {
+            return m_split_array[index];
+        }
+    };
+
+
     class FFT : public Object {
     public:
         enum {
@@ -62,49 +124,36 @@ namespace Grain {
         };
 
     protected:
-#if defined(__APPLE__) && defined(__MACH__)
-        static FFTSetup g_fft_setups[kLogNResolutionCount];
-#endif
-
-        bool m_valid = false;
         int32_t m_log_n;
-        int32_t m_length;
-        int32_t m_half_length;
+        int32_t m_len;
+        int32_t m_half_len;
+        float* m_io_buffer = nullptr;         ///< Input/output buffer for samples, used in fft() and ifft()
 
 #if defined(__APPLE__) && defined(__MACH__)
-        float *m_data;
-        float *m_x_buffer;
-        float *m_y_buffer;
-        float *m_real_part;
-        float *m_imag_part;
-        float *m_mag;
-        float *m_phase;
+        DSPSplitComplex m_split_complex;
         FFTSetup m_fft_setup;
-        DSPComplex *m_temp_complex;
 #else
         fftwf_complex* m_out{};
         fftwf_plan m_plan{};
         fftwf_plan m_plan_inv{};
-        float* m_x_buffer;
         float* m_mag;
         float* m_phase;
 #endif
 
     public:
         explicit FFT(int32_t log_n) noexcept;
-
         ~FFT() noexcept override;
 
-        [[nodiscard]] const char *className() const noexcept override { return "FFT"; }
+        [[nodiscard]] const char* className() const noexcept override { return "FFT"; }
 
-        friend std::ostream &operator<<(std::ostream &os, const FFT *o) {
+        friend std::ostream &operator<<(std::ostream& os, const FFT* o) {
             o == nullptr ? os << "FFT nullptr" : os << *o;
             return os;
         }
 
-        friend std::ostream &operator<<(std::ostream &os, const FFT &o) {
-            os << "m_valid: " << o.m_valid << ", m_log_n: " << o.m_log_n << ", m_length: " << o.m_length
-               << ", m_half_length: " << o.m_half_length << std::endl;
+        friend std::ostream &operator<<(std::ostream& os, const FFT& o) {
+            os << "m_log_n: " << o.m_log_n << ", m_len: " << o.m_len;
+            os << ", m_half_len: " << o.m_half_len << std::endl;
             return os;
         }
 
@@ -114,101 +163,44 @@ namespace Grain {
 
         static bool isValidResolution(int32_t resolution) noexcept;
         [[nodiscard]] int32_t logN() const noexcept { return m_log_n; }
-        [[nodiscard]] int32_t length() const noexcept { return m_length; }
-        [[nodiscard]] int32_t partialResolution() const noexcept { return m_length / 2; }
+        [[nodiscard]] int32_t len() const noexcept { return m_len; }
+        [[nodiscard]] int32_t partialResolution() const noexcept { return m_len / 2; }
 
-        ErrorCode fft(float *data, Partials *out_partials) noexcept;
-        ErrorCode ifft(Partials *partials, float *out_data) noexcept;
+        ErrorCode fft(float* samples) noexcept;
+        ErrorCode ifft(float* out_samples) noexcept;
 
-        [[nodiscard]] static int32_t logNFromResolution(int32_t resolution) noexcept;
-        [[nodiscard]] static int32_t resolutionFromLogN(int32_t log_n) noexcept;
-        [[nodiscard]] static int32_t nextPow2Int32(int32_t v) noexcept;
-    };
+        ErrorCode filter(const Partials* partials) noexcept;
 
+        ErrorCode setPartials(const Partials* partials) noexcept;
+        ErrorCode getPartials(Partials* out_partials) noexcept;
 
-    class FFT_FIR : public Object {
-    public:
-        int32_t m_log_n;
-        int32_t m_step_length;
-        int32_t m_signal_length;
-        int32_t m_filter_length;
-        int32_t m_fft_length;
-        int32_t m_fft_half_length;
-        int32_t m_overlap_length;
+        void shiftPhase(int32_t bin_index, float delta) noexcept;
 
-        float* m_filter_samples = nullptr;
-        float* m_signal_samples = nullptr;
-        float* m_convolved_samples = nullptr;
-
-        float* m_filter_padded = nullptr;
-        float* m_signal_padded = nullptr;
-        float* m_filter_result = nullptr;
 
 #if defined(__APPLE__) && defined(__MACH__)
-        float* m_filter_real = nullptr;
-        float* m_filter_imag = nullptr;
-        float* m_signal_real = nullptr;
-        float* m_signal_imag = nullptr;
+        // On macOS/iOS: use posix_memalign for alignment
+        inline void* fft_alloc(std::size_t n_bytes) {
+            void* ptr = nullptr;
+            // vDSP likes 16-byte alignment (safe for NEON/AVX)
+            if (posix_memalign(&ptr, 16, n_bytes) != 0) {
+                return nullptr;
+            }
+            return ptr;
+        }
 
-        FFTSetup m_fft_setup;
-        DSPSplitComplex m_filter_split_complex;
+        inline void fft_free(void* ptr) {
+            free(ptr);
+        }
 #else
-        // FFTW buffers
-        fftwf_complex* m_signal_fft = nullptr; // Forward FFT of signal
-        fftwf_complex* m_filter_fft = nullptr; // Forward FFT of filter
+        // On other platforms: use FFTW's allocator
+        inline void* fft_alloc(std::size_t n_bytes) {
+            return fftwf_malloc(n_bytes); // properly aligned for FFTW
+        }
 
-        // FFTW plans
-        fftwf_plan m_plan_fwd_signal = nullptr;
-        fftwf_plan m_plan_fwd_filter = nullptr;
-        fftwf_plan m_plan_inv_signal = nullptr;
+        inline void fft_free(void* ptr) {
+            fftwf_free(ptr);
+        }
 #endif
-
-    public:
-        explicit FFT_FIR(int32_t log_n) noexcept;
-        ~FFT_FIR() noexcept override;
-
-        [[nodiscard]] const char* className() const noexcept override { return "FFT_FIR"; }
-
-        friend std::ostream& operator << (std::ostream& os, const FFT_FIR* o) {
-            o == nullptr ? os << "FFT_FIR nullptr" : os << *o;
-            return os;
-        }
-
-        friend std::ostream& operator << (std::ostream& os, const FFT_FIR& o) {
-            os << "m_log_n: " << o.m_log_n << ", m_step_length: " << o.m_step_length << ", m_signal_length: " << o.m_signal_length << ", m_filter_length: " << o.m_filter_length << ", m_fft_length: " << o.m_filter_length << ", m_overlap_length: " << o.m_overlap_length;
-            return os;
-        }
-
-        [[nodiscard]] bool isValid() const noexcept {
-#if defined(__APPLE__) && defined(__MACH__)
-            // Check all buffers and FFT setup
-            return
-                m_filter_samples && m_signal_samples && m_convolved_samples &&
-                m_filter_padded && m_signal_padded && m_filter_result &&
-                m_signal_real && m_signal_imag &&
-                m_filter_real && m_fft_setup;
-#else
-            // Check buffers and FFTW plans
-            return
-                m_filter_samples && m_signal_samples && m_convolved_samples &&
-                m_filter_padded && m_signal_padded && m_filter_result &&
-                m_filter_fft &&
-                m_plan_fwd_filter && m_plan_fwd_signal && m_plan_inv_signal;
-#endif
-        }
-
-        void setFilter() noexcept;
-        void filter() noexcept;
-
-        [[nodiscard]] int32_t fftLength() const noexcept { return m_fft_length; }
-        [[nodiscard]] int32_t stepLength() const noexcept { return m_step_length; }
-        [[nodiscard]] int32_t signalLength() const noexcept { return m_signal_length; }
-        [[nodiscard]] int32_t filterLength() const noexcept { return m_filter_length; }
-        [[nodiscard]] int32_t overlapLength() const noexcept { return m_overlap_length; }
-
-        [[nodiscard]] float* filterSamplesPtr() const noexcept { return m_filter_samples; }
-        [[nodiscard]] float* signalSamplesPtr() const noexcept { return m_signal_samples; }
-        [[nodiscard]] float* convolvedSamplesPtr() const noexcept { return m_convolved_samples; }
     };
 
 
@@ -217,13 +209,13 @@ namespace Grain {
         // TODO: This class is not tested!
 
     private:
-        int32_t m_dft_length = 0;
+        int32_t m_dft_len = 0;
 
-        // Are the frequency domain values valid? e.g. have at elast DFT_Length data points been seen?
+        // Are the frequency domain values valid? e.g. have at elast `dft_len_` data points been seen?
         bool _m_data_valid = false;
 
         // Index of the next item in the buffer to be used. Equivalently, the number
-        // of samples that have been seen so far modulo DFT_Length
+        // of samples that have been seen so far modulo `dft_len_`
         int32_t _m_x_index = 0;
 
         double* _m_x;        ///< Time domain samples are stored in this circular buffer
@@ -236,7 +228,7 @@ namespace Grain {
 
 
     public:
-        explicit SlidingDFT(int32_t dft_length) noexcept;
+        explicit SlidingDFT(int32_t dft_len) noexcept;
         ~SlidingDFT() noexcept override;
 
         [[nodiscard]] const char* className() const noexcept override { return "SlidingDFT"; }
@@ -249,7 +241,7 @@ namespace Grain {
 
         /**
          *  @brief Returns a pointer to the current DFT output (windowed values).
-         *  @return Pointer to an array of std::complex<double> of size `dft_length`.
+         *  @return Pointer to an array of std::complex<double> of size `dft_len`.
          */
         [[nodiscard]] const std::complex<double>* dft() const noexcept { return _m_dft; }
 
@@ -257,7 +249,7 @@ namespace Grain {
          *  @brief Returns the length of the DFT.
          *  @return Number of frequency bins.
          */
-        [[nodiscard]] int32_t length() const noexcept { return m_dft_length; }
+        [[nodiscard]] int32_t len() const noexcept { return m_dft_len; }
     };
 
 

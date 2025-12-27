@@ -16,8 +16,15 @@
 #include "Type/Object.hpp"
 #include "2d/Rect.hpp"
 #include "2d/Dimension.hpp"
+#include "2d/Border.hpp"
 #include "GUI/GUIStyle.hpp"
 
+#include <dispatch/dispatch.h>
+
+#if defined(__APPLE__) && defined(__MACH__)
+#include <CoreFoundation/CoreFoundation.h>
+#include <CoreVideo/CoreVideo.h>
+#endif
 
 namespace Grain {
 
@@ -36,7 +43,66 @@ namespace Grain {
     typedef void (*ComponentDrawFunc)(GraphicContext* gc, Component* component, void* ref);
     typedef bool (*ComponentHandleEventFunc)(Component* component, const Event& event, void* ref);
     typedef bool (*ComponentHandleMessageFunc)(Component* component, const char* message, void* ref, void* data);
+    typedef void (*ComponentAnimationFunc)(Component* component, void* ref);
 
+
+    class ComponentAnimationFrameDriver {
+    public:
+        using TimePoint = std::chrono::steady_clock::time_point;
+
+        ComponentAnimationFrameDriver() = default;
+        virtual ~ComponentAnimationFrameDriver() {
+#if defined(__APPLE__) && defined(__MACH__)
+            stop();
+            if (link_) CVDisplayLinkRelease(link_);
+#endif
+        }
+
+        void setCallback(std::function<void(TimePoint)> cb) {
+            callback_ = std::move(cb);
+        }
+
+        void start() {
+#if defined(__APPLE__) && defined(__MACH__)
+            if (!link_) {
+                CVDisplayLinkCreateWithActiveCGDisplays(&link_);
+                CVDisplayLinkSetOutputCallback(
+                    link_,
+                    [](CVDisplayLinkRef, const CVTimeStamp*, const CVTimeStamp*,
+                       CVOptionFlags, CVOptionFlags*, void* userData) -> CVReturn {
+                        auto* driver = static_cast<ComponentAnimationFrameDriver*>(userData);
+                        driver->tick(std::chrono::steady_clock::now());
+                        return kCVReturnSuccess;
+                    },
+                    this
+                );
+            }
+
+            if (!CVDisplayLinkIsRunning(link_)) {
+                CVDisplayLinkStart(link_);
+            }
+#endif
+        }
+
+        void stop() {
+#if defined(__APPLE__) && defined(__MACH__)
+            if (link_ && CVDisplayLinkIsRunning(link_)) {
+                CVDisplayLinkStop(link_);
+            }
+#endif
+        }
+
+    protected:
+        void tick(TimePoint now) {
+            if (callback_) callback_(now);
+        }
+
+    private:
+        std::function<void(TimePoint)> callback_;
+#if defined(__APPLE__) && defined(__MACH__)
+        CVDisplayLinkRef link_{nullptr};
+#endif
+    };
 
     class Component : Object {
 
@@ -91,6 +157,102 @@ namespace Grain {
             ViewportChanged
         };
 
+        enum class AnimationMode {
+            None,
+            Finite,
+            Continuous
+        };
+
+    protected:
+        ComponentType type_ = ComponentType::Undefined;  ///< What type of component it is
+        int32_t tag_ = 0;           ///< A tag, can be used to identify a component
+        char* name_ = nullptr;      ///< An optional name
+
+#if defined(__APPLE__) && defined(__MACH__)
+        void* ns_view_ = nullptr;   ///< The related NSView on macOS
+#endif
+
+        GraphicContext* m_gc_ptr = nullptr;
+
+        // Flags
+        bool view_is_flipped_ = true;
+        bool accepts_first_mouse_ = true;
+        bool handles_mouse_moved_ = true;
+        bool fills_bg_ = true;
+        bool is_visible_ = true;
+        bool is_enabled_ = true;
+        bool is_selected_ = false;
+        bool is_highlighted_ = false;
+        bool is_delayed_ = true;
+        bool is_editable_ = false;
+        bool is_toggle_mode_ = false;
+        bool is_number_mode_ = false;
+        bool can_get_focus_ = false;
+        bool focus_flag_ = false;
+        bool continuous_update_flag_ = true;
+        bool drag_entered_flag_ = false;
+        bool simple_mode_flag_ = false;
+        bool can_have_children_ = false;
+        bool draws_as_button_ = false;
+        bool shows_debug_info_ = false;
+
+        Component* parent_ = nullptr;         ///< Target view that this component renders into
+        Rectd rect_ = Rectd(100.0, 100.0);    ///< Position and size of component in view
+        Alignment edge_alignment_ = Alignment::No;
+        Borderf margin_{};
+
+        // Style
+        int32_t style_index_ = 0;   ///<
+
+        // Text
+        String* text_ = nullptr;    ///< Optional text
+
+        // Mouse
+        int32_t mouse_mode_ = 0;
+        bool mouse_precision_mode_ = false;
+        bool mouse_is_in_view_ = false;
+        bool needs_redraw_at_mouse_enter_and_exit_ = false;
+        bool is_modified_while_mouse_drag_ = false;
+        bool is_modified_since_mouse_down_ = false;
+
+        // Connected components
+        TextField* textfield_{};
+        // Label* label_{}; GUI!!!
+        // ColorWell* color_well_{}; GUI!!!
+        Component* receiver_component_{};
+        Component* previous_key_component_{};
+        Component* next_key_component_{};
+
+        // Action
+        ActionType action_type_ = ActionType::None;
+
+        // Animation
+        AnimationMode animation_mode_ = AnimationMode::None;
+        bool is_animating_ = false;
+        TimePoint animation_start_{};
+        Duration animation_duration_{};
+        double animation_progress_{};
+        ComponentAnimationFrameDriver* animation_frame_driver_ = nullptr;
+        ComponentAnimationFunc animation_func_ = nullptr;
+        void* animation_ref_ = nullptr;
+
+
+        // Component specific functions
+        ComponentAction action_{};
+        void* action_ref_{};
+
+        ComponentAction text_changed_action_{};
+        void* text_changed_action_ref_{};
+
+        ComponentDrawFunc draw_func_{};
+        void* draw_func_ref_{};
+
+        ComponentHandleEventFunc handle_event_func_{};
+        void* handle_event_func_ref_{};
+
+        ComponentHandleMessageFunc handle_message_func_{};
+        void* handle_message_func_ref_{};
+
     public:
         explicit Component(int32_t tag = 0) noexcept : Component(Rectd(0, 0, 1, 1), tag) {}
         explicit Component(const Rectd& rect, int32_t tag = 0) noexcept;
@@ -105,103 +267,103 @@ namespace Grain {
         }
 
         friend std::ostream& operator << (std::ostream& os, const Component& o) {
-            os << static_cast<int32_t>(o.m_type) << std::endl; // TODO: Implement!
+            os << static_cast<int32_t>(o.type_) << std::endl; // TODO: Implement!
             return os;
         }
 
 
 
 #if defined(__APPLE__) && defined(__MACH__)
-        [[nodiscard]] virtual void* nsView() const noexcept { return m_ns_view; }
-        virtual void setNSView(void* ns_view) noexcept { m_ns_view = ns_view; }
+        [[nodiscard]] virtual void* nsView() const noexcept { return ns_view_; }
+        virtual void setNSView(void* ns_view) noexcept { ns_view_ = ns_view; }
 #endif
 
-        [[nodiscard]] ComponentType componentType() const noexcept { return m_type; }
+        [[nodiscard]] ComponentType componentType() const noexcept { return type_; }
 
-        [[nodiscard]] int32_t tag() const noexcept { return m_tag; }
-        void setTag(int32_t tag) noexcept { m_tag = tag; }
+        [[nodiscard]] int32_t tag() const noexcept { return tag_; }
+        void setTag(int32_t tag) noexcept { tag_ = tag; }
 
-        [[nodiscard]] double x() const noexcept { return m_rect.m_x; }
-        [[nodiscard]] double y() const noexcept { return m_rect.m_y; }
-        [[nodiscard]] double width() const noexcept { return m_rect.m_width; }
-        [[nodiscard]] double height() const noexcept { return m_rect.m_height; }
-        [[nodiscard]] Dimensiond dimension() const noexcept { return Dimensiond(m_rect.m_width, m_rect.m_height); }
-        [[nodiscard]] double size(bool vertical) const noexcept { return vertical ? m_rect.m_height : m_rect.m_width; }
-        [[nodiscard]] double aspectRatio() const noexcept { return m_rect.m_width != 0.0 ? m_rect.m_height / m_rect.m_width : 1.0; }
-        [[nodiscard]] double shortSide() const noexcept { return m_rect.shortSide(); }
-        [[nodiscard]] double longSide() const noexcept { return m_rect.longSide(); }
-        [[nodiscard]] virtual Vec2d center() const noexcept { return Vec2d(m_rect.m_width * 0.5, m_rect.m_height * 0.5); }
-        [[nodiscard]] double centerX() const noexcept { return m_rect.m_width * 0.5; }
-        [[nodiscard]] double centerY() const noexcept { return m_rect.m_height * 0.5; }
+        [[nodiscard]] double x() const noexcept { return rect_.x_; }
+        [[nodiscard]] double y() const noexcept { return rect_.y_; }
+        [[nodiscard]] double width() const noexcept { return rect_.width_; }
+        [[nodiscard]] double height() const noexcept { return rect_.height_; }
+        [[nodiscard]] Dimensiond dimension() const noexcept { return { rect_.width_, rect_.height_ }; }
+        [[nodiscard]] double size(bool vertical) const noexcept { return vertical ? rect_.height_ : rect_.width_; }
+        [[nodiscard]] double aspectRatio() const noexcept { return rect_.width_ != 0.0 ? rect_.height_ / rect_.width_ : 1.0; }
+        [[nodiscard]] double shortSide() const noexcept { return rect_.shortSide(); }
+        [[nodiscard]] double longSide() const noexcept { return rect_.longSide(); }
+        [[nodiscard]] virtual Vec2d center() const noexcept { return { rect_.width_ * 0.5, rect_.height_ * 0.5 }; }
+        [[nodiscard]] double centerX() const noexcept { return rect_.width_ * 0.5; }
+        [[nodiscard]] double centerY() const noexcept { return rect_.height_ * 0.5; }
 
 
         // Flags
-        [[nodiscard]] bool isEnabled() const noexcept { return m_is_enabled; }
+        [[nodiscard]] bool isEnabled() const noexcept { return is_enabled_; }
         static bool setEnabled(Component* component, bool enabled) noexcept;
         virtual bool setEnabled(bool enabled) noexcept;
         bool enable() noexcept { return setEnabled(true); }
         bool disable() noexcept { return setEnabled(false); }
-        void toggleEnabled() noexcept{ setEnabled(!m_is_enabled); }
+        void toggleEnabled() noexcept{ setEnabled(!is_enabled_); }
         void setVisibility(bool visibility) noexcept;
 
-        [[nodiscard]] bool isSelected() const noexcept { return m_is_selected; }
-        virtual void setSelected(bool selected) noexcept { m_is_selected = selected; needsDisplay(); }
+        [[nodiscard]] bool isSelected() const noexcept { return is_selected_; }
+        virtual void setSelected(bool selected) noexcept { is_selected_ = selected; needsDisplay(); }
         void select() noexcept { setSelected(true); }
         void deselect() noexcept { setSelected(false); }
-        void deselectWithoutChecking() noexcept { m_is_selected = false; needsDisplay(); }
+        void deselectWithoutChecking() noexcept { is_selected_ = false; needsDisplay(); }
 
-        [[nodiscard]] bool isToggleMode() const noexcept { return m_is_toggle_mode; }
-        void toggleSelection() noexcept { setSelected(!m_is_selected); }
-        void setToggleMode(bool toggle_mode) noexcept { m_is_toggle_mode = toggle_mode; }
+        [[nodiscard]] bool isToggleMode() const noexcept { return is_toggle_mode_; }
+        void toggleSelection() noexcept { setSelected(!is_selected_); }
+        void setToggleMode(bool toggle_mode) noexcept { is_toggle_mode_ = toggle_mode; }
 
-        [[nodiscard]] bool isFlippedView() const noexcept { return m_view_is_flipped; }
-        void setFlippedView(bool flipped_view ) noexcept { m_view_is_flipped = flipped_view; }
+        [[nodiscard]] bool isFlippedView() const noexcept { return view_is_flipped_; }
+        void setFlippedView(bool flipped_view ) noexcept { view_is_flipped_ = flipped_view; }
 
-        [[nodiscard]] bool isNumberMode() const noexcept { return m_is_number_mode; }
+        [[nodiscard]] bool isNumberMode() const noexcept { return is_number_mode_; }
         void virtual setNumberMode(bool mode) noexcept {};
         virtual void stepNumber(bool use_big_step, bool negative) noexcept {};
 
         [[nodiscard]] bool canGetFocus() const noexcept {
-            return m_is_visible && m_can_get_focus && m_is_enabled && m_rect.m_width > 0.0 && m_rect.m_height > 0.0;
+            return is_visible_ && can_get_focus_ && is_enabled_ && rect_.width_ > 0.0 && rect_.height_ > 0.0;
         }
         void setFocusFlag(bool focus_flag) noexcept {
-            if (m_focus_flag != focus_flag) {
-                m_focus_flag = focus_flag;
+            if (focus_flag_ != focus_flag) {
+                focus_flag_ = focus_flag;
                 needsDisplay();
             }
         }
-        [[nodiscard]] bool hasFocusFlag() const noexcept { return m_focus_flag; }
+        [[nodiscard]] bool hasFocusFlag() const noexcept { return focus_flag_; }
 
 
-        [[nodiscard]] bool isHorizontal() const noexcept { return m_rect.isHorizontal(); }
-        [[nodiscard]] bool isVertical() const noexcept { return m_rect.isVertical(); }
-        [[nodiscard]] bool acceptsFirstMouse() const noexcept { return m_is_visible ? m_accepts_first_mouse : false; }
-        void setAcceptsFirstMouse(bool accepts_first_mouse ) noexcept { m_accepts_first_mouse = accepts_first_mouse; }
-        [[nodiscard]] bool isHandlingMouseMoved() const noexcept { return m_handles_mouse_moved; }
-        void setHandlesMouseMoved(bool handles_mouse_moved) noexcept { m_handles_mouse_moved = handles_mouse_moved; }
-        [[nodiscard]] bool isMouseInView() const noexcept { return m_mouse_is_in_view; }
+        [[nodiscard]] virtual bool isHorizontal() const noexcept { return rect_.isHorizontal(); }
+        [[nodiscard]] virtual bool isVertical() const noexcept { return rect_.isVertical(); }
+        [[nodiscard]] bool acceptsFirstMouse() const noexcept { return is_visible_ ? accepts_first_mouse_ : false; }
+        void setAcceptsFirstMouse(bool accepts_first_mouse ) noexcept { accepts_first_mouse_ = accepts_first_mouse; }
+        [[nodiscard]] bool isHandlingMouseMoved() const noexcept { return handles_mouse_moved_; }
+        void setHandlesMouseMoved(bool handles_mouse_moved) noexcept { handles_mouse_moved_ = handles_mouse_moved; }
+        [[nodiscard]] bool isMouseInView() const noexcept { return mouse_is_in_view_; }
 
-        [[nodiscard]] bool isDragEntered() const noexcept { return m_drag_entered_flag; }
-        void setDragEntered(bool drag_entered) noexcept { m_drag_entered_flag = drag_entered; }
+        [[nodiscard]] bool isDragEntered() const noexcept { return drag_entered_flag_; }
+        void setDragEntered(bool drag_entered) noexcept { drag_entered_flag_ = drag_entered; }
 
         // Rect, Bounds
-        [[nodiscard]] Rectd rect() const noexcept { return m_rect; }
-        [[nodiscard]] bool isRectUsable() const noexcept { return m_rect.usable(); }
-        [[nodiscard]] Rectd boundsRect() const noexcept { return Rectd(m_rect.m_width, m_rect.m_height); }
+        [[nodiscard]] Rectd rect() const noexcept { return rect_; }
+        [[nodiscard]] bool isRectUsable() const noexcept { return rect_.usable(); }
+        [[nodiscard]] Rectd boundsRect() const noexcept { return Rectd(rect_.width_, rect_.height_); }
         [[nodiscard]] Rectd contentRect() const noexcept;
 
 
         // Style
         [[nodiscard]] bool isOpaque() const noexcept { return true; }
-        void setStyleIndex(int32_t index) { m_style_index = index; }
+        void setStyleIndex(int32_t index) { style_index_ = index; }
         [[nodiscard]] GUIStyle* guiStyle() const noexcept;
 
 
         // Text
-        [[nodiscard]] bool hasText() const noexcept { return m_text ? m_text->length() > 0 : false; }
+        [[nodiscard]] bool hasText() const noexcept { return text_ ? text_->length() > 0 : false; }
         void setText(const char* text_str) noexcept;
         void setText(const String& text) noexcept;
-        [[nodiscard]] virtual int32_t textLength() const noexcept { return m_text ? m_text->length() : 0; }
+        [[nodiscard]] virtual int32_t textLength() const noexcept { return text_ ? text_->length() : 0; }
 
         //
         [[nodiscard]] virtual bool hasDescendant(const Component* component) noexcept { return false; }
@@ -217,33 +379,164 @@ namespace Grain {
         virtual void fireActionAndDisplay(ActionType action_type, const Component* excluded_component) noexcept;
         virtual void updateRepresentations(const Component* excluded_component) noexcept;
         virtual void transmit() noexcept {
-            if (m_receiver_component) {
-                m_receiver_component->setByComponent(this);
+            if (receiver_component_) {
+                receiver_component_->setByComponent(this);
             }
         }
         virtual void setByComponent(Component* component) noexcept {}
-        virtual void setReceiverComponent(Component* component) noexcept { m_receiver_component = component; }
-        virtual void setTextField(TextField* textfield) noexcept { m_textfield = textfield; }
+        virtual void setReceiverComponent(Component* component) noexcept { receiver_component_ = component; }
+        virtual void setTextField(TextField* textfield) noexcept { textfield_ = textfield; }
 
         void setAction(ComponentAction action) noexcept { setAction(action, nullptr); }
         void setAction(ComponentAction action, void* action_ref) noexcept {
-            m_action = action;
-            m_action_ref = action_ref;
+            action_ = action;
+            action_ref_ = action_ref;
         }
-        void* actionRef() const noexcept { return m_action_ref; }
+        void* actionRef() const noexcept { return action_ref_; }
 
         void setTextChangedAction(ComponentAction action) noexcept { setTextChangedAction(action, nullptr); }
         void setTextChangedAction(ComponentAction action, void* action_ref) noexcept {
-            m_text_changed_action = action;
-            m_text_changed_action_ref = action_ref;
+            text_changed_action_ = action;
+            text_changed_action_ref_ = action_ref;
         }
         void textChangedAction() noexcept {
-            if (m_text_changed_action != nullptr) {
-                m_text_changed_action(this);
+            if (text_changed_action_ != nullptr) {
+                text_changed_action_(this);
             }
         }
 
+        bool ensureAnimationDriver() {
+            if (!animation_frame_driver_) {
+                animation_frame_driver_ = new(std::nothrow) ComponentAnimationFrameDriver();
+                if (!animation_frame_driver_) {
+                    return false;
+                }
+            }
+            return true;
+        }
 
+        void setAnimationFunc(ComponentAnimationFunc func, void* ref) {
+            animation_func_ = func;
+            animation_ref_ = ref;
+        }
+
+        void animate(double start, double duration) {
+            if (!ensureAnimationDriver()) { return; }
+            if (is_animating_) { return; }
+
+            animation_mode_ = AnimationMode::Finite;
+
+            if (start <= 0.0) {
+                animation_start_ = Clock::now();
+            } else {
+                animation_start_ = Clock::time_point{
+                    std::chrono::duration_cast<Clock::duration>(
+                        std::chrono::duration<double>(start)
+                    )
+                };
+            }
+
+            animation_duration_ =
+                std::chrono::duration_cast<Duration>(
+                    std::chrono::duration<double>(duration)
+                );
+
+            is_animating_ = true;
+
+            animation_frame_driver_->setCallback([this](TimePoint now){
+                if (!is_animating_) return;
+
+                auto elapsed = std::chrono::duration_cast<Duration>(now - animation_start_);
+                double progress = double(elapsed.count()) / double(animation_duration_.count());
+
+                if (progress >= 1.0) {
+                    progress = 1.0;
+                    is_animating_ = false;
+                    animation_frame_driver_->stop();
+                }
+
+                // Post to main thread using pure C dispatch
+                struct CallbackContext {
+                    Component* self;
+                    double progress;
+                };
+                auto* ctx = new CallbackContext{this, progress};
+
+                dispatch_async_f(dispatch_get_main_queue(), ctx, [](void* context){
+                    auto* c = static_cast<CallbackContext*>(context);
+                    c->self->onAnimationFrame(c->progress);
+                    delete c;
+                });
+            });
+
+            animation_frame_driver_->start();
+        }
+
+        void startAnimation() {
+            if (!ensureAnimationDriver()) return;
+            if (is_animating_) return;
+
+            animation_mode_ = AnimationMode::Continuous;
+            animation_start_ = std::chrono::steady_clock::now();
+            is_animating_ = true;
+
+            animation_frame_driver_->setCallback([this](TimePoint now) {
+                if (!is_animating_) return;
+
+                auto elapsed =
+                    std::chrono::duration_cast<std::chrono::duration<double>>(now - animation_start_);
+
+                struct Context {
+                    Component* self;
+                    double t;
+                };
+
+                auto* ctx = new Context{ this, elapsed.count() };
+
+                dispatch_async_f(
+                    dispatch_get_main_queue(),
+                    ctx,
+                    [](void* p) {
+                        auto* c = static_cast<Context*>(p);
+                        c->self->onAnimationTick(c->t);
+                        delete c;
+                    }
+                );
+            });
+
+            animation_frame_driver_->start();
+        }
+
+        void stopAnimation() {
+            if (!is_animating_) return;
+
+            is_animating_ = false;
+            animation_mode_ = AnimationMode::None;
+
+            if (animation_frame_driver_) {
+                animation_frame_driver_->stop();
+            }
+        }
+
+        virtual void onAnimationFrame(double progress) {
+            animation_progress_ = progress;
+            if (animation_func_) {
+                animation_func_(this, animation_ref_);
+            }
+            needsDisplay();
+        }
+
+        virtual void onAnimationTick(double seconds_since_start) {
+            animation_progress_ = seconds_since_start;
+            if (animation_func_) {
+                animation_func_(this, animation_ref_);
+            }
+            needsDisplay();
+        }
+
+        [[nodiscard]] double animationProgress() const noexcept {
+            return animation_progress_;
+        }
 
         // FirstResponder
         virtual void becomeFirstResponder() noexcept {}
@@ -268,18 +561,18 @@ namespace Grain {
         virtual void deselectRadioGroup(int32_t radio_group) noexcept {}
 
         // Highlight
-        [[nodiscard]] bool isHighlighted() const noexcept { return m_is_highlighted; }
+        [[nodiscard]] bool isHighlighted() const noexcept { return is_highlighted_; }
         virtual void setHighlighted(bool highlighted) noexcept;
         void highlight() noexcept { setHighlighted(true); }
         void deHighlight() noexcept { setHighlighted(false); }
 
         // Delayed
-        [[nodiscard]] bool isDelayed() const noexcept { return m_is_delayed; }
-        void setDelayed(bool delayed) noexcept { m_is_delayed = delayed; }
+        [[nodiscard]] bool isDelayed() const noexcept { return is_delayed_; }
+        void setDelayed(bool delayed) noexcept { is_delayed_ = delayed; }
 
         // Value
         [[nodiscard]] virtual Fix value() const noexcept { return Fix{}; }
-        virtual bool setValue(const Fix & value) noexcept { return false; }
+        virtual bool setValue(const Fix& value) noexcept { return false; }
         virtual void setValueRange(const Fix& min, const Fix& max) noexcept {}
         [[nodiscard]] virtual int32_t valueAsInt32() const noexcept { return 0; }
         [[nodiscard]] virtual double valueAsDouble() const noexcept { return 0; }
@@ -289,7 +582,7 @@ namespace Grain {
 
         // Event
         virtual void handleEvent(const Event& event) noexcept;
-        [[nodiscard]] bool hasHandleEventFunction() const noexcept { return _m_handle_event_func != nullptr; }
+        [[nodiscard]] bool hasHandleEventFunction() const noexcept { return handle_event_func_ != nullptr; }
         void setHandleEventFunction(ComponentHandleEventFunc func, void* ref = nullptr) noexcept;
         bool callHandleEventFunction(const Event& event) noexcept;
         void _interpretKeyEvents(const Event& event) noexcept;
@@ -299,7 +592,7 @@ namespace Grain {
         virtual void updateBeforeDrawing(const Rectd& dirty_rect) noexcept {}
 
         // Custom draw function
-        [[nodiscard]] bool hasDrawFunction() const noexcept { return _m_draw_func != nullptr; }
+        [[nodiscard]] bool hasDrawFunction() const noexcept { return draw_func_ != nullptr; }
         void setDrawFunction(ComponentDrawFunc func, void* ref = nullptr) noexcept;
         void callDrawFunction(GraphicContext* gc) noexcept;
 
@@ -317,7 +610,7 @@ namespace Grain {
 
         // Mouse
         virtual void updateAtMouseDown(const Event& event) noexcept {}
-        virtual void handleMouseDown(const Event& event) noexcept { needsDisplay(); }
+        virtual void handleMouseDown(const Event& event) noexcept {}
         virtual void handleMouseDrag(const Event& event) noexcept {}
         virtual void handleMouseUp(const Event& event) noexcept {}
         virtual void handleRightMouseDown(const Event& event) noexcept {}
@@ -327,27 +620,27 @@ namespace Grain {
         virtual void handleMouseExited(const Event& event) noexcept {}
         virtual void handleMouseMoved(const Event& event) noexcept {}
         virtual void handleScrollWheel(const Event& event) noexcept {
-            if (m_parent) {
-                m_parent->handleScrollWheel(event);
+            if (parent_) {
+                parent_->handleScrollWheel(event);
             }
         }
         virtual void handleMagnification(const Event& event) noexcept {
-            if (m_parent) {
-                m_parent->handleMagnification(event);
+            if (parent_) {
+                parent_->handleMagnification(event);
             }
         }
         virtual void handleRotation(const Event& event) noexcept {
-            if (m_parent) {
-                m_parent->handleRotation(event);
+            if (parent_) {
+                parent_->handleRotation(event);
             }
         }
         virtual void handleKeyDown(const Event& event) noexcept {
-            if (m_parent) {
-                m_parent->handleKeyDown(event);
+            if (parent_) {
+                parent_->handleKeyDown(event);
             }
         }
 
-        [[nodiscard]] bool hasAction() const noexcept { return m_action != nullptr; }
+        [[nodiscard]] bool hasAction() const noexcept { return action_ != nullptr; }
 
 
         // Geometry
@@ -356,94 +649,14 @@ namespace Grain {
 
         // Drawing
         void drawDummy(GraphicContext* gc) const noexcept;
-        void drawRect(GraphicContext* gc, const Rectd& rect) const noexcept;
+        // void drawRect(GraphicContext* gc, const Rectd& rect) const noexcept;
 
         // Utils
-        static Component* addComponentToView(Component* component, View* view, AddFlags flags) noexcept;
-        void _setParent(Component* parent) noexcept { m_parent = parent; }
-        [[nodiscard]] View* parentView() const noexcept { return reinterpret_cast<View*>(m_parent); }
+        static Component* addComponentToView(Component* component, View* view, AddFlags flags = AddFlags::kNone) noexcept;
+        void _setParent(Component* parent) noexcept { parent_ = parent; }
+        [[nodiscard]] View* parentView() const noexcept { return reinterpret_cast<View*>(parent_); }
 
         virtual GraphicContext* graphicContextPtr() noexcept;
-
-
-    protected:
-        ComponentType m_type = ComponentType::Undefined;  ///< What type of component it is
-        int32_t m_tag = 0;           ///< A tag, can be used to identify a component
-        char* m_name = nullptr;      ///< An optional name
-
-#if defined(__APPLE__) && defined(__MACH__)
-        void* m_ns_view = nullptr;   ///< The related NSView on macOS
-#endif
-
-        GraphicContext* m_gc_ptr = nullptr;
-
-        // Flags
-        bool m_view_is_flipped = true;
-        bool m_accepts_first_mouse = true;
-        bool m_handles_mouse_moved = true;
-        bool m_fills_bg = true;
-        bool m_is_visible = true;
-        bool m_is_enabled = true;
-        bool m_is_selected = false;
-        bool m_is_highlighted = false;
-        bool m_is_delayed = true;
-        bool m_is_editable = false;
-        bool m_is_toggle_mode = false;
-        bool m_is_number_mode = false;
-        bool m_can_get_focus = false;
-        bool m_focus_flag = false;
-        bool m_continuous_update_flag = true;
-        bool m_drag_entered_flag = false;
-        bool m_simple_mode_flag = false;
-        bool m_can_have_children = false;
-        bool m_draws_as_button = false;
-        bool m_shows_debug_info = false;
-
-        Component* m_parent = nullptr;        ///< Target view that this component renders into
-        Rectd m_rect = Rectd(100.0, 100.0);   ///< Position and size of component in view
-        Alignment m_edge_alignment = Alignment::No;
-        RectEdgesf m_margin{};
-
-        // Style
-        int32_t m_style_index = 0;            ///<
-
-        // Text
-        String* m_text = nullptr;             ///< Optional text
-
-        // Mouse
-        int32_t m_mouse_mode = 0;
-        bool m_mouse_precision_mode = false;
-        bool m_mouse_is_in_view = false;
-        bool m_needs_redraw_at_mouse_enter_and_exit = false;
-        bool m_is_modified_while_mouse_drag = false;
-        bool m_is_modified_since_mouse_down = false;
-
-        // Connected components
-        TextField* m_textfield{};
-        // Label* m_label{}; GUI!!!
-        // ColorWell* m_color_well{}; GUI!!!
-        Component* m_receiver_component{};
-        Component* m_previous_key_component{};
-        Component* m_next_key_component{};
-
-        // Action
-        ActionType _m_action_type = ActionType::None;
-
-        // Component specific functions
-        ComponentAction m_action{};
-        void* m_action_ref{};
-
-        ComponentAction m_text_changed_action{};
-        void* m_text_changed_action_ref{};
-
-        ComponentDrawFunc _m_draw_func{};
-        void* _m_draw_func_ref{};
-
-        ComponentHandleEventFunc _m_handle_event_func{};
-        void* _m_handle_event_func_ref{};
-
-        ComponentHandleMessageFunc _m_handle_message_func{};
-        void* _m_handle_message_func_ref{};
     };
 
 }

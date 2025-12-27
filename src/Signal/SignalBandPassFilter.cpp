@@ -34,7 +34,6 @@ namespace Grain {
 
 
     const char *SignalBandPassFilter::filterTypeName() const noexcept {
-
         switch (m_filter_type) {
             case FilterType::BandPass1: return "band pass 1";
         }
@@ -44,7 +43,6 @@ namespace Grain {
 
 
     void SignalBandPassFilter::setFilterType(FilterType filter_type) noexcept {
-
         _m_has_range = true;
         m_filter_type = filter_type;
         reset();
@@ -52,7 +50,6 @@ namespace Grain {
 
 
     void SignalBandPassFilter::setFreqRange(float low_freq, float high_freq) noexcept {
-
         m_low_freq = std::clamp<double>(low_freq, 20.0, 9999.0);
         m_high_freq = std::clamp<double>(high_freq, m_low_freq * 1.001, 10000.0);
 

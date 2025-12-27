@@ -21,42 +21,42 @@ namespace Grain {
 
 
     class ScrollAreaView : public View {
+
+    protected:
+        bool must_update_ = true;
     public:
         ScrollAreaView() noexcept;
 
         virtual bool update() noexcept { return true; }
-        void mustUpdate() noexcept { m_must_update = true; }
-        void updateDone() noexcept { m_must_update = false; }
-        bool isUpdateNeeded() noexcept { return m_must_update; }
+        void mustUpdate() noexcept { must_update_ = true; }
+        void updateDone() noexcept { must_update_ = false; }
+        [[nodiscard]] bool isUpdateNeeded() noexcept { return must_update_; }
         void forcedUpdate() noexcept { mustUpdate(); update(); }
 
-    protected:
-        bool m_must_update = true;
     };
 
 
     class ScrollView : public View {
     public:
-        ScrollView(const Rectd& rect) noexcept;
-        ~ScrollView() noexcept;
+        explicit ScrollView(const Rectd& rect) noexcept;
+        ~ScrollView() noexcept override;
 
         void _init(Component* parent, const Rectd& rect) noexcept;
 
         [[nodiscard]] const char* className() const noexcept override { return "ScrollView"; }
 
-
         [[nodiscard]] static ScrollView* add(View* view) { return add(view, Rectd()); }
         [[nodiscard]] static ScrollView* add(View* view, const Rectd &rect);
 
-
         void setScrollAreaView(ScrollAreaView* view) noexcept;
 
-        [[nodiscard]] double scrollAreaWidth() const noexcept { return m_scroll_area_view->width(); }
-        [[nodiscard]] double scrollAreaHeight() const noexcept { return m_scroll_area_view->height(); }
+        [[nodiscard]] double scrollAreaWidth() const { return scroll_area_view_->width(); }
+        [[nodiscard]] double scrollAreaHeight() const { return scroll_area_view_->height(); }
+        [[nodiscard]] View* scrollAreaViewPtr() const { return scroll_area_view_; }
 
-        [[nodiscard]] int32_t contentXOffset() { return m_content_x_offset; }
-        [[nodiscard]] int32_t contentYOffset() { return m_content_y_offset; }
-        [[nodiscard]] Vec2d contentOffset() noexcept { return Vec2d(m_content_x_offset, m_content_y_offset); }
+        [[nodiscard]] int32_t contentXOffset() const { return content_x_offset_; }
+        [[nodiscard]] int32_t contentYOffset() const { return content_y_offset_; }
+        [[nodiscard]] Vec2d contentOffset() const { return Vec2d(content_x_offset_, content_y_offset_); }
 
         void setContentView(View *content_view) noexcept;
         void removeContentView(View *content_view) noexcept;
@@ -68,19 +68,19 @@ namespace Grain {
 
         void setOffset(double x_offset, double y_offset);
 
-        [[nodiscard]] bool canScrollHorizontal() { return m_can_scroll_horizontal; }
-        [[nodiscard]] bool canScrollVertical() { return m_can_scroll_vertical; }
+        [[nodiscard]] bool canScrollHorizontal() const { return can_h_scroll_; }
+        [[nodiscard]] bool canScrollVertical() const { return can_v_scroll_; }
         void setCanScrollHorizontal(bool flag) {
-            m_can_scroll_horizontal = flag;
-            if (m_scroll_area_view != nullptr) {
-                m_scroll_area_view->mustUpdate();
+            can_h_scroll_ = flag;
+            if (scroll_area_view_ != nullptr) {
+                scroll_area_view_->mustUpdate();
             }
             needsDisplay();
         }
         void setCanScrollVertical(bool flag) {
-            m_can_scroll_vertical = flag;
-            if (m_scroll_area_view != nullptr) {
-                m_scroll_area_view->mustUpdate();
+            can_v_scroll_ = flag;
+            if (scroll_area_view_ != nullptr) {
+                scroll_area_view_->mustUpdate();
             }
             needsDisplay();
         }
@@ -97,21 +97,20 @@ namespace Grain {
         void setByComponent(Component *component) noexcept override;
 
     protected:
-        ScrollAreaView* m_scroll_area_view = nullptr;
-        View* m_content_view = nullptr;
-        ScrollBar* m_horizontal_scroll_bar = nullptr;
-        ScrollBar* m_vertical_scroll_bar = nullptr;
-        ObjectList<View*> m_views;
+        ScrollAreaView* scroll_area_view_ = nullptr;
+        View* content_view_ = nullptr;
+        ScrollBar* h_scroll_bar_ = nullptr;
+        ScrollBar* v_scroll_bar_ = nullptr;
+        ObjectList<View*> views_;
 
-        int32_t m_content_width = 640;
-        int32_t m_content_height = 480;
-        int32_t m_content_x_offset = 0;
-        int32_t m_content_y_offset = 0;
-        float m_scroll_wheel_speed = 1.0f;
-        bool m_can_scroll_horizontal = true;
-        bool m_can_scroll_vertical = true;
+        int32_t content_width_ = 640;
+        int32_t content_height_ = 480;
+        int32_t content_x_offset_ = 0;
+        int32_t content_y_offset_ = 0;
+        float scroll_wheel_speed_ = 1.0;
+        bool can_h_scroll_ = true;
+        bool can_v_scroll_ = true;
     };
-
 
 } // End of namespace Grain
 

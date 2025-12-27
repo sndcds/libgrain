@@ -103,7 +103,7 @@ namespace Grain {
             m_binary_ptr += 4;
         }
         else {
-            uint8_t* p = (uint8_t*)&result;
+            auto p = (uint8_t*)&result;
             if (m_little_endian == true) {
                 for (int i = 0; i < 4; i++) {
                     p[i] = readByte();
@@ -122,11 +122,11 @@ namespace Grain {
 
     double WKBParser::readDouble() {
         double result;
-        uint8_t* p = (uint8_t*)&result;
+        auto p = (uint8_t*)&result;
 
         if (m_binary_mode) {
             if (m_little_endian) {
-                uint64_t* temp = (uint64_t*)&result;
+                auto temp = (uint64_t*)&result;
                 *temp = m_binary_ptr[7]; *temp <<= 8;
                 *temp |= m_binary_ptr[6]; *temp <<= 8;
                 *temp |= m_binary_ptr[5]; *temp <<= 8;
@@ -137,7 +137,7 @@ namespace Grain {
                 *temp |= m_binary_ptr[0];
             }
             else {
-                uint64_t* temp = (uint64_t*)&result;
+                auto temp = (uint64_t*)&result;
                 *temp = m_binary_ptr[0]; *temp <<= 8;
                 *temp |= m_binary_ptr[1]; *temp <<= 8;
                 *temp |= m_binary_ptr[2]; *temp <<= 8;
@@ -167,8 +167,8 @@ namespace Grain {
 
 
     void WKBParser::readVec2(Vec2d& out_vec) {
-        out_vec.m_x = readDouble();
-        out_vec.m_y = readDouble();
+        out_vec.x_ = readDouble();
+        out_vec.y_ = readDouble();
     }
 
 

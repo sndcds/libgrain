@@ -17,7 +17,6 @@
 namespace Grain {
 
     const double Audio::g_envelope_min_level = 0.00001;
-    LUT1* Audio::g_amplitude_from_level_lut = nullptr;
     LUT1* Audio::g_release_lut = nullptr;
     LUT1* Audio::g_release_duration_lut = nullptr;
 
@@ -45,18 +44,6 @@ namespace Grain {
 
 
     void Audio::_init() noexcept {
-
-        {
-            // Compute `g_amplitude_from_levellut`
-            int32_t resolution = 1024;
-            g_amplitude_from_level_lut = new (std::nothrow) LUT1(resolution);
-            if (g_amplitude_from_level_lut) {
-                for (int32_t lut_index = 0; lut_index < resolution; lut_index++) {
-                    g_amplitude_from_level_lut->setValueAtIndex(lut_index, Audio::amplitudeFromLevel(static_cast<float>(lut_index) / (resolution - 1)));
-                }
-            }
-        }
-
         {
             // Compute `g_release_lut`
             int32_t resolution = 4096;
@@ -111,7 +98,6 @@ namespace Grain {
 
 
     float Audio::durationForNote(float bpm, float length) noexcept {
-
         //  Returns the duration for a musical note
         //  The maximum duration is 360000 seconds ~ 100 hours
         //  bpm - Beats per minute
@@ -130,105 +116,46 @@ namespace Grain {
 
 
     float Audio::samplesNeededForNote(int32_t sample_rate, float bpm, float length) noexcept {
-
         return static_cast<float>(sample_rate) * durationForNote(bpm, length);
     }
 
 
-    float Audio::dezibelFromAmplitude(float amplitude) noexcept {
-
-        if (amplitude < 0.0f) {
-            return std::numeric_limits<float>::lowest();
+    float Audio::linearToDb(float level) noexcept {
+        if (level <= kMinLinear) {
+            return kMinDb;
         }
         else {
-            float d = 20.0f * std::log10(amplitude);
-            return d < std::numeric_limits<float>::lowest() ? std::numeric_limits<float>::lowest() : d;
+            return 20.0f * std::log10(level);
         }
     }
 
 
-    float Audio::levelFromAmplitude(float amplitude) noexcept {
-
-        return std::pow(2.0f, dezibelFromAmplitude(amplitude) / 10.0f);
-    }
-
-
-    float Audio::amplitudeFromDezibel(float dezibel) noexcept {
-
-        return std::pow(10.0f, dezibel / 20.0f);
-    }
-
-
-    float Audio::levelFromDezibel(float dezibel) noexcept {
-
-        return std::pow(2.0f, dezibel / 10.0f);
-    }
-
-
-    float Audio::dezibelFromLevel(float level) noexcept {
-
-        if (level < 0.0) {
-            return std::numeric_limits<float>::lowest();
-        }
-        else {
-            float d = std::log2f(level) * 10.0f;
-            return d < std::numeric_limits<float>::lowest() ? std::numeric_limits<float>::lowest() : d;
-        }
-    }
-
-
-    float Audio::amplitudeFromLevel(float level) noexcept {
-
-        if (level < 0.0) {
-            return 0.0;
-        }
-        else {
-            float dezibel = std::log2f(level) * 10.0f;
-            return std::pow(10, dezibel / 20.0f);
-        }
-    }
-
-
-    float Audio::amplitudeFromLevelLUT(float level) noexcept {
-
-        if (level < 0.0f) {
-            return 0.0f;
-        }
-        if (level > 1.0f) {
-            return amplitudeFromLevel(level);
-        }
-        else {
-            return g_amplitude_from_level_lut->lookup(level);
-        }
+    float Audio::dbToLinear(float db) noexcept {
+        return std::pow(10.0f, db / 20.0f);
     }
 
 
     float Audio::freqFromPitch(float pitch, float reference_freq) noexcept {
-
         return static_cast<float>(reference_freq * std::pow(2, (pitch - 69) / 12));
     }
 
 
     float Audio::freqFromPitchAndOctave(float pitch, int32_t octave, float reference_freq) noexcept {
-
         return static_cast<float>(reference_freq * std::pow(2.0f, (pitch - 69.0f + static_cast<float>(octave) * 12.0f) / 12.0f));
     }
 
 
     float Audio::pitchFromFreq(float freq, float reference_freq) noexcept {
-
         return static_cast<float>(69.0 + 12.0 * std::log(freq / reference_freq) / std::numbers::ln2);
     }
 
 
     int32_t Audio::pitchClass(float pitch) noexcept {
-
         return Audio::pitchClass(static_cast<int32_t>(std::round(pitch)));
     }
 
 
     int32_t Audio::pitchClass(int32_t pitch) noexcept {
-
         int32_t pitch_class = pitch - ((static_cast<int32_t>(pitch - kMusic_A) / 12) * 12);
         if (pitch_class < kMusic_A) {
             pitch_class += 12;
@@ -238,26 +165,22 @@ namespace Grain {
 
 
     int32_t Audio::noteClassFromPitch(float pitch) noexcept {
-
         return Audio::noteClassFromPitch(static_cast<int32_t>(std::round(pitch)));
     }
 
 
     int32_t Audio::noteClassFromPitch(int32_t pitch) noexcept {
-
         int32_t pitch_class = Audio::pitchClass(pitch) - 3;
         return pitch_class < 0 ? pitch_class + 12 : pitch_class;
     }
 
 
     bool Audio::samePitchClass(int32_t pitch, int32_t referencePitch) noexcept {
-
         return pitchClass(pitch) == pitchClass(referencePitch);
     }
 
 
     bool Audio::pitchIsBlackKey(int32_t pitch) noexcept {
-
         switch (Audio::pitchClass(pitch)) {
             case kMusic_A:
             case kMusic_B:
@@ -268,32 +191,27 @@ namespace Grain {
             case kMusic_G:
                 return false;
         }
-
         return true;
     }
 
 
     bool Audio::pitchIsWhiteKey(int32_t pitch) noexcept {
-
         return !Audio::pitchIsBlackKey(pitch);
     }
 
 
     int32_t Audio::pitchCountBlackKeys(int32_t low_pitch, int32_t high_pitch) noexcept {
-
         int32_t n = 0;
         for (int32_t pitch = low_pitch; pitch <= high_pitch; pitch++) {
             if (pitchIsBlackKey(pitch)) {
                 n++;
             }
         }
-
         return n;
     }
 
 
     void Audio::pitchString(float pitch, bool cent_flag, int32_t str_size, char* out_str) noexcept {
-
         static const char* classNames[12] = { "A", "Bb", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#" };
 
         if (out_str) {
@@ -315,37 +233,31 @@ namespace Grain {
 
 
     float Audio::pitchIntervalAsCent(float pitch_a, float pitch_b) noexcept {
-
         return freqIntervalAsCent(Audio::freqFromPitch(pitch_a), Audio::freqFromPitch(pitch_b));
     }
 
 
     float Audio::freqIntervalAsCent(float freq_a, float freq_b) noexcept {
-
         return (1200.0f * (logf(freq_b / freq_a) / std::numbers::ln2));
     }
 
 
     float Audio::shiftetFreqByCent(float freq, float cent) noexcept {
-
         return freq * std::pow(2, cent * 0.00083333333333f); // 1 / 100 / 12.
     }
 
 
     float Audio::shiftetPitchByCent(float pitch, float cent) noexcept {
-
         return pitchFromFreq(freqFromPitch(pitch) * std::pow(2, cent * 0.00083333333333f)); // 1 / 100 / 12.
     }
 
 
     float Audio::loopFreq(int32_t sample_rate, int32_t sample_count) noexcept {
-
         return static_cast<float>(sample_rate) / static_cast<float>(sample_count);
     }
 
 
     float Audio::interauralSampleDelay(int32_t sample_rate, float level) noexcept {
-
         // Interaural time difference, 660 μs @ 90 degree
         level = std::clamp(level, 0.0f, 1.0f);
         float interaural_f = 660.0f / 1000000.0f * sample_rate;
@@ -354,35 +266,24 @@ namespace Grain {
 
 
     float Audio::amplitudeAttenuation(float db, float distance) noexcept {
-
-        return Audio::amplitudeFromDezibel(-db * distance / 100.0f);
-    }
-
-
-    float Audio::levelAttenuation(float db, float distance) noexcept {
-
-        return Audio::levelFromDezibel(-db * distance / 100.0f);
+        return Audio::dbToLinear(-db * distance / 100.0f);
     }
 
 
     float Audio::dbAttenuation(float db, float distance) noexcept {
-
         return -db * distance / 100.0f;
     }
 
 
     float Audio::soundIntensity(float initial_intensity, float attenuation, float distance) {
-
         // Convert attenuation from dB/m to a linear scale
         float linear_attenuation = std::pow(10.0f, (attenuation / 10.0f) * distance);
-
         // Calculate and return final intensity
         return initial_intensity / linear_attenuation;
     }
 
 
 #if defined(__APPLE__) && defined(__MACH__)
-
     void Audio::logAudioStreamBasicDescription(Log& log, AudioStreamBasicDescription& asbd, const char* name) noexcept {
         log << "AudioStreamBasicDescription " << name << log.endl;
         log++;
@@ -440,7 +341,6 @@ namespace Grain {
         log--;
         log--;
     }
-
 #endif
 
 

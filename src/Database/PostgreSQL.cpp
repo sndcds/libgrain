@@ -33,7 +33,7 @@ namespace Grain {
         m_type = type;
         m_format = format;
         m_value = value;
-        m_length = length;
+        length_ = length;
         m_bin_ptr = bin_ptr;
     }
 
@@ -531,24 +531,24 @@ namespace Grain {
 
 
     PSQLPropertyList::PSQLPropertyList(int32_t size) {
-        m_properties = new (std::nothrow) PSQLProperty[size];
-        if (!m_properties) {
-            m_size = 0;
+        properties_ = new (std::nothrow) PSQLProperty[size];
+        if (!properties_) {
+            size_ = 0;
         }
         else {
-            m_size = size;
+            size_ = size;
         }
     }
 
 
     PSQLPropertyList::~PSQLPropertyList() {
-        delete [] m_properties;
+        delete [] properties_;
     }
 
 
     PSQLProperty* PSQLPropertyList::mutPropertyPtrAtIndex(int32_t index) noexcept {
-        if (m_properties != nullptr && index >= 0 && index < m_size) {
-            return &m_properties[index];
+        if (properties_ != nullptr && index >= 0 && index < size_) {
+            return &properties_[index];
         }
         else {
             return nullptr;

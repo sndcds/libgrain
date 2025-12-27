@@ -54,7 +54,7 @@ namespace Grain {
             m_bounding_box.readFromFile(*this);
 
             // Read CRS
-            m_srid = readValue<int64_t>();
+            srid_ = readValue<int64_t>();
 
             // Read all Polygon entries
             for (int32_t i = 0; i < m_polygon_count; i++) {

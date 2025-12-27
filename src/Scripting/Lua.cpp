@@ -147,7 +147,7 @@ namespace Grain {
  *  This function checks whether the file exists and, if so, executes it using
  *  the Lua interpreter (`luaL_dofile`). If the Lua script fails to run,
  *  the error message is captured from the Lua stack and stored in
- *  `m_last_err_message`.
+ *  `last_err_message_`.
  *
  *  @param file_path The full path to the Lua script file to be executed.
  *
@@ -156,7 +156,7 @@ namespace Grain {
  *          `ErrorCode::LuaCodeError` if execution failed.
  *
  *  @note If a Lua runtime error occurs, the error message is stored in
- *        `m_last_err_message` for later inspection.
+ *        `last_err_message_` for later inspection.
  */
     ErrorCode Lua::run(const String& file_path) noexcept {
 
@@ -217,7 +217,7 @@ namespace Grain {
  *          or `ErrorCode::LuaCodeError` if Lua reported a runtime error.
  *          Other `ErrorCode` values may be returned if thrown and caught.
  *
- *  @note If an error message is present, it is stored in `m_last_err_message`
+ *  @note If an error message is present, it is stored in `last_err_message_`
  *        for later retrieval.
  */
     ErrorCode Lua::runCode(const char* code) noexcept {
@@ -247,7 +247,7 @@ namespace Grain {
 /**
  *  @brief Closes the Lua interpreter and releases associated resources.
  *
- *  If the Lua virtual machine (`m_lua_vm`) is currently active, this function
+ *  If the Lua virtual machine (`lua_vm_`) is currently active, this function
  *  closes it using `lua_close()` and sets the internal pointer to `nullptr`.
  *  It is safe to call this function multiple times; it will have no effect if
  *  the Lua VM is already closed.

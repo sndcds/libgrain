@@ -46,10 +46,10 @@ namespace Grain {
         m_cg_color_space = CGColorSpaceCreateDeviceRGB();
         // m_cg_color_space = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);  // TODO: An alternative?
 
-        if (component != nullptr) {
+        if (component) {
             m_flipped_y = component->isFlippedView();
-            m_width = component->width();
-            m_height = component->height();
+            width_ = component->width();
+            height_ = component->height();
             m_component = component;
         }
     }
@@ -60,7 +60,7 @@ namespace Grain {
 
 
     void AppleCGContext::_macGCInit() noexcept {
-        m_magic = Type::fourcc('m', 'a', 'c', ' ');
+        magic_ = Type::fourcc('m', 'a', 'c', ' ');
     }
 
 
@@ -83,8 +83,8 @@ namespace Grain {
             m_image = image;
             image->graphicContext(this);
 
-            m_width = image->width();
-            m_height = image->height();
+            width_ = image->width();
+            height_ = image->height();
 
             switch (image->colorModel()) {
                 case Color::Model::Lumina:
@@ -142,7 +142,7 @@ namespace Grain {
     }
 
     void AppleCGContext::setAlpha(float alpha) noexcept {
-        m_alpha = alpha;
+        alpha_ = alpha;
         CGContextSetAlpha(m_cg_context, alpha);
     }
 
@@ -296,21 +296,21 @@ namespace Grain {
 
     void AppleCGContext::moveTo(double x, double y) noexcept {
         CGContextMoveToPoint(m_cg_context, x, y);
-        m_last_pos.m_x = x;
-        m_last_pos.m_y = y;
+        m_last_pos.x_ = x;
+        m_last_pos.y_ = y;
     }
 
 
     void AppleCGContext::moveTo(const Vec2d& point) noexcept {
-        CGContextMoveToPoint(m_cg_context, point.m_x, point.m_y);
+        CGContextMoveToPoint(m_cg_context, point.x_, point.y_);
         m_last_pos = point;
     }
 
 
     void AppleCGContext::lineTo(double x, double y) noexcept {
         CGContextAddLineToPoint(m_cg_context, x, y);
-        m_last_pos.m_x = x;
-        m_last_pos.m_y = y;
+        m_last_pos.x_ = x;
+        m_last_pos.y_ = y;
     }
 
 
@@ -321,22 +321,22 @@ namespace Grain {
         else {
             CGContextAddLineToPoint(m_cg_context, x, y);
         }
-        m_last_pos.m_x = x;
-        m_last_pos.m_y = y;
+        m_last_pos.x_ = x;
+        m_last_pos.y_ = y;
     }
 
 
     void AppleCGContext::lineTo(const Vec2d& point) noexcept {
-        CGContextAddLineToPoint(m_cg_context, point.m_x, point.m_y);
+        CGContextAddLineToPoint(m_cg_context, point.x_, point.y_);
         m_last_pos = point;
     }
 
     void AppleCGContext::lineTo(const Vec2d& point, bool start_flag) noexcept {
         if (start_flag) {
-            CGContextMoveToPoint(m_cg_context, point.m_x, point.m_y);
+            CGContextMoveToPoint(m_cg_context, point.x_, point.y_);
         }
         else {
-            CGContextAddLineToPoint(m_cg_context, point.m_x, point.m_y);
+            CGContextAddLineToPoint(m_cg_context, point.x_, point.y_);
         }
         m_last_pos = point;
     }
@@ -344,25 +344,25 @@ namespace Grain {
 
     void AppleCGContext::curveTo(double c1x, double c1y, double c2x, double c2y, double x, double y) noexcept {
         CGContextAddCurveToPoint(m_cg_context, c1x, c1y, c2x, c2y, x, y);
-        m_last_pos.m_x = x;
-        m_last_pos.m_y = y;
+        m_last_pos.x_ = x;
+        m_last_pos.y_ = y;
     }
 
 
     void AppleCGContext::curveTo(const Vec2d& control1, const Vec2d& control2, const Vec2d& point) noexcept {
-        CGContextAddCurveToPoint(m_cg_context, control1.m_x, control1.m_y, control2.m_x, control2.m_y, point.m_x, point.m_y);
+        CGContextAddCurveToPoint(m_cg_context, control1.x_, control1.y_, control2.x_, control2.y_, point.x_, point.y_);
         m_last_pos = point;
     }
 
 
     void AppleCGContext::curveTo(double cx, double cy, double x, double y) noexcept {
-        double c1x = m_last_pos.m_x + 2.0 / 3.0 * (cx - m_last_pos.m_x);
+        double c1x = m_last_pos.x_ + 2.0 / 3.0 * (cx - m_last_pos.x_);
         double c2x = x + 2.0 / 3.0 * (cx - x);
-        double c1y = m_last_pos.m_y + 2.0 / 3.0 * (cy - m_last_pos.m_y);
+        double c1y = m_last_pos.y_ + 2.0 / 3.0 * (cy - m_last_pos.y_);
         double c2y = y + 2.0 / 3.0 * (cy - y);
         CGContextAddCurveToPoint(m_cg_context, c1x, c1y, c2x, c2y, x, y);
-        m_last_pos.m_x = x;
-        m_last_pos.m_y = y;
+        m_last_pos.x_ = x;
+        m_last_pos.y_ = y;
     }
 
 
@@ -418,8 +418,8 @@ namespace Grain {
             angle = Math::degtorad(angle);
             span = Math::degtorad(span);
             double endAngle = angle + span;
-            CGContextAddArc(m_cg_context, center.m_x, center.m_y, outer_radius, angle, endAngle, false);
-            CGContextAddArc(m_cg_context, center.m_x, center.m_y, inner_radius, endAngle, angle, true);
+            CGContextAddArc(m_cg_context, center.x_, center.y_, outer_radius, angle, endAngle, false);
+            CGContextAddArc(m_cg_context, center.x_, center.y_, inner_radius, endAngle, angle, true);
             closePath();
         }
     }
@@ -561,10 +561,10 @@ namespace Grain {
             auto points = quadrilateral.pointsPtr();
 
             // Define the quadrilateral points for transformation
-            [perspective_filter setValue:[CIVector vectorWithX:points[0].m_x Y:points[0].m_y] forKey:@"inputTopLeft"];
-            [perspective_filter setValue:[CIVector vectorWithX:points[1].m_x Y:points[1].m_y] forKey:@"inputTopRight"];
-            [perspective_filter setValue:[CIVector vectorWithX:points[2].m_x Y:points[2].m_y] forKey:@"inputBottomRight"];
-            [perspective_filter setValue:[CIVector vectorWithX:points[3].m_x Y:points[3].m_y] forKey:@"inputBottomLeft"];
+            [perspective_filter setValue:[CIVector vectorWithX:points[0].x_ Y:points[0].y_] forKey:@"inputTopLeft"];
+            [perspective_filter setValue:[CIVector vectorWithX:points[1].x_ Y:points[1].y_] forKey:@"inputTopRight"];
+            [perspective_filter setValue:[CIVector vectorWithX:points[2].x_ Y:points[2].y_] forKey:@"inputBottomRight"];
+            [perspective_filter setValue:[CIVector vectorWithX:points[3].x_ Y:points[3].y_] forKey:@"inputBottomLeft"];
 
             // Get the output CIImage from the filter.
             CIImage* output_ci_image = [perspective_filter outputImage];
@@ -619,10 +619,10 @@ namespace Grain {
 
         // Define the quadrilateral points for transformation
         auto points = quadrilateral.pointsPtr();
-        [perspective_filter setValue:[CIVector vectorWithX:points[0].m_x Y:points[0].m_y] forKey:@"inputTopLeft"];
-        [perspective_filter setValue:[CIVector vectorWithX:points[1].m_x Y:points[1].m_y] forKey:@"inputTopRight"];
-        [perspective_filter setValue:[CIVector vectorWithX:points[2].m_x Y:points[2].m_y] forKey:@"inputBottomRight"];
-        [perspective_filter setValue:[CIVector vectorWithX:points[3].m_x Y:points[3].m_y] forKey:@"inputBottomLeft"];
+        [perspective_filter setValue:[CIVector vectorWithX:points[0].x_ Y:points[0].y_] forKey:@"inputTopLeft"];
+        [perspective_filter setValue:[CIVector vectorWithX:points[1].x_ Y:points[1].y_] forKey:@"inputTopRight"];
+        [perspective_filter setValue:[CIVector vectorWithX:points[2].x_ Y:points[2].y_] forKey:@"inputBottomRight"];
+        [perspective_filter setValue:[CIVector vectorWithX:points[3].x_ Y:points[3].y_] forKey:@"inputBottomLeft"];
 
         // Get the output CIImage from the perspective filter
         CIImage* output_ci_image = [perspective_filter outputImage];
@@ -667,9 +667,9 @@ namespace Grain {
 
         CGContextSaveGState(m_cg_context);
 
-        // CGContextTranslateCTM(m_cg_context, 0.0, m_height);
+        // CGContextTranslateCTM(m_cg_context, 0.0, height_);
         CGContextScaleCTM(m_cg_context, 1.0, -1.0);
-        CGContextTranslateCTM(m_cg_context, 0.0, - rect.m_y * 2 - rect.m_height);
+        CGContextTranslateCTM(m_cg_context, 0.0, - rect.y_ * 2 - rect.height_);
 
         setAlpha(alpha);
         CGContextDrawImage(m_cg_context, rect.cgRect(), icon->_m_cg_image);
@@ -686,9 +686,9 @@ namespace Grain {
 
         CGContextSaveGState(m_cg_context);
 
-        // CGContextTranslateCTM(m_cg_context, 0.0, m_height);
+        // CGContextTranslateCTM(m_cg_context, 0.0, height_);
         CGContextScaleCTM(m_cg_context, 1, -1);
-        CGContextTranslateCTM(m_cg_context, 0, -rect.m_height - rect.m_y * 2 );
+        CGContextTranslateCTM(m_cg_context, 0, -rect.height_ - rect.y_ * 2 );
 
         // CGContextDrawImage(m_cg_context, rect.cgRect(), icon->_m_cg_image);
         CGContextClipToMask(m_cg_context, rect.cgRect(), icon->_m_cg_image);
@@ -704,7 +704,7 @@ namespace Grain {
     void AppleCGContext::drawIconInCircle(const Icon* icon, const Vec2d& center, double radius, const RGB& bg_color, const RGB& icon_color, const RGB& border_color, double border_width, float bg_alpha, float border_alpha, float icon_alpha) noexcept {
         /* TODO: ...
 
-        Rectd rect(center.m_x - radius, center.m_y - radius, radius * 2, radius * 2);
+        Rectd rect(center.x_ - radius, center.y_ - radius, radius * 2, radius * 2);
 
         if (bg_alpha > 0) {
 
@@ -790,7 +790,7 @@ namespace Grain {
 
         CTLineRef line = CTLineCreateWithAttributedString(cf_attr_str);
 
-        CGContextSetTextPosition(m_cg_context, pos.m_x, pos.m_y);
+        CGContextSetTextPosition(m_cg_context, pos.x_, pos.y_);
         CTLineDraw(line, m_cg_context);
 
         CFRelease(cf_str);
@@ -842,17 +842,17 @@ namespace Grain {
             case Alignment::Center:
             case Alignment::Top:
             case Alignment::Bottom:
-                text_x = rect.m_x + rect.m_width / 2 - text_width / 2;
+                text_x = rect.x_ + rect.width_ / 2 - text_width / 2;
                 break;
 
             case Alignment::Right:
             case Alignment::TopRight:
             case Alignment::BottomRight:
-                text_x = rect.m_x + rect.m_width - text_width;
+                text_x = rect.x_ + rect.width_ - text_width;
                 break;
 
             default:
-                text_x = rect.m_x;
+                text_x = rect.x_;
                 break;
         }
 
@@ -862,10 +862,10 @@ namespace Grain {
             case Alignment::Left:
             case Alignment::Right:
                 if (m_flipped_y == true) {
-                    text_y = rect.m_y + rect.m_height / 2 + (ascent - descent) / 2;
+                    text_y = rect.y_ + rect.height_ / 2 + (ascent - descent) / 2;
                 }
                 else {
-                    text_y = rect.m_y + rect.m_height / 2 - (ascent - descent) / 2;
+                    text_y = rect.y_ + rect.height_ / 2 - (ascent - descent) / 2;
                 }
                 break;
 
@@ -873,19 +873,19 @@ namespace Grain {
             case Alignment::Bottom:
             case Alignment::BottomRight:
                 if (m_flipped_y == true) {
-                    text_y = rect.m_y + rect.m_height - descent;
+                    text_y = rect.y_ + rect.height_ - descent;
                 }
                 else {
-                    text_y = rect.m_y + descent;
+                    text_y = rect.y_ + descent;
                 }
                 break;
 
             default:
                 if (m_flipped_y == true) {
-                    text_y = rect.m_y + ascent;
+                    text_y = rect.y_ + ascent;
                 }
                 else {
-                    text_y = rect.m_y + rect.m_height - ascent;
+                    text_y = rect.y_ + rect.height_ - ascent;
                 }
                 break;
         }

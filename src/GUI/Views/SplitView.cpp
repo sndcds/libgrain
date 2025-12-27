@@ -16,7 +16,7 @@
 namespace Grain {
 
     SplitView::SplitView(const Rectd& rect, int32_t tag) noexcept : View(rect, tag) {
-        m_type = ComponentType::SplitView;
+        type_ = ComponentType::SplitView;
 
         // setMouseCursor(App::MouseCursor::ResizeLeftRight); TODO: !!!!!
     }
@@ -34,15 +34,16 @@ namespace Grain {
 
     void SplitView::draw(const Rectd& dirty_rect) noexcept {
         auto gc = graphicContextPtr();
+        if (!gc) { return; }
 
-        if (m_must_init == true) {
+        if (m_must_init) {
             initLayout();
             m_must_init = false;
         }
 
         Rectd bounds_rect = boundsRect();
-        RGB bg_color = { 1, 0, 0 }; // TODO: !!!!!
 
+        RGB bg_color = { 0.2, 0.2, 0.2 }; // TODO: !!!!!
         gc->setFillRGB(bg_color);
         gc->fillRect(bounds_rect);
 
@@ -50,18 +51,18 @@ namespace Grain {
         Rectd split_rect;
 
         if (m_vertical) {
-            split_rect.set(0, static_cast<int32_t>(divider_size / 2) - 0.5f, bounds_rect.m_width, 1);
+            split_rect.set(0, static_cast<int32_t>(divider_size / 2) - 0.5f, bounds_rect.width_, 1);
         }
         else {
-            split_rect.set(static_cast<int32_t>(divider_size / 2) - 0.5f, 0, 1, bounds_rect.m_height);
+            split_rect.set(static_cast<int32_t>(divider_size / 2) - 0.5f, 0, 1, bounds_rect.height_);
         }
 
         int32_t n = viewCount();
 
         for (int32_t i = 0; i < n; i++) {
             Rectd view_rect = getViewRect(i);
-            m_vertical ? split_rect.m_y += view_rect.m_height : split_rect.m_x += view_rect.m_width;
-            m_vertical ? split_rect.m_y += divider_size : split_rect.m_x += divider_size;
+            m_vertical ? split_rect.y_ += view_rect.height_ : split_rect.x_ += view_rect.width_;
+            m_vertical ? split_rect.y_ += divider_size : split_rect.x_ += divider_size;
         }
 
         callDrawFunction(gc);
@@ -70,7 +71,7 @@ namespace Grain {
 
     bool SplitView::hasDescendant(const Component* component) noexcept {
         for (int32_t i = 0; i < viewCount(); i++) {
-            if (m_items[i].m_view->hasDescendant(component)) {
+            if (m_items[i].view_->hasDescendant(component)) {
                 return true;
             }
         }
@@ -88,7 +89,7 @@ namespace Grain {
 
         for (int32_t i = 0; i < m_view_count; i++) {
             auto item = itemAtIndex(i);
-            item->setSize(item->m_real_size * available_size);
+            item->setSize(item->real_size_ * available_size);
         }
 
         updateRectOfAllViews();
@@ -113,7 +114,7 @@ namespace Grain {
                     for (int32_t i = 0; i < m_view_count; i++) {
                         auto item = itemAtIndex(i);
                         if (item->canGrow()) {
-                            item->setSize(item->m_size + 1);
+                            item->setSize(item->size_ + 1);
                             rest--;
                         }
                         if (rest < 1) {
@@ -127,9 +128,9 @@ namespace Grain {
                     for (int32_t i = 0; i < m_view_count; i++) {
                         auto item = itemAtIndex(i);
                         if (item->canGrow()) {
-                            item->setSize(item->m_size + rest / growable_count);
+                            item->setSize(item->size_ + rest / growable_count);
                         }
-                        total_view_size += item->m_size;
+                        total_view_size += item->size_;
                     }
                     rest = available_size - total_view_size;
                 }
@@ -147,7 +148,7 @@ namespace Grain {
                     for (int32_t i = 0; i < m_view_count; i++) {
                         auto item = itemAtIndex(i);
                         if (item->canShrink()) {
-                            item->setSize(item->m_size - 1);
+                            item->setSize(item->size_ - 1);
                             rest--;
                         }
                         if (rest < 1) {
@@ -161,9 +162,9 @@ namespace Grain {
                     for (int32_t i = 0; i < m_view_count; i++) {
                         auto item = itemAtIndex(i);
                         if (item->canShrink()) {
-                            item->setSize(item->m_size - rest / shrinkable_count);
+                            item->setSize(item->size_ - rest / shrinkable_count);
                         }
-                        total_view_size += item->m_size;
+                        total_view_size += item->size_;
                     }
                     rest = total_view_size - available_size;
                 }
@@ -181,7 +182,7 @@ namespace Grain {
         for (int32_t i = 1; i < m_view_count && m_divider_index < 0; i++) {
 
             auto item = itemAtIndex(i);
-            Rectd view_rect = item->m_view->rect();
+            Rectd view_rect = item->view_->rect();
 
             if (isVertical()) {
                 if (event.mouseY() < view_rect.y()) {
@@ -199,16 +200,16 @@ namespace Grain {
             m_item_a = itemAtIndex(m_divider_index);
             m_item_b = itemAtIndex(m_divider_index + 1);
 
-            int32_t delta_min_a = m_item_a->m_min - m_item_a->m_size;
-            int32_t delta_max_a = m_item_a->m_max - m_item_a->m_size;
-            int32_t delta_min_b = m_item_b->m_size - m_item_b->m_max;
-            int32_t delta_max_b = m_item_b->m_size - m_item_b->m_min;
+            int32_t delta_min_a = m_item_a->min_ - m_item_a->size_;
+            int32_t delta_max_a = m_item_a->max_ - m_item_a->size_;
+            int32_t delta_min_b = m_item_b->size_ - m_item_b->max_;
+            int32_t delta_max_b = m_item_b->size_ - m_item_b->min_;
             m_divider_delta_min = std::max(delta_min_a, delta_min_b);
             m_divider_delta_max = std::min(delta_max_a, delta_max_b);
 
             // Remember sizes and positions.
-            m_item_a_size = m_item_a->m_size;
-            m_item_b_size = m_item_b->m_size;
+            m_item_a_size = m_item_a->size_;
+            m_item_b_size = m_item_b->size_;
         }
     }
 
@@ -219,8 +220,8 @@ namespace Grain {
             int32_t delta = static_cast<int32_t>(std::round(new_mouse_pos - m_prev_mouse_pos));
             delta = std::clamp<int32_t>(delta, m_divider_delta_min, m_divider_delta_max);
 
-            m_item_a->m_size = m_item_a_size + delta;
-            m_item_b->m_size = m_item_b_size - delta;
+            m_item_a->size_ = m_item_a_size + delta;
+            m_item_b->size_ = m_item_b_size - delta;
 
             updateRectOfAllViews();
             updateRealPositions();
@@ -244,7 +245,7 @@ namespace Grain {
     SplitViewItem* SplitView::itemByView(Component* component) noexcept {
         for (int32_t i = 0; i < m_view_count; i++) {
             auto item = itemAtIndex(i);
-            if ((Component*)item->m_view == component) {
+            if ((Component*)item->view_ == component) {
                 return item;
             }
         }
@@ -253,12 +254,12 @@ namespace Grain {
 
 
     View* SplitView::viewAtIndex(int32_t index) const noexcept {
-        return isViewIndex(index) ? m_items[index].m_view : nullptr;
+        return isViewIndex(index) ? m_items[index].view_ : nullptr;
     }
 
 
     Rectd SplitView::getViewRect(int32_t index) const noexcept {
-        return isViewIndex(index) ? m_items[index].m_view->rect() : Rectd();
+        return isViewIndex(index) ? m_items[index].view_->rect() : Rectd();
     }
 
 
@@ -266,7 +267,7 @@ namespace Grain {
         double total_size = 0.0;
 
         for (int32_t i = 0; i < m_view_count; i++) {
-            total_size += isVertical() ? m_items[i].m_view->height() : m_items[i].m_view->width();
+            total_size += isVertical() ? m_items[i].view_->height() : m_items[i].view_->width();
         }
 
         return static_cast<int32_t>(total_size);
@@ -289,8 +290,8 @@ namespace Grain {
 
     void SplitView::setViewLimits(int32_t index, int32_t min, int32_t max) noexcept {
         if (SplitViewItem* item = itemAtIndex(index)) {
-            m_items[index].m_min = min;
-            m_items[index].m_max = max;
+            m_items[index].min_ = min;
+            m_items[index].max_ = max;
             updateRectOfAllViews();
         }
     }
@@ -298,7 +299,7 @@ namespace Grain {
 
     void SplitView::setViewSize(int32_t index, int32_t size) noexcept {
         if (SplitViewItem* item = itemAtIndex(index)) {
-            m_items[index].m_size = size;
+            m_items[index].size_ = size;
             updateRectOfAllViews();
         }
     }
@@ -312,7 +313,7 @@ namespace Grain {
 
             if (view != nullptr) {
                 view->setSplitViewFlag(true);
-                m_items[m_view_count].m_view = view;
+                m_items[m_view_count].view_ = view;
                 m_view_count++;
                 updateRectOfAllViews();
             }
@@ -358,7 +359,7 @@ namespace Grain {
                     for (int32_t i = 0; i < m_view_count; i++) {
                         auto item = itemAtIndex(i);
                         if (item->canGrow()) {
-                            item->setSize(item->m_size + 1);
+                            item->setSize(item->size_ + 1);
                             rest--;
                         }
                         if (rest < 1) {
@@ -371,9 +372,9 @@ namespace Grain {
                     for (int32_t i = 0; i < m_view_count; i++) {
                         auto item = itemAtIndex(i);
                         if (item->canGrow()) {
-                            item->setSize(item->m_size + rest / growable_count);
+                            item->setSize(item->size_ + rest / growable_count);
                         }
-                        total_view_size += item->m_size;
+                        total_view_size += item->size_;
                     }
 
                     rest = available_size - total_view_size;
@@ -394,13 +395,13 @@ namespace Grain {
             auto item = itemAtIndex(i);
 
             if (isVertical()) {
-                item->m_view->setRect(Rectd(0, pos, width(), item->m_size));
+                item->view_->setRect(Rectd(0, pos, width(), item->size_));
             }
             else {
-                item->m_view->setRect(Rectd(pos, 0, item->m_size, height()));
+                item->view_->setRect(Rectd(pos, 0, item->size_, height()));
             }
 
-            pos += item->m_size + m_divider_size;
+            pos += item->size_ + m_divider_size;
         }
     }
 
@@ -422,8 +423,8 @@ namespace Grain {
                 out_shrinkable++;
             }
 
-            out_grow_potential += item->m_max - item->m_size;
-            out_shrink_potential += item->m_size - item->m_min;
+            out_grow_potential += item->max_ - item->size_;
+            out_shrink_potential += item->size_ - item->min_;
         }
     }
 
@@ -435,11 +436,11 @@ namespace Grain {
         for (int32_t i = 0; i < m_view_count; i++) {
             auto item = itemAtIndex(i);
 
-            item->m_real_pos = p / available_size;
-            item->m_real_size = static_cast<double>(item->m_size) / available_size;
-            item->m_view->needsDisplay();
+            item->real_pos_ = p / available_size;
+            item->real_size_ = static_cast<double>(item->size_) / available_size;
+            item->view_->needsDisplay();
 
-            p += item->m_size;
+            p += item->size_;
         }
     }
 

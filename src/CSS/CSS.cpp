@@ -13,9 +13,7 @@
 
 namespace Grain {
 
-
     const CSSUnitInfo CSS::_g_css_unit_infos[] = {
-
             { "undefined", 9, CSSUnit::Undefined, CSSUnitContext::Undefined },
             { "absolute", 8, CSSUnit::Absolute, CSSUnitContext::Absolute },
 
@@ -80,21 +78,18 @@ namespace Grain {
 
 
     const char* CSSValue::unitName() const noexcept {
-
-        return CSS::unitName(m_unit);
+        return CSS::unitName(unit_);
     }
 
 
     double CSSValue::valueAsDoubleConsiderPercentage() const noexcept {
-
-        return m_unit == CSSUnit::Percentage ? m_value.asDouble() * 0.01 : m_value.asDouble();
+        return unit_ == CSSUnit::Percentage ? m_value.asDouble() * 0.01 : m_value.asDouble();
     }
 
 
     double CSSValue::valueForColorLevel() const noexcept {
-
         float value = m_value.asFloat();
-        if (m_unit == CSSUnit::Percentage) {
+        if (unit_ == CSSUnit::Percentage) {
             return value * 0.01f;
         }
         else if (m_is_float) {
@@ -107,21 +102,16 @@ namespace Grain {
 
 
     double CSSValue::valueForAngleDegree() const noexcept {
-
-        switch (m_unit) {
+        switch (unit_) {
             case CSSUnit::Absolute:
             case CSSUnit::Angle_deg:
                 return m_value.asFloat();
-
             case CSSUnit::Angle_grad:
                 return m_value.asFloat() / 400 * 360;
-
             case CSSUnit::Angle_rad:
                 return m_value.asFloat() / (std::numbers::pi * 2.0) * 360;
-
             case CSSUnit::Angle_turn:
                 return m_value.asFloat() * 360;
-
             default:
                 return m_value.asFloat();
         }
@@ -132,29 +122,21 @@ namespace Grain {
      *  @brief Get value in unit of pixels.
      */
     double CSSValue::valueSVGPixel(double dpi) const noexcept {
-
         double value = valueAsDouble();
 
-        switch (m_unit) {
-
+        switch (unit_) {
             case CSSUnit::Millimeter:
                 return value * 10 / 2.54 * dpi;
-
             case CSSUnit::Centimeter:
                 return value / 2.54 * dpi;
-
             case CSSUnit::QuarterMillimeter:
                 return value * 10 / 2.54 / 4 * dpi;
-
             case CSSUnit::Inch:
                 return value * dpi;
-
             case CSSUnit::Point:
                 return value * dpi / 72;
-
             case CSSUnit::Pica:
                 return value * dpi / 6;
-
             case CSSUnit::Absolute:
             case CSSUnit::Pixel:
             default:
@@ -254,37 +236,33 @@ namespace Grain {
     /**
      *  @brief Extract numeric values from a C-string as floats.
      *
-     *  This function parses a C-string to extract up to `values_size` numeric values,
-     *  storing them as floats in the `out_values` array. The function also uses a
-     *  buffer to temporarily store segments of the input string during parsing.
+     *  This function parses a C-string to extract up to `values_size` numeric values, storing them as floats in the
+     *  `out_values` array. The function also uses a buffer to temporarily store segments of the input string during
+     *  parsing.
      *
-     *  @param[in] str          The input C-string to parse. Must be null-terminated.
-     *  @param[out] buffer      A temporary character buffer used during parsing. This
-     *                          buffer should have at least `buffer_size` capacity.
-     *  @param[in] buffer_size  The size of the `buffer`. Must be large enough to store
-     *                          segments of the input string during parsing.
+     *  @param[in] str The input C-string to parse. Must be null-terminated.
+     *  @param[out] buffer A temporary character buffer used during parsing. This buffer should have at least
+     *                     `buffer_size` capacity.
+     *  @param[in] buffer_size The size of the `buffer`. Must be large enough to store segments of the input string
+     *                         during parsing.
      *  @param[in] closing_char If != '\0', this char is needed at the end of `str`.
-     *  @param[in] values_size  The maximum number of numeric values to extract.
-     *                          This determines the size of the `out_values` array.
-     *  @param[out] out_values  An array where extracted float values will be stored.
-     *                          Must have a capacity of at least `values_size`.
+     *  @param[in] values_size The maximum number of numeric values to extract. This determines the size of the
+     *                         `out_values` array.
+     *  @param[out] out_values An array where extracted float values will be stored. Must have a capacity of at least
+     *                         `values_size`.
      *
-     *  @return int32_t The number of numeric values successfully extracted and stored
-     *                  in `out_values`.
+     *  @return int32_t The number of numeric values successfully extracted and stored in `out_values`.
      *
      *  @note
-     *  - The function stops parsing either when `values_size` numbers are extracted
-     *    or when the input string is fully processed.
-     *  - Non-numeric characters in the input string are ignored, except when they
-     *    terminate a numeric sequence.
+     *  - The function stops parsing either when `values_size` numbers are extracted or when the input string is fully
+     *    processed.
+     *  - Non-numeric characters in the input string are ignored, except when they terminate a numeric sequence.
      *  - If the buffer is insufficient for parsing segments, the function may fail.
      *
      *  @warning
-     *  - Ensure `buffer` and `out_values` are properly allocated with sufficient size
-     *    before calling this function. Passing invalid pointers or insufficient sizes
-     *    may result in undefined behavior.
-     *  - This function does not handle locale-specific number formatting (e.g., commas
-     *    as decimal separators).
+     *  - Ensure `buffer` and `out_values` are properly allocated with sufficient size before calling this function.
+     *    Passing invalid pointers or insufficient sizes may result in undefined behavior.
+     *  - This function does not handle locale-specific number formatting (e.g., commas as decimal separators).
      *
      *  @example
      *  @code
@@ -293,20 +271,24 @@ namespace Grain {
      *  float values[4];
      *  int32_t num_values = CSS::extractValuesFromStr(input, temp_buffer, 32, ')', 4, values);
      *
-     *  // Result: values = {255.0, 128.0, 64.0, 0.5}, num_values = 4
+     *  // Result: values = { 255.0, 128.0, 64.0, 0.5 }, num_values = 4
      *  @endcode
      */
-    int32_t CSS::extractValuesFromStr(const char* str, char* buffer, int32_t buffer_size, char closing_char, int32_t values_size, float* out_values) {
-
+    int32_t CSS::extractValuesFromStr(
+            const char* str,
+            char* buffer,
+            int32_t buffer_size,
+            char closing_char,
+            int32_t values_size,
+            float* out_values
+    ) {
         static constexpr int32_t kMaxValuesCount = 128;
 
         if (!str) { throw ErrorCode::CSSInternalError; }
         if (!buffer) { throw ErrorCode::CSSInternalMemoryError; }
         if (!out_values) { throw ErrorCode::CSSInternalMemoryError; }
-
         if (buffer_size < 1) { throw ErrorCode::CSSInternalError; }
         if (values_size > kMaxValuesCount) { throw ErrorCode::CSSInternalError; }
-
         if (*str == '\0') {
             return 0;
         }
@@ -326,17 +308,16 @@ namespace Grain {
         if (length < 1) { throw ErrorCode::CSSContentMissing; }
         if (length >= buffer_size) { throw ErrorCode::CSSContentToBig; }
 
-        std::strncpy(buffer, str, length); // Copy up to `buffer_size` - 1 characters.
+        std::strncpy(buffer, str, length); // Copy up to `buffer_size` - 1 characters
         buffer[length] = '\0'; // Ensure null-termination.
 
-        // Replace all commas with spaces, which now separates the values.
+        // Replace all commas with spaces, which now separates the values
         String::replaceChar(buffer, ',', ' ');
         String::replaceChar(buffer, '/', ' ');
 
 
-        // Find all value pointers.
-
-        const char* value_ptr[kMaxValuesCount]; // Pointer to start of values in `buffer`.
+        // Find all value pointers
+        const char* value_ptr[kMaxValuesCount]; // Pointer to start of values in `buffer`
 
         char* b_ptr = buffer;
         bool prev_space_flag = false;
@@ -360,9 +341,7 @@ namespace Grain {
             b_ptr++;
         }
 
-
         // Convert the values from str to floats
-
         int32_t value_n = value_index + 1;
         for (int32_t i = 0; i < value_n; i++) {
             auto value_str_length = static_cast<int32_t>(strlen(value_ptr[i]));
@@ -384,7 +363,7 @@ namespace Grain {
      *  It then stores the extracted value as a double and the unit in the provided `CSSUnit` reference.
      *  The function can handle typical CSS units for lengths and sizes, such as pixels, percentage, etc.
      *
-     *  @param str       A pointer to a C-style string containing a number followed by an optional  unit.
+     *  @param str A pointer to a C-style string containing a number followed by an optional  unit.
      *  @param out_value A reference to a `CSSValue` obejct that will hold the resulting value with unit.
      *
      *  @return An `ErrorCode` indicating the success or a failure.
@@ -403,13 +382,12 @@ namespace Grain {
      *  @endcode
      */
     ErrorCode CSS::extractCSSValueFromStr(const char* str, CSSValue& out_value, char** next_value_ptr) noexcept {
-
         auto result = ErrorCode::None;
 
         try {
             if (!str) { throw ErrorCode::CSSInternalError; }
 
-            // Skip all whitespaces.
+            // Skip all whitespaces
             auto ptr = str;
             while (String::charIsWhiteSpace(*ptr)) {
                 ptr++;
@@ -424,7 +402,6 @@ namespace Grain {
             if (first_c != '-' && first_c != '+' && !(first_c >= '0' && first_c <= '9')) {
                 throw ErrorCode::CSSNumberParseError;
             }
-
 
             bool has_dot = false;
             ptr++;
@@ -443,7 +420,6 @@ namespace Grain {
 
             out_value.setIsFloat(has_dot);
 
-
             auto unit_beg_ptr = ptr;
 
             if (next_value_ptr) {
@@ -459,15 +435,15 @@ namespace Grain {
             bool unit_flag = false;
             CSSUnit css_unit = CSSUnit::Absolute;
             if (!_css_isDelimiter(*unit_beg_ptr)) {
-                while (css_unit_info->m_unit_str[0] != '\0') {  // Check for sentinel.
+                while (css_unit_info->m_unit_str[0] != '\0') { // Check for sentinel.
                     if (_css_strcmp(unit_beg_ptr, css_unit_info->m_unit_str)) {
-                        css_unit = css_unit_info->m_unit;
+                        css_unit = css_unit_info->unit_;
                         unit_flag = true;
                         break;
                     }
                     css_unit_info++;
                 }
-                if (!unit_flag) { throw ErrorCode::CSSUnknownUnit; }  // No unit found
+                if (!unit_flag) { throw ErrorCode::CSSUnknownUnit; }
             }
 
             out_value.setDouble(String::parseDoubleWithDotOrComma(value_beg_ptr), css_unit);
@@ -482,7 +458,6 @@ namespace Grain {
 
 
     const char* CSS::unitName(CSSUnit unit) noexcept {
-
         static const char* undefined_name = "unknown";
 
         if (unit >= CSSUnit::First && unit <= CSSUnit::Last) {
@@ -515,16 +490,13 @@ namespace Grain {
     /**
      *  @brief Checks if a character is a CSS delimiter.
      *
-     *  This utility function determines whether the given character is a delimiter
-     *  commonly used in CSS syntax. Delimiters are used to separate tokens or values
-     *  in CSS properties.
+     *  This utility function determines whether the given character is a delimiter commonly used in CSS syntax.
+     *  Delimiters are used to separate tokens or values in CSS properties.
      *
      *  @param c The character to check.
-     *  @return true if the character is a CSS delimiter ('\0', ' ', ',', '/', or ')'),
-     *          false otherwise.
+     *  @return true if the character is a CSS delimiter ('\0', ' ', ',', '/', or ')'), false otherwise.
      */
     bool CSS::_css_isDelimiter(const char c) noexcept {
-
         return c == '\0' || c == ' ' || c == ',' || c == '/' || c == ')';
     }
 
@@ -563,9 +535,9 @@ namespace Grain {
             }
             else {
                 if (*ptr != ' ' && *ptr != '/') {
-                    // A character which is not a delimiter would be some content/value.
+                    // A character which is not a delimiter would be some content/value
                     curr_content_length++;
-                    comma_flag = false;  // The previous comma isn't relevant anymore.
+                    comma_flag = false;  // The previous comma isn't relevant anymore
                 }
                 else {
                     if (*ptr == '/') {

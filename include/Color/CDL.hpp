@@ -6,8 +6,6 @@
 //
 //  This file is part of GrainLib, see <https://grain.one>.
 //
-//  LastChecked: 25.07.2025
-//
 
 #ifndef GrainCDL_hpp
 #define GrainCDL_hpp
@@ -35,29 +33,29 @@ namespace Grain {
     class CDL_RGB {
 
     public:
-        RGB m_lift_rgb;
-        RGB m_gamma_rgb;
-        RGB m_gain_rgb;
-        RGB m_shift1_rgb;
-        RGB m_shift2_rgb;
+        RGB lift_rgb_;
+        RGB gamma_rgb_;
+        RGB gain_rgb_;
+        RGB shift1_rgb_;
+        RGB shift2_rgb_;
     };
 
     class CDL {
     public:
-        float m_black_point = 0.063f;
-        float m_lift = 0.0f;
-        float m_gamma = 2.0f;
-        float m_gain = 2.0f;
-        HSV m_lift_hsv = { 0.0f, 0.0f, 0.0f };
-        HSV m_gamma_hsv = { 0.0f, 0.0f, 0.5f };
-        HSV m_gain_hsv = { 0.0f, 0.0f, 0.5f };
+        float black_point_ = 0.063f;
+        float lift_ = 0.0f;
+        float gamma_ = 2.0f;
+        float gain_ = 2.0f;
+        HSV lift_hsv_ = { 0.0f, 0.0f, 0.0f };
+        HSV gamma_hsv_ = { 0.0f, 0.0f, 0.5f };
+        HSV gain_hsv_ = { 0.0f, 0.0f, 0.5f };
 
     public:
         CDL() noexcept {}
         ~CDL() noexcept {}
 
         void init() noexcept;
-        void buildCDL_RGB(CDL_RGB& outCDL_RGB) const noexcept;
+        void buildCDL_RGB(CDL_RGB& out_cdl_rgb) const noexcept;
     };
 
 

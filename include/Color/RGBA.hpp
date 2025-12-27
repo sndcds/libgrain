@@ -38,26 +38,26 @@ namespace Grain {
         static const RGBA kWhite;
 
     public:
-        float m_alpha = 1.0f;
+        float alpha_ = 1.0f;
 
     public:
-        RGBA() noexcept : RGB(), m_alpha(1.0f) {}
-        RGBA(float r, float g, float b, float alpha) noexcept : RGB(r, g, b), m_alpha(alpha) {}
-        explicit RGBA(float value) noexcept : RGB(value), m_alpha(1.0f) {}
+        RGBA() noexcept : RGB(), alpha_(1.0f) {}
+        RGBA(float r, float g, float b, float alpha) noexcept : RGB(r, g, b), alpha_(alpha) {}
+        explicit RGBA(float value) noexcept : RGB(value), alpha_(1.0f) {}
         explicit RGBA(uint32_t value) noexcept { set32bit(value); }
-        explicit RGBA(float r, float g, float b) noexcept : RGB(r, g, b), m_alpha(1.0f) {}
-        explicit RGBA(const RGB& rgb, float alpha) noexcept : RGB(rgb), m_alpha(alpha) {}
+        explicit RGBA(float r, float g, float b) noexcept : RGB(r, g, b), alpha_(1.0f) {}
+        explicit RGBA(const RGB& rgb, float alpha) noexcept : RGB(rgb), alpha_(alpha) {}
         explicit RGBA(const RGBA& a, const RGBA& b, float blend) noexcept { setBlend(a, b, blend); }
         explicit RGBA(const RGB& a, const RGBA& b, float blend) noexcept { setBlend(RGBA(a, 1.0f), b, blend); }
         explicit RGBA(const RGBA& a, const RGB& b, float blend) noexcept { setBlend(a, RGBA(b, 1.0f), blend); }
-        explicit RGBA(const HSV& hsv, float alpha) noexcept : RGB(hsv), m_alpha(alpha) {}
+        explicit RGBA(const HSV& hsv, float alpha) noexcept : RGB(hsv), alpha_(alpha) {}
 
         RGBA(int32_t r, int32_t g, int32_t b, int32_t a, int32_t max) noexcept {
             float f = 1.0f / static_cast<float>(max);
             m_data[0] = f * static_cast<float>(r);
             m_data[1] = f * static_cast<float>(g);
             m_data[2] = f * static_cast<float>(b);
-            m_alpha = f * static_cast<float>(a);
+            alpha_ = f * static_cast<float>(a);
         }
         explicit RGBA(const String& csv) noexcept;
         explicit RGBA(const char* csv) noexcept;
@@ -73,7 +73,7 @@ namespace Grain {
         }
 
         friend std::ostream& operator << (std::ostream& os, const RGBA& o) {
-            os << o.m_data[0] << ", " << o.m_data[1] << ", " << o.m_data[2] << ", " << o.m_alpha;
+            os << o.m_data[0] << ", " << o.m_data[1] << ", " << o.m_data[2] << ", " << o.alpha_;
             return os;
         }
 
@@ -88,37 +88,37 @@ namespace Grain {
 
 
         bool operator == (const RGBA& v) const {
-            return m_data[0] == v.m_data[0] && m_data[1] == v.m_data[1] && m_data[2] == v.m_data[2]  && m_alpha == v.m_alpha;
+            return m_data[0] == v.m_data[0] && m_data[1] == v.m_data[1] && m_data[2] == v.m_data[2]  && alpha_ == v.alpha_;
         }
 
         bool operator != (const RGBA& v) const {
-            return m_data[0] != v.m_data[0] || m_data[1] != v.m_data[1] || m_data[2] != v.m_data[2] || m_alpha != v.m_alpha;
+            return m_data[0] != v.m_data[0] || m_data[1] != v.m_data[1] || m_data[2] != v.m_data[2] || alpha_ != v.alpha_;
         }
 
-        [[nodiscard]] float alpha() const noexcept { return m_alpha; }
+        [[nodiscard]] float alpha() const noexcept { return alpha_; }
         [[nodiscard]] uint32_t rgba32bit() const noexcept;
         void values(float* out_values) const noexcept override;
 
         [[nodiscard]] bool isSame(const RGBA& rgba, float tolerance = 0.0001f) const noexcept;
 
-        void black() noexcept override { m_data[0] = m_data[1] = m_data[2] = 0.0f; m_alpha = 1.0f; }
-        void white() noexcept override { m_data[0] = m_data[1] = m_data[2] = 1.0f; m_alpha = 1.0f;  }
+        void black() noexcept override { m_data[0] = m_data[1] = m_data[2] = 0.0f; alpha_ = 1.0f; }
+        void white() noexcept override { m_data[0] = m_data[1] = m_data[2] = 1.0f; alpha_ = 1.0f;  }
 
-        void setGrey(float value) noexcept override { m_data[0] = m_data[1] = m_data[2] = value; m_alpha = 1.0f; }
+        void setGrey(float value) noexcept override { m_data[0] = m_data[1] = m_data[2] = value; alpha_ = 1.0f; }
         void setRGB(const RGB& color) {
-            m_data[0] = color.m_data[0]; m_data[1] = color.m_data[1]; m_data[2] = color.m_data[2]; m_alpha = 1.0f;
+            m_data[0] = color.m_data[0]; m_data[1] = color.m_data[1]; m_data[2] = color.m_data[2]; alpha_ = 1.0f;
         }
         void setRGBA(const RGB& color, float alpha) {
-            m_data[0] = color.m_data[0]; m_data[1] = color.m_data[1]; m_data[2] = color.m_data[2]; m_alpha = alpha;
+            m_data[0] = color.m_data[0]; m_data[1] = color.m_data[1]; m_data[2] = color.m_data[2]; alpha_ = alpha;
         }
-        void setRGB(float r, float g, float b) { m_data[0] = r; m_data[1] = g; m_data[2] = b; m_alpha = 1.0f; }
-        void setRGBA(float r, float g, float b, float alpha) { m_data[0] = r; m_data[1] = g; m_data[2] = b; m_alpha = alpha; }
+        void setRGB(float r, float g, float b) { m_data[0] = r; m_data[1] = g; m_data[2] = b; alpha_ = 1.0f; }
+        void setRGBA(float r, float g, float b, float alpha) { m_data[0] = r; m_data[1] = g; m_data[2] = b; alpha_ = alpha; }
 
         void set32bit(uint32_t value) noexcept {
             m_data[0] = static_cast<float>((value & 0xFF000000) >> 24) / 255;
             m_data[1] = static_cast<float>((value & 0xFF0000) >> 16) / 255;
             m_data[2] = static_cast<float>((value & 0xFF00) >> 8) / 255;
-            m_alpha = static_cast<float>(value & 0xFF) / 255;
+            alpha_ = static_cast<float>(value & 0xFF) / 255;
         }
 
         int32_t setByCSV(const char* csv) noexcept override;
@@ -129,7 +129,7 @@ namespace Grain {
         void setValues(const float* comp, float scale) noexcept override;
 
 
-        void setAlpha(float alpha) noexcept { m_alpha = alpha; }
+        void setAlpha(float alpha) noexcept { alpha_ = alpha; }
         void setBlend(const RGBA& a, float t) noexcept;
         void setBlend(const RGBA& a, const RGBA& b, float t) noexcept;
         void mixbox(const RGBA& color1, const RGBA& color2, float t) noexcept;

@@ -512,7 +512,7 @@ namespace Grain {
 
             // Calculate the axis of rotation
             Vec3d axis(dy, dx, 0);
-            double view_space_magnitude = std::sqrt(axis.m_x * axis.m_x + axis.m_y * axis.m_y + axis.m_z * axis.m_z);
+            double view_space_magnitude = std::sqrt(axis.x_ * axis.x_ + axis.y_ * axis.y_ + axis.z_ * axis.z_);
             if (Safe::canSafelyDivideBy(view_space_magnitude)) {
                 axis *= 1.0 / view_space_magnitude;     // Normalize the axis
             }
@@ -521,9 +521,9 @@ namespace Grain {
             double c = std::cos(angle);
             double s = std::sin(angle);
             double t = 1.0 - c;
-            double x = axis.m_x;
-            double y = axis.m_y;
-            double z = axis.m_z;
+            double x = axis.x_;
+            double y = axis.y_;
+            double z = axis.z_;
 
             set(
                     t * x * x + c, t * x * y - s * z, t * x * z + s * y, 0.0,

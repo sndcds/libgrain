@@ -80,7 +80,7 @@ namespace Grain {
      */
     void GeoTileRendererLayer::checkProj(int32_t dst_srid) {
         if (!m_proj) {
-            m_proj = new GeoProj(m_srid, dst_srid);
+            m_proj = new GeoProj(srid_, dst_srid);
             if (!m_proj->isValid()) {
                 Exception::throwSpecific(GeoTileRenderer::kErrDefaultRenderProjNotValid);
             }
@@ -146,20 +146,20 @@ namespace Grain {
             TomlTable config_table;
             m_toml.asTable(config_table);
 
-            m_title = config_table.stringOrThrow("title");
+            m_title = config_table.asStringThrow("title");
 
-            m_render_mode_name = config_table.stringOrThrow("render-mode");
+            m_render_mode_name = config_table.asStringThrow("render-mode");
             setRenderModeByName(m_render_mode_name);
 
-            m_renderer_name = config_table.stringOr("renderer", "System");
+            m_renderer_name = config_table.asString("renderer", "System");
 
             if (m_render_mode == RenderMode::Image) {
-                m_output_file_name = config_table.stringOrThrow("output-file-name");
+                m_output_file_name = config_table.asStringThrow("output-file-name");
             }
 
-            m_min_zoom = (int32_t)config_table.integerOrThrow("zoom-min");
-            m_max_zoom = (int32_t)config_table.integerOrThrow("zoom-max");
-            m_current_zoom = (int32_t)config_table.integerOr("image-zoom-level", 10);
+            m_min_zoom = config_table.asInt32Throw("zoom-min");
+            m_max_zoom = config_table.asInt32Throw("zoom-max");
+            m_current_zoom = config_table.asInt32("image-zoom-level", 10);
 
             if (m_max_zoom < m_min_zoom) {
                 Exception::throwSpecificFormattedMessage(
@@ -183,7 +183,7 @@ namespace Grain {
             // PostgreSQL connections
             {
                 TomlArray psql_db_array;
-                config_table.arrayOrThrow("psql-db", psql_db_array);
+                config_table.asArrayThrow("psql-db", psql_db_array);
 
                 for (auto& item : psql_db_array) {
                     auto table = item.asTableOrThrow();
@@ -193,21 +193,21 @@ namespace Grain {
                         Exception::throwStandard(ErrorCode::MemCantAllocate);
                     }
 
-                    db->m_identifier = table.stringOr("identifier", "");
-                    db->m_host = table.stringOr("host", "");
-                    db->m_port = (int32_t)table.integerOr("port", 5432);
-                    db->m_db_name = table.stringOrThrow("db-name");
-                    db->m_user = table.stringOrThrow("user");
-                    db->m_password = table.stringOr("password", "");
-                    db->m_timeout_sec = table.doubleOr("timeout", 30.0);
+                    db->m_identifier = table.asString("identifier", "");
+                    db->m_host = table.asString("host", "");
+                    db->m_port = table.asInt32("port", 5432);
+                    db->m_db_name = table.asStringThrow("db-name");
+                    db->m_user = table.asStringThrow("user");
+                    db->m_password = table.asString("password", "");
+                    db->m_timeout_sec = table.asDouble("timeout", 30.0);
 
                     // TODO: Validate parameters!
                 }
             }
 
-            m_tile_size = (int32_t)config_table.integerOrThrow("tile-size");
-            m_output_path = config_table.stringOrThrow("output-path");
-            m_output_file_format_name = config_table.stringOr("output-file-format", "png");
+            m_tile_size = config_table.asInt32Throw("tile-size");
+            m_output_path = config_table.asStringThrow("output-path");
+            m_output_file_format_name = config_table.asString("output-file-format", "png");
             m_output_file_type = Image::fileTypeByFormatName(m_output_file_format_name);
             if (!Image::isKnownFileType(m_output_file_type)) {
                 Exception::throwSpecificFormattedMessage(
@@ -217,13 +217,13 @@ namespace Grain {
             }
             m_output_file_ext = Image::fileTypeExtension(m_output_file_type);
 
-            m_image_size.m_width = (int32_t)config_table.integerOrThrow("image-width");
-            m_image_size.m_height = (int32_t)config_table.integerOrThrow("image-height");
+            m_image_size.width_ = config_table.asInt32Throw("image-width");
+            m_image_size.height_ = config_table.asInt32Throw("image-height");
 
             // Output image padding
             {
                 double values[4]{};
-                int32_t n = config_table.doublesOrThrow("image-padding", 4, values);
+                int32_t n = config_table.asDoublesThrow("image-padding", 4, values);
                 if (n > 0 && !m_image_padding.set(values, n)) {
                     Exception::throwSpecificFormattedMessage(
                             kTomlErrImagePadding,
@@ -235,7 +235,7 @@ namespace Grain {
             // Bounds
             {
                 double values[4]{};
-                int32_t n = config_table.doublesOrThrow("bounds", 4, values);
+                int32_t n = config_table.asDoublesThrow("bounds", 4, values);
                 if (n != 4 || values[0] >= values[2] || values[1] >= values[3]) {
                     Exception::throwSpecificFormattedMessage(
                             kTomlErrBounds,
@@ -244,15 +244,15 @@ namespace Grain {
                 m_bounding_box.set(values, 4);
             }
 
-            m_dst_srid = (int32_t)config_table.integerOr("destination-srid", 3857);
+            m_dst_srid = config_table.asInt32("destination-srid", 3857);
 
             // TODO: Validate m_dst_srid
 
-            m_map_bg_opacity = std::clamp(config_table.doubleOr("map-background-opacity", 1.0), 0.0, 1.0);
-            m_map_bg_color = config_table.rgbOrThrow("map-background-color");
-            m_default_fill_color = config_table.rgbOr("default-fill-color", RGB(0.8, 0.8, 0.8));
-            m_default_stroke_color = config_table.rgbOr("default-stroke-color", RGB(0, 0, 0));
-            m_default_text_color = config_table.rgbOr("default-text-color", RGB(0, 0, 0));
+            m_map_bg_opacity = std::clamp(config_table.asDouble("map-background-opacity", 1.0), 0.0, 1.0);
+            m_map_bg_color = config_table.asRGBThrow("map-background-color");
+            m_default_fill_color = config_table.asRGB("default-fill-color", RGB(0.8, 0.8, 0.8));
+            m_default_stroke_color = config_table.asRGB("default-stroke-color", RGB(0, 0, 0));
+            m_default_text_color = config_table.asRGB("default-text-color", RGB(0, 0, 0));
 
             m_image_use_alpha = m_map_bg_opacity < (1.0f - FLT_EPSILON);
 
@@ -282,10 +282,10 @@ namespace Grain {
             if (m_render_mode == RenderMode::Image) {
                 auto w = m_bounding_box.width();
                 auto h = m_bounding_box.height();
-                m_bounding_box.m_min_x -= w * m_image_padding.left() / 100;
-                m_bounding_box.m_max_x += w * m_image_padding.right() / 100;
-                m_bounding_box.m_min_y -= h * m_image_padding.top() / 100;
-                m_bounding_box.m_max_y += h * m_image_padding.bottom() / 100;
+                m_bounding_box.min_x_ -= w * m_image_padding.left() / 100;
+                m_bounding_box.max_x_ += w * m_image_padding.right() / 100;
+                m_bounding_box.min_y_ -= h * m_image_padding.top() / 100;
+                m_bounding_box.max_y_ += h * m_image_padding.bottom() / 100;
             }
 
             // Configure layers
@@ -313,8 +313,8 @@ namespace Grain {
             Exception::throwStandard(ErrorCode::MemCantAllocate);
         }
 
-        layer->m_name = layer_table.stringOrThrow("name");   // TODO: !!!!
-        layer->m_type_name = layer_table.stringOrThrow("type");
+        layer->m_name = layer_table.asStringThrow("name");   // TODO: !!!!
+        layer->m_type_name = layer_table.asStringThrow("type");
 
         bool geometry_field_needed = false;
         bool dir_needed = false;
@@ -322,7 +322,7 @@ namespace Grain {
 
         if (layer->m_type_name.compare("psql") == 0) {
             layer->m_type = GeoTileRendererLayer::LayerType::PSQL;
-            layer->m_sql_query = layer_table.stringOrThrow("query");
+            layer->m_sql_query = layer_table.asStringThrow("query");
             geometry_field_needed = true;
         }
         else if (layer->m_type_name.compare("shape") == 0) {
@@ -343,38 +343,38 @@ namespace Grain {
 
 
         if (dir_needed) {
-            layer->m_dir_path = layer_table.stringOrThrow("dir");
+            layer->dir_path_ = layer_table.asStringThrow("dir");
         }
         else {
-            layer->m_dir_path.clear();
+            layer->dir_path_.clear();
         }
 
         if (file_needed) {
-            layer->m_file_name = layer_table.stringOrThrow("file");
+            layer->m_file_name = layer_table.asStringThrow("file");
 
-            buildFilePath(layer->m_dir_path, layer->m_file_name, layer->m_used_file_path);
+            buildFilePath(layer->dir_path_, layer->m_file_name, layer->m_used_file_path);
 
             if (!File::fileExists(layer->m_used_file_path)) {
-                m_last_err_message.setFormatted(1000, "'file' %s/%s not found in layer \"%s\".", layer->m_dir_path.utf8(), layer->m_file_name.utf8(), layer->m_name.utf8());
+                m_last_err_message.setFormatted(1000, "'file' %s/%s not found in layer \"%s\".", layer->dir_path_.utf8(), layer->m_file_name.utf8(), layer->m_name.utf8());
                 m_toml.throwParserError(m_last_err_message.utf8());
             }
         }
 
-        layer->m_sql_identifier = layer_table.stringOr("psql-identifier", "");
+        layer->m_sql_identifier = layer_table.asString("psql-identifier", "");
 
         if (geometry_field_needed) {
-            layer->m_geometry_field = layer_table.stringOrThrow("geometry-field");
+            layer->m_geometry_field = layer_table.asStringThrow("geometry-field");
         }
 
-        layer->m_csv_ignore_header = layer_table.booleanOr("ignore-header", false);
+        layer->m_csv_ignore_header = layer_table.asBool("ignore-header", false);
 
-        layer->m_char_set = layer_table.stringOr("char-set", "UTF-8");
+        layer->m_char_set = layer_table.asString("char-set", "UTF-8");
 
         // TODO: Check, if m_char_set is known! char-set
         // TODO: Check, if quote is known!
 
 
-        String string = layer_table.stringOr("delimiter", ",");
+        String string = layer_table.asString("delimiter", ",");
         if (string.byteLength() != 1) {
             Exception::throwMessage(
                     ErrorCode::TomlParseError,
@@ -382,7 +382,7 @@ namespace Grain {
         }
         layer->m_csv_delimiter = string.firstAsciiChar();
 
-        string = layer_table.stringOr("quote", "\"");
+        string = layer_table.asString("quote", "\"");
         if (string.byteLength() != 1) {
             Exception::throwMessage(
                     ErrorCode::TomlParseError,
@@ -391,14 +391,14 @@ namespace Grain {
         layer->m_csv_quote = string.firstAsciiChar();
 
 
-        layer->m_xy_scale = layer_table.doubleOr("xy-scale", 1.0);
+        layer->m_xy_scale = layer_table.asDouble("xy-scale", 1.0);
 
-        layer->m_radius_field_index = layer_table.integerOr("radius-field", -1);
+        layer->radius_field_index_ = layer_table.asInt32("radius-field", -1);
 
         // TODO: Check lat, lon and radius field indices, must be >= 0 and < max number of custom fields.
 
-        layer->m_min_zoom = (int32_t)layer_table.integerOr("zoom-min", kMinZoom);
-        layer->m_max_zoom = (int32_t)layer_table.integerOr("zoom-max", kMaxZoom);
+        layer->m_min_zoom = layer_table.asInt32("zoom-min", kMinZoom);
+        layer->m_max_zoom = layer_table.asInt32("zoom-max", kMaxZoom);
         if (layer->m_min_zoom < kMinZoom || layer->m_min_zoom > kMaxZoom ||
             layer->m_max_zoom < layer->m_min_zoom || layer->m_max_zoom > kMaxZoom) {
             Exception::throwFormattedMessage(
@@ -409,9 +409,9 @@ namespace Grain {
                     layer->m_name.utf8());
         }
 
-        layer->m_srid = (int32_t)layer_table.integerOr("srid", kDefaultSRID);
+        layer->srid_ = layer_table.asInt32("srid", kDefaultSRID);
 
-        layer->m_draw_mode_name = layer_table.stringOrThrow("draw-mode");
+        layer->m_draw_mode_name = layer_table.asStringThrow("draw-mode");
 
         layer->m_draw_settings.m_draw_mode = drawModeFromName(layer->m_draw_mode_name.utf8());
         if (layer->m_draw_settings.m_draw_mode == GeoTileDrawMode::Undefined) {
@@ -422,7 +422,7 @@ namespace Grain {
                     layer->m_name.utf8());
         }
 
-        layer->m_point_shape_name = layer_table.stringOr("point-shape", "circle");
+        layer->m_point_shape_name = layer_table.asString("point-shape", "circle");
         layer->m_draw_settings.m_point_shape = drawShapeFromName(layer->m_point_shape_name.utf8());
         if (layer->m_draw_settings.m_point_shape == GeoTileDrawShape::Undefined) {
             Exception::throwFormattedMessage(
@@ -433,35 +433,35 @@ namespace Grain {
         }
 
 
-        layer->m_draw_settings.m_fill_color = layer_table.rgbOr("fill-color", m_default_fill_color);
-        layer->m_draw_settings.m_fill_extend_width = layer_table.doubleOr("fill-extent-width", 0.0);
-        layer->m_draw_settings.m_fill_extend_px_fix = layer_table.doubleOr("fill-extent-fix", -1.0);
-        layer->m_draw_settings.m_fill_opacity = layer_table.doubleOr("fill-opacity", 1.0);
+        layer->m_draw_settings.m_fill_color = layer_table.asRGB("fill-color", m_default_fill_color);
+        layer->m_draw_settings.m_fill_extend_width = layer_table.asDouble("fill-extent-width", 0.0);
+        layer->m_draw_settings.m_fill_extend_px_fix = layer_table.asDouble("fill-extent-fix", -1.0);
+        layer->m_draw_settings.m_fill_opacity = layer_table.asDouble("fill-opacity", 1.0);
 
-        layer->m_draw_settings.m_stroke_color = layer_table.rgbOr("stroke-color", m_default_stroke_color);
-        layer->m_draw_settings.m_stroke_opacity = layer_table.doubleOr("stroke-opacity", 1.0);
+        layer->m_draw_settings.m_stroke_color = layer_table.asRGB("stroke-color", m_default_stroke_color);
+        layer->m_draw_settings.m_stroke_opacity = layer_table.asDouble("stroke-opacity", 1.0);
 
-        layer->m_draw_settings.m_stroke_width = layer_table.doubleOr("stroke-width", 10.0);
-        layer->m_draw_settings.m_stroke_px_min = layer_table.doubleOr("stroke-px-min", 0.1);
-        layer->m_draw_settings.m_stroke_px_max = layer_table.doubleOr("stroke-px-max", 10.0);
-        layer->m_draw_settings.m_stroke_px_fix = layer_table.doubleOr("stroke-px-fix", -1.0);
+        layer->m_draw_settings.m_stroke_width = layer_table.asDouble("stroke-width", 10.0);
+        layer->m_draw_settings.m_stroke_px_min = layer_table.asDouble("stroke-px-min", 0.1);
+        layer->m_draw_settings.m_stroke_px_max = layer_table.asDouble("stroke-px-max", 10.0);
+        layer->m_draw_settings.m_stroke_px_fix = layer_table.asDouble("stroke-px-fix", -1.0);
 
         /* TODO: INCLUDE AGAIN!
         layer->m_draw_settings.m_stroke_dash_length = m_toml.allDoublesAt(layer_node, "stroke-dash", Toml::kOptional, GeoTileRendererDrawSettings::kMaxStrokeDashLength, layer->m_draw_settings.m_stroke_dash_array);
           */
 
-        layer->m_draw_settings.m_text_color = layer_table.rgbOr("text-color", m_default_text_color);
-        layer->m_draw_settings.m_text_opacity = layer_table.doubleOr("text-opacity", 1.0);
+        layer->m_draw_settings.m_text_color = layer_table.asRGB("text-color", m_default_text_color);
+        layer->m_draw_settings.m_text_opacity = layer_table.asDouble("text-opacity", 1.0);
 
-        layer->m_draw_settings.m_radius = layer_table.doubleOr("radius", 10.0);
-        layer->m_draw_settings.m_radius_px_fix = layer_table.doubleOr("radius-px-fix", -1);
-        layer->m_draw_settings.m_radius_px_min = layer_table.doubleOr("radius-px-min", 0.0);
-        layer->m_draw_settings.m_radius_px_max = layer_table.doubleOr("radius-px-max", 1000000.0);
+        layer->m_draw_settings.radius_ = layer_table.asDouble("radius", 10.0);
+        layer->m_draw_settings.radius_px_fix_ = layer_table.asDouble("radius-px-fix", -1);
+        layer->m_draw_settings.radius_px_min_ = layer_table.asDouble("radius-px-min", 0.0);
+        layer->m_draw_settings.radius_px_max_ = layer_table.asDouble("radius-px-max", 1000000.0);
 
 
         // TODO: Check `radius`, must be >= 0.0.
 
-        String blend_mode_name = layer_table.stringOr("blend-mode", "normal");
+        String blend_mode_name = layer_table.asString("blend-mode", "normal");
         layer->m_draw_settings.m_blend_mode = GraphicContext::blendModeByName(blend_mode_name.utf8());
         if (layer->m_draw_settings.m_blend_mode == GraphicContext::BlendMode::Undefined) {
             Exception::throwFormattedMessage(
@@ -471,13 +471,13 @@ namespace Grain {
                     layer->m_name.utf8());
         }
 
-        layer->m_lua_script = layer_table.stringOr("script", "");
+        layer->m_lua_script = layer_table.asString("script", "");
         layer->m_has_lua_script = layer->m_lua_script.length() > 0;
 
         // Custom fields
         if (layer_table.hasItem("custom-fields")) {
             TomlArray custom_fields;
-            layer_table.arrayOrThrow("custom-fields", custom_fields);
+            layer_table.asArrayThrow("custom-fields", custom_fields);
 
             int32_t field_count = custom_fields.size();
             layer->m_custom_field_infos = new CSVDataColumnInfo[field_count + 1];
@@ -487,10 +487,10 @@ namespace Grain {
             for (const auto& field : custom_fields) {
                 const auto field_description = field.asTableOrThrow();
 
-                int32_t index = (int32_t)field_description.integerOrThrow("index");
-                String name = field_description.stringOrThrow("name");
-                String type_name = field_description.stringOrThrow("type");
-                String usage = field_description.stringOr("usage", "");
+                int32_t index = field_description.asInt32Throw("index");
+                String name = field_description.asStringThrow("name");
+                String type_name = field_description.asStringThrow("type");
+                String usage = field_description.asString("usage", "");
 
                 layer->m_custom_field_infos[field_index].set(index, name.utf8(), type_name.utf8(), usage.utf8());
 
@@ -530,30 +530,30 @@ namespace Grain {
 
 
     void GeoTileRenderer::setBounds(double min_lat, double max_lat, double min_lon, double max_lon) noexcept {
-        m_bounding_box.m_min_x = min_lat;
-        m_bounding_box.m_max_x = max_lat;
-        m_bounding_box.m_min_y = min_lon;
-        m_bounding_box.m_max_y = max_lon;
+        m_bounding_box.min_x_ = min_lat;
+        m_bounding_box.max_x_ = max_lat;
+        m_bounding_box.min_y_ = min_lon;
+        m_bounding_box.max_y_ = max_lon;
     }
 
 
     void GeoTileRenderer::setRenderBoundsWGS84(const Vec2d& top_left, const Vec2d& bottom_right) noexcept {
-        m_render_lonlat_top_left.m_x = std::clamp(top_left.m_x, Geo::kMinLonDeg, Geo::kMaxLonDeg);
-        m_render_lonlat_bottom_right.m_x = std::clamp(bottom_right.m_x, Geo::kMinLonDeg, Geo::kMaxLonDeg);
+        m_render_lonlat_top_left.x_ = std::clamp(top_left.x_, Geo::kMinLonDeg, Geo::kMaxLonDeg);
+        m_render_lonlat_bottom_right.x_ = std::clamp(bottom_right.x_, Geo::kMinLonDeg, Geo::kMaxLonDeg);
 
-        if (top_left.m_y > bottom_right.m_y) {
-            m_render_lonlat_bottom_right.m_y = std::clamp(top_left.m_y, Geo::kMinLatDeg, Geo::kMaxLatDeg);
-            m_render_lonlat_top_left.m_y = std::clamp(bottom_right.m_y, Geo::kMinLatDeg, Geo::kMaxLatDeg);
+        if (top_left.y_ > bottom_right.y_) {
+            m_render_lonlat_bottom_right.y_ = std::clamp(top_left.y_, Geo::kMinLatDeg, Geo::kMaxLatDeg);
+            m_render_lonlat_top_left.y_ = std::clamp(bottom_right.y_, Geo::kMinLatDeg, Geo::kMaxLatDeg);
         }
         else {
-            m_render_lonlat_top_left.m_y = std::clamp(top_left.m_y, Geo::kMinLatDeg, Geo::kMaxLatDeg);
-            m_render_lonlat_bottom_right.m_y = std::clamp(bottom_right.m_y, Geo::kMinLatDeg, Geo::kMaxLatDeg);
+            m_render_lonlat_top_left.y_ = std::clamp(top_left.y_, Geo::kMinLatDeg, Geo::kMaxLatDeg);
+            m_render_lonlat_bottom_right.y_ = std::clamp(bottom_right.y_, Geo::kMinLatDeg, Geo::kMaxLatDeg);
         }
 
-        m_render_wgs84_bounding_box.m_min_x = m_render_lonlat_top_left.m_x;
-        m_render_wgs84_bounding_box.m_max_x = m_render_lonlat_bottom_right.m_x;
-        m_render_wgs84_bounding_box.m_min_y = m_render_lonlat_top_left.m_y;
-        m_render_wgs84_bounding_box.m_max_y = m_render_lonlat_bottom_right.m_y;
+        m_render_wgs84_bounding_box.min_x_ = m_render_lonlat_top_left.x_;
+        m_render_wgs84_bounding_box.max_x_ = m_render_lonlat_bottom_right.x_;
+        m_render_wgs84_bounding_box.min_y_ = m_render_lonlat_top_left.y_;
+        m_render_wgs84_bounding_box.max_y_ = m_render_lonlat_bottom_right.y_;
     }
 
 
@@ -695,7 +695,7 @@ namespace Grain {
                 Lua::rgbFromStack(l, arg_n, 2, draw_settings->m_text_color);
             }
             else if (strcmp(name, "radius") == 0) {
-                Lua::doubleFromStack(l, 2, draw_settings->m_radius);
+                Lua::doubleFromStack(l, 2, draw_settings->radius_);
             }
             else if (strcmp(name, "blend-mode") == 0) {
                 const char* str = Lua::stringFromStack(l, 2);
@@ -878,11 +878,11 @@ namespace Grain {
                 // TODO: Use MetaTileRange!!!!!!
 
                 Vec2i tile_start, tile_end;
-                Geo::wgs84ToTileIndex(m_current_zoom, m_bounding_box.m_min_x, m_bounding_box.m_max_y, tile_start.m_x, tile_start.m_y);
-                Geo::wgs84ToTileIndex(m_current_zoom, m_bounding_box.m_max_x, m_bounding_box.m_min_y, tile_end.m_x, tile_end.m_y);
+                Geo::wgs84ToTileIndex(m_current_zoom, m_bounding_box.min_x_, m_bounding_box.max_y_, tile_start.x_, tile_start.y_);
+                Geo::wgs84ToTileIndex(m_current_zoom, m_bounding_box.max_x_, m_bounding_box.min_y_, tile_end.x_, tile_end.y_);
 
-                int32_t tile_start_x = tile_start.m_x & (~0b111);
-                int32_t tile_start_y = tile_start.m_y & (~0b111);
+                int32_t tile_start_x = tile_start.x_ & (~0b111);
+                int32_t tile_start_y = tile_start.y_ & (~0b111);
 
                 // Special cases for zoom levels less than 3
                 int32_t sn = 0;
@@ -893,8 +893,8 @@ namespace Grain {
                     default: sn = kMetaTileGridSize; break;
                 }
 
-                int32_t x_iterations = (tile_end.m_x - tile_start_x) / kMetaTileGridSize + 1;
-                int32_t y_iterations = (tile_end.m_y - tile_start_y) / kMetaTileGridSize + 1;
+                int32_t x_iterations = (tile_end.x_ - tile_start_x) / kMetaTileGridSize + 1;
+                int32_t y_iterations = (tile_end.y_ - tile_start_y) / kMetaTileGridSize + 1;
                 int32_t meta_tiles_needed = x_iterations * y_iterations;
                 int32_t meta_tile_n = 0;
 
@@ -905,11 +905,11 @@ namespace Grain {
                 ImageAccess tile_ia(tile_image, pixel);
 
                 Vec2i tile_index;  // Current top left tile inside meta tile
-                for (tile_index.m_y = tile_start_y; tile_index.m_y <= tile_end.m_y; tile_index.m_y += kMetaTileGridSize) {
-                    for (tile_index.m_x = tile_start_x; tile_index.m_x <= tile_end.m_x; tile_index.m_x += kMetaTileGridSize) {
+                for (tile_index.y_ = tile_start_y; tile_index.y_ <= tile_end.y_; tile_index.y_ += kMetaTileGridSize) {
+                    for (tile_index.x_ = tile_start_x; tile_index.x_ <= tile_end.x_; tile_index.x_ += kMetaTileGridSize) {
                         m_log_file->writeCurrentDateTime();
-                        m_log_file->writeFormatted(": %d x %d\n", tile_index.m_x, tile_index.m_y);
-                        std::cout << "Tile: " << tile_index.m_x << " x " << tile_index.m_y << std::endl;
+                        m_log_file->writeFormatted(": %d x %d\n", tile_index.x_, tile_index.y_);
+                        std::cout << "Tile: " << tile_index.x_ << " x " << tile_index.y_ << std::endl;
 
                         // Preparation for rendering a single meta-tile
                         Vec2d lonlat;
@@ -917,7 +917,7 @@ namespace Grain {
                         Vec2d wgs84_bottom_right;
 
                         Geo::wgs84FromTileIndex(m_current_zoom, tile_index, wgs84_top_left);
-                        Geo::wgs84FromTileIndex(m_current_zoom, Vec2i(tile_index.m_x + kMetaTileGridSize, tile_index.m_y + kMetaTileGridSize), wgs84_bottom_right);
+                        Geo::wgs84FromTileIndex(m_current_zoom, Vec2i(tile_index.x_ + kMetaTileGridSize, tile_index.y_ + kMetaTileGridSize), wgs84_bottom_right);
 
                         setRenderBoundsWGS84(wgs84_top_left, wgs84_bottom_right);
 
@@ -931,7 +931,7 @@ namespace Grain {
                         // Split the meta-tile into 8 x 8 tiles and save to files as separate tiles
                         if (use_meta_tile) {
                             // For meta-tiles, create a temporary directory
-                            meta_temp_dir = m_output_path + "/_temp_" + m_current_zoom + "_" + tile_index.m_y + "_" + tile_index.m_x;
+                            meta_temp_dir = m_output_path + "/_temp_" + m_current_zoom + "_" + tile_index.y_ + "_" + tile_index.x_;
 
                             if (!File::makeDirs(meta_temp_dir)) {
                                 m_last_err_message.setFormatted(2560, "Temporary directory %s does not exist.", meta_temp_dir.utf8());
@@ -945,14 +945,14 @@ namespace Grain {
                         for (int32_t sy = 0; sy < sn; sy++) {
                             for (int32_t sx = 0; sx < sn; sx++) {
                                 Vec2i sub_tile = tile_index;
-                                sub_tile.m_x = tile_index.m_x + sx;
-                                sub_tile.m_y = tile_index.m_y + sy;
+                                sub_tile.x_ = tile_index.x_ + sx;
+                                sub_tile.y_ = tile_index.y_ + sy;
 
                                 bool tile_explicit_needed =
-                                        sub_tile.m_x >= tile_start.m_x &&
-                                        sub_tile.m_x <= tile_end.m_x &&
-                                        sub_tile.m_y >= tile_start.m_y &&
-                                        sub_tile.m_y <= tile_end.m_y;
+                                        sub_tile.x_ >= tile_start.x_ &&
+                                        sub_tile.x_ <= tile_end.x_ &&
+                                        sub_tile.y_ >= tile_start.y_ &&
+                                        sub_tile.y_ <= tile_end.y_;
 
                                 if (use_meta_tile || tile_explicit_needed) {
                                     meta_ia.setRegion(sx * m_tile_size, sy * m_tile_size, m_tile_size, m_tile_size);
@@ -1067,8 +1067,8 @@ namespace Grain {
             }
 
             // Set the bounds to the area which has to be rendered
-            Vec2d top_left(m_bounding_box.m_min_x, m_bounding_box.m_max_y);
-            Vec2d bottom_right(m_bounding_box.m_max_x, m_bounding_box.m_min_y);
+            Vec2d top_left(m_bounding_box.min_x_, m_bounding_box.max_y_);
+            Vec2d bottom_right(m_bounding_box.max_x_, m_bounding_box.min_y_);
 
             // Prepare and start rendering
             setRenderSize(m_image_size.width(), m_image_size.height());
@@ -1161,36 +1161,36 @@ namespace Grain {
             Rectd src_rect, dst_rect;
 
             m_default_render_proj->transform(m_render_lonlat_top_left, m_render_top_left);
-            if (m_render_lonlat_bottom_right.m_y >= 180.0) {
-                m_render_lonlat_bottom_right.m_y = 180.0 - 0.00001;
+            if (m_render_lonlat_bottom_right.y_ >= 180.0) {
+                m_render_lonlat_bottom_right.y_ = 180.0 - 0.00001;
             }
             m_default_render_proj->transform(m_render_lonlat_bottom_right, m_render_bottom_right);
 
-            m_render_dst_bounding_box.m_min_x = m_render_top_left.m_x;
-            m_render_dst_bounding_box.m_min_y = m_render_top_left.m_y;
-            m_render_dst_bounding_box.m_max_x = m_render_bottom_right.m_x;
-            m_render_dst_bounding_box.m_max_y = m_render_bottom_right.m_y;
+            m_render_dst_bounding_box.min_x_ = m_render_top_left.x_;
+            m_render_dst_bounding_box.min_y_ = m_render_top_left.y_;
+            m_render_dst_bounding_box.max_x_ = m_render_bottom_right.x_;
+            m_render_dst_bounding_box.max_y_ = m_render_bottom_right.y_;
 
-            m_render_left_string = m_render_top_left.m_x;
-            m_render_right_string = m_render_bottom_right.m_x;
-            m_render_top_string = m_render_top_left.m_y;
-            m_render_bottom_string = m_render_bottom_right.m_y;
+            m_render_left_string = m_render_top_left.x_;
+            m_render_right_string = m_render_bottom_right.x_;
+            m_render_top_string = m_render_top_left.y_;
+            m_render_bottom_string = m_render_bottom_right.y_;
 
-            src_rect.m_x = m_render_top_left.m_x;
-            src_rect.m_y = m_render_top_left.m_y;
-            src_rect.m_width = m_render_bottom_right.m_x - m_render_top_left.m_x;
-            src_rect.m_height = m_render_bottom_right.m_y - m_render_top_left.m_y;
+            src_rect.x_ = m_render_top_left.x_;
+            src_rect.y_ = m_render_top_left.y_;
+            src_rect.width_ = m_render_bottom_right.x_ - m_render_top_left.x_;
+            src_rect.height_ = m_render_bottom_right.y_ - m_render_top_left.y_;
 
-            dst_rect.m_x = 0;
-            dst_rect.m_width = m_render_image_size.width();
-            dst_rect.m_height = dst_rect.m_width * m_render_image_size.aspectRatio();
-            dst_rect.m_y = -0.5 * (dst_rect.m_height - m_render_image_size.height());
+            dst_rect.x_ = 0;
+            dst_rect.width_ = m_render_image_size.width();
+            dst_rect.height_ = dst_rect.width_ * m_render_image_size.aspectRatio();
+            dst_rect.y_ = -0.5 * (dst_rect.height_ - m_render_image_size.height());
 
-            if (dst_rect.m_y < 0.0) {
-                dst_rect.m_y = 0.0;
-                dst_rect.m_height = m_render_image_size.height();
-                dst_rect.m_width = dst_rect.m_height / m_render_image_size.aspectRatio();
-                dst_rect.m_x = -0.5 * (dst_rect.m_width - m_render_image_size.width());
+            if (dst_rect.y_ < 0.0) {
+                dst_rect.y_ = 0.0;
+                dst_rect.height_ = m_render_image_size.height();
+                dst_rect.width_ = dst_rect.height_ / m_render_image_size.aspectRatio();
+                dst_rect.x_ = -0.5 * (dst_rect.width_ - m_render_image_size.width());
             }
 
             if (m_render_mode == RenderMode::Tiles) {
@@ -1204,17 +1204,17 @@ namespace Grain {
             }
             else if (m_render_mode == RenderMode::Image) {
                 auto fitted_rect = src_rect.fitRect(dst_rect, FitMode::Cover);
-                double w_ratio = std::fabs(fitted_rect.m_width) / dst_rect.m_width;
-                double h_ratio = std::fabs(fitted_rect.m_height) / dst_rect.m_height;
+                double w_ratio = std::fabs(fitted_rect.width_) / dst_rect.width_;
+                double h_ratio = std::fabs(fitted_rect.height_) / dst_rect.height_;
 
                 if (w_ratio > h_ratio) {
-                    dst_rect.m_height /= w_ratio;
+                    dst_rect.height_ /= w_ratio;
                 }
                 else {
-                    dst_rect.m_width /= h_ratio;
+                    dst_rect.width_ /= h_ratio;
                 }
 
-                setRenderSize(dst_rect.m_width, dst_rect.m_height);
+                setRenderSize(dst_rect.width_, dst_rect.height_);
             }
 
             RemapRectd remap_rect(src_rect, dst_rect, true);
@@ -1280,7 +1280,7 @@ namespace Grain {
         m_current_layer_index = 0;
 
         for (auto& layer : m_layers) {
-            layer->m_ignore_proj = layer->m_srid == m_dst_srid;
+            layer->m_ignore_proj = layer->srid_ == m_dst_srid;
 
             if (m_current_zoom >= layer->m_min_zoom && m_current_zoom <= layer->m_max_zoom) {
                 TimeMeasure tm_render_layer;
@@ -1495,7 +1495,7 @@ namespace Grain {
                 l << "Replace variables in SQL query: " << l.endl;
             }
 
-            if (layer->m_srid == m_dst_srid) {
+            if (layer->srid_ == m_dst_srid) {
                 sql.replace("{{clipping}}", "ST_Intersects({{geometry-field}}, ST_MakeEnvelope({{min-x}}, {{min-y}}, {{max-x}}, {{max-y}}, {{destination-srid}}))");
             }
             else {
@@ -1761,25 +1761,25 @@ namespace Grain {
                     if (render_as_point) {
                         switch (draw_settings.m_draw_mode) {
                             case GeoTileDrawMode::Fill:
-                                gc->fillCircle(point, draw_settings.m_radius_px);
+                                gc->fillCircle(point, draw_settings.radius_px_);
                                 fill_n = 1;
                                 break;
 
                             case GeoTileDrawMode::Stroke:
-                                gc->strokeCircle(point, draw_settings.m_radius_px);
+                                gc->strokeCircle(point, draw_settings.radius_px_);
                                 stroke_n = 1;
                                 break;
 
                             case GeoTileDrawMode::FillStroke:
-                                gc->fillCircle(point, draw_settings.m_radius_px);
-                                gc->strokeCircle(point, draw_settings.m_radius_px);
+                                gc->fillCircle(point, draw_settings.radius_px_);
+                                gc->strokeCircle(point, draw_settings.radius_px_);
                                 fill_n = 1;
                                 stroke_n = 1;
                                 break;
 
                             case GeoTileDrawMode::StrokeFill:
-                                gc->strokeCircle(point, draw_settings.m_radius_px);
-                                gc->fillCircle(point, draw_settings.m_radius_px);
+                                gc->strokeCircle(point, draw_settings.radius_px_);
+                                gc->fillCircle(point, draw_settings.radius_px_);
                                 fill_n = 1;
                                 stroke_n = 1;
                                 break;
@@ -1941,7 +1941,7 @@ namespace Grain {
         gc->save();
 
         gc->setBlendMode(layer->m_draw_settings.m_blend_mode);
-        shape->setPointRadius(layer->m_draw_settings.m_radius_px);
+        shape->setPointRadius(layer->m_draw_settings.radius_px_);
         shape->drawAll(gc, remap_rect);
 
         // TODO: Statistics!
@@ -1964,7 +1964,7 @@ namespace Grain {
             TimeMeasure tm_data_access;
 
             // Load all polygon records
-            String file_path = layer->m_dir_path + "/" + layer->m_file_name;
+            String file_path = layer->dir_path_ + "/" + layer->m_file_name;
             layer->m_polygons_file = new (std::nothrow) PolygonsFile(file_path);
             if(!layer->m_polygons_file) {
                 Exception::throwSpecific(kErrPolygonsFileInstantiationFailed);
@@ -2105,12 +2105,12 @@ namespace Grain {
 
         int32_t x_field_index = layer->m_x_field_index;
         int32_t y_field_index = layer->m_y_field_index;
-        int32_t radius_field_index = layer->m_radius_field_index;
+        int32_t radius_field_index = layer->radius_field_index_;
 
         bool has_pos_fields = x_field_index >= 0 && x_field_index < layer->m_custom_field_count && y_field_index >= 0 && y_field_index < layer->m_custom_field_count;
         bool has_radius_field = radius_field_index >= 0;
         bool ignore_proj = layer->m_ignore_proj;
-        bool src_is_4326 = layer->m_srid == 4326;
+        bool src_is_4326 = layer->srid_ == 4326;
 
         Rectd render_rect = m_render_image->rect();
 
@@ -2126,8 +2126,8 @@ namespace Grain {
             Vec2d src_pos, pos;
 
             if (has_pos_fields) {
-                src_pos.m_x = layer->m_csv_data.doubleValue(row_index, x_field_index);
-                src_pos.m_y = layer->m_csv_data.doubleValue(row_index, y_field_index);
+                src_pos.x_ = layer->m_csv_data.doubleValue(row_index, x_field_index);
+                src_pos.y_ = layer->m_csv_data.doubleValue(row_index, y_field_index);
                 src_pos *= layer->m_xy_scale;
 
                 if (src_is_4326 && !GeoProj::isWGS84Pos(src_pos)) {
@@ -2148,7 +2148,7 @@ namespace Grain {
 
 
             if (has_radius_field) {
-                draw_settings.m_radius_px = layer->m_csv_data.doubleValue(row_index, radius_field_index);
+                draw_settings.radius_px_ = layer->m_csv_data.doubleValue(row_index, radius_field_index);
             }
 
             if (layer->m_has_lua_script) {
@@ -2307,8 +2307,8 @@ namespace Grain {
 
 
             // TODO: Check, how bounds should be extended for correct rendering!
-            double radius_px = meterToPixel(draw_settings.m_radius, draw_settings.m_radius_px_fix, draw_settings.m_radius_px_min, draw_settings.m_radius_px_max);
-            Rectd bounds(pos.m_x - radius_px, pos.m_y - radius_px, radius_px * 2, radius_px * 2);
+            double radius_px = meterToPixel(draw_settings.radius_, draw_settings.radius_px_fix_, draw_settings.radius_px_min_, draw_settings.radius_px_max_);
+            Rectd bounds(pos.x_ - radius_px, pos.y_ - radius_px, radius_px * 2, radius_px * 2);
 
             if (bounds.intersect(render_rect)) {
                 Gradient gradient;
@@ -2322,25 +2322,25 @@ namespace Grain {
 
                 switch (draw_settings.m_draw_mode) {
                     case GeoTileDrawMode::Stroke:
-                        gc->strokeCircle(pos, draw_settings.m_radius_px);
+                        gc->strokeCircle(pos, draw_settings.radius_px_);
                         stroke_n += 1;
                         break;
 
                     case GeoTileDrawMode::Fill:
-                        gc->fillCircle(pos, draw_settings.m_radius_px);
+                        gc->fillCircle(pos, draw_settings.radius_px_);
                         fill_n += 1;
                         break;
 
                     case GeoTileDrawMode::FillStroke:
-                        gc->fillCircle(pos, draw_settings.m_radius_px);
-                        gc->strokeCircle(pos, draw_settings.m_radius_px);
+                        gc->fillCircle(pos, draw_settings.radius_px_);
+                        gc->strokeCircle(pos, draw_settings.radius_px_);
                         fill_n += 1;
                         stroke_n += 1;
                         break;
 
                     case GeoTileDrawMode::StrokeFill:
-                        gc->strokeCircle(pos, draw_settings.m_radius_px);
-                        gc->fillCircle(pos, draw_settings.m_radius_px);
+                        gc->strokeCircle(pos, draw_settings.radius_px_);
+                        gc->fillCircle(pos, draw_settings.radius_px_);
                         fill_n += 1;
                         stroke_n += 1;
                         break;
@@ -2349,7 +2349,7 @@ namespace Grain {
                         break;
                 }
 
-                // gc->drawTextInt((int32_t)row_index, pos, App::uiFont(), RGB(0, 0, 0));
+                // gc->drawTextInt((int32_t)row_index, pos, App::uiFont(), RGB(0, 0, 0)); TODO: !!!
             }
         }
 
@@ -2366,7 +2366,7 @@ namespace Grain {
 
 
     void GeoTileRenderer::_setupGCDrawing(GraphicContext* gc, GeoTileRendererDrawSettings& draw_settings) {
-        draw_settings.m_radius_px = meterToPixel(draw_settings.m_radius, draw_settings.m_radius_px_fix, draw_settings.m_radius_px_min, draw_settings.m_radius_px_max);
+        draw_settings.radius_px_ = meterToPixel(draw_settings.radius_, draw_settings.radius_px_fix_, draw_settings.radius_px_min_, draw_settings.radius_px_max_);
 
         if (drawModeHasFill(draw_settings.m_draw_mode)) {
             gc->setFillRGBAndAlpha(draw_settings.m_fill_color, draw_settings.m_fill_opacity);

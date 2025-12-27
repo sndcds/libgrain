@@ -6,8 +6,6 @@
 //
 //  This file is part of GrainLib, see <https://grain.one>.
 //
-//  LastChecked: 26.07.2025
-//
 
 #ifndef GrainApp_hpp
 #define GrainApp_hpp
@@ -22,200 +20,193 @@
 
 namespace Grain {
 
-    class Font;
-    class GraphicContext;
+class Font;
+class GraphicContext;
 
-    enum {
-        kAppFlag_SDL2 = 0x1,        // Windowing and Events by SDL2, https://www.libsdl.org/
-        kAppFlag_Cairo = 0x1 << 1,  // Render with Cairo, https://cairographics.org/
-        kAppFlag_FFTW = 0x1 << 2,   // Use FFTW, https://www.fftw.org/
-    };
+enum {
+    kAppFlag_SDL2 = 0x1,        // Windowing and Events by SDL2, https://www.libsdl.org/
+    kAppFlag_Cairo = 0x1 << 1,  // Render with Cairo, https://cairographics.org/
+    kAppFlag_FFTW = 0x1 << 2,   // Use FFTW, https://www.fftw.org/
+};
 
-    enum {
-        kMaxScreenCount = 32    ///< Maximum number of screens
-    };
+enum {
+    kMaxScreenCount = 32    ///< Maximum number of screens
+};
 
-    enum class ConfirmButton {
-        Undefined = 1,
-        Cancel = 0,
-        OK = 1
-    };
+enum class ConfirmButton {
+    Undefined = 1,
+    Cancel = 0,
+    OK = 1
+};
 
-    enum class MouseCursor {
-        Undefined = -1,
-        Arrow,
-        IBeam,
-        PointingHand,
-        ClosedHand,
-        OpenHand,
-        ResizeLeft, ResizeRight, ResizeLeftRight,
-        ResizeUp, ResizeDown, ResizeUpDown,
-        Crosshair,
-        DisappearingItem,
-        OperationNotAllowed,
-        DragLink,
-        DragCopy,
-        ContextualMenu,
-        IBeamVertical
-    };
+enum class MouseCursor {
+    Undefined = -1,
+    Arrow,
+    IBeam,
+    PointingHand,
+    ClosedHand,
+    OpenHand,
+    ResizeLeft, ResizeRight, ResizeLeftRight,
+    ResizeUp, ResizeDown, ResizeUpDown,
+    Crosshair,
+    DisappearingItem,
+    OperationNotAllowed,
+    DragLink,
+    DragCopy,
+    ContextualMenu,
+    IBeamVertical
+};
 
-    class App {
-    public:
-        static App* g_instance;     ///< Global App singleton instance
-        void* m_ns_app = nullptr;   ///< macOS NSApplication
-        bool m_verbose = false;     ///< Verbose flag
+class App {
+public:
+    static App* g_instance;     ///< Global App singleton instance
 
-        String m_conf_file_path;    ///< Path to configuration file
+    void* ns_app_ = nullptr;    ///< macOS NSApplication
+    bool verbose_ = false;      ///< Verbose flag
 
-        bool m_use_sdl2 = false;
-        bool m_use_cairo = false;
-        bool m_use_fftw = false;
+    String conf_file_path_;     ///< Path to configuration file
 
-        // File System
-        static String g_app_path;
-        static String g_home_dir_path;
-        static String g_desktop_dir_path;
-        static String g_document_dir_path;
-        static String g_app_support_dir_path;
-        static String g_app_data_dir_path;
-        static String g_app_test_data_dir_path;
+    bool use_sdl2_ = false;
+    bool use_cairo_ = false;
+    bool use_fftw_ = false;
 
-        Timestamp m_start_time;
-        bool m_big_endian = false;
+    Timestamp start_time_;
+    bool big_endian_ = false;
 
-        int32_t m_physical_core_count = 0;
-        int32_t m_logical_core_count = 0;
-        size_t m_mem_size = 0;
+    int32_t physical_core_count_ = 0;
+    int32_t logical_core_count_ = 0;
+    size_t mem_size_ = 0;
 
-        // GraphicContext
-        GraphicContextType m_gc_type = GraphicContextType::AppleMac;
+    // GraphicContext
+    GraphicContextType gc_type_ = GraphicContextType::AppleMac;
 
-        // Screens
-        ObjectList<Screen*> m_screens;          ///< Pointers to screens
-        int32_t m_smallest_screen_index = -1;   ///< Index of smalles screen
-        int32_t m_largest_screen_index = -1;    ///< Index of larfest screen
-        int32_t m_total_screen_pixel_count = 0; ///< Total amount of pixels on all screens
+    // Screens
+    ObjectList<Screen*> screens_;           ///< Pointers to screens
+    int32_t smallest_screen_index_ = -1;    ///< Index of smalles screen
+    int32_t largest_screen_index_ = -1;     ///< Index of larfest screen
+    int32_t total_screen_pixel_count_ = 0;  ///< Total amount of pixels on all screens
 
-        // Windows
-        ObjectList<Window*> m_windows;          ///< List of all windows
-        Window* m_confirm_window = nullptr;
-        Window* m_key_window = nullptr;         ///< Pointer to current key window
+    // Windows
+    ObjectList<Window*> windows_;           ///< List of all windows
+    Window* confirm_window_ = nullptr;
+    Window* key_window_ = nullptr;          ///< Pointer to current key window
 
-        // Fonts
-        Font* m_ui_font = nullptr;
-        Font* m_small_ui_font = nullptr;
-        Font* m_title_ui_font = nullptr;
-        Font* m_mono_font = nullptr;
+    // Fonts
+    Font* ui_font_ = nullptr;
+    Font* small_ui_font_ = nullptr;
+    Font* title_ui_font_ = nullptr;
+    Font* mono_font_ = nullptr;
 
-        // Style
-        GUIStyleSet m_gui_styles_set;
+    // Style
+    GUIStyleSet gui_styles_set_;
 
-        // GUI
-        float m_default_corner_radius = 5.0f;   // TODO: !!!!!
+    // GUI
+    float default_corner_radius_ = 5.0f;    // TODO: !!!!!
 
 
-        timestamp_t m_double_click_ms = 250;    ///< Maximum time for detecting double clicks, default 250 msec ~ 1/4 sec
-        float m_scroll_wheel_speed = 4;
+    timestamp_t double_click_ms_ = 250;     ///< Maximum time for detecting double clicks, default 250 msec ~ 1/4 sec
+    float scroll_wheel_speed_ = 4;
 
-    public:
-        explicit App(uint32_t flags = 0x0);
-        ~App();
+public:
+    explicit App(uint32_t flags = 0x0);
+    ~App();
 
-        [[nodiscard]] static const char* className() noexcept { return "App"; }
+    [[nodiscard]] static const char* className() noexcept { return "App"; }
 
-        void log(Log& l) const {
-            l.header(className());
-            l << "start_time: " << m_start_time << Log::endl;
-            l << "big_endian: " << l.boolValue(m_big_endian) << Log::endl;
-            l << "physical_core_count: " << m_physical_core_count << Log::endl;
-            l << "logical_core_count: " << m_logical_core_count << Log::endl;
-            l << "mem_size: " << (m_mem_size / 1024 / 1024) << " MB, " << (m_mem_size / 1024 / 1024 / 1024) << " GB" << Log::endl;
-            l << "screen_count: " << screenCount() << Log::endl;
-            l << "smallest_screen_index: " << m_smallest_screen_index << Log::endl;
-            l << "largest_screen_index: " << m_largest_screen_index << Log::endl;
-            l << "total_screen_pixel_count: " << m_total_screen_pixel_count << Log::endl;
-            l << "use DSL2: " << l.boolValue(m_use_sdl2) << l.endl;
-            l << "use Cairo: " << l.boolValue(m_use_cairo) << l.endl;
-            l << "use FFTW: " << l.boolValue(m_use_fftw) << l.endl;
-            l--;
-        }
+    void log(Log& l) const {
+        l.header(className());
+        l << "start_time: " << start_time_ << Log::endl;
+        l << "big_endian: " << l.boolValue(big_endian_) << Log::endl;
+        l << "physical_core_count: " << physical_core_count_ << Log::endl;
+        l << "logical_core_count: " << logical_core_count_ << Log::endl;
+        l << "mem_size: " << (mem_size_ / 1024 / 1024) << " MB, " << (mem_size_ / 1024 / 1024 / 1024) << " GB" << Log::endl;
+        l << "screen_count: " << screenCount() << Log::endl;
+        l << "smallest_screen_index: " << smallest_screen_index_ << Log::endl;
+        l << "largest_screen_index: " << largest_screen_index_ << Log::endl;
+        l << "total_screen_pixel_count: " << total_screen_pixel_count_ << Log::endl;
+        l << "use DSL2: " << l.boolValue(use_sdl2_) << l.endl;
+        l << "use Cairo: " << l.boolValue(use_cairo_) << l.endl;
+        l << "use FFTW: " << l.boolValue(use_fftw_) << l.endl;
+        l--;
+    }
 
-        void _initGUIStyle();
-
-
-        static void addMenu();
-        static void start();
-
-        [[nodiscard]] static App* instance() noexcept { return g_instance; }
-        static void beep() noexcept;
+    void _initGUIStyle();
 
 
-        [[nodiscard]] static const String& confFilePath() {
-            return g_instance->m_conf_file_path;
-        }
+    static void addMenu();
+    static void start();
+
+    [[nodiscard]] static App* instance() noexcept { return g_instance; }
+    static void beep() noexcept;
 
 
-        // GraphicContext
-        static GraphicContextType graphicContextType() noexcept { return g_instance->m_gc_type; }
-        [[nodiscard]] static GraphicContext* createGUIGraphicContext() noexcept;
+    [[nodiscard]] static const String& confFilePath() {
+        return g_instance->conf_file_path_;
+    }
 
 
-        // Screen
-        void updateScreenInfos() noexcept;
-        static int32_t screenCount() noexcept {
-            return static_cast<int32_t>(g_instance->m_screens.size());
-        }
-        [[nodiscard]] static Screen* mainScreen() noexcept {
-            return App::screenAtIndex(0);
-        }
-        [[nodiscard]] static Screen* smallestScreen() noexcept {
-            return App::screenAtIndex(g_instance->m_smallest_screen_index);
-        }
-        [[nodiscard]] static Screen* largestScreen() noexcept {
-            return App::screenAtIndex(g_instance->m_largest_screen_index);
-        }
-        [[nodiscard]] static Screen* screenAtIndex(int32_t index) noexcept {
-            return g_instance->m_screens.elementAtIndex(index);
-        }
-        [[nodiscard]] static int32_t totalScreenPixelCount() noexcept {
-            return g_instance->m_total_screen_pixel_count;
-        }
-        [[nodiscard]] static Rectd mainScreenRect() noexcept;
-
-        // Window
-        Window* addWindow(const char* title, const Rectd& rect, Window::Style window_style = Window::Style::Default, Screen* screen = nullptr) noexcept;
-        [[nodiscard]] int32_t windowCount() const noexcept { return static_cast<int32_t>(m_windows.size()); }
-        [[nodiscard]] static Window *keyWindow() noexcept { return g_instance->m_key_window; }
-
-        // Font
-        [[nodiscard]] static Font* uiFont() noexcept { return g_instance->m_ui_font; }
-        [[nodiscard]] static Font* uiSmallFont() noexcept { return g_instance->m_small_ui_font; }
-        [[nodiscard]] static Font* uiTitleFont() noexcept { return g_instance->m_title_ui_font; }
-        [[nodiscard]] static Font* monoFont() noexcept { return g_instance->m_mono_font; }
-
-        // GUI
-        [[nodiscard]] static float defaultCornerRadius() noexcept { return g_instance->m_default_corner_radius; }
-        [[nodiscard]] static timestamp_t doubleClickMillis() noexcept { return g_instance->m_double_click_ms; }
+    // GraphicContext
+    static GraphicContextType graphicContextType() noexcept { return g_instance->gc_type_; }
+    [[nodiscard]] static GraphicContext* createGUIGraphicContext() noexcept;
 
 
-        // Hardware
-        [[nodiscard]] static float scrollWheelSpeed() { return 1.0f; }
+    // Screen
+    void updateScreenInfos() noexcept;
+    static int32_t screenCount() noexcept {
+        return static_cast<int32_t>(g_instance->screens_.size());
+    }
+    [[nodiscard]] static Screen* mainScreen() noexcept {
+        return App::screenAtIndex(0);
+    }
+    [[nodiscard]] static Screen* smallestScreen() noexcept {
+        return App::screenAtIndex(g_instance->smallest_screen_index_);
+    }
+    [[nodiscard]] static Screen* largestScreen() noexcept {
+        return App::screenAtIndex(g_instance->largest_screen_index_);
+    }
+    [[nodiscard]] static Screen* screenAtIndex(int32_t index) noexcept {
+        return g_instance->screens_.elementAtIndex(index);
+    }
+    [[nodiscard]] static int32_t totalScreenPixelCount() noexcept {
+        return g_instance->total_screen_pixel_count_;
+    }
+    [[nodiscard]] static Rectd mainScreenRect() noexcept;
 
-        // Style
-        [[nodiscard]] static GUIStyle* guiStyleAtIndex(int32_t index) noexcept {
-            return g_instance->m_gui_styles_set.styleAtIndex(index);
-        }
-        static int32_t addGUIStyle() {
-            return g_instance->m_gui_styles_set.addStyle();
-        }
-        static GUIStyle* addGUIStyle(int32_t& out_index) {
-            out_index = g_instance->m_gui_styles_set.addStyle();
-            return guiStyleAtIndex(out_index);
-        }
+    // Window
+    Window* addWindow(const char* title, const Rectd& rect, Window::Style window_style = Window::Style::Default, Screen* screen = nullptr) noexcept;
+    [[nodiscard]] int32_t windowCount() const noexcept { return static_cast<int32_t>(windows_.size()); }
+    [[nodiscard]] static Window *keyWindow() noexcept { return g_instance->key_window_; }
 
-        static void setKeyWindow(Window* window) noexcept;
-        static void allWindowsNeedsDisplay() noexcept;
-    };
+    // Font
+    [[nodiscard]] static Font* uiFont() noexcept { return g_instance->ui_font_; }
+    [[nodiscard]] static Font* uiSmallFont() noexcept { return g_instance->small_ui_font_; }
+    [[nodiscard]] static Font* uiTitleFont() noexcept { return g_instance->title_ui_font_; }
+    [[nodiscard]] static Font* monoFont() noexcept { return g_instance->mono_font_; }
+
+    // GUI
+    [[nodiscard]] static float defaultCornerRadius() noexcept { return g_instance->default_corner_radius_; }
+    [[nodiscard]] static timestamp_t doubleClickMillis() noexcept { return g_instance->double_click_ms_; }
+
+
+    // Hardware
+    [[nodiscard]] static float scrollWheelSpeed() { return 1.0f; }
+
+    // Style
+    [[nodiscard]] static GUIStyle* guiStyleAtIndex(int32_t index) noexcept {
+        return g_instance->gui_styles_set_.styleAtIndex(index);
+    }
+    static int32_t addGUIStyle() {
+        return g_instance->gui_styles_set_.addStyle();
+    }
+    static GUIStyle* addGUIStyle(int32_t& out_index) {
+        out_index = g_instance->gui_styles_set_.addStyle();
+        return guiStyleAtIndex(out_index);
+    }
+
+    static void setKeyWindow(Window* window) noexcept;
+    static void allWindowsNeedsDisplay() noexcept;
+};
+
 
 } // End of namespace Grain
 

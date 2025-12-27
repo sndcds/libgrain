@@ -18,124 +18,128 @@
 
 namespace Grain {
 
-    class Vec3Fix {
-    public:
-        Vec3Fix() noexcept { zero(); }
-        Vec3Fix(const Fix& x, const Fix& y, const Fix& z) noexcept {
-            m_x = x; m_y = y;  m_z = z;
+class Vec3Fix {
+public:
+    Fix x_{};
+    Fix y_{};
+    Fix z_{};
+
+public:
+    Vec3Fix() noexcept = default;
+    Vec3Fix(const Fix& x, const Fix& y, const Fix& z) noexcept {
+        x_ = x; y_ = y;  z_ = z;
+    }
+
+    virtual ~Vec3Fix() = default;
+
+    [[nodiscard]] virtual const char* className() const noexcept { return "Vec3Fix"; }
+
+    friend std::ostream& operator << (std::ostream& os, const Vec3Fix& o) {
+        os << o.x_ << ", " << o.y_ << ", " << o.z_;
+        return os;
+    }
+
+
+    bool operator == (const Vec3Fix& other) const {
+        return other.x_ == x_ && other.y_ == y_ && other.z_ == z_;
+    }
+
+    bool operator != (const Vec3Fix& other) const {
+        return other.x_ != x_ || other.y_ != y_ || other.z_ != z_;
+    }
+
+    Vec3Fix operator + (const Vec3Fix& other) const {
+        return { x_ + other.x_, y_ + other.y_, z_ + other.z_ };
+    }
+
+    Vec3Fix operator - (const Vec3Fix& other) const {
+        return { x_ - other.x_, y_ - other.y_, z_ - other.z_ };
+    }
+
+    Vec3Fix operator * (const Vec3Fix& other) const {
+        return { x_ * other.x_, y_ * other.y_, z_ * other.z_ };
+    }
+
+    [[nodiscard]] Fix x() const noexcept { return x_; }
+    [[nodiscard]] Fix y() const noexcept { return y_; }
+    [[nodiscard]] Fix z() const noexcept { return z_; }
+    [[nodiscard]] float xFloat() const noexcept { return x_.asFloat(); }
+    [[nodiscard]] float yFloat() const noexcept { return y_.asFloat(); }
+    [[nodiscard]] float zFloat() const noexcept { return z_.asFloat(); }
+    [[nodiscard]] double xDouble() const noexcept { return x_.asDouble(); }
+    [[nodiscard]] double yDouble() const noexcept { return y_.asDouble(); }
+    [[nodiscard]] double zDouble() const noexcept { return z_.asDouble(); }
+
+
+    void zero() noexcept { x_ = 0; y_ = 0; z_ = 0; }
+
+    bool set(int32_t x, int32_t y, int32_t z) noexcept {
+        if (x_ != x || y_ != y || z_ != z) {
+            x_ = x;
+            y_ = y;
+            z_ = z;
+            return true;
         }
-
-        [[nodiscard]] virtual const char* className() const noexcept { return "Vec3Fix"; }
-
-        friend std::ostream& operator << (std::ostream& os, const Vec3Fix& o) {
-            os << o.m_x << ", " << o.m_y << ", " << o.m_z;
-            return os;
+        else {
+            return false;
         }
+    }
 
-
-        bool operator == (const Vec3Fix& other) const {
-            return other.m_x == m_x && other.m_y == m_y && other.m_z == m_z;
+    bool set(const Fix& x, const Fix& y, const Fix& z) noexcept {
+        if (x != x_ || y != y_ || z != z_) {
+            x_ = x;
+            y_ = y;
+            z_ = z;
+            return true;
         }
-
-        bool operator != (const Vec3Fix& other) const {
-            return other.m_x != m_x || other.m_y != m_y || other.m_z != m_z;
+        else {
+            return false;
         }
+    }
 
-        Vec3Fix operator + (const Vec3Fix& other) const {
-            return { m_x + other.m_x, m_y + other.m_y, m_z + other.m_z };
-        }
-
-        Vec3Fix operator - (const Vec3Fix& other) const {
-            return { m_x - other.m_x, m_y - other.m_y, m_z - other.m_z };
-        }
-
-        Vec3Fix operator * (const Vec3Fix& other) const {
-            return { m_x * other.m_x, m_y * other.m_y, m_z * other.m_z };
-        }
-
-        [[nodiscard]] Fix x() const noexcept { return m_x; }
-        [[nodiscard]] Fix y() const noexcept { return m_y; }
-        [[nodiscard]] Fix z() const noexcept { return m_z; }
-        [[nodiscard]] float xFloat() const noexcept { return m_x.asFloat(); }
-        [[nodiscard]] float yFloat() const noexcept { return m_y.asFloat(); }
-        [[nodiscard]] float zFloat() const noexcept { return m_z.asFloat(); }
-        [[nodiscard]] double xDouble() const noexcept { return m_x.asDouble(); }
-        [[nodiscard]] double yDouble() const noexcept { return m_y.asDouble(); }
-        [[nodiscard]] double zDouble() const noexcept { return m_z.asDouble(); }
+    bool set(const char* x_str, const char* y_str, const char* z_str) noexcept {
+        int64_t x_old = x_.m_raw_value;
+        int64_t y_old = y_.m_raw_value;
+        int64_t z_old = z_.m_raw_value;
+        x_.setStr(x_str);
+        y_.setStr(y_str);
+        z_.setStr(z_str);
+        return x_.m_raw_value != x_old || y_.m_raw_value != y_old || z_.m_raw_value != z_old;
+    }
 
 
-        void zero() noexcept { m_x = 0; m_y = 0; m_z = 0; }
+    bool setByCSV(const String& string, char delimiter) noexcept;
 
-        bool set(int32_t x, int32_t y, int32_t z) noexcept {
-            if (m_x != x || m_y != y || m_z != z) {
-                m_x = x;
-                m_y = y;
-                m_z = z;
-                return true;
-            }
-            else {
-                return false;
-            }
-        }
+    void vec3f(Vec3f& out_vec) const noexcept {
+        out_vec.x_ = x_.asFloat();
+        out_vec.y_ = y_.asFloat();
+        out_vec.z_ = z_.asFloat();
+    }
 
-        bool set(const Fix& x, const Fix& y, const Fix& z) noexcept {
-            if (x != m_x || y != m_y || z != m_z) {
-                m_x = x;
-                m_y = y;
-                m_z = z;
-                return true;
-            }
-            else {
-                return false;
-            }
-        }
+    void vec3d(Vec3d& out_vec) const noexcept {
+        out_vec.x_ = x_.asDouble();
+        out_vec.y_ = y_.asDouble();
+        out_vec.z_ = z_.asDouble();
+    }
 
-        bool set(const char* x_str, const char* y_str, const char* z_str) noexcept {
-            int64_t x_old = m_x.m_raw_value;
-            int64_t y_old = m_y.m_raw_value;
-            int64_t z_old = m_z.m_raw_value;
-            m_x.setStr(x_str);
-            m_y.setStr(y_str);
-            m_z.setStr(z_str);
-            return m_x.m_raw_value != x_old || m_y.m_raw_value != y_old || m_z.m_raw_value != z_old;
-        }
+    void setVec3f(const Vec3f& vec) noexcept {
+        x_.setFloat(vec.x_);
+        y_.setFloat(vec.y_);
+        z_.setFloat(vec.z_);
+    }
 
+    void setVec3d(const Vec3d& vec) noexcept {
+        x_.setDouble(vec.x_);
+        y_.setDouble(vec.y_);
+        z_.setDouble(vec.z_);
+    }
 
-        bool setByCSV(const String& string, char delimiter) noexcept;
-
-        void vec3f(Vec3f& out_vec) const noexcept {
-            out_vec.m_x = m_x.asFloat();
-            out_vec.m_y = m_y.asFloat();
-            out_vec.m_z = m_z.asFloat();
-        }
-
-        void vec3d(Vec3d& out_vec) const noexcept {
-            out_vec.m_x = m_x.asDouble();
-            out_vec.m_y = m_y.asDouble();
-            out_vec.m_z = m_z.asDouble();
-        }
-
-        void setVec3f(const Vec3f& vec) noexcept {
-            m_x.setFloat(vec.m_x);
-            m_y.setFloat(vec.m_y);
-            m_z.setFloat(vec.m_z);
-        }
-
-        void setVec3d(const Vec3d& vec) noexcept {
-            m_x.setDouble(vec.m_x);
-            m_y.setDouble(vec.m_y);
-            m_z.setDouble(vec.m_z);
-        }
-
-        void setPrecision(int32_t precision) noexcept {
-            m_x.setPrecision(precision);
-            m_y.setPrecision(precision);
-            m_z.setPrecision(precision);
-        }
-
-    public:
-        Fix m_x, m_y, m_z;
-    };
+    void setPrecision(int32_t precision) noexcept {
+        x_.setPrecision(precision);
+        y_.setPrecision(precision);
+        z_.setPrecision(precision);
+    }
+};
 
 
 } // End of namespace Grain

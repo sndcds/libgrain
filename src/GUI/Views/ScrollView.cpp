@@ -19,60 +19,55 @@ namespace Grain {
     ScrollAreaView::ScrollAreaView() noexcept : View(Rectd(0, 0, 100, 100)) {
     }
 
-
     ScrollView::ScrollView(const Rectd& rect) noexcept : View(rect) {
         _init(nullptr, rect);
     }
 
-
     ScrollView::~ScrollView() noexcept {
-        delete m_scroll_area_view;
-        delete m_horizontal_scroll_bar;
-        delete m_vertical_scroll_bar;
+        delete scroll_area_view_;
+        delete h_scroll_bar_;
+        delete v_scroll_bar_;
     }
-
 
     ScrollView* ScrollView::add(View* view, const Rectd& rect) {
         return (ScrollView*)Component::addComponentToView((Component*)new (std::nothrow) ScrollView(rect), view, AddFlags::kWantsLayer);
     }
 
-
     void ScrollView::_init(Component* parent, const Rectd& rect) noexcept {
-        m_type = ComponentType::ScrollView;
-        m_scroll_wheel_speed = App::scrollWheelSpeed();
+        type_ = ComponentType::ScrollView;
+        scroll_wheel_speed_ = App::scrollWheelSpeed();
 
         setScrollAreaView(new (std::nothrow) ScrollAreaView());
 
-        m_horizontal_scroll_bar = (ScrollBar*)addComponent(new (std::nothrow) ScrollBar(Rectd(), false), AddFlags::kNone);
-        m_horizontal_scroll_bar->setReceiverComponent(this);
-        m_horizontal_scroll_bar->setVisibility(false);
+        h_scroll_bar_ = (ScrollBar*)addComponent(new (std::nothrow) ScrollBar(Rectd(), false), AddFlags::kNone);
+        h_scroll_bar_->setReceiverComponent(this);
+        h_scroll_bar_->setVisibility(false);
 
-        m_vertical_scroll_bar = (ScrollBar*)addComponent(new (std::nothrow) ScrollBar(Rectd(), true), AddFlags::kNone);
-        m_vertical_scroll_bar->setReceiverComponent(this);
-        m_vertical_scroll_bar->setVisibility(false);
+        v_scroll_bar_ = (ScrollBar*)addComponent(new (std::nothrow) ScrollBar(Rectd(), true), AddFlags::kNone);
+        v_scroll_bar_->setReceiverComponent(this);
+        v_scroll_bar_->setVisibility(false);
 
         setRect(rect);
     }
 
 
     void ScrollView::setScrollAreaView(ScrollAreaView* view) noexcept {
-        if (view != m_scroll_area_view) {
-            removeComponent(m_scroll_area_view);
+        if (view != scroll_area_view_) {
+            removeComponent(scroll_area_view_);
             // delete m_scroll_area_view;    // TODO:!!!!
             addComponent(view, AddFlags::kWantsLayer);
-            m_scroll_area_view = view;
+            scroll_area_view_ = view;
             if (view != nullptr) {
                 view->setDimension(width(), height());
             }
         }
     }
 
-
     void ScrollView::setContentView(View* content_view) noexcept {
-        if (m_scroll_area_view != nullptr && content_view != m_content_view) {
+        if (scroll_area_view_ != nullptr && content_view != content_view_) {
             bool view_in_array_flag = false;
 
-            for (auto view : m_views) {
+            for (auto view : views_) {
                 if (view == content_view) {
                     view->setVisibility(true);
                     view_in_array_flag = true;
@@ -83,15 +78,15 @@ namespace Grain {
             }
 
             if (!view_in_array_flag) {
-                m_views.push(content_view);
-                m_scroll_area_view->addComponent(content_view, AddFlags::kWantsLayer);
+                views_.push(content_view);
+                scroll_area_view_->addComponent(content_view, AddFlags::kWantsLayer);
             }
 
-            m_content_view = content_view;
+            content_view_ = content_view;
             if (content_view) {
                 content_view->setPosition(0.0, 0.0);
-                m_content_width = content_view->width();
-                m_content_height = content_view->height();
+                content_width_ = content_view->width();
+                content_height_ = content_view->height();
                 geometryChanged();
                 needsDisplay();
             }
@@ -100,13 +95,12 @@ namespace Grain {
         setScrollPosition(0, 0);
     }
 
-
     void ScrollView::removeContentView(View* content_view) noexcept {
-        for (auto view : m_views) {
+        for (auto view : views_) {
             if (view == content_view) {
-                m_views.removeElement(content_view);
-                if (content_view == m_content_view) {
-                    m_content_view = nullptr;
+                views_.removeElement(content_view);
+                if (content_view == content_view_) {
+                    content_view_ = nullptr;
                 }
                 break;
             }
@@ -115,11 +109,11 @@ namespace Grain {
 
 
     void ScrollView::setContentDimension(double width, double height) {
-        m_content_width = width;
-        m_content_height = height;
+        content_width_ = width;
+        content_height_ = height;
 
-        if (m_content_view != nullptr) {
-            m_content_view->setDimension(width, height);
+        if (content_view_ != nullptr) {
+            content_view_->setDimension(width, height);
         }
 
         geometryChanged();
@@ -130,65 +124,65 @@ namespace Grain {
     void ScrollView::setScrollPosition(double x, double y) {
         Rectd content_rect;
 
-        if (m_content_view != nullptr) {
-            content_rect = m_content_view->rect();
-            m_content_width = content_rect.m_width;
-            m_content_height = content_rect.m_height;
+        if (content_view_ != nullptr) {
+            content_rect = content_view_->rect();
+            content_width_ = content_rect.width_;
+            content_height_ = content_rect.height_;
         }
 
         bool x_changed = false;
         bool y_changed = false;
 
-        if (m_can_scroll_horizontal == true && x < std::numeric_limits<double>::max()) {
+        if (can_h_scroll_ == true && x < std::numeric_limits<double>::max()) {
             x = std::clamp<double>(x, 0.0, 1.0);
 
-            if (m_horizontal_scroll_bar != nullptr) {
-                m_horizontal_scroll_bar->setScrollPosition(x);
+            if (h_scroll_bar_ != nullptr) {
+                h_scroll_bar_->setScrollPosition(x);
             }
 
-            double x_offset = x * (m_content_width - scrollAreaWidth());
+            double x_offset = x * (content_width_ - scrollAreaWidth());
 
-            if (x_offset != m_content_x_offset) {
-                m_content_x_offset = x_offset;
+            if (x_offset != content_x_offset_) {
+                content_x_offset_ = x_offset;
                 x_changed = true;
 
-                if (m_content_view != nullptr) {
-                    content_rect.m_x = -m_content_x_offset;
+                if (content_view_ != nullptr) {
+                    content_rect.x_ = -content_x_offset_;
                 }
             }
         }
 
-        if (m_can_scroll_vertical == true && y < std::numeric_limits<double>::max()) {
+        if (can_v_scroll_ == true && y < std::numeric_limits<double>::max()) {
             y = std::clamp<double>(y, 0.0, 1.0);
 
-            if (m_vertical_scroll_bar != nullptr) {
-                m_vertical_scroll_bar->setScrollPosition(y);
+            if (v_scroll_bar_ != nullptr) {
+                v_scroll_bar_->setScrollPosition(y);
             }
 
-            double y_offset = y * (m_content_height - scrollAreaHeight());
+            double y_offset = y * (content_height_ - scrollAreaHeight());
 
-            if (y_offset != m_content_y_offset) {
-                m_content_y_offset = y_offset;
+            if (y_offset != content_y_offset_) {
+                content_y_offset_ = y_offset;
                 y_changed = true;
 
-                if (m_content_view != nullptr) {
-                    content_rect.m_y = -m_content_y_offset;
+                if (content_view_ != nullptr) {
+                    content_rect.y_ = -content_y_offset_;
                 }
             }
         }
 
-        if (m_content_view != nullptr && (x_changed || y_changed)) {
-            m_content_view->setRect(content_rect);
+        if (content_view_ != nullptr && (x_changed || y_changed)) {
+            content_view_->setRect(content_rect);
         }
         else {
-            m_scroll_area_view->needsDisplay();
+            scroll_area_view_->needsDisplay();
         }
     }
 
 
     void ScrollView::setOffset(double x_offset, double y_offset) {
-        double max_x = m_content_width - scrollAreaWidth();
-        double max_y = m_content_height - scrollAreaHeight();
+        double max_x = content_width_ - scrollAreaWidth();
+        double max_y = content_height_ - scrollAreaHeight();
 
         x_offset = std::clamp<double>(x_offset, 0, max_x);
         y_offset = std::clamp<double>(y_offset, 0, max_y);
@@ -201,20 +195,20 @@ namespace Grain {
 
 
     void ScrollView::setScrollBarColor(const RGB& color) noexcept {
-        if (m_horizontal_scroll_bar != nullptr) {
+        if (h_scroll_bar_ != nullptr) {
             // m_horizontal_scroll_bar->setUiColor(UIColor::Bg, color); TODO; !!!!
         }
 
-        if (m_vertical_scroll_bar != nullptr) {
+        if (v_scroll_bar_ != nullptr) {
             // m_vertical_scroll_bar->setUiColor(UIColor::Bg, color); TODO; !!!!
         }
     }
 
 
     void ScrollView::geometryChanged() noexcept {
-        if (m_content_view != nullptr) {
-            m_content_width = m_content_view->width();
-            m_content_height = m_content_view->height();
+        if (content_view_ != nullptr) {
+            content_width_ = content_view_->width();
+            content_height_ = content_view_->height();
         }
 
         Rectd bounds_rect = boundsRect();
@@ -222,75 +216,69 @@ namespace Grain {
         double scroll_area_width = width();
         double scroll_area_height = height();
 
-        bool h_scroll_bar_flag = m_content_width > scroll_area_width && m_can_scroll_horizontal;
-        bool v_scroll_bar_flag = m_content_height > scroll_area_height && m_can_scroll_vertical;
+        bool h_scroll_bar_flag = content_width_ > scroll_area_width && can_h_scroll_;
+        bool v_scroll_bar_flag = content_height_ > scroll_area_height && can_v_scroll_;
 
         if (h_scroll_bar_flag == true) {
-            scroll_area_height -= m_horizontal_scroll_bar->barSize();
-            if (m_content_height > scroll_area_height) {
+            scroll_area_height -= h_scroll_bar_->barSize();
+            if (content_height_ > scroll_area_height) {
                 v_scroll_bar_flag = true;
             }
         }
 
         if (v_scroll_bar_flag == true) {
-            scroll_area_width -= m_horizontal_scroll_bar->barSize();
+            scroll_area_width -= h_scroll_bar_->barSize();
         }
 
-        m_scroll_area_view->setDimension(scroll_area_width, scroll_area_height);
+        scroll_area_view_->setDimension(scroll_area_width, scroll_area_height);
 
-        double h_bar_size = h_scroll_bar_flag ? m_horizontal_scroll_bar->barSize() : 0;
-        double v_bar_size = v_scroll_bar_flag ? m_vertical_scroll_bar->barSize() : 0;
+        double h_bar_size = h_scroll_bar_flag ? h_scroll_bar_->barSize() : 0;
+        double v_bar_size = v_scroll_bar_flag ? v_scroll_bar_->barSize() : 0;
 
-        m_horizontal_scroll_bar->setVisibility(h_scroll_bar_flag);
+        h_scroll_bar_->setVisibility(h_scroll_bar_flag);
         if (h_scroll_bar_flag == true) {
-            m_horizontal_scroll_bar->setRect({ 0, bounds_rect.m_height - h_bar_size, bounds_rect.m_width - v_bar_size, h_bar_size });
-            m_horizontal_scroll_bar->setVisibleFraction(m_content_width, scroll_area_width);
+            h_scroll_bar_->setRect({ 0, bounds_rect.height_ - h_bar_size, bounds_rect.width_ - v_bar_size, h_bar_size });
+            h_scroll_bar_->setVisibleFraction(content_width_, scroll_area_width);
         }
 
-        m_vertical_scroll_bar->setVisibility(v_scroll_bar_flag);
+        v_scroll_bar_->setVisibility(v_scroll_bar_flag);
         if (v_scroll_bar_flag == true) {
-            m_vertical_scroll_bar->setRect({ bounds_rect.m_width - v_bar_size, 0, v_bar_size, bounds_rect.m_height - h_bar_size });
-            m_vertical_scroll_bar->setVisibleFraction(m_content_height, scroll_area_height);
+            v_scroll_bar_->setRect({ bounds_rect.width_ - v_bar_size, 0, v_bar_size, bounds_rect.height_ - h_bar_size });
+            v_scroll_bar_->setVisibleFraction(content_height_, scroll_area_height);
         }
 
 
-        double max_x_offset = std::clamp<double>(m_content_width - scroll_area_width, 0, m_content_width - 1);
-        double max_y_offset = std::clamp<double>(m_content_height - scroll_area_height, 0, m_content_height - 1);
+        double max_x_offset = std::clamp<double>(content_width_ - scroll_area_width, 0, content_width_ - 1);
+        double max_y_offset = std::clamp<double>(content_height_ - scroll_area_height, 0, content_height_ - 1);
 
-        if (m_content_x_offset > max_x_offset) {
-            m_content_x_offset = max_x_offset;
+        if (content_x_offset_ > max_x_offset) {
+            content_x_offset_ = max_x_offset;
         }
 
-        if (m_content_y_offset > max_y_offset) {
-            m_content_y_offset = max_y_offset;
+        if (content_y_offset_ > max_y_offset) {
+            content_y_offset_ = max_y_offset;
         }
 
-        if (m_content_view != nullptr) {
-            m_content_view->setPosition(-m_content_x_offset, -m_content_y_offset);
+        if (content_view_ != nullptr) {
+            content_view_->setPosition(-content_x_offset_, -content_y_offset_);
         }
 
-        m_horizontal_scroll_bar->setScrollPosition(max_x_offset > FLT_EPSILON ? m_content_x_offset / max_x_offset : 0);
-        m_vertical_scroll_bar->setScrollPosition(max_y_offset > FLT_EPSILON ? m_content_y_offset / max_y_offset : 0);
+        h_scroll_bar_->setScrollPosition(max_x_offset > FLT_EPSILON ? content_x_offset_ / max_x_offset : 0);
+        v_scroll_bar_->setScrollPosition(max_y_offset > FLT_EPSILON ? content_y_offset_ / max_y_offset : 0);
     }
-
 
     void ScrollView::handleScrollWheel(const Event& event) noexcept {
 
-        Vec3d delta = event.delta() * m_scroll_wheel_speed;
-        setOffset(m_content_x_offset - delta.m_x, m_content_y_offset - delta.m_y);
+        Vec3d delta = event.delta() * scroll_wheel_speed_;
+        setOffset(content_x_offset_ - delta.x_, content_y_offset_ - delta.y_);
     }
-
 
     void ScrollView::setByComponent(Component* component) noexcept {
-
-        if (component != nullptr) {
-            if (component->componentType() == ComponentType::ScrollBar) {
-                ScrollBar* scroll_bar = (ScrollBar*)component;
-                double position = scroll_bar->scrollPosition();
-                scroll_bar->isVertical() ? setScrollYPosition(position) : setScrollXPosition(position);
-            }
+        if (component && component->componentType() == ComponentType::ScrollBar) {
+            auto scroll_bar = (ScrollBar*)component;
+            double position = scroll_bar->scrollPosition();
+            scroll_bar->isVertical() ? setScrollYPosition(position) : setScrollXPosition(position);
         }
     }
-
 
 } // End of namespace Grain

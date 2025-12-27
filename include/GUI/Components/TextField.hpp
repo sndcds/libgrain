@@ -36,7 +36,7 @@ namespace Grain {
         int32_t m_fractional_digits = 2;
         bool m_value_changed = false;
 
-        float m_beam_width = 2;
+        float beam_width_ = 2.0f;
 
         int32_t m_cursor_index = 0;
         int32_t m_selection_begin = -1, m_selection_end = -1;
@@ -69,7 +69,7 @@ namespace Grain {
         void draw(const Rectd& dirty_rect) noexcept override;
         void drawCursor(GraphicContext* gc, float x) const noexcept;
 
-        virtual float beamWidth() const noexcept { return m_beam_width; }
+        virtual float beamWidth() const noexcept { return beam_width_; }
 
         virtual int32_t cursorIndex() const noexcept { return m_cursor_index; }
         virtual int32_t clampedCursorIndex() const noexcept { return std::clamp<int32_t>(m_cursor_index, 0, textLength()); }
@@ -86,7 +86,7 @@ namespace Grain {
         void setNumberMode(bool mode) noexcept override;
         void stepNumber(bool use_big_step, bool negative) noexcept override;
 
-        virtual void setBeamWidth(float beam_width) noexcept { m_beam_width = beam_width; needsDisplay(); }
+        virtual void setBeamWidth(float beam_width) noexcept { beam_width_ = beam_width; needsDisplay(); }
 
         virtual void setCursorIndex(int32_t cursor_index) noexcept { m_cursor_index = cursor_index; needsDisplay(); }
         virtual void setSelectionBegin(int32_t selection_begin) noexcept { m_selection_begin = selection_begin; needsDisplay(); ; }
@@ -110,9 +110,9 @@ namespace Grain {
 
 
         void setReceiverComponent(Component* receiver) noexcept override {
-            m_receiver_component = receiver;
-            if (m_receiver_component) {
-                m_receiver_component->setTextField(this);
+            receiver_component_ = receiver;
+            if (receiver_component_) {
+                receiver_component_->setTextField(this);
             }
         }
 

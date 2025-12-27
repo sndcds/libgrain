@@ -28,10 +28,10 @@ namespace Grain {
      *  @brief Coordinate Reference System information.
      */
     typedef struct GeoSRIDInfo {
-        const char* m_id_str;       ///< SRID number as C-stirng.
-        RangeRectd m_bounds;        ///< Bounds of thhe coordinate system.
-        Vec2d m_center;             ///< Center.
-        RangeRectd m_wgs84_bounds;  ///< Corresponding bounds in WGS84 lon/lat coordinates.
+        const char* m_id_str;       ///< SRID number as C-string
+        RangeRectd m_bounds;        ///< Bounds of thhe coordinate system
+        Vec2d center_{};            ///< Center
+        RangeRectd m_wgs84_bounds;  ///< Corresponding bounds in WGS84 lon/lat coordinates
     } GeoSRIDInfo;
 
 
@@ -69,12 +69,12 @@ namespace Grain {
             kErrFlag_UnsupportedMetaTileSize = 0x4
         };
 
-        static constexpr int32_t kMetaTileGridSize = 8;     ///< Typical size of a meta tile in map applications.
-        static constexpr int32_t kMaxMapZoomLevel = 30;     ///< Max zoom level for map applications.
+        static constexpr int32_t kMetaTileGridSize = 8;     ///< Typical size of a meta tile in map applications
+        static constexpr int32_t kMaxMapZoomLevel = 30;     ///< Max zoom level for map applications
 
-        static constexpr double kEarthRadius_m = 6378137.0;  ///< Radius of Earth in meters.
-        static constexpr double kEarthRadius_km = 6378.137;  ///< Radius of Earth in kilometers.
-        static constexpr double kWGS84EllipsoidFlattening = 1.0 / 298.257223563;  ///< Flattening of the WGS 84 ellipsoid.
+        static constexpr double kEarthRadius_m = 6378137.0;  ///< Radius of Earth in meters
+        static constexpr double kEarthRadius_km = 6378.137;  ///< Radius of Earth in kilometers
+        static constexpr double kWGS84EllipsoidFlattening = 1.0 / 298.257223563;  ///< Flattening of the WGS 84 ellipsoid
         static constexpr double kEarthCircumferenceAtEquator = kEarthRadius_m * 2.0 * std::numbers::pi;
 
         // OSM Limits.
@@ -139,7 +139,7 @@ namespace Grain {
         }
 
         static double haversineDistance(const Vec2d& lonlat1, const Vec2d& lonlat2, double radius) noexcept {
-            return haversineDistance(lonlat1.m_x, lonlat1.m_y, lonlat2.m_x, lonlat2.m_y, radius);
+            return haversineDistance(lonlat1.x_, lonlat1.y_, lonlat2.x_, lonlat2.y_, radius);
         }
         static double haversineDistance(double lon1, double lat1, double lon2, double lat2, double radius) noexcept;
         static double haversineDistanceAtLon(double lon, double lat1, double lat2, double radius) noexcept {
@@ -153,7 +153,7 @@ namespace Grain {
         static void haversineWidthAndHeight(const RangeRectd& bounds, int32_t srid, double radius, BoundType bound_type, double& out_width, double& out_height) noexcept;
 
         static double sphericalLawOfCosinesDistance(const Vec2d& lonlat1, const Vec2d& lonlat2, double radius) noexcept {
-            return sphericalLawOfCosinesDistance(lonlat1.m_x, lonlat1.m_y, lonlat2.m_x, lonlat2.m_y, radius);
+            return sphericalLawOfCosinesDistance(lonlat1.x_, lonlat1.y_, lonlat2.x_, lonlat2.y_, radius);
         }
         static double sphericalLawOfCosinesDistance(double lon1, double lat1, double lon2, double lat2, double radius) noexcept;
 

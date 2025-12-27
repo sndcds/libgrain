@@ -13,14 +13,27 @@
 
 namespace Grain {
 
-    bool DSP::hanningWindowSymmetric(int32_t window_size, float *out_data) noexcept {
+    float DSP::hanningWindow(float t) noexcept {
+        if (t <= 0.0f) return 0.0f;
+        if (t >= 1.0f) return 0.0f;
+        return 0.5f * (1.0f - cosf(2.0f * std::numbers::pi_v<float> * t));
+    }
 
+
+    float DSP::hanningLeft(float t) noexcept {
+        if (t <= 0.0f) return 0.0f;
+        if (t >= 1.0f) return 1.0f;
+        return 0.5f * (1.0f - cosf(std::numbers::pi_v<float> * t));
+    }
+
+
+    bool DSP::hanningWindowSymmetric(int32_t window_size, float *out_data) noexcept {
         if (window_size <= 1 || !out_data) {
             return false;
         }
 
         for (int32_t i = 0; i < window_size; i++) {
-            out_data[i] = static_cast<float>(0.5 * (1.0 - std::cos((std::numbers::pi * 2 * i) / (window_size - 1))));
+            out_data[i] = 0.5f * (1.0f - cosf((2.0f * std::numbers::pi_v<float> * i) / (window_size - 1)));
         }
 
         return true;
@@ -28,61 +41,13 @@ namespace Grain {
 
 
     bool DSP::hanningWindowPeriodic(int32_t window_size, float* out_data) noexcept {
-
         if (window_size <= 0 || !out_data) {
             return false;
         }
 
-        for (int32_t i = 0; i < window_size; ++i) {
-            out_data[i] = static_cast<float>(0.5 * (1.0 - std::cos((2.0 * std::numbers::pi * i) / window_size)));
-        }
-
-        return true;
-    }
-
-
-
-    bool DSP::normalizedHanningWindow(int32_t window_size, float* out_data) noexcept {
-
-        // TODO: Check!!!!!
-
-        if (window_size <= 1 || !out_data) {
-            return false;
-        }
-
-        auto buffer = new float[window_size * 2];
-        if (!buffer) {
-            return false;
-        }
-
-        auto hann = buffer;
-        auto normalization = &buffer[window_size];
-
         for (int32_t i = 0; i < window_size; i++) {
-            hann[i] = 0.5f * (1.0f - std::cos((2.0f * std::numbers::pi * i) / (window_size - 1)));
+            out_data[i] = 0.5f * (1.0f - cosf((2.0f * std::numbers::pi_v<float> * i) / window_size));
         }
-
-        // Compute normalization factor assuming 50% overlap
-        for (int32_t i = 0; i < window_size; i++) {
-            normalization[i] = 0.0f;
-        }
-
-        int32_t hop_size = window_size / 2;
-
-        // Overlap-add the squared window twice (50% overlap)
-        for (int32_t i = 0; i < window_size; i++) {
-            normalization[i] += hann[i] * hann[i];
-            if (i >= hop_size) {
-                normalization[i - hop_size] += hann[i] * hann[i];
-            }
-        }
-
-        // Normalize the window so overlapping segments sum to 1
-        for (int32_t i = 0; i < window_size; i++) {
-            out_data[i] = hann[i] / std::sqrt(normalization[i] + 1e-6f); // +epsilon avoids division by zero
-        }
-
-        delete[] buffer;
 
         return true;
     }
@@ -150,7 +115,7 @@ namespace Grain {
 
             case WindowType::Sinc: {    // Lanczos
                 for (j = 0; j < window_size; j++) {
-                    win_coef[j] = static_cast<float>(Math::sinc(static_cast<double>(2 * j + 1 - m) / dm * std::numbers::pi));  // TODO: Check, if that its correct!
+                    win_coef[j] = static_cast<float>(Math::sinc(static_cast<double>(2 * j + 1 - m) / dm * std::numbers::pi));
                 }
                 for (j = 0; j < window_size; j++) {
                     win_coef[j] = std::pow(win_coef[j], beta);
@@ -183,74 +148,73 @@ namespace Grain {
             }
                 break;
 
-            case WindowType::Blackman:
-            {
+            case WindowType::Blackman: {
                 for (j = 0; j < m / 2; j++) {
-                    win_coef[j] = 0.42f
-                                  - 0.50f * std::cos(static_cast<float>(j + 1) * tau / dm)
-                                  + 0.08f * std::cos(static_cast<float>(j + 1) * tau * 2.0f / dm);
+                    win_coef[j] =
+                            0.42f
+                            - 0.50f * std::cos(static_cast<float>(j + 1) * tau / dm)
+                            + 0.08f * std::cos(static_cast<float>(j + 1) * tau * 2.0f / dm);
                 }
-            }
                 break;
+            }
 
-            case WindowType::FlatTop:
-            {
+            case WindowType::FlatTop: {
                 for (j = 0; j <= m / 2; j++) {
-                    win_coef[j] = 1
-                                  - 1.93293488969227f * std::cos(static_cast<float>(j + 1) * tau / dm)
-                                  + 1.28349769674027f * std::cos(static_cast<float>(j + 1) * tau * 2.0f / dm)
-                                  - 0.38130801681619f * std::cos(static_cast<float>(j + 1) * tau * 3.0f / dm)
-                                  + 0.02929730258511f * std::cos(static_cast<float>(j + 1) * tau * 4.0f / dm);
+                    win_coef[j] =
+                            1
+                            - 1.93293488969227f * std::cos(static_cast<float>(j + 1) * tau / dm)
+                            + 1.28349769674027f * std::cos(static_cast<float>(j + 1) * tau * 2.0f / dm)
+                            - 0.38130801681619f * std::cos(static_cast<float>(j + 1) * tau * 3.0f / dm)
+                            + 0.02929730258511f * std::cos(static_cast<float>(j + 1) * tau * 4.0f / dm);
                 }
-            }
                 break;
+            }
 
-            case WindowType::BlackmanHarris:
-            {
+            case WindowType::BlackmanHarris: {
                 for (j = 0; j < m / 2; j++) {
-                    win_coef[j] = 0.35875f
-                                  - 0.48829f * std::cos(static_cast<float>(j + 1) * tau / dm)
-                                  + 0.14128f * std::cos(static_cast<float>(j + 1) * tau * 2.0f / dm)
-                                  - 0.01168f * std::cos(static_cast<float>(j + 1) * tau * 3.0f / dm);
+                    win_coef[j] =
+                            0.35875f
+                            - 0.48829f * std::cos(static_cast<float>(j + 1) * tau / dm)
+                            + 0.14128f * std::cos(static_cast<float>(j + 1) * tau * 2.0f / dm)
+                            - 0.01168f * std::cos(static_cast<float>(j + 1) * tau * 3.0f / dm);
                 }
-            }
                 break;
+            }
 
-            case WindowType::BlackmanNuttall:
-            {
+            case WindowType::BlackmanNuttall: {
                 for (j = 0; j < m / 2; j++) {
-                    win_coef[j] = 0.3535819f
-                                  - 0.4891775f * std::cos(static_cast<float>(j + 1) * tau / dm)
-                                  + 0.1365995f * std::cos(static_cast<float>(j + 1) * tau * 2.0f / dm)
-                                  - 0.0106411f * std::cos(static_cast<float>(j + 1) * tau * 3.0f / dm);
+                    win_coef[j] =
+                            0.3535819f
+                            - 0.4891775f * std::cos(static_cast<float>(j + 1) * tau / dm)
+                            + 0.1365995f * std::cos(static_cast<float>(j + 1) * tau * 2.0f / dm)
+                            - 0.0106411f * std::cos(static_cast<float>(j + 1) * tau * 3.0f / dm);
                 }
-            }
                 break;
+            }
 
-            case WindowType::Nuttall:
-            {
+            case WindowType::Nuttall: {
                 for (j = 0; j < m / 2; j++) {
-                    win_coef[j] = 0.355768f
-                                  - 0.487396f * std::cos(static_cast<float>(j + 1) * tau / dm)
-                                  + 0.144232f * std::cos(static_cast<float>(j + 1) * tau * 2.0f / dm)
-                                  - 0.012604f * std::cos(static_cast<float>(j + 1) * tau * 3.0f / dm);
+                    win_coef[j] =
+                            0.355768f
+                            - 0.487396f * std::cos(static_cast<float>(j + 1) * tau / dm)
+                            + 0.144232f * std::cos(static_cast<float>(j + 1) * tau * 2.0f / dm)
+                            - 0.012604f * std::cos(static_cast<float>(j + 1) * tau * 3.0f / dm);
                 }
-            }
                 break;
+            }
 
-            case WindowType::KaiserBessel:
-            {
+            case WindowType::KaiserBessel: {
                 for (j = 0; j <= m / 2; j++) {
-                    win_coef[j] = 0.402f
-                                  - 0.498f * std::cos(tau * static_cast<float>(j + 1) / dm)
-                                  + 0.098f * std::cos(2.0f * tau * static_cast<float>(j + 1) / dm)
-                                  + 0.001f * std::cos(3.0f * tau * static_cast<float>(j + 1) / dm);
+                    win_coef[j] =
+                            0.402f
+                            - 0.498f * std::cos(tau * static_cast<float>(j + 1) / dm)
+                            + 0.098f * std::cos(2.0f * tau * static_cast<float>(j + 1) / dm)
+                            + 0.001f * std::cos(3.0f * tau * static_cast<float>(j + 1) / dm);
                 }
-            }
                 break;
+            }
 
-            case WindowType::Trapezoid:
-            {
+            case WindowType::Trapezoid: {
                 // Rectangle for alpha = 1, triangle for alpha = 0
                 int32_t k = m / 2;
                 if (m % 2) {
@@ -259,11 +223,10 @@ namespace Grain {
                 for (j = 0; j < k; j++) {
                     win_coef[j] = static_cast<float>(j + 1) / static_cast<float>(k);
                 }
-            }
                 break;
+            }
 
-            case WindowType::Gauss:
-            {
+            case WindowType::Gauss: {
                 // This definition is from http://en.wikipedia.org/wiki/Window_function (Gauss Generalized normal window)
                 // We set their p = 2, and use alpha in the numerator, instead of sigma in the denominator, as most others do.
                 // alpha = M_E puts the Gauss window response midway between the Hanning and the Flattop (basically what we want).
@@ -275,8 +238,8 @@ namespace Grain {
                     win_coef[j] *= win_coef[j];
                     win_coef[j] = std::exp(-win_coef[j]);
                 }
-            }
                 break;
+            }
         }
 
         // Fold the coefficients over
@@ -293,7 +256,6 @@ namespace Grain {
 
         // This will set the gain of the window to 1. Only the Flattop window has unity gain by design
         if (unity_gain) {
-
             float sum = 0.0f;
 
             for (j = 0; j < window_size; j++) {

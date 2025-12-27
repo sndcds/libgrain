@@ -24,13 +24,13 @@ namespace Grain {
 
     CatmullRomCurve::CatmullRomCurve() noexcept {
 
-        m_points.reserve(64);
+        points_.reserve(64);
     }
 
 
     CatmullRomCurve::CatmullRomCurve(int32_t point_capacity) noexcept {
 
-        m_points.reserve(point_capacity);
+        points_.reserve(point_capacity);
     }
 
 
@@ -57,14 +57,14 @@ namespace Grain {
 
         if (pointCount() > 0) {
             auto p = pointAtIndex(lastPointIndex());
-            if (p.distance(point) < m_point_distance_threshold) {
-                // Ignore points closer than `m_point_distance_threshold`
+            if (p.distance(point) < point_distance_threshold_) {
+                // Ignore points closer than `point_distance_threshold_`
                 // This is intentional behavior, not an error, so return success
                 return ErrorCode::None;
             }
         }
 
-        if (!m_points.push(point)) {
+        if (!points_.push(point)) {
             return ErrorCode::MemCantAllocate;
         }
 
@@ -91,19 +91,19 @@ namespace Grain {
 
             // Reorganize points memory
             for (int32_t i = 0; i < 2; i++) {
-                if (!m_points.push(Vec2d())) {
+                if (!points_.push(Vec2d())) {
                     return ErrorCode::MemCantAllocate;
                 }
             }
 
-            auto points = m_points.mutDataPtr();
+            auto points = points_.mutDataPtr();
             for (int32_t i = pointCount() - 2; i > 0; i--) {
                 points[i] = points[i - 1];
             }
 
             // Compute the extended start point
             {
-                auto points = m_points.mutDataPtr();
+                auto points = points_.mutDataPtr();
                 auto a = &points[0];
                 auto b = &points[1];
                 auto c = &points[2];
@@ -112,7 +112,7 @@ namespace Grain {
 
             // Compute the extended end point
             {
-                auto points = m_points.mutElementPtrAtIndex(lastPointIndex());
+                auto points = points_.mutElementPtrAtIndex(lastPointIndex());
                 auto a = &points[0];
                 auto b = &points[-1];
                 auto c = &points[-2];
@@ -126,9 +126,9 @@ namespace Grain {
 
     Vec2d CatmullRomCurve::pointAtIndex(int32_t index) noexcept {
 
-        auto point = m_points.elementPtrAtIndex(index);
+        auto point = points_.elementPtrAtIndex(index);
         if (point) {
-            return Vec2d(point->m_x, point->m_y);
+            return Vec2d(point->x_, point->y_);
         }
         else {
             return Vec2d();
@@ -140,7 +140,7 @@ namespace Grain {
 
         double length = 0.0;
 
-        auto points = m_points.dataPtr();
+        auto points = points_.dataPtr();
         for (int32_t i = 0; i < pointCount() - 1; i++) {
             length += points[i].distance(points[i + 1]);
         }
@@ -156,7 +156,7 @@ namespace Grain {
                 out_point.zero();
             }
             else {
-                out_point = m_points[0];
+                out_point = points_[0];
             }
             return;
         }
@@ -172,7 +172,7 @@ namespace Grain {
 
         float t2 = Math::remapnorm(static_cast<double>(segment_index) / segment_n, static_cast<double>(segment_index + 1) / segment_n, t);
 
-        _getPoint(segment_index, t2, m_alpha, out_point);
+        _getPoint(segment_index, t2, alpha_, out_point);
     }
 
 
@@ -208,13 +208,13 @@ namespace Grain {
 
     void CatmullRomCurve::_getPoint(int32_t segment_index, double t, float alpha, Vec2d &out_point) const noexcept {
 
-        auto p = m_points.elementPtrAtIndex(segment_index);
+        auto p = points_.elementPtrAtIndex(segment_index);
 
         if (p) {
-            Vec2d p0{ p[0].m_x, p[0].m_y };
-            Vec2d p1{ p[1].m_x, p[1].m_y };
-            Vec2d p2{ p[2].m_x, p[2].m_y };
-            Vec2d p3{ p[3].m_x, p[3].m_y };
+            Vec2d p0{ p[0].x_, p[0].y_ };
+            Vec2d p1{ p[1].x_, p[1].y_ };
+            Vec2d p2{ p[2].x_, p[2].y_ };
+            Vec2d p3{ p[3].x_, p[3].y_ };
 
             double t0 = 0.0;
             double t1 = _getT(t0, alpha, p0, p1);

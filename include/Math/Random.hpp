@@ -15,6 +15,7 @@
 #include <random>
 #include <cmath>
 #include <chrono>
+#include <numbers>
 
 
 namespace Grain {
@@ -73,6 +74,11 @@ namespace Grain {
          */
         [[nodiscard]] static float nextBipolar(float max) noexcept {
             return (static_cast<float>(arc4random()) * kUint32Reciprocal2 - 1.0f) * max;
+        }
+
+
+        [[nodiscard]] static float nextBipolarPi() noexcept {
+            return (static_cast<float>(arc4random()) * kUint32Reciprocal2 - 1.0f) * std::numbers::pi_v<float>;
         }
 
         /**

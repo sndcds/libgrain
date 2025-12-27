@@ -94,13 +94,13 @@ namespace Grain {
      *  single channel, or a subsection of it, and can optionally carry metadata
      *  such as a name or locked state.
      *
-     *  Regions can be chained via the `m_next` pointer, allowing construction of
+     *  Regions can be chained via the `next_` pointer, allowing construction of
      *  region lists or sequences. Each region supports locking (to prevent
      *  modification), color indexing for UI representation, and functions for
      *  querying and manipulating signal data within its bounds.
      *
      *  Key features:
-     *  - Channel-specific or multi-channel support (`m_channel`)
+     *  - Channel-specific or multi-channel support (`channel_`)
      *  - Left/right sample position boundaries
      *  - Lockable state for edit protection
      *  - Optional naming for identification
@@ -126,7 +126,7 @@ namespace Grain {
 
         [[nodiscard]] const char* className() const noexcept override { return "SignalRegion"; }
 
-        [[nodiscard]] int64_t length() const noexcept { return m_right - m_left + 1; }
+        [[nodiscard]] int64_t len() const noexcept { return m_right - m_left + 1; }
         [[nodiscard]] const Signal* signal() const noexcept { return m_signal; }
         [[nodiscard]] String name() const noexcept { return m_name; }
         [[nodiscard]] int32_t channel() const noexcept { return m_channel; }
@@ -195,15 +195,23 @@ namespace Grain {
         }
 
         [[nodiscard]] int16_t* valuesPtr() const noexcept { return m_values; }
-        [[nodiscard]] int64_t length() const noexcept { return m_length; }
+        [[nodiscard]] int64_t len() const noexcept { return m_len; }
         [[nodiscard]] int64_t step() const noexcept { return m_step; }
 
         void update(Signal* signal, int32_t channel) noexcept;
 
     protected:
         int16_t* m_values = nullptr;
-        int64_t m_length = 0;
+        int64_t m_len = 0;
         int64_t m_step = 0;
+    };
+
+
+    struct SignalInfo {
+        int32_t m_channel_count;
+        int32_t m_sample_rate;
+        int64_t m_sample_count;
+        int32_t m_format;
     };
 
 
@@ -305,8 +313,9 @@ namespace Grain {
         ErrorCode growIfNeeded(int64_t sample_count) noexcept;
 
         // Factory
-        [[nodiscard]] Signal* copySignal(int64_t offset, int64_t sample_count, bool weights_mode = false) noexcept;
+        [[nodiscard]] Signal* copySignal(int64_t offs, int64_t sample_count, bool weights_mode = false) noexcept;
         [[nodiscard]] Signal* createSignalWithSameSetting() const noexcept;
+        [[nodiscard]] Signal* createSignalFromChannel(int32_t channel, int64_t offs, int64_t len) const noexcept;
 
         // Get
         [[nodiscard]] DataType dataType() const noexcept { return m_data_type; }
@@ -351,7 +360,7 @@ namespace Grain {
                     index >= 0 && index < m_last_sample_index;
         }
 
-        void checkProcessTypeChannelIndex(DataType data_type, int32_t channel, int64_t index) const {
+        void _checkProcessTypeChannelIndex(DataType data_type, int32_t channel, int64_t index) const {
             if (!hasData()) {
                 Exception::throwMessage(ErrorCode::NoData, "Signal has no data to process.");
             }
@@ -403,27 +412,27 @@ namespace Grain {
         [[nodiscard]] bool hasSameSampleRateAs(const Signal* signal) const noexcept { return signal && signal->m_sample_rate == m_sample_rate; }
 
         //
-        ErrorCode forEachSample(SignalSampleFunc func, SignalSampleFuncInfo& info, int32_t channel, int64_t offset, int64_t length, int64_t stride) const;
-        ErrorCode forEachSampleOfType(DataType data_type, SignalSampleFunc func, SignalSampleFuncInfo& info, int64_t offset, int64_t length, int64_t stride) const;
-        ErrorCode forEachSampleOfType(DataType data_type, SignalSampleFunc func, SignalSampleFuncInfo& info, int32_t channel, int64_t offset, int64_t length, int64_t stride) const;
+        ErrorCode forEachSample(SignalSampleFunc func, SignalSampleFuncInfo& info, int32_t channel, int64_t offs, int64_t len, int64_t stride) const;
+        ErrorCode forEachSampleOfType(DataType data_type, SignalSampleFunc func, SignalSampleFuncInfo& info, int64_t offs, int64_t len, int64_t stride) const;
+        ErrorCode forEachSampleOfType(DataType data_type, SignalSampleFunc func, SignalSampleFuncInfo& info, int32_t channel, int64_t offs, int64_t len, int64_t stride) const;
 
         // Information about the signal
         template <typename T>
         static void _absMaxFunc(SignalSampleFuncInfo& info_ref);
-        [[nodiscard]] double absMax(int32_t channel, int64_t offset = 0, int64_t length = -1, int64_t stride = 1) const noexcept;
+        [[nodiscard]] double absMax(int32_t channel, int64_t offs = 0, int64_t len = -1, int64_t stride = 1) const noexcept;
         [[nodiscard]] double absMax() const noexcept;
 
         template <typename T>
         static void _averageFunc(SignalSampleFuncInfo& info_ref);
-        [[nodiscard]] double average(int32_t channel, int64_t offset = 0, int64_t length = -1, int64_t stride = 1) const noexcept;
+        [[nodiscard]] double average(int32_t channel, int64_t offs = 0, int64_t len = -1, int64_t stride = 1) const noexcept;
 
         template <typename T>
         static void _absAverageFunc(SignalSampleFuncInfo& info_ref);
-        [[nodiscard]] double absAverage(int32_t channel, int64_t offset = 0, int64_t length = -1, int64_t stride = 1) const noexcept;
+        [[nodiscard]] double absAverage(int32_t channel, int64_t offs = 0, int64_t len = -1, int64_t stride = 1) const noexcept;
 
         template <typename T>
         static void _rmsFunc(SignalSampleFuncInfo& info_ref);
-        [[nodiscard]] double rms(int32_t channel, int64_t offset, int64_t length, int64_t stride) const noexcept;
+        [[nodiscard]] double rms(int32_t channel, int64_t offs, int64_t len, int64_t stride) const noexcept;
 
 
         template <typename T>
@@ -431,10 +440,10 @@ namespace Grain {
         template <typename T>
         static void _scaleDoubleFunc(SignalSampleFuncInfo& info_ref);
         void scale(float scale_factor) const noexcept;
-        void scale(int32_t channel, int64_t offset, int64_t length, float scale_factor) const noexcept;
+        void scale(int32_t channel, int64_t offs, int64_t len, float scale_factor) const noexcept;
 
         void derivate() noexcept;
-        void derivate(int32_t channel, int64_t offset, int64_t length) noexcept;
+        void derivate(int32_t channel, int64_t offs, int64_t len) noexcept;
 
 
 
@@ -443,9 +452,9 @@ namespace Grain {
         // Utilities
         [[nodiscard]] int64_t samplesNeededForMilliseconds(int64_t milliseconds) const noexcept;
         [[nodiscard]] int64_t samplesNeededForSeconds(float seconds) const noexcept;
-        [[nodiscard]] int64_t samplesNeededForNote(float bpm, float length) const noexcept;
+        [[nodiscard]] int64_t samplesNeededForNote(float bpm, float len) const noexcept;
 
-        int64_t clampOffsetAndLength(int64_t& offset, int64_t& length) const noexcept;
+        int64_t clampOffsAndLen(int64_t& offs, int64_t& len) const noexcept;
         int64_t clampStartEndIndex(int64_t& start_index, int64_t& end_index) const noexcept;
 
 
@@ -490,53 +499,53 @@ namespace Grain {
         bool finishWeightedSamples(int32_t channel) noexcept;
 
         // Copy, read, write, combine
-        int64_t copyAll(const Signal* src, int32_t src_channel, int64_t dst_offset, uint32_t dst_channelMask = 0xFFFF) noexcept;
+        int64_t copyAll(const Signal* src, int32_t src_channel, int64_t dst_offs, uint32_t dst_channelMask = 0xFFFF) noexcept;
         int64_t copySamples(const Signal* src) noexcept;
-        int64_t copySamples(const Signal* src, int64_t length, int64_t src_offset = 0, int64_t dst_offset = 0) noexcept;
-        int64_t copySamples(const Signal* src, int64_t length, int32_t src_channel, int64_t src_offset, int32_t dst_channel, int64_t dst_offset) noexcept;
+        int64_t copySamples(const Signal* src, int64_t len, int64_t src_offs = 0, int64_t dst_offs = 0) noexcept;
+        int64_t copySamples(const Signal* src, int64_t len, int32_t src_channel, int64_t src_offs, int32_t dst_channel, int64_t dst_offs) noexcept;
 
         int64_t copyChannel(int32_t src_channel, int32_t dst_channel) noexcept;
-        int64_t copyChannel(int32_t src_channel, int32_t dst_channel, int64_t offset, int64_t length) noexcept;
+        int64_t copyChannel(int32_t src_channel, int32_t dst_channel, int64_t offs, int64_t len) noexcept;
 
-        int64_t readSamplesAsFloatWithZeroPadding(int32_t channel, int64_t offset, int64_t length, float* out_samples) const noexcept;
-        int64_t readSamples(int32_t channel, int64_t offset, int64_t length, DataType data_type, void* out_samples) noexcept;
+        int64_t readSamplesAsFloatWithZeroPadding(int32_t channel, int64_t offs, int64_t len, float* out_samples) const noexcept;
+        int64_t readSamples(int32_t channel, int64_t offs, int64_t len, DataType data_type, void* out_samples) noexcept;
 
-        int64_t writeSamples(int32_t channel, int64_t offset, int64_t length, const float* samples, CombineMode combine_mode = CombineMode::Replace) noexcept;
+        int64_t writeSamples(int32_t channel, int64_t offs, int64_t len, const float* samples, CombineMode combine_mode = CombineMode::Replace) noexcept;
 
-        int64_t combineSamples(const Signal* src, int64_t length, int32_t src_channel, int64_t src_offset, int32_t dst_channel, int64_t dst_offset, CombineMode combine_mode, float amount) noexcept;
-        int64_t combineSamples(const Signal* src, int64_t length, int64_t src_offset, int64_t dst_offset, CombineMode combine_mode, float amount) noexcept;
+        int64_t combineSamples(const Signal* src, int64_t len, int32_t src_channel, int64_t src_offs, int32_t dst_channel, int64_t dst_offs, CombineMode combine_mode, float amount) noexcept;
+        int64_t combineSamples(const Signal* src, int64_t len, int64_t src_offs, int64_t dst_offs, CombineMode combine_mode, float amount) noexcept;
 
         // Mix
-        int64_t mixByAudioPos(const Signal* src, int64_t length, int64_t src_offset, int64_t dst_offset, const Vec3d& audio_pos) noexcept;
+        int64_t mixByAudioPos(const Signal* src, int64_t len, int64_t src_offs, int64_t dst_offs, const Vec3d& audio_pos) noexcept;
 
         // Clear
         void clear() noexcept;
-        void clear(int64_t length) noexcept;
-        void clear(int64_t offset, int64_t length) noexcept;
+        void clear(int64_t len) noexcept;
+        void clear(int64_t offs, int64_t len) noexcept;
         void clearChannel(int32_t channel) noexcept;
-        void clearChannel(int32_t channel, int64_t offset, int64_t length) noexcept;
-        void clearMaskedChannels(uint32_t channel_mask, int64_t offset, int64_t length) noexcept;
+        void clearChannel(int32_t channel, int64_t offs, int64_t len) noexcept;
+        void clearMaskedChannels(uint32_t channel_mask, int64_t offs, int64_t len) noexcept;
         void clearAll() noexcept;
 
         // Modify
         void normalize(float target_level = 1.0) noexcept;
-        void normalize(int32_t channel, int64_t offset, int64_t length, float target_level = 1.0) noexcept;
+        void normalize(int32_t channel, int64_t offs, int64_t len, float target_level = 1.0) noexcept;
 
-        void centerPowerOfChannel(int32_t channel, int64_t offset, int64_t length) noexcept;
+        void centerPowerOfChannel(int32_t channel, int64_t offs, int64_t len) noexcept;
 
-        void fadeIn(int64_t offset, int64_t length) noexcept;
-        void fadeInChannel(int32_t channel, int64_t offset, int64_t length) noexcept;
-        void fadeOut(int64_t offset, int64_t length) noexcept;
-        void fadeOutChannel(int32_t channel, int64_t offset, int64_t length) noexcept;
-        void fadeChannel(int32_t channel, int64_t offset, int64_t length, bool fade_out_mode) noexcept;
+        void fadeIn(int64_t offs, int64_t len) noexcept;
+        void fadeInChannel(int32_t channel, int64_t offs, int64_t len) noexcept;
+        void fadeOut(int64_t offs, int64_t len) noexcept;
+        void fadeOutChannel(int32_t channel, int64_t offs, int64_t len) noexcept;
+        void fadeChannel(int32_t channel, int64_t offs, int64_t len, bool fade_out_mode) noexcept;
 
-        double envelope(int64_t offset, int64_t length, float start_amplitude, float end_amplitude, float shape = 0.0f) noexcept;
-        double envelope(int32_t channel, int64_t offset, int64_t length, float start_amplitude, float end_amplitude, float shape = 0.0f) noexcept;
+        double envelope(int64_t offs, int64_t len, float start_amplitude, float end_amplitude, float shape = 0.0f) noexcept;
+        double envelope(int32_t channel, int64_t offs, int64_t len, float start_amplitude, float end_amplitude, float shape = 0.0f) noexcept;
 
         template<typename T>
-        double _envelopeTyped(int32_t channel, int64_t offset, int64_t length, T start_amplitude, T end_amplitude, float shape) noexcept;
+        double _envelopeTyped(int32_t channel, int64_t offs, int64_t len, T start_amplitude, T end_amplitude, float shape) noexcept;
 
-        void applyEnvelopeLUT(int32_t channel, int64_t offset, const LUT1* lut) noexcept;
+        void applyEnvelopeLUT(int32_t channel, int64_t offs, const LUT1* lut) noexcept;
 
 
             //
@@ -544,12 +553,12 @@ namespace Grain {
         void reverseTyped(T* left, T* right, int64_t count, int64_t step);
 
         void reverse() noexcept;
-        void reverse(int64_t offset, int64_t length) noexcept;
-        void reverseChannel(int32_t channel, int64_t offset, int64_t length) noexcept;
+        void reverse(int64_t offs, int64_t len) noexcept;
+        void reverseChannel(int32_t channel, int64_t offs, int64_t len) noexcept;
 
 
 
-        ErrorCode resample(int32_t channel, int32_t sample_rate, int64_t offset, int64_t length, float* out_ptr, int64_t step = 1) noexcept;
+        ErrorCode resample(int32_t channel, int32_t sample_rate, int64_t offs, int64_t len, float* out_ptr, int64_t step = 1) noexcept;
 
         ErrorCode changeSampleRate(int32_t sample_rate) noexcept;
 
@@ -558,36 +567,36 @@ namespace Grain {
         [[nodiscard]] float ringBufferSample(int32_t channel, int64_t index) const noexcept;
 
         // Filter and Effects
-        void distortChannel(int32_t channel, int64_t offset, int64_t length, float coef) noexcept;
+        void distortChannel(int32_t channel, int64_t offs, int64_t len, float coef) noexcept;
 
         ErrorCode applyFilter(SignalFilter* filter) noexcept;
-        ErrorCode applyFilter(SignalFilter* filter, int64_t offset, int64_t length) noexcept;
+        ErrorCode applyFilter(SignalFilter* filter, int64_t offs, int64_t len) noexcept;
         ErrorCode applyFilterToChannel(SignalFilter* filter, int32_t channel) noexcept;
-        ErrorCode applyFilterToChannel(SignalFilter* filter, int32_t channel, int64_t offset, int64_t length) noexcept;
+        ErrorCode applyFilterToChannel(SignalFilter* filter, int32_t channel, int64_t offs, int64_t len) noexcept;
 
         ErrorCode applyFilterFFT(const Partials* partials) noexcept;
-        ErrorCode applyFilterFFT(const Partials* partials, int64_t length) noexcept;
+        ErrorCode applyFilterFFT(const Partials* partials, int64_t len) noexcept;
         ErrorCode applyFilterFFTToChannel(const Partials* partials, int32_t channel) noexcept;
-        ErrorCode applyFilterFFTToChannel(const Partials* partials, int32_t channel, int64_t length) noexcept;
+        ErrorCode applyFilterFFTToChannel(const Partials* partials, int32_t channel, int64_t len) noexcept;
 
         void releaseFilterFFTResources();
 
-        ErrorCode convolve(int64_t a_length, const Signal* b_signal, Signal* result_signal) const noexcept {
-            return convolveChannel(0, 0, a_length, b_signal, 0, 0, -1, result_signal, 0, 10);
+        ErrorCode convolve(int64_t a_len, const Signal* b_signal, Signal* result_signal, int64_t partition_len) const noexcept {
+            return convolveChannel(0, 0, a_len, b_signal, 0, 0, -1, result_signal, 0, partition_len);
         }
 
         ErrorCode convolveChannel(
-                int32_t channel, int64_t offset, int64_t length,
-                const Signal* ir, int32_t ir_channel, int64_t ir_offset, int64_t ir_length,
+                int32_t channel, int64_t offs, int64_t len,
+                const Signal* ir, int32_t ir_channel, int64_t ir_offs, int64_t ir_len,
                 Signal* result_signal, int32_t result_channel,
-                int32_t partition_log_n
+                int64_t partition_len
         ) const noexcept;
 
         // Generate
-        void addWhiteNoise(int64_t offset, int64_t length, float amount = 1.0f, float threshold = 1.0f) const noexcept;
-        void addWhiteNoiseToChannel(int32_t channel, int64_t offset, int64_t length, float amount = 1.0f, float threshold = 1.0f) const noexcept;
+        void addWhiteNoise(int64_t offs, int64_t len, float amount = 1.0f, float threshold = 1.0f) noexcept;
+        void addWhiteNoiseToChannel(int32_t channel, int64_t offs, int64_t len, float amount = 1.0f, float threshold = 1.0f) noexcept;
 
-        void generateSine(int32_t channel, int64_t offset, int64_t length, float freq) noexcept;
+        void generateSine(int32_t channel, int64_t offs, int64_t len, float freq) noexcept;
         void generateSineSweep(int32_t channel, float start, float duration, float freq_start, float freq_end, float db_start, float db_end, float fade_in_duration, float fade_out_duration) noexcept;
 
 
@@ -596,32 +605,26 @@ namespace Grain {
                 const String& file_path,
                 FileContainerFormat container_format,
                 FileSampleEncoding sample_encoding,
-                int64_t offset,
-                int64_t length) const noexcept;
+                int64_t offs,
+                int64_t len) const noexcept;
+
         [[nodiscard]] ErrorCode writeToFile(
                 const String& file_path,
                 FileContainerFormat container_format,
                 FileSampleEncoding sample_encoding) const noexcept;
+
         [[nodiscard]] ErrorCode writeRegionToFile(
                 const String& file_path,
                 FileContainerFormat container_format,
                 FileSampleEncoding sample_encoding,
                 int32_t region_index) const noexcept;
 
+        [[nodiscard]] static int32_t fileInfo(const String& file_path, SignalInfo& out_info) noexcept;
+
         [[nodiscard]] static Signal* createFromFile(
                 const String& file_path,
                 DataType data_type,
                 ErrorCode& out_err) noexcept;
-
-#if defined(__APPLE__) && defined(__MACH__)
-        [[nodiscard]] static Signal* createFromMainBundle(String& file_name, const char* type) noexcept;
-        /* TODO: !!!!! Move to a separate mm file
-        [[nodiscard]] static Signal* createFromBundle(NSBundle* bundle, String& fileName, const char* type) noexcept;
-        */
-#endif
-
-        bool waveformValues(int32_t channel, int64_t offset, int64_t length, int64_t values_length, float* out_values) const noexcept;
-        bool waveformValues(int64_t offset, int64_t length, int64_t values_length, float* out_values) const noexcept;
 
         // Regions
         [[nodiscard]] int32_t regionCount() const noexcept { return m_region_count; }
@@ -638,11 +641,11 @@ namespace Grain {
             return static_cast<int64_t>(std::round(sec * m_sample_rate));
         }
 
-        [[nodiscard]] static double findNearestFrequency(int32_t sample_rate, int64_t buffer_length, double freq) noexcept;
+        [[nodiscard]] static double findNearestFrequency(int32_t sample_rate, int64_t buffer_len, double freq) noexcept;
 
-        [[nodiscard]] static double releaseCoef(double start_level, double end_level, double min_level, int32_t sample_rate, double durationSeconds) noexcept;
+        [[nodiscard]] static double releaseCoef(double start_level, double end_level, double min_level, int32_t sample_rate, double duration_seconds) noexcept;
         [[nodiscard]] static double releaseCoef(double start_level, double end_level, double min_level, int64_t sample_count) noexcept;
-        [[nodiscard]] static double releaseLength(double start_level, double end_level, double min_level, double coef) noexcept;
+        [[nodiscard]] static double releaseLen(double start_level, double end_level, double min_level, double coef) noexcept;
         [[nodiscard]] static double releaseValue(double start_level, double coef, int64_t t) noexcept;
 
 
@@ -660,7 +663,7 @@ namespace Grain {
         int64_t _updateSimplified() noexcept;
 
     private:
-        void _prepareFilterFFT(int32_t fft_length);
+        void _prepareFilterFFT(int32_t fft_len, int32_t window_len);
 
     protected:
         DataType m_data_type = DataType::Undefined; ///< Sample data type
@@ -690,10 +693,9 @@ namespace Grain {
 
         // Memory and Resources used for computations
         FFT* m_fft = nullptr;
-        float* m_computation_mem = nullptr;
-        float* m_fft_buffer[2]{};
-        float* m_window_buffer{};
-        Partials* m_partials = nullptr;
+        float* m_fft_buffer = nullptr;
+        int32_t m_fft_window_len = 0;
+        float* m_fft_window = nullptr;
 
     private:
         //
@@ -711,6 +713,41 @@ namespace Grain {
 
         void _updateAccessors();
 
+    };
+
+
+    class SignalConvolveSetup {
+    public:
+        int64_t m_ir_len = -1;
+
+        int64_t m_partition_len = -1;
+        int32_t m_partition_log_n = -1;
+        int32_t m_partition_count = -1;
+
+        int32_t m_fft_len = -1;
+        int32_t m_fft_half_len = -1;
+        int32_t m_fft_log = -1;
+        int32_t m_overlap_len = -1;
+
+        float* m_time_buffer = nullptr;
+        float* m_interleaved_buffer = nullptr;
+        float* m_write_buffer = nullptr;
+        float* m_overlap_buffer = nullptr;
+        float* m_t_out = nullptr;
+        FFTComplexSplitArray* m_ir_partials = nullptr;
+        FFTComplexSplitArray* m_x_ring = nullptr;
+        FFTComplexSplit* m_y_freq = nullptr;
+
+#if defined(__APPLE__) && defined(__MACH__)
+        FFTSetup fft_setup = nullptr;
+#else
+        #pragma message("SignalConvolveSetup fft_setup must be implemented for Linux")
+#endif
+
+    public:
+        SignalConvolveSetup(int64_t ir_len, int32_t partition_len);
+        ErrorCode checkSettings(int64_t ir_len, int32_t partition_len) noexcept;
+        void freeMemory() noexcept;
     };
 
 

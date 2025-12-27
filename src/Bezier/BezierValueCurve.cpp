@@ -24,39 +24,39 @@ namespace Grain {
     bool BezierValueCurvePoint::setPointType(Bezier::PointType point_type) noexcept {
         bool changed = false;
 
-        if (point_type != m_point_type) {
+        if (point_type != point_type_) {
             changed = true;
 
             if (point_type == Bezier::PointType::Linear) {
             }
             else if (point_type == Bezier::PointType::Corner) {
-                if (m_point_type == Bezier::PointType::Linear ||
-                    m_point_type == Bezier::PointType::Right ||
-                    m_point_type == Bezier::PointType::Left) {
-                    m_left.set(-1, 0);    // TODO:
-                    m_right.set(1, 0);
+                if (point_type_ == Bezier::PointType::Linear ||
+                    point_type_ == Bezier::PointType::Right ||
+                    point_type_ == Bezier::PointType::Left) {
+                    left_.set(-1, 0);    // TODO:
+                    right_.set(1, 0);
                 }
             }
             else if (point_type == Bezier::PointType::Smooth1) {
-                if (m_point_type == Bezier::PointType::Linear ||
-                    m_point_type == Bezier::PointType::Corner ||
-                    m_point_type == Bezier::PointType::Right ||
-                    m_point_type == Bezier::PointType::Left) {
-                    m_left.set(-1, 0);    // TODO:
-                    m_right.set(1, 0);
+                if (point_type_ == Bezier::PointType::Linear ||
+                    point_type_ == Bezier::PointType::Corner ||
+                    point_type_ == Bezier::PointType::Right ||
+                    point_type_ == Bezier::PointType::Left) {
+                    left_.set(-1, 0);    // TODO:
+                    right_.set(1, 0);
                 }
             }
             else if (point_type == Bezier::PointType::Smooth2) {
-                if (m_point_type == Bezier::PointType::Linear ||
-                    m_point_type == Bezier::PointType::Corner ||
-                    m_point_type == Bezier::PointType::Right ||
-                    m_point_type == Bezier::PointType::Left) {
-                    m_left.set(-1, 0);    // TODO:
-                    m_right.set(1, 0);
+                if (point_type_ == Bezier::PointType::Linear ||
+                    point_type_ == Bezier::PointType::Corner ||
+                    point_type_ == Bezier::PointType::Right ||
+                    point_type_ == Bezier::PointType::Left) {
+                    left_.set(-1, 0);    // TODO:
+                    right_.set(1, 0);
                 }
-                else if (m_point_type == Bezier::PointType::Smooth1) {
-                    m_left = (m_left - m_right) * 0.5;
-                    m_right = -m_left;
+                else if (point_type_ == Bezier::PointType::Smooth1) {
+                    left_ = (left_ - right_) * 0.5;
+                    right_ = -left_;
                 }
             }
             else if (point_type == Bezier::PointType::Right) {
@@ -64,11 +64,11 @@ namespace Grain {
             else if (point_type == Bezier::PointType::Left) {
             }
 
-            m_point_type = point_type;
+            point_type_ = point_type;
         }
 
         if (changed) {
-            m_bezier_value_curve->mustUpdate();
+            bezier_value_curve_->mustUpdate();
         }
 
         return changed;
@@ -76,70 +76,70 @@ namespace Grain {
 
 
     double BezierValueCurvePoint::leftDistance() const noexcept {
-        return hasLeftControl() ? (m_left_pos - m_pos).length() : 0;
+        return hasLeftControl() ? (left_pos_ - pos_).length() : 0;
     }
 
 
     double BezierValueCurvePoint::rightDistance() const noexcept {
-        return hasRightControl() ? (m_right - m_pos).length() : 0;
+        return hasRightControl() ? (right_ - pos_).length() : 0;
     }
 
     bool BezierValueCurvePoint::hasVisibleControlPoints() const noexcept {
         return
-                m_point_type == Bezier::PointType::Corner ||
-                m_point_type == Bezier::PointType::Smooth1 ||
-                m_point_type == Bezier::PointType::Smooth2;
+                point_type_ == Bezier::PointType::Corner ||
+                point_type_ == Bezier::PointType::Smooth1 ||
+                point_type_ == Bezier::PointType::Smooth2;
     }
 
 
     bool BezierValueCurvePoint::hasLeftControl() const noexcept {
         return
-                m_point_type == Bezier::PointType::Corner ||
-                m_point_type == Bezier::PointType::Smooth1 ||
-                m_point_type == Bezier::PointType::Smooth2;
+                point_type_ == Bezier::PointType::Corner ||
+                point_type_ == Bezier::PointType::Smooth1 ||
+                point_type_ == Bezier::PointType::Smooth2;
     }
 
 
     bool BezierValueCurvePoint::hasRightControl() const noexcept {
         return
-                m_point_type == Bezier::PointType::Corner ||
-                m_point_type == Bezier::PointType::Smooth1 ||
-                m_point_type == Bezier::PointType::Smooth2;
+                point_type_ == Bezier::PointType::Corner ||
+                point_type_ == Bezier::PointType::Smooth1 ||
+                point_type_ == Bezier::PointType::Smooth2;
     }
 
 
     bool BezierValueCurvePoint::usesLeftControl() const noexcept {
         return
-                m_point_type == Bezier::PointType::Corner ||
-                m_point_type == Bezier::PointType::Smooth1 ||
-                m_point_type == Bezier::PointType::Smooth2 ||
-                m_point_type == Bezier::PointType::Left;
+                point_type_ == Bezier::PointType::Corner ||
+                point_type_ == Bezier::PointType::Smooth1 ||
+                point_type_ == Bezier::PointType::Smooth2 ||
+                point_type_ == Bezier::PointType::Left;
     }
 
 
     bool BezierValueCurvePoint::usesRightControl() const noexcept {
         return
-                m_point_type == Bezier::PointType::Corner ||
-                m_point_type == Bezier::PointType::Smooth1 ||
-                m_point_type == Bezier::PointType::Smooth2 ||
-                m_point_type == Bezier::PointType::Right;
+                point_type_ == Bezier::PointType::Corner ||
+                point_type_ == Bezier::PointType::Smooth1 ||
+                point_type_ == Bezier::PointType::Smooth2 ||
+                point_type_ == Bezier::PointType::Right;
     }
 
 
     bool BezierValueCurvePoint::isSmooth() const noexcept {
-        return m_point_type == Bezier::PointType::Smooth1 || m_point_type == Bezier::PointType::Smooth2;
+        return point_type_ == Bezier::PointType::Smooth1 || point_type_ == Bezier::PointType::Smooth2;
     }
 
 
     bool BezierValueCurvePoint::changeStatus(Status mask, bool flag) noexcept {
-        Status old_status = m_status;
-        m_status = (Status)(flag ? m_status | mask : m_status & ~mask);
-        return m_status != old_status;
+        Status old_status = status_;
+        status_ = (Status)(flag ? status_ | mask : status_ & ~mask);
+        return status_ != old_status;
     }
 
 
     void BezierValueCurvePoint::invertSelection() noexcept {
-        m_status = (Status)(m_status & Status::Selected ? m_status & ~Status::Selected : m_status | Status::Selected);
+        status_ = (Status)(status_ & Status::Selected ? status_ & ~Status::Selected : status_ | Status::Selected);
     }
 
 
@@ -152,36 +152,36 @@ namespace Grain {
 
 
     void BezierValueCurvePoint::setPos(const Vec2d& pos) noexcept {
-        m_pos = pos;
+        pos_ = pos;
         curveMustUpdate();
     }
 
 
     void BezierValueCurvePoint::setX(double x) noexcept {
-        m_pos.m_x = x; curveMustUpdate();
+        pos_.x_ = x; curveMustUpdate();
     }
 
 
     void BezierValueCurvePoint::setY(double y) noexcept {
-        m_pos.m_y = y; curveMustUpdate();
+        pos_.y_ = y; curveMustUpdate();
     }
 
 
     void BezierValueCurvePoint::clampX(const double min, const double max) noexcept {
-        m_pos.clampX(min, max);
+        pos_.clampX(min, max);
         curveMustUpdate();
     }
 
 
     void BezierValueCurvePoint::clampY(const double min, const double max) noexcept {
-        m_pos.clampY(min, max);
+        pos_.clampY(min, max);
         curveMustUpdate();
     }
 
 
     void BezierValueCurvePoint::curveMustUpdate() const noexcept {
-        if (m_bezier_value_curve) {
-            m_bezier_value_curve->mustUpdate();
+        if (bezier_value_curve_) {
+            bezier_value_curve_->mustUpdate();
         }
     }
 
@@ -192,31 +192,27 @@ namespace Grain {
 
 
     void BezierValueCurvePoint::remember() noexcept {
-        m_remembered_pos = m_pos;
-        m_remembered_status = m_status;
+        remembered_pos_ = pos_;
+        remembered_status_ = status_;
     }
 
 
     void BezierValueCurvePoint::backToRememberedStatus() noexcept {
-        m_status = m_remembered_status;
+        status_ = remembered_status_;
     }
 
 
-    /* TODO: !!!!!
     void BezierValueCurvePoint::startMouseAction(BezierValueCurvePoint::Part part, const Viewport& viewport) noexcept {
-
         Vec2d posInViewport, leftInViewport, rightInViewport;
-        posInViewport = viewport.posToView(m_pos);
-        leftInViewport = viewport.posToView(m_left_pos);
-        rightInViewport = viewport.posToView(m_right_pos);
+        // posInViewport = viewport.posToView(m_pos);
+        // leftInViewport = viewport.posToView(m_left_pos);
+        // rightInViewport = viewport.posToView(m_right_pos);   TODO: !!!
     }
-    */
 
-    /* TODO: !!!!!
     BezierValueCurvePoint::Part BezierValueCurvePoint::hit(const Viewport& viewport, const Vec2d& pos, double& min_distance) const noexcept {
-
         Part part = Part::None;
 
+        /* TODO: !!!!!
         Vec2d posInView = viewport.posToView(m_pos);
         float distance = posInView.distance(pos);
 
@@ -250,18 +246,18 @@ namespace Grain {
                 }
             }
         }
+        */
 
         return part;
     }
-     */
 
 
     int32_t BezierValueCurvePoint::compare(const BezierValueCurvePoint* point) const noexcept {
         if (point) {
-            if (m_pos.m_x > point->m_pos.m_x) {
+            if (pos_.x_ > point->pos_.x_) {
                 return 1;
             }
-            if (m_pos.m_x < point->m_pos.m_x) {
+            if (pos_.x_ < point->pos_.x_) {
                 return -1;
             }
         }
@@ -271,7 +267,7 @@ namespace Grain {
 
 
     BezierValueCurve::BezierValueCurve() noexcept {
-        m_points.reserve(16);
+        points_.reserve(16);
     }
 
 
@@ -282,16 +278,16 @@ namespace Grain {
 
 
     BezierValueCurve::~BezierValueCurve() noexcept {
-        delete m_weighted_samples;
+        delete weighted_samples_;
     }
 
 
     bool BezierValueCurve::isValid() const noexcept {
-        if (m_mode == Mode::Envelope) {
+        if (mode_ == Mode::Envelope) {
             bool has_decay_begin = false;
 
-            for (auto& point : m_points) {
-                if (point.m_status & BezierValueCurvePoint::Status::DecayBegin) {
+            for (auto& point : points_) {
+                if (point.status_ & BezierValueCurvePoint::Status::DecayBegin) {
                     has_decay_begin = true;
                 }
             }
@@ -308,7 +304,7 @@ namespace Grain {
     int32_t BezierValueCurve::selectedPointsCount() const noexcept {
         int32_t n = 0;
 
-        for (auto& point : m_points) {
+        for (auto& point : points_) {
             if (point.isSelected()) {
                 n++;
             }
@@ -321,7 +317,7 @@ namespace Grain {
     int32_t BezierValueCurve::decayPointIndex() const noexcept {
         int32_t index = 0;
 
-        for (auto& point : m_points) {
+        for (auto& point : points_) {
             if (point.isDecayBegin()) {
                 return index;
             }
@@ -336,8 +332,8 @@ namespace Grain {
         out_min_y = DBL_MAX;
         out_max_y = -DBL_MAX;
 
-        for (auto& point : m_points) {
-            double y = point.m_pos.m_y;
+        for (auto& point : points_) {
+            double y = point.pos_.y_;
             if (y < out_min_y)
                 out_min_y = y;
             if (y > out_max_y)
@@ -354,12 +350,12 @@ namespace Grain {
         double max_x = std::numeric_limits<double>::lowest();
         double max_y = std::numeric_limits<double>::lowest();
 
-        for (auto& point : m_points) {
+        for (auto& point : points_) {
             if (point.isSelected() || !selected_only) {
-                if (point.m_pos.m_x < min_x) min_x = point.m_pos.m_x;
-                if (point.m_pos.m_x > max_x) max_x = point.m_pos.m_x;
-                if (point.m_pos.m_y < min_y) min_y = point.m_pos.m_y;
-                if (point.m_pos.m_y > max_y) max_y = point.m_pos.m_y;
+                if (point.pos_.x_ < min_x) min_x = point.pos_.x_;
+                if (point.pos_.x_ > max_x) max_x = point.pos_.x_;
+                if (point.pos_.y_ < min_y) min_y = point.pos_.y_;
+                if (point.pos_.y_ > max_y) max_y = point.pos_.y_;
             }
         }
 
@@ -368,17 +364,17 @@ namespace Grain {
 
 
     const BezierValueCurvePoint* BezierValueCurve::pointAtIndex(int32_t index) const noexcept {
-        return index >= 0 && index < static_cast<int32_t>(m_points.size()) ? &m_points[index] : nullptr;
+        return index >= 0 && index < static_cast<int32_t>(points_.size()) ? &points_[index] : nullptr;
     }
 
 
     BezierValueCurvePoint* BezierValueCurve::mutPointAtIndex(int32_t index) noexcept {
-        return index >= 0 && index < static_cast<int32_t>(m_points.size()) ? &m_points[index] : nullptr;
+        return index >= 0 && index < static_cast<int32_t>(points_.size()) ? &points_[index] : nullptr;
     }
 
 
     BezierValueCurvePoint* BezierValueCurve::firstSelectedPoint() noexcept {
-        for (auto& point : m_points) {
+        for (auto& point : points_) {
             if (point.isSelected()) {
                 return &point;
             }
@@ -389,7 +385,7 @@ namespace Grain {
 
 
     BezierValueCurvePoint* BezierValueCurve::decayBeginPoint() noexcept {
-        for (auto& point : m_points) {
+        for (auto& point : points_) {
             if (point.isDecayBegin())
                 return &point;
         }
@@ -399,16 +395,16 @@ namespace Grain {
 
 
     void BezierValueCurve::setLimits(double min_x, double max_x, double min_y, double max_y) noexcept {
-        m_limit_min_x = min_x;
-        m_limit_max_x = max_x;
-        m_limit_min_y = min_y;
-        m_limit_max_y = max_y;
+        limit_min_x_ = min_x;
+        limit_max_x_ = max_x;
+        limit_min_y_ = min_y;
+        limit_max_y_ = max_y;
     }
 
 
     int32_t BezierValueCurve::decayBeginIndex() const noexcept {
         int32_t index = 0;
-        for (auto& point : m_points) {
+        for (auto& point : points_) {
             if (point.isDecayBegin()) {
                 return index;
             }
@@ -421,7 +417,7 @@ namespace Grain {
 
     void BezierValueCurve::setDecayBeginIndex(int32_t decay_begin_index) noexcept {
         int32_t index = 0;
-        for (auto& point : m_points) {
+        for (auto& point : points_) {
             point.changeStatus(BezierValueCurvePoint::Status::DecayBegin, index == decay_begin_index);
             index++;
         }
@@ -429,14 +425,14 @@ namespace Grain {
 
 
     void BezierValueCurve::selectAllPoints() noexcept {
-        for (auto& point : m_points) {
+        for (auto& point : points_) {
             point.select();
         }
     }
 
 
     void BezierValueCurve::deselectAllPoints() noexcept {
-        for (auto& point : m_points) {
+        for (auto& point : points_) {
             point.deselect();
         }
     }
@@ -448,7 +444,7 @@ namespace Grain {
 
         for (int32_t index = 0; index < length(); index++) {
             if (auto point = mutPointAtIndex(index)) {
-                if (selection_rect.contains(point->m_pos)) {
+                if (selection_rect.contains(point->pos_)) {
                     point->select();
                 }
                 else {
@@ -472,77 +468,77 @@ namespace Grain {
             auto c = mutPointAtIndex(i);
             auto r = mutPointAtIndex(i + 1);
 
-            if (c->isSelected() && c->m_point_type != point_type) {
+            if (c->isSelected() && c->point_type_ != point_type) {
                 switch (point_type) {
                     case Bezier::PointType::Linear:
                         break;
 
                     case Bezier::PointType::Corner:
-                        if (c->m_point_type == Bezier::PointType::Linear ||
-                            c->m_point_type == Bezier::PointType::Right ||
-                            c->m_point_type == Bezier::PointType::Left) {
+                        if (c->point_type_ == Bezier::PointType::Linear ||
+                            c->point_type_ == Bezier::PointType::Right ||
+                            c->point_type_ == Bezier::PointType::Left) {
                             if (l) {
-                                c->m_left.m_x = (l->m_pos.m_x - c->m_pos.m_x) / 2;
-                                c->m_left.m_y = 0;
+                                c->left_.x_ = (l->pos_.x_ - c->pos_.x_) / 2;
+                                c->left_.y_ = 0;
                             }
                             if (r) {
-                                c->m_right.m_x = (r->m_pos.m_x - c->m_pos.m_x) / 2;
-                                c->m_right.m_y = 0;
+                                c->right_.x_ = (r->pos_.x_ - c->pos_.x_) / 2;
+                                c->right_.y_ = 0;
                             }
                         }
                         break;
 
                     case Bezier::PointType::Smooth1:
-                        if (c->m_point_type == Bezier::PointType::Linear ||
-                            c->m_point_type == Bezier::PointType::Corner ||
-                            c->m_point_type == Bezier::PointType::Right ||
-                            c->m_point_type == Bezier::PointType::Left) {
+                        if (c->point_type_ == Bezier::PointType::Linear ||
+                            c->point_type_ == Bezier::PointType::Corner ||
+                            c->point_type_ == Bezier::PointType::Right ||
+                            c->point_type_ == Bezier::PointType::Left) {
                             if (l) {
-                                c->m_left.m_x = (l->m_pos.m_x - c->m_pos.m_x) / 2;
-                                c->m_left.m_y = 0;
+                                c->left_.x_ = (l->pos_.x_ - c->pos_.x_) / 2;
+                                c->left_.y_ = 0;
                             }
                             if (r) {
-                                c->m_right.m_x = (r->m_pos.m_x - c->m_pos.m_x) / 2;
-                                c->m_right.m_y = 0;
+                                c->right_.x_ = (r->pos_.x_ - c->pos_.x_) / 2;
+                                c->right_.y_ = 0;
                             }
                         }
                         break;
 
                     case Bezier::PointType::Smooth2:
-                        if (c->m_point_type == Bezier::PointType::Linear ||
-                            c->m_point_type == Bezier::PointType::Corner ||
-                            c->m_point_type == Bezier::PointType::Right ||
-                            c->m_point_type == Bezier::PointType::Left) {
+                        if (c->point_type_ == Bezier::PointType::Linear ||
+                            c->point_type_ == Bezier::PointType::Corner ||
+                            c->point_type_ == Bezier::PointType::Right ||
+                            c->point_type_ == Bezier::PointType::Left) {
                             double length = 0;
                             int32_t n = 0;
                             if (l) {
-                                length = c->m_pos.m_x - l->m_pos.m_x;
+                                length = c->pos_.x_ - l->pos_.x_;
                                 n++;
                             }
                             if (r) {
-                                length += r->m_pos.m_x - c->m_pos.m_x;
+                                length += r->pos_.x_ - c->pos_.x_;
                                 n++;
                             }
                             if (n > 0) {
                                 length /= n * 2;
-                                c->m_left.m_x = -length;
-                                c->m_right.m_x = length;
-                                c->m_left.m_y = 0;
-                                c->m_right.m_y = 0;
+                                c->left_.x_ = -length;
+                                c->right_.x_ = length;
+                                c->left_.y_ = 0;
+                                c->right_.y_ = 0;
                             }
                         }
-                        else if (c->m_point_type == Bezier::PointType::Smooth1) {
+                        else if (c->point_type_ == Bezier::PointType::Smooth1) {
                             Vec2d v;
                             if (l && r) {
-                                v = (-c->m_left + c->m_right) * 0.5;
-                                c->m_left = -v;
-                                c->m_right = v;
+                                v = (-c->left_ + c->right_) * 0.5;
+                                c->left_ = -v;
+                                c->right_ = v;
                             }
                             if (!l) {
-                                c->m_left = -c->m_right;
+                                c->left_ = -c->right_;
                             }
                             else if (!r) {
-                                c->m_right = -c->m_left;
+                                c->right_ = -c->left_;
                             }
                         }
                         break;
@@ -551,7 +547,7 @@ namespace Grain {
                         break;
                 }
 
-                c->m_point_type = point_type;
+                c->point_type_ = point_type;
                 changed = true;
             }
         }
@@ -566,10 +562,10 @@ namespace Grain {
         BezierValueCurvePoint* a = nullptr;
         BezierValueCurvePoint* b = nullptr;
 
-        for (auto& point : m_points) {
+        for (auto& point : points_) {
             if (a && b) {
                 if (b->isSelected() && !a->isSelected() && !point.isSelected()) {
-                    b->m_pos.m_x = a->m_pos.m_x + (point.m_pos.m_x - a->m_pos.m_x) / 2;
+                    b->pos_.x_ = a->pos_.x_ + (point.pos_.x_ - a->pos_.x_) / 2;
                     changed = true;
                 }
             }
@@ -591,10 +587,10 @@ namespace Grain {
         BezierValueCurvePoint* a = nullptr;
         BezierValueCurvePoint* b = nullptr;
 
-        for (auto& point : m_points) {
+        for (auto& point : points_) {
             if (a && b) {
                 if (b->isSelected() && !a->isSelected() && !point.isSelected()) {
-                    b->m_pos.m_y = a->m_pos.m_y + (point.m_pos.m_y - a->m_pos.m_y) / 2;
+                    b->pos_.y_ = a->pos_.y_ + (point.pos_.y_ - a->pos_.y_) / 2;
                     changed = true;
                 }
             }
@@ -629,14 +625,14 @@ namespace Grain {
         switch (align) {
             case Alignment::Top: y = rect.y2(); break;
             case Alignment::Center: y = rect.centerY(); break;
-            case Alignment::Bottom: y = rect.m_y; break;
+            case Alignment::Bottom: y = rect.y_; break;
             case Alignment::No: y = 0; break;
             default: return false;
         }
 
-        for (auto& point : m_points) {
+        for (auto& point : points_) {
             if (point.isSelected()) {
-                point.m_pos.m_y = y;
+                point.pos_.y_ = y;
                 changed = true;
             }
         }
@@ -653,12 +649,12 @@ namespace Grain {
         BezierValueCurvePoint* result = nullptr;
 
         try {
-            m_points.push(BezierValueCurvePoint());
+            points_.push(BezierValueCurvePoint());
             auto point = mutLastPoint();
             if (!point) {
                 throw ErrorCode::Specific;
             }
-            point->m_bezier_value_curve = this;
+            point->bezier_value_curve_ = this;
             mustUpdate();
             result = point;
         }
@@ -686,22 +682,22 @@ namespace Grain {
             BezierValueCurvePoint::Status status
     ) noexcept
     {
-        m_points.push(BezierValueCurvePoint());
+        points_.push(BezierValueCurvePoint());
 
         auto point = mutLastPoint();
         if (!point) {
             return nullptr;
         }
 
-        point->m_bezier_value_curve = this;
-        point->m_pos.m_x = x;
-        point->m_pos.m_y = y;
-        point->m_left.m_x = lx;
-        point->m_left.m_y = ly;
-        point->m_right.m_x = rx;
-        point->m_right.m_y = ry;
-        point->m_point_type = point_type;
-        point->m_status = status;
+        point->bezier_value_curve_ = this;
+        point->pos_.x_ = x;
+        point->pos_.y_ = y;
+        point->left_.x_ = lx;
+        point->left_.y_ = ly;
+        point->right_.x_ = rx;
+        point->right_.y_ = ry;
+        point->point_type_ = point_type;
+        point->status_ = status;
 
         mustUpdate();
 
@@ -710,8 +706,8 @@ namespace Grain {
 
 
     bool BezierValueCurve::removePoint(int32_t index) noexcept {
-        if (index >= 0 && index < static_cast<int32_t>(m_points.size()) - 1) {
-            m_points.removeAtIndex(index);
+        if (index >= 0 && index < static_cast<int32_t>(points_.size()) - 1) {
+            points_.removeAtIndex(index);
             mustUpdate();
             return true;
         }
@@ -724,10 +720,10 @@ namespace Grain {
         int32_t result = 0;
 
         if (selectedPointsCount() > 0) {
-            auto n = static_cast<int32_t>(m_points.size());
+            auto n = static_cast<int32_t>(points_.size());
             for (int32_t i = n - 1; i >= 0; i--) {
-                if (m_points[i].isSelected()) {
-                    m_points.removeAtIndex(i);
+                if (points_[i].isSelected()) {
+                    points_.removeAtIndex(i);
                     result++;
                 }
             }
@@ -742,7 +738,7 @@ namespace Grain {
 
 
     void BezierValueCurve::clear() noexcept {
-        m_points.clear();
+        points_.clear();
     }
 
 
@@ -752,10 +748,10 @@ namespace Grain {
             rangeY(min_y, max_y);
             double offset = min_y + max_y;
 
-            for (auto& point : m_points) {
-                point.m_pos.m_y = offset - point.m_pos.m_y;
-                point.m_left.m_y = -point.m_left.m_y;
-                point.m_right.m_y = -point.m_right.m_y;
+            for (auto& point : points_) {
+                point.pos_.y_ = offset - point.pos_.y_;
+                point.left_.y_ = -point.left_.y_;
+                point.right_.y_ = -point.right_.y_;
             }
 
             mustUpdate();
@@ -782,11 +778,11 @@ namespace Grain {
         bezier.split(t, sub_bezier0, sub_bezier1);
 
         Bezier::PointType point_type = Bezier::PointType::Smooth1;
-        if (point_a->m_point_type == Bezier::PointType::Linear && point_b->m_point_type == Bezier::PointType::Linear) {
+        if (point_a->point_type_ == Bezier::PointType::Linear && point_b->point_type_ == Bezier::PointType::Linear) {
             point_type = Bezier::PointType::Linear;
         }
 
-        auto new_point = addPoint(sub_bezier1.m_pos[0].m_x, sub_bezier1.m_pos[0].m_y, 0, 0, 0, 0, point_type);
+        auto new_point = addPoint(sub_bezier1.pos_[0].x_, sub_bezier1.pos_[0].y_, 0, 0, 0, 0, point_type);
         if (!new_point) {
             return false;
         }
@@ -795,17 +791,17 @@ namespace Grain {
             new_point->select();
         }
 
-        new_point->m_left = sub_bezier0.m_pos[2] - sub_bezier0.m_pos[3];
-        new_point->m_right = sub_bezier1.m_pos[1] - sub_bezier1.m_pos[0];
+        new_point->left_ = sub_bezier0.pos_[2] - sub_bezier0.pos_[3];
+        new_point->right_ = sub_bezier1.pos_[1] - sub_bezier1.pos_[0];
 
-        point_a->m_right = sub_bezier0.m_pos[1] - sub_bezier0.m_pos[0];
-        point_b->m_left = sub_bezier1.m_pos[2] - sub_bezier1.m_pos[3];
+        point_a->right_ = sub_bezier0.pos_[1] - sub_bezier0.pos_[0];
+        point_b->left_ = sub_bezier1.pos_[2] - sub_bezier1.pos_[3];
 
-        if (point_a->m_point_type == Bezier::PointType::Smooth2) {
-            point_a->m_point_type = Bezier::PointType::Smooth1;
+        if (point_a->point_type_ == Bezier::PointType::Smooth2) {
+            point_a->point_type_ = Bezier::PointType::Smooth1;
         }
-        if (point_b->m_point_type == Bezier::PointType::Smooth2) {
-            point_b->m_point_type = Bezier::PointType::Smooth1;
+        if (point_b->point_type_ == Bezier::PointType::Smooth2) {
+            point_b->point_type_ = Bezier::PointType::Smooth1;
         }
 
         mustUpdate();
@@ -815,7 +811,7 @@ namespace Grain {
 
 
     void BezierValueCurve::rememberAllPoints() noexcept {
-        for (auto& point : m_points) {
+        for (auto& point : points_) {
             point.remember();
         }
     }
@@ -824,20 +820,20 @@ namespace Grain {
     bool BezierValueCurve::moveRememberedSelectedPoints(const Vec2d& delta) noexcept {
         bool changed = false;
 
-        for (auto& point : m_points) {
+        for (auto& point : points_) {
             if (point.isSelected()) {
                 if (!point.isXFixed()) {
-                    double new_x = std::clamp<double>(point.m_remembered_pos.m_x + delta.m_x, m_limit_min_x, m_limit_max_x);
-                    if (new_x != point.m_pos.m_x) {
-                        point.m_pos.m_x = new_x;
+                    double new_x = std::clamp<double>(point.remembered_pos_.x_ + delta.x_, limit_min_x_, limit_max_x_);
+                    if (new_x != point.pos_.x_) {
+                        point.pos_.x_ = new_x;
                         changed = true;
                     }
                 }
 
                 if (!point.isYFixed()) {
-                    double new_y = std::clamp<double>(point.m_remembered_pos.m_y + delta.m_y, m_limit_min_y, m_limit_max_y);
-                    if (new_y != point.m_pos.m_y) {
-                        point.m_pos.m_y = new_y;
+                    double new_y = std::clamp<double>(point.remembered_pos_.y_ + delta.y_, limit_min_y_, limit_max_y_);
+                    if (new_y != point.pos_.y_) {
+                        point.pos_.y_ = new_y;
                         changed = true;
                     }
                 }
@@ -853,25 +849,25 @@ namespace Grain {
 
 
     void BezierValueCurve::mustSort() noexcept {
-        _m_must_sort = true;
-        _m_modification_count++;
+        must_sort_ = true;
+        modification_count_++;
     }
 
 
     void BezierValueCurve::mustUpdate() noexcept {
-        _m_must_sort = true;
-        _m_must_update = true;
-        _m_modification_count++;
+        must_sort_ = true;
+        must_update_ = true;
+        modification_count_++;
     }
 
 
     float BezierValueCurve::lookup(float t, int32_t resolution) noexcept {
         _updateWeightedSamples(resolution);
-        if (!m_weighted_samples) {
+        if (!weighted_samples_) {
             return 0;
         }
 
-        return m_weighted_samples->lookup(t);
+        return weighted_samples_->lookup(t);
     }
 
 
@@ -884,7 +880,7 @@ namespace Grain {
             return false;
         }
 
-        if (!lut->setByWeightedSamples(m_weighted_samples)) {
+        if (!lut->setByWeightedSamples(weighted_samples_)) {
             return false;
         }
 
@@ -893,7 +889,7 @@ namespace Grain {
 
 
     bool BezierValueCurve::fillEnvelopeAttackLUT(LUT1* lut) noexcept {
-        if (lut && m_mode == Mode::Envelope) {
+        if (lut && mode_ == Mode::Envelope) {
             int32_t end_index = decayBeginIndex();
             if (end_index >= 0) {
                 return _updateLUT(lut, 0, end_index) == ErrorCode::None;
@@ -905,7 +901,7 @@ namespace Grain {
 
 
     bool BezierValueCurve::fillEnvelopeDecayLUT(LUT1* lut) noexcept {
-        if (lut && m_mode == Mode::Envelope) {
+        if (lut && mode_ == Mode::Envelope) {
             int32_t begin_index = decayBeginIndex();
             if (begin_index >= 0) {
 
@@ -949,8 +945,8 @@ namespace Grain {
         auto start_point = pointAtIndex(start_index);
         auto end_point = pointAtIndex(end_index);
 
-        double start_x = start_point->m_pos.m_x;
-        double end_x = end_point->m_pos.m_x;
+        double start_x = start_point->pos_.x_;
+        double end_x = end_point->pos_.x_;
         double width = end_x - start_x;
 
         if (width <= 0) {
@@ -966,8 +962,8 @@ namespace Grain {
             auto p1 = pointAtIndex(pi1);
             auto p2 = pointAtIndex(pi2);
 
-            double x1 = p1->m_pos.m_x;
-            double x2 = p2->m_pos.m_x;
+            double x1 = p1->pos_.x_;
+            double x2 = p2->pos_.x_;
             double segment_width = x2 - x1;
 
             double f = segment_width / width;
@@ -975,28 +971,28 @@ namespace Grain {
 
             int32_t index2 = std::round(t * length);
 
-            Vec2d bp1 = p1->m_pos;
-            Vec2d bp2 = p1->m_used_right_pos;
-            Vec2d bp3 = p2->m_used_left_pos;
-            Vec2d bp4 = p2->m_pos;
+            Vec2d bp1 = p1->pos_;
+            Vec2d bp2 = p1->used_right_pos_;
+            Vec2d bp3 = p2->used_left_pos_;
+            Vec2d bp4 = p2->pos_;
 
             float scale = 1.0f / width;
-            bp1.m_x = (bp1.m_x - start_x) * scale;
-            bp2.m_x = (bp2.m_x - start_x) * scale;
-            bp3.m_x = (bp3.m_x - start_x) * scale;
-            bp4.m_x = (bp4.m_x - start_x) * scale;
+            bp1.x_ = (bp1.x_ - start_x) * scale;
+            bp2.x_ = (bp2.x_ - start_x) * scale;
+            bp3.x_ = (bp3.x_ - start_x) * scale;
+            bp4.x_ = (bp4.x_ - start_x) * scale;
 
             Bezier bezier(bp1, bp2, bp3, bp4);
 
             for (int32_t i = index1; i < index2; i++) {
-                double x = bp1.m_x + static_cast<double>(i - index1) / (index2 - index1) * (bp4.m_x - bp1.m_x);
+                double x = bp1.x_ + static_cast<double>(i - index1) / (index2 - index1) * (bp4.x_ - bp1.x_);
 
                 double roots[3];
-                int32_t n = Math::solveCubicBezier(bp1.m_x, bp2.m_x, bp3.m_x, bp4.m_x, x, roots);
+                int32_t n = Math::solveCubicBezier(bp1.x_, bp2.x_, bp3.x_, bp4.x_, x, roots);
                 if (n > 0) {
                     double t = roots[0];
                     Vec2d sample = bezier.posOnCurve(t);
-                    buffer[i] = sample.m_y;
+                    buffer[i] = sample.y_;
                 }
 
             }
@@ -1010,15 +1006,15 @@ namespace Grain {
 
 
     void BezierValueCurve::_sortPoints() noexcept {
-        if (_m_must_sort) {
-            std::sort(m_points.begin(), m_points.end(), sortPointsCompareFunc);
-            _m_must_sort = false;
+        if (must_sort_) {
+            std::sort(points_.begin(), points_.end(), sortPointsCompareFunc);
+            must_sort_ = false;
         }
     }
 
 
     bool BezierValueCurve::sortPointsCompareFunc(const BezierValueCurvePoint& a, const BezierValueCurvePoint& b) {
-        return a.m_pos.m_x < b.m_pos.m_x;
+        return a.pos_.x_ < b.pos_.x_;
     }
 
 
@@ -1028,10 +1024,10 @@ namespace Grain {
 
 
     bool BezierValueCurve::_updateWeightedSamples(int32_t start_point_index, int32_t end_point_index, int32_t resolution) noexcept {
-        if (_m_weighted_samples_modification_count >= _m_modification_count &&
-            _m_weighted_samples_resolution == resolution &&
-            _m_weighted_samples_start_point_index == start_point_index &&
-            _m_weighted_samples_end_point_index == end_point_index) {
+        if (weighted_samples_modification_count_ >= modification_count_ &&
+            weighted_samples_resolution_ == resolution &&
+            weighted_samples_start_point_index_ == start_point_index &&
+            weighted_samples_end_point_index_ == end_point_index) {
             // Nothing changed since last update.
             return true;
         }
@@ -1051,21 +1047,21 @@ namespace Grain {
             return false;
         }
 
-        if (!m_weighted_samples) {
-            m_weighted_samples = new (std::nothrow) WeightedSamples(resolution);
+        if (!weighted_samples_) {
+            weighted_samples_ = new (std::nothrow) WeightedSamples(resolution);
         }
         else {
-            if (m_weighted_samples->setResolution(resolution) != ErrorCode::None) {
+            if (weighted_samples_->setResolution(resolution) != ErrorCode::None) {
                 return false;
             }
         }
 
-        if (!m_weighted_samples) {
+        if (!weighted_samples_) {
             // GrApp::addError(Gr::ERR_FATAL, "BezierCurve::_updateWeightedSamples()"); TODO: !!!!
             return false;
         }
 
-        m_weighted_samples->clear();
+        weighted_samples_->clear();
         _update();
 
         auto start_point = pointAtIndex(start_point_index);
@@ -1074,8 +1070,8 @@ namespace Grain {
             return false;
         }
 
-        double min_x = start_point ? start_point->m_pos.m_x : 0.0;
-        double max_x = end_point ? end_point->m_pos.m_x : 0.0;
+        double min_x = start_point ? start_point->pos_.x_ : 0.0;
+        double max_x = end_point ? end_point->pos_.x_ : 0.0;
         double width = max_x - min_x;
         if (width < std::numeric_limits<double>::epsilon()) {
             width = std::numeric_limits<double>::epsilon();
@@ -1087,26 +1083,26 @@ namespace Grain {
             auto cp1 = pointAtIndex(start_point_index + i - 1);
             auto cp2 = pointAtIndex(start_point_index + i);
 
-            Vec2d bp1 = cp1->m_pos;
-            Vec2d bp2 = cp1->m_used_right_pos;
-            Vec2d bp3 = cp2->m_used_left_pos;
-            Vec2d bp4 = cp2->m_pos;
+            Vec2d bp1 = cp1->pos_;
+            Vec2d bp2 = cp1->used_right_pos_;
+            Vec2d bp3 = cp2->used_left_pos_;
+            Vec2d bp4 = cp2->pos_;
 
-            bp1.m_x = (bp1.m_x - min_x) * scale;
-            bp2.m_x = (bp2.m_x - min_x) * scale;
-            bp3.m_x = (bp3.m_x - min_x) * scale;
-            bp4.m_x = (bp4.m_x - min_x) * scale;
+            bp1.x_ = (bp1.x_ - min_x) * scale;
+            bp2.x_ = (bp2.x_ - min_x) * scale;
+            bp3.x_ = (bp3.x_ - min_x) * scale;
+            bp4.x_ = (bp4.x_ - min_x) * scale;
 
             Bezier bezier(bp1, bp2, bp3, bp4);
-            m_weighted_samples->addBezier(bezier, 256); // TODO: configurable resolution?
+            weighted_samples_->addBezier(bezier, 256); // TODO: configurable resolution?
         }
 
-        m_weighted_samples->finish();
+        weighted_samples_->finish();
 
-        _m_weighted_samples_modification_count = _m_modification_count;
-        _m_weighted_samples_resolution = resolution;
-        _m_weighted_samples_start_point_index = start_point_index;
-        _m_weighted_samples_end_point_index = end_point_index;
+        weighted_samples_modification_count_ = modification_count_;
+        weighted_samples_resolution_ = resolution;
+        weighted_samples_start_point_index_ = start_point_index;
+        weighted_samples_end_point_index_ = end_point_index;
 
         return true;
     }
@@ -1126,7 +1122,7 @@ namespace Grain {
             return ErrorCode::Specific;
         }
 
-        lut->setByWeightedSamples(m_weighted_samples);
+        lut->setByWeightedSamples(weighted_samples_);
 
         return ErrorCode::None;
     }
@@ -1136,27 +1132,27 @@ namespace Grain {
         _sortPoints();
         int32_t point_n = length();
 
-        if (_m_must_update && point_n > 1) {
+        if (must_update_ && point_n > 1) {
 
             // Pass 1, left to right
             for (int32_t i = 0; i < point_n - 1; i++) {
                 auto p0 = mutPointAtIndex(i);
                 auto p1 = mutPointAtIndex(i + 1);
 
-                if (p0->m_right.m_x < 0) {
-                    p0->m_right.m_x = 0;
+                if (p0->right_.x_ < 0) {
+                    p0->right_.x_ = 0;
                 }
 
-                Vec2d v = p0->m_right;
-                if (v.m_x > 0) {
-                    if (v.m_x > p1->m_pos.m_x - p0->m_pos.m_x) {
-                        v.m_x = p1->m_pos.m_x - p0->m_pos.m_x;
-                        v.m_y = p0->m_right.m_y * v.m_x / p0->m_right.m_x;
+                Vec2d v = p0->right_;
+                if (v.x_ > 0) {
+                    if (v.x_ > p1->pos_.x_ - p0->pos_.x_) {
+                        v.x_ = p1->pos_.x_ - p0->pos_.x_;
+                        v.y_ = p0->right_.y_ * v.x_ / p0->right_.x_;
                     }
                 }
 
-                p0->m_right_pos = p0->m_pos + p0->m_right;
-                p0->m_used_right_pos = p0->m_pos + v;
+                p0->right_pos_ = p0->pos_ + p0->right_;
+                p0->used_right_pos_ = p0->pos_ + v;
             }
 
             // Pass 2, right to left
@@ -1164,109 +1160,109 @@ namespace Grain {
                 auto p0 = mutPointAtIndex(i);
                 auto p1 = mutPointAtIndex(i - 1);
 
-                if (p0->m_left.m_x > 0) {
-                    p0->m_left.m_x = 0;
+                if (p0->left_.x_ > 0) {
+                    p0->left_.x_ = 0;
                 }
 
-                Vec2d v = p0->m_left;
-                if (v.m_x < 0) {
-                    if (v.m_x < p1->m_pos.m_x - p0->m_pos.m_x) {
-                        v.m_x = p1->m_pos.m_x - p0->m_pos.m_x;
-                        v.m_y = p0->m_left.m_y * v.m_x / p0->m_left.m_x;
+                Vec2d v = p0->left_;
+                if (v.x_ < 0) {
+                    if (v.x_ < p1->pos_.x_ - p0->pos_.x_) {
+                        v.x_ = p1->pos_.x_ - p0->pos_.x_;
+                        v.y_ = p0->left_.y_ * v.x_ / p0->left_.x_;
                     }
                 }
-                p0->m_left_pos = p0->m_pos + p0->m_left;
-                p0->m_used_left_pos = p0->m_pos + v;
+                p0->left_pos_ = p0->pos_ + p0->left_;
+                p0->used_left_pos_ = p0->pos_ + v;
             }
 
             // Pass 3, automatic right continuity
             auto p = mutPointAtIndex(0);
-            if (p->m_point_type == Bezier::PointType::Right) {
-                p->m_used_right_pos = p->m_pos;
+            if (p->point_type_ == Bezier::PointType::Right) {
+                p->used_right_pos_ = p->pos_;
             }
 
             for (int32_t i = 1; i < point_n - 1; i++) {
                 auto c = mutPointAtIndex(i);
 
-                if (c->m_point_type == Bezier::PointType::Right) {
+                if (c->point_type_ == Bezier::PointType::Right) {
                     auto l = mutPointAtIndex(i - 1);
                     auto r = mutPointAtIndex(i + 1);
 
-                    Vec2d v = c->m_pos - (l->usesRightControl() ? l->m_used_right_pos : l->m_pos);
-                    Lined line(0, 0, v.m_x, v.m_y);
-                    double right_pos = (r->m_pos.m_x - c->m_pos.m_x) / 2;
+                    Vec2d v = c->pos_ - (l->usesRightControl() ? l->used_right_pos_ : l->pos_);
+                    Lined line(0, 0, v.x_, v.y_);
+                    double right_pos = (r->pos_.x_ - c->pos_.x_) / 2;
 
                     Lined top_line(0, 1, right_pos, 1);
                     Vec2d iv;
                     if (line.intersects(top_line, iv)) {
-                        if (iv.m_x > 0 && iv.length() < v.length()) {
+                        if (iv.x_ > 0 && iv.length() < v.length()) {
                             v = iv;
                         }
                     }
 
                     Lined bottom_line(0, -1, right_pos, -1);
                     if (line.intersects(bottom_line, iv)) {
-                        if (iv.m_x > 0 && iv.length() < v.length()) {
+                        if (iv.x_ > 0 && iv.length() < v.length()) {
                             v = iv;
                         }
                     }
 
                     Lined right_line(right_pos, -1, right_pos, 1);
                     if (line.intersects(right_line, iv)) {
-                        if (iv.m_x > 0 && iv.length() < v.length()) {
+                        if (iv.x_ > 0 && iv.length() < v.length()) {
                             v = iv;
                         }
                     }
 
-                    c->m_used_right_pos = c->m_pos + v;
+                    c->used_right_pos_ = c->pos_ + v;
                 }
             }
 
             // Pass 4, automatic left continuity
             p = mutPointAtIndex(point_n - 1);
-            if (p->m_point_type == Bezier::PointType::Left) {
-                p->m_used_left_pos = p->m_pos;
+            if (p->point_type_ == Bezier::PointType::Left) {
+                p->used_left_pos_ = p->pos_;
             }
 
             for (int32_t i = point_n - 2; i > 0; i--) {
                 auto c = mutPointAtIndex(i);
 
-                if (c->m_point_type == Bezier::PointType::Left) {
+                if (c->point_type_ == Bezier::PointType::Left) {
                     auto l = mutPointAtIndex(i - 1);
                     auto r = mutPointAtIndex(i + 1);
 
-                    Vec2d v = (r->usesLeftControl() ? r->m_used_left_pos : r->m_pos) - c->m_pos;
-                    Lined line(0, 0, v.m_x, v.m_y);
-                    double left_pos = (l->m_pos.m_x - c->m_pos.m_x) / 2;
+                    Vec2d v = (r->usesLeftControl() ? r->used_left_pos_ : r->pos_) - c->pos_;
+                    Lined line(0, 0, v.x_, v.y_);
+                    double left_pos = (l->pos_.x_ - c->pos_.x_) / 2;
 
                     Vec2d iv;
 
                     Lined left_line(left_pos, -1, left_pos, 1);
                     if (line.intersects(left_line, iv)) {
-                        if (iv.m_x < 0 && iv.length() < v.length()) {
+                        if (iv.x_ < 0 && iv.length() < v.length()) {
                             v = -iv;
                         }
                     }
 
                     Lined top_line(left_pos, 1, 0, 1);
                     if (line.intersects(top_line, iv)) {
-                        if (iv.m_x < 0 && iv.length() < v.length()) {
+                        if (iv.x_ < 0 && iv.length() < v.length()) {
                             v = -iv;
                         }
                     }
 
                     Lined bottom_line(left_pos, -1, 0, -1);
                     if (line.intersects(bottom_line, iv)) {
-                        if (iv.m_x < 0 && iv.length() < v.length()) {
+                        if (iv.x_ < 0 && iv.length() < v.length()) {
                             v = -iv;
                         }
                     }
 
-                    c->m_used_left_pos = c->m_pos - v;
+                    c->used_left_pos_ = c->pos_ - v;
                 }
             }
 
-            _m_must_update = false;
+            must_update_ = false;
             return true;
         }
 
@@ -1292,14 +1288,13 @@ namespace Grain {
         int32_t index = 0;
         int32_t last_index = length() - 1;
 
-        for (auto& point : m_points) {
-
+        for (auto& point : points_) {
             if (fit_all_flag || point.isSelected()) {
 
                 min_x = std::min(min_x, point.m_pos.m_x);
                 max_x = std::max(max_x, point.m_pos.m_x);
-                min_y = std::min(min_y, point.m_pos.m_y);
-                max_y = std::max(max_y, point.m_pos.m_y);
+                min_y = std::min(min_y, point.m_pos.y_);
+                max_y = std::max(max_y, point.m_pos.y_);
 
                 if (point.hasVisibleControlPoints()) {
                     if (index == 0) {
@@ -1312,11 +1307,11 @@ namespace Grain {
                         max_x = std::max(max_x, point.m_right_pos.m_x);
                     }
 
-                    min_y = std::min(min_y, point.m_left_pos.m_y);
-                    min_y = std::min(min_y, point.m_right_pos.m_y);
+                    min_y = std::min(min_y, point.m_left_pos.y_);
+                    min_y = std::min(min_y, point.m_right_pos.y_);
 
-                    max_y = std::max(max_y, point.m_left_pos.m_y);
-                    max_y = std::max(max_y, point.m_right_pos.m_y);
+                    max_y = std::max(max_y, point.m_left_pos.y_);
+                    max_y = std::max(max_y, point.m_right_pos.y_);
                 }
 
                 n++;

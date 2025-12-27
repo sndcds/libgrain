@@ -33,15 +33,6 @@ namespace Grain {
 
     App* App::g_instance = nullptr;
 
-    String App::g_app_path;
-    String App::g_home_dir_path;
-    String App::g_desktop_dir_path;
-    String App::g_document_dir_path;
-    String App::g_app_support_dir_path;
-    String App::g_app_data_dir_path;
-    String App::g_app_test_data_dir_path;
-
-
     App::App(uint32_t flags) {
         if (App::g_instance) { // Prevent multiple instantiation
             return;
@@ -49,37 +40,37 @@ namespace Grain {
 
         g_instance = this;
 
-        m_start_time.now();
+        start_time_.now();
 
         // Collect information about the computer
-        m_big_endian = std::endian::native == std::endian::big;
-        m_physical_core_count = Hardware::physicalCores();
-        m_logical_core_count = Hardware::logicalCores();
-        m_mem_size = Hardware::memSize();
+        big_endian_ = std::endian::native == std::endian::big;
+        physical_core_count_ = Hardware::physicalCores();
+        logical_core_count_ = Hardware::logicalCores();
+        mem_size_ = Hardware::memSize();
 
-        m_use_sdl2 = flags & kAppFlag_SDL2;
-        m_use_cairo = flags & kAppFlag_Cairo;
-        m_use_fftw = flags & kAppFlag_FFTW;
+        use_sdl2_ = flags & kAppFlag_SDL2;
+        use_cairo_ = flags & kAppFlag_Cairo;
+        use_fftw_ = flags & kAppFlag_FFTW;
 
 
 #if defined(__APPLE__) && defined(__MACH__)
-        if (m_use_cairo) {
-            m_gc_type = GraphicContextType::Cairo;
+        if (use_cairo_) {
+            gc_type_ = GraphicContextType::Cairo;
         }
         else {
-            m_gc_type = GraphicContextType::AppleMac;
+            gc_type_ = GraphicContextType::AppleMac;
         }
 #else
-        m_gc_type =  GraphicContextType::Cairo;
+        gc_type_ =  GraphicContextType::Cairo;
 #endif
 
         updateScreenInfos();
 
         // Init App fonts
-        m_ui_font = new (std::nothrow) Font(16);
-        m_small_ui_font = new (std::nothrow) Font(12);
-        m_title_ui_font = new (std::nothrow) Font(22);
-        m_mono_font = new (std::nothrow) Font("SF Mono", 11); // TODO: Fallback!
+        ui_font_ = new (std::nothrow) Font(16);
+        small_ui_font_ = new (std::nothrow) Font(12);
+        title_ui_font_ = new (std::nothrow) Font(22);
+        mono_font_ = new (std::nothrow) Font("SF Mono", 11); // TODO: Fallback!
 
         g_instance->_initGUIStyle();
     }
@@ -88,7 +79,7 @@ namespace Grain {
     App::~App() {
         // Release all Screens
         for (int32_t i = 0; i < kMaxScreenCount; i++) {
-            delete m_screens[i];
+            delete screens_[i];
         }
     }
 
@@ -124,7 +115,7 @@ namespace Grain {
 
     GraphicContext* App::createGUIGraphicContext() noexcept {
 #if defined(__APPLE__) && defined(__MACH__)
-        if (g_instance->m_gc_type == GraphicContextType::AppleMac) {
+        if (g_instance->gc_type_ == GraphicContextType::AppleMac) {
             return new (std::nothrow) AppleCGContext();
         }
         else {
@@ -160,7 +151,7 @@ namespace Grain {
                 throw Exception(ErrorCode::NullData, "App::addWindow: Window is null.");
             }
 
-            if (!g_instance->m_windows.push(window)) {
+            if (!g_instance->windows_.push(window)) {
                 throw Exception(ErrorCode::MemCantGrow, "App::addWindow: Could not add window to list.");
             }
         }
@@ -175,9 +166,9 @@ namespace Grain {
 
     void App::setKeyWindow(Window* window) noexcept {
         if (window->canBecomeKeyWindow()) {
-            for (auto& w : g_instance->m_windows) {
+            for (auto& w : g_instance->windows_) {
                 if (w->setIsKeyWindow(w == window)) {
-                    g_instance->m_key_window = window;
+                    g_instance->key_window_ = window;
                     w->needsDisplay();
                 }
             }
@@ -186,7 +177,7 @@ namespace Grain {
 
 
     void App::allWindowsNeedsDisplay() noexcept {
-        for (auto& window : g_instance->m_windows) {
+        for (auto& window : g_instance->windows_) {
             window->needsDisplay();
         }
     }

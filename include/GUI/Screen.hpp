@@ -26,11 +26,11 @@ namespace Grain {
         friend class App;
 
     public:
-        int32_t m_width = 0;
-        int32_t m_height = 0;
-        int32_t m_visible_width = 0;
-        int32_t m_visible_height = 0;
-        void* _m_ns_screen = nullptr;    ///< Pointer to macOS pointer NSScreen
+        int32_t width_ = 0;
+        int32_t height_ = 0;
+        int32_t visible_width_ = 0;
+        int32_t visible_height_ = 0;
+        void* ns_screen_ = nullptr;    ///< Pointer to macOS pointer NSScreen
 
     public:
         Screen() : Object() {}
@@ -43,23 +43,23 @@ namespace Grain {
                 os << "Screen nullptr";
             }
             else {
-                os << "Screen " << o->m_width << " x " << o->m_height << " pixel";
+                os << "Screen " << o->width_ << " x " << o->height_ << " pixel";
             }
             return os;
         }
 
-        [[nodiscard]] int32_t width() const noexcept { return m_width; }
-        [[nodiscard]] int32_t height() const noexcept { return m_height; }
-        [[nodiscard]] int32_t visibleWidth() const noexcept { return m_visible_width; }
-        [[nodiscard]] int32_t visibleHeight() const noexcept { return m_visible_height; }
-        [[nodiscard]] int32_t pixelCount() const noexcept { return m_width * m_height; }
-        [[nodiscard]] Rectd rect() const noexcept { return Rectd(0, 0, m_width, m_height); }
-        [[nodiscard]] Rectd visibleRect() const noexcept { return Rectd(0, 0, m_visible_width, m_visible_height); }
+        [[nodiscard]] int32_t width() const noexcept { return width_; }
+        [[nodiscard]] int32_t height() const noexcept { return height_; }
+        [[nodiscard]] int32_t visibleWidth() const noexcept { return visible_width_; }
+        [[nodiscard]] int32_t visibleHeight() const noexcept { return visible_height_; }
+        [[nodiscard]] int32_t pixelCount() const noexcept { return width_ * height_; }
+        [[nodiscard]] Rectd rect() const noexcept { return Rectd(0, 0, width_, height_); }
+        [[nodiscard]] Rectd visibleRect() const noexcept { return Rectd(0, 0, visible_width_, visible_height_); }
 
-        [[nodiscard]] void* nsScreen() const noexcept { return _m_ns_screen; }
+        [[nodiscard]] void* nsScreen() const noexcept { return ns_screen_; }
 
         [[nodiscard]] bool isValid() const noexcept {
-            return m_width > 1 && m_height > 1 && m_visible_width > 1 && m_visible_height > 1;
+            return width_ > 1 && height_ > 1 && visible_width_ > 1 && visible_height_ > 1;
         }
     };
 

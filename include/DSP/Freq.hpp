@@ -85,32 +85,32 @@ namespace Grain {
     public:
         FreqBands() noexcept = default;
         FreqBands(float left_freq, float center_freq, float right_freq) noexcept {
-            m_left_freq = left_freq;
-            m_center_freq = center_freq;
-            m_right_freq = right_freq;
+            left_freq_ = left_freq;
+            center_freq_ = center_freq;
+            right_freq_ = right_freq;
         }
 
-        [[nodiscard]] int32_t bandCount() const noexcept { return m_band_count; }
-        [[nodiscard]] float leftFreq() const noexcept { return m_left_freq; }
-        [[nodiscard]] float centerFreq() const noexcept { return m_center_freq; }
-        [[nodiscard]] float rightFreq() const noexcept { return m_right_freq; }
+        [[nodiscard]] int32_t bandCount() const noexcept { return band_count_; }
+        [[nodiscard]] float leftFreq() const noexcept { return left_freq_; }
+        [[nodiscard]] float centerFreq() const noexcept { return center_freq_; }
+        [[nodiscard]] float rightFreq() const noexcept { return right_freq_; }
 
         void set(float left_freq, float center_freq, float right_freq) noexcept;
         void setupBands(float bands_per_octave, float start_freq, float end_freq) noexcept;
         bool setBand(int32_t index) noexcept;
 
-        void setBandsPerOctave(float bands_per_octave) noexcept { m_bands_per_octave = bands_per_octave; }
+        void setBandsPerOctave(float bands_per_octave) noexcept { bands_per_octave_ = bands_per_octave; }
         void setCenterFreq(float center_freq, float octave_range) noexcept;
 
     protected:
-        float m_bands_per_octave = 2.0f;
-        int32_t m_band_count = 11;
-        float m_band_start_freq = 20.0f;
-        float m_band_end_freq = 20000.0f;
+        float bands_per_octave_ = 2.0f;
+        int32_t band_count_ = 11;
+        float band_start_freq_ = 20.0f;
+        float band_end_freq_ = 20000.0f;
 
-        float m_left_freq = 100.0f;
-        float m_center_freq = 1000.0f;
-        float m_right_freq = 5000.0f;
+        float left_freq_ = 100.0f;
+        float center_freq_ = 1000.0f;
+        float right_freq_ = 5000.0f;
     };
 
 

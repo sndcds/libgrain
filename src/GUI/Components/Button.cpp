@@ -20,32 +20,29 @@
 namespace Grain {
 
     Button::Button(const Rectd& rect, const char* text, int32_t tag) noexcept : Component(rect, tag) {
-        m_type = ComponentType::Button;
-        m_radio_group = 0;
-        m_radio_value = 0;
-        m_draws_as_button = true;
+        type_ = ComponentType::Button;
+        radio_group_ = 0;
+        radio_value_ = 0;
+        draws_as_button_ = true;
 
         // setMouseCursor(App::MouseCursor::PointingHand); TODO: !!!!!
 
         setText(text);
     }
 
-
     Button* Button::add(View* view, const Rectd& rect, const char* text, int32_t tag) {
         return (Button*)Component::addComponentToView(new (std::nothrow) Button(rect, text, tag), view, AddFlags::kNone);
     }
 
-
     void Button::setSelected(bool selected) noexcept {
-        if (m_radio_group > 0) {
-            if (selected && m_parent) {
-                m_parent->deselectRadioGroup(m_radio_group);
+        if (radio_group_ > 0) {
+            if (selected && parent_) {
+                parent_->deselectRadioGroup(radio_group_);
             }
         }
-        m_is_selected = selected;
+        is_selected_ = selected;
         needsDisplay();
     }
-
 
     void Button::draw(const Rectd& dirty_rect) noexcept {
         auto gc = graphicContextPtr();
@@ -66,28 +63,32 @@ namespace Grain {
                 break;
             case GUIStyle::CornerRadiusMode::Different:
                 gc->fillRoundRect(
-                        boundsRect(),
-                        style->cornerRadius(0),
-                        style->cornerRadius(1),
-                        style->cornerRadius(2),
-                        style->cornerRadius(3));
+                    boundsRect(),
+                    style->cornerRadius(0),
+                    style->cornerRadius(1),
+                    style->cornerRadius(2),
+                    style->cornerRadius(3));
                 break;
         }
 
         if (hasText()) {
             Rectd text_rect = boundsRect();
             text_rect.inset(style->padding(0), style->padding(1), style->padding(2), style->padding(3));
-            gc->drawTextInRect(m_text->utf8(), text_rect, style->textAlignment(), style->font(), style->foregroundColor());
+            gc->drawTextInRect(text_->utf8(), text_rect, style->textAlignment(), style->font(), style->foregroundColor());
+        }
+
+        if (isHighlighted()) {
+            gc->setFillColor(1, 0, 0, 1);
+            gc->fillFrame(boundsRect(), 2);
         }
     }
-
 
     void Button::handleMouseDown(const Event& event) noexcept {
         if (hit(event)) {
             highlight();
             if (!isDelayed()) {
-                if (m_radio_group > 0) {
-                    if (!m_is_selected) {
+                if (radio_group_ > 0) {
+                    if (!is_selected_) {
                         select();
                         forcedDisplay();
                         fireAction(Component::ActionType::None, nullptr);
@@ -110,16 +111,14 @@ namespace Grain {
         }
     }
 
-
     void Button::handleMouseDrag(const Event& event) noexcept {
         setHighlighted(hit(event));
     }
 
-
     void Button::handleMouseUp(const Event& event) noexcept {
         if (hit(event)) {
-            if (m_radio_group > 0) {
-                if (!m_is_selected) {
+            if (radio_group_ > 0) {
+                if (!is_selected_) {
                     select();
                     fireAction(Component::ActionType::None, nullptr);
                 }

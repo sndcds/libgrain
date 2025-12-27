@@ -6,97 +6,102 @@
 //
 //  This file is part of GrainLib, see <https://grain.one>.
 //
-//  LastChecked: 24.08.2025
-//
 
 #ifndef GrainBorder_hpp
 #define GrainBorder_hpp
 
-#include <cstdint>
-#include <iostream>
-
-
 namespace Grain {
 
-    template <class T>
-    class Border {
+template <class T>
+class Border {
 
-    public:
-        T m_top = 0;
-        T m_right = 0;
-        T m_bottom = 0;
-        T m_left = 0;
+public:
+    T top_{};
+    T right_{};
+    T bottom_{};
+    T left_{};
 
-    public:
-        Border() = default;
+public:
+    Border() noexcept = default;
 
-        explicit Border(T top, T right, T bottom, T left) :
-            m_top(top), m_right(right), m_bottom(bottom), m_left(left) {}
+    Border(T top, T right, T bottom, T left) noexcept :
+        top_(top), right_(right), bottom_(bottom), left_(left) {}
 
-        explicit Border(T horizontal, T vertical) :
-            m_top(vertical), m_right(horizontal), m_bottom(vertical), m_left(horizontal) {}
+    explicit Border(T horizontal, T vertical) noexcept :
+        top_(vertical), right_(horizontal), bottom_(vertical), left_(horizontal) {}
 
-        explicit Border(T size) :
-            m_top(size), m_right(size), m_bottom(size), m_left(size) {}
+    explicit Border(T size) noexcept :
+        top_(size), right_(size), bottom_(size), left_(size) {}
 
-        friend std::ostream& operator << (std::ostream& os, const Border& o) {
-            os << o.m_top << ", " << o.m_right << ", " << o.m_bottom << ", " << o.m_left;
-            return os;
-        }
+    virtual ~Border() noexcept = default;
+
+    [[nodiscard]] virtual const char* className() const noexcept {
+        return "Border";
+    }
+
+    friend std::ostream& operator << (std::ostream& os, const Border* o) {
+        o == nullptr ? os << "Border nullptr" : os << *o;
+        return os;
+    }
+
+    friend std::ostream& operator << (std::ostream& os, const Border& o) {
+        os << o.top_ << ", " << o.right_ << ", " << o.bottom_ << ", " << o.left_;
+        return os;
+    }
 
 
-        [[nodiscard]] T left() const noexcept { return m_left; }
-        [[nodiscard]] T right() const noexcept { return m_right; }
-        [[nodiscard]] T top() const noexcept { return m_top; }
-        [[nodiscard]] T bottom() const noexcept { return m_bottom; }
-        [[nodiscard]] T width() const noexcept { return m_left + m_right; }
-        [[nodiscard]] T height() const noexcept { return m_top + m_bottom; }
+    [[nodiscard]] T left() const noexcept { return left_; }
+    [[nodiscard]] T right() const noexcept { return right_; }
+    [[nodiscard]] T top() const noexcept { return top_; }
+    [[nodiscard]] T bottom() const noexcept { return bottom_; }
+    [[nodiscard]] T width() const noexcept { return left_ + right_; }
+    [[nodiscard]] T height() const noexcept { return top_ + bottom_; }
 
-        void set(T size) noexcept {
-            m_top = m_right = m_bottom = m_left = size;
-        }
+    void set(T size) noexcept {
+        top_ = right_ = bottom_ = left_ = size;
+    }
 
-        void set(T vertical, T horizontal) noexcept {
-            m_top = m_bottom = vertical;
-            m_right = m_left = horizontal;
-        }
+    void set(T vertical, T horizontal) noexcept {
+        top_ = bottom_ = vertical;
+        right_ = left_ = horizontal;
+    }
 
-        void set(T top, T right, T bottom, T left) noexcept {
-            m_top = top;
-            m_right = right;
-            m_bottom = bottom;
-            m_left = left;
-        }
+    void set(T top, T right, T bottom, T left) noexcept {
+        top_ = top;
+        right_ = right;
+        bottom_ = bottom;
+        left_ = left;
+    }
 
-        bool set(T* values, int32_t n) noexcept {
-            if (values != nullptr) {
-                if (n == 1) {
-                    m_top = m_right = m_bottom = m_left = values[0];
-                    return true;
-                }
-                else if (n == 2) {
-                    m_top = m_bottom = values[0];
-                    m_right = m_left = values[1];
-                    return true;
-                }
-                else if (n == 4) {
-                    m_top = values[0];
-                    m_right = values[1];
-                    m_bottom = values[2];
-                    m_left = values[3];
-                    return true;
-                }
+    bool set(T* values, int32_t n) noexcept {
+        if (values != nullptr) {
+            if (n == 1) {
+                top_ = right_ = bottom_ = left_ = values[0];
+                return true;
             }
-            return false;
+            if (n == 2) {
+                top_ = bottom_ = values[0];
+                right_ = left_ = values[1];
+                return true;
+            }
+            if (n == 4) {
+                top_ = values[0];
+                right_ = values[1];
+                bottom_ = values[2];
+                left_ = values[3];
+                return true;
+            }
         }
-    };
+        return false;
+    }
+};
 
 
-    // Standard types
-    using Borderi = Border<int32_t>;    ///< 32 bit integer
-    using Borderl = Border<int64_t>;    ///< 64 bit integer
-    using Borderf = Border<float>;      ///< 32 bit floating point
-    using Borderd = Border<double>;     ///< 64 bit floating point
+// Standard types
+using Borderi = Border<int32_t>;    ///< 32 bit integer
+using Borderl = Border<int64_t>;    ///< 64 bit integer
+using Borderf = Border<float>;      ///< 32 bit floating point
+using Borderd = Border<double>;     ///< 64 bit floating point
 
 
 } // End of namespace Grain

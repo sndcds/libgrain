@@ -65,29 +65,29 @@ namespace Grain {
         };
 
     protected:
-        int64_t m_capacity = 0;                 ///< Maximum number of entries before reallocation is needed
-        int64_t m_size = 0;                     ///< Current number of entries in the list
-        int64_t m_grow_step = kMinStepSize;     ///< Number of entries to grow by when reallocating (if not doubling)
-        bool m_double_capacity_mode = true;     ///< If `true`, the list doubles in size when reallocating memory
+        int64_t capacity_ = 0;                 ///< Maximum number of entries before reallocation is needed
+        int64_t size_ = 0;                     ///< Current number of entries in the list
+        int64_t grow_step_ = kMinStepSize;     ///< Number of entries to grow by when reallocating (if not doubling)
+        bool double_capacity_mode_ = true;     ///< If `true`, the list doubles in size when reallocating memory
 
-        T* m_data = nullptr;                    ///< Pointer to the allocated memory holding the elements
-        T m_dummy{};                            ///< Returned when an invalid index is accessed.
-        size_t m_element_size = 0;              ///< Size of each element (optional if using `sizeof(T)` directly)
-        SortCompareFunc m_sort_compare_func = nullptr;  ///< Custom comparison function used by sort()
+        T* data_ = nullptr;                    ///< Pointer to the allocated memory holding the elements
+        T dummy_{};                            ///< Returned when an invalid index is accessed.
+        size_t element_size_ = 0;              ///< Size of each element (optional if using `sizeof(T)` directly)
+        SortCompareFunc sort_compare_func_ = nullptr;  ///< Custom comparison function used by sort()
 
     public:
         List() {
-            m_element_size = sizeof(T);
+            element_size_ = sizeof(T);
             reserve(kMinStepSize);
         }
 
         explicit List(int64_t capacity) {
-            m_element_size = sizeof(T);
+            element_size_ = sizeof(T);
             reserve(capacity);
         }
 
         ~List() override {
-            std::free(m_data);
+            std::free(data_);
         }
 
         [[nodiscard]] const char* className() const noexcept override {
@@ -99,19 +99,19 @@ namespace Grain {
         }
 
         friend std::ostream& operator << (std::ostream& os, const List& o) {
-            os << o.className() << " with " << o.m_size << " of " << o.m_capacity << " entries, entry size: " << o.m_element_size << " bytes";
-            if (o.m_data) {
+            os << o.className() << " with " << o.size_ << " of " << o.capacity_ << " entries, entry size: " << o.element_size_ << " bytes";
+            if (o.data_) {
                 os << ", memory is allocated";
             }
             else {
                 os << ", memory is not(!) allocated";
             }
 
-            if (o.m_double_capacity_mode) {
+            if (o.double_capacity_mode_) {
                 os << ", grows with double size";
             }
             else {
-                os << ", grows by " << o.m_grow_step << " entries";
+                os << ", grows by " << o.grow_step_ << " entries";
             }
 
             return os;
@@ -120,62 +120,62 @@ namespace Grain {
 
         // Non-const version of operator[]
         T& operator[](int64_t index) noexcept {
-            if (index >= 0 && index < m_size) {
-                return m_data[index];
+            if (index >= 0 && index < size_) {
+                return data_[index];
             }
             else {
-                return m_dummy;
+                return dummy_;
             }
         }
 
         // Const version of operator[]
         const T& operator[](int64_t index) const noexcept {
-            if (index >= 0 && index < m_size) {
-                return m_data[index];
+            if (index >= 0 && index < size_) {
+                return data_[index];
             }
             else {
-                return m_dummy;
+                return dummy_;
             }
         }
 
         void free() noexcept {
-            if (m_data) {
-                std::free(m_data);
-                m_data = nullptr;
+            if (data_) {
+                std::free(data_);
+                data_ = nullptr;
             }
-            m_size = 0;
-            m_capacity = 0;
+            size_ = 0;
+            capacity_ = 0;
         }
 
-        [[nodiscard]] const T* dataPtr() const noexcept { return (T* )m_data; }
-        [[nodiscard]] T* mutDataPtr() const noexcept { return (T* )m_data; }
+        [[nodiscard]] const T* dataPtr() const noexcept { return (T* )data_; }
+        [[nodiscard]] T* mutDataPtr() const noexcept { return (T* )data_; }
 
-        [[nodiscard]] int64_t capacity() const noexcept { return m_capacity; }
-        [[nodiscard]] int64_t growStep() const noexcept { return m_grow_step; }
-        [[nodiscard]] int64_t size() const noexcept { return m_size; }
-        [[nodiscard]] bool isEmpty() const noexcept { return m_size == 0; }
-        [[nodiscard]] int64_t elementSize() const noexcept { return m_element_size; }
-        [[nodiscard]] int64_t memSize() const noexcept { return m_element_size * m_capacity; }
+        [[nodiscard]] int64_t capacity() const noexcept { return capacity_; }
+        [[nodiscard]] int64_t growStep() const noexcept { return grow_step_; }
+        [[nodiscard]] int64_t size() const noexcept { return size_; }
+        [[nodiscard]] bool isEmpty() const noexcept { return size_ == 0; }
+        [[nodiscard]] int64_t elementSize() const noexcept { return element_size_; }
+        [[nodiscard]] int64_t memSize() const noexcept { return element_size_ * capacity_; }
 
         [[nodiscard]] bool hasIndex(int64_t index) const noexcept {
-            return (index >= 0 && index < m_size && m_data);
+            return (index >= 0 && index < size_ && data_);
         }
 
         [[nodiscard]] int64_t lastIndex() const noexcept {
-            return m_size - 1;
+            return size_ - 1;
         }
 
         [[nodiscard]] int64_t nextCapacity() const noexcept {
-            if (m_double_capacity_mode) {
-                return m_capacity * 2;
+            if (double_capacity_mode_) {
+                return capacity_ * 2;
             }
             else {
-                return m_capacity + m_grow_step;
+                return capacity_ + grow_step_;
             }
         }
 
         bool reserve(int64_t capacity) noexcept {
-            if (capacity == m_capacity) {
+            if (capacity == capacity_) {
                 return true;
             }
 
@@ -183,45 +183,45 @@ namespace Grain {
                 capacity = 0;
             }
 
-            if (capacity < m_size) {
-                capacity = m_size;
+            if (capacity < size_) {
+                capacity = size_;
             }
 
-            if (capacity == 0 && m_data) {
+            if (capacity == 0 && data_) {
                 // Release memory when capacity becomes 0
-                std::free(m_data);
-                m_data = nullptr;
-                m_capacity = 0;
+                std::free(data_);
+                data_ = nullptr;
+                capacity_ = 0;
                 return true;
             }
 
-            if (m_capacity == 0 && capacity > 0) {
+            if (capacity_ == 0 && capacity > 0) {
                 // Allocate new memory
-                m_data = (T* )std::malloc(sizeof(T) * capacity);
-                if (!m_data) {
+                data_ = (T* )std::malloc(sizeof(T) * capacity);
+                if (!data_) {
                     return false;
                 }
-                m_capacity = capacity;
+                capacity_ = capacity;
             }
             else {
                 // Reallocate memory
-                T* new_data = (T* )std::realloc(m_data, sizeof(T) * capacity);
+                T* new_data = (T* )std::realloc(data_, sizeof(T) * capacity);
                 if (!new_data) {
                     return false;
                 }
-                m_data = new_data;
-                m_capacity = capacity;
+                data_ = new_data;
+                capacity_ = capacity;
             }
 
             return true;
         }
 
         void setGrowStep(int64_t step) noexcept {
-            m_grow_step = step < kMinStepSize ? kMinStepSize : step;
+            grow_step_ = step < kMinStepSize ? kMinStepSize : step;
         }
 
         void setDoubleCapacityMode(bool mode) noexcept {
-            m_double_capacity_mode = mode;
+            double_capacity_mode_ = mode;
         }
 
         virtual bool resize(int64_t new_size, T value) noexcept {
@@ -235,13 +235,13 @@ namespace Grain {
                 }
             }
             else if (new_size < size()) {
-                m_size = new_size;
+                size_ = new_size;
             }
             return true;
         }
 
         bool shrink(int64_t extra_capacity = 0) noexcept {
-            return reserve(m_size + extra_capacity);
+            return reserve(size_ + extra_capacity);
         }
 
         virtual bool push(const T* element_ptr) noexcept {
@@ -249,36 +249,36 @@ namespace Grain {
                 return false;
             }
 
-            if (m_size >= m_capacity) {
+            if (size_ >= capacity_) {
                 bool result = reserve(nextCapacity());
                 if (!result) {
                     return false;
                 }
             }
 
-            m_data[m_size] = *element_ptr;
-            m_size++;
+            data_[size_] = *element_ptr;
+            size_++;
 
             return true;
         }
 
         virtual bool push(const T element) noexcept {
-            if (m_size >= m_capacity) {
+            if (size_ >= capacity_) {
                 bool result = reserve(nextCapacity());
                 if (!result) {
                     return false;
                 }
             }
 
-            m_data[m_size] = element;
-            m_size++;
+            data_[size_] = element;
+            size_++;
 
             return true;
         }
 
         bool pop(T* out_element) noexcept {
-            if (m_size > 0 && out_element) {
-                *out_element = m_data[lastIndex()];
+            if (size_ > 0 && out_element) {
+                *out_element = data_[lastIndex()];
                 removeLast();
                 return true;
             }
@@ -296,52 +296,48 @@ namespace Grain {
                 return false;
             }
             else {
-                m_data[index] = *element_ptr;
+                data_[index] = *element_ptr;
                 return true;
             }
         }
 
         virtual bool replaceLastElement(const T* element_ptr) noexcept {
-            if (!element_ptr || m_size < 1) {
+            if (!element_ptr || size_ < 1) {
                 return false;
             }
             else {
-                m_data[m_size] = *element_ptr;
+                data_[size_] = *element_ptr;
                 return true;
             }
         }
 
         virtual void clear() noexcept {
-            m_size = 0;
+            size_ = 0;
         }
 
         void setSortCompareFunc(SortCompareFunc func) noexcept {
-            m_sort_compare_func = func;
+            sort_compare_func_ = func;
         }
 
         virtual ErrorCode sort() noexcept {
-            return sort(m_sort_compare_func);
+            return sort(sort_compare_func_);
         }
 
         ErrorCode sort(SortCompareFunc func) noexcept {
-            auto result = ErrorCode::None;
+            if (!data_ || size_ <= 1) return ErrorCode::None;
+            if (!func) return ErrorCode::SortFailed; // comparator must be valid
             try {
-                if (func && m_size > 1) {
-                    qsort(m_data, m_size, sizeof(T), func);
-                }
-            }
-            catch (ErrorCode err) {
-                result = err;
+                std::qsort(data_, size_, sizeof(T), func);
             }
             catch (...) {
-                result = ErrorCode::SortFailed;
+                std::cout << "What" << std::endl;
             }
-            return result;
+            return ErrorCode::None;
         }
 
         [[nodiscard]] int64_t indexForElement(const T element) const noexcept {
-            for (int64_t i = 0; i < m_size; i++) {
-                if ( m_data[i] == element) {
+            for (int64_t i = 0; i < size_; i++) {
+                if ( data_[i] == element) {
                     return i;
                 }
             }
@@ -349,8 +345,8 @@ namespace Grain {
         }
 
         bool elementAtIndex(int64_t index, T& out_element) const noexcept {
-            if (index >= 0 && index < m_size) {
-                out_element = m_data[index];
+            if (index >= 0 && index < size_) {
+                out_element = data_[index];
                 return true;
             }
             else {
@@ -359,17 +355,17 @@ namespace Grain {
         }
 
         [[nodiscard]] T elementAtIndex(int64_t index) const noexcept {
-            if (index >= 0 && index < m_size) {
-                return m_data[index];
+            if (index >= 0 && index < size_) {
+                return data_[index];
             }
             else {
-                return m_dummy;
+                return dummy_;
             }
         }
 
         [[nodiscard]] const T* elementPtrAtIndex(int64_t index) const noexcept {
-            if (index >= 0 && index < m_size) {
-                return &m_data[index];
+            if (index >= 0 && index < size_) {
+                return &data_[index];
             }
             else {
                 return nullptr;
@@ -377,8 +373,8 @@ namespace Grain {
         }
 
         [[nodiscard]] T* mutElementPtrAtIndex(int64_t index) const noexcept {
-            if (index >= 0 && index < m_size) {
-                return &m_data[index];
+            if (index >= 0 && index < size_) {
+                return &data_[index];
             }
             else {
                 return nullptr;
@@ -386,17 +382,17 @@ namespace Grain {
         }
 
         [[nodiscard]] T lastElement() const noexcept {
-            if (m_size > 0) {
-                return m_data[m_size - 1];
+            if (size_ > 0) {
+                return data_[size_ - 1];
             }
             else {
-                return m_dummy;
+                return dummy_;
             }
         }
 
         [[nodiscard]] const T* lastElementPtr() const noexcept {
-            if (m_size > 0) {
-                return &m_data[m_size - 1];
+            if (size_ > 0) {
+                return &data_[size_ - 1];
             }
             else {
                 return nullptr;
@@ -404,8 +400,8 @@ namespace Grain {
         }
 
         [[nodiscard]] T* mutLastElementPtr() const noexcept {
-            if (m_size > 0) {
-                return &m_data[m_size - 1];
+            if (size_ > 0) {
+                return &data_[size_ - 1];
             }
             else {
                 return nullptr;
@@ -413,10 +409,10 @@ namespace Grain {
         }
 
         bool swapElements(int64_t index_a, int64_t index_b) noexcept {
-            if (index_a >= 0 && index_a < m_size && index_b >= 0 && index_b < m_size) {
-                T temp = m_data[index_a];
-                m_data[index_a] = m_data[index_b];
-                m_data[index_b] = temp;
+            if (index_a >= 0 && index_a < size_ && index_b >= 0 && index_b < size_) {
+                T temp = data_[index_a];
+                data_[index_a] = data_[index_b];
+                data_[index_b] = temp;
                 return true;
             }
             else {
@@ -438,12 +434,12 @@ namespace Grain {
                 return ErrorCode::IndexOutOfRange;
             }
 
-            m_size--;
-            std::cout << "new m_size: " << m_size << std::endl;
+            size_--;
+            std::cout << "new size_: " << size_ << std::endl;
             // Reorganize data if necessary
-            if (index < m_size) {
-                for (int64_t i = index; i < m_size; i++) {
-                    m_data[i] = m_data[i + 1];
+            if (index < size_) {
+                for (int64_t i = index; i < size_; i++) {
+                    data_[i] = data_[i + 1];
                 }
             }
 
@@ -464,18 +460,18 @@ namespace Grain {
                 return ErrorCode::IndexOutOfRange;
             }
 
-            int64_t last_index = m_size - 1;
+            int64_t last_index = size_ - 1;
             if (index != last_index) {
                 swapElements(index, last_index);
             }
 
-            m_size--;
+            size_--;
             return ErrorCode::None;
         }
 
         ErrorCode removeElement(const T element) noexcept {
-            for (int64_t i = 0; i < m_size; i++) {
-                if (m_data[i] == element) {
+            for (int64_t i = 0; i < size_; i++) {
+                if (data_[i] == element) {
                     return removeAtIndex(i);
                 }
             }
@@ -483,7 +479,7 @@ namespace Grain {
         }
 
         virtual ErrorCode removeLast() noexcept {
-            if (m_size > 0) {
+            if (size_ > 0) {
                 return removeAtIndex(lastIndex());
             }
             else {
@@ -492,11 +488,11 @@ namespace Grain {
         }
 
         Iterator begin() const {
-            return Iterator(&m_data[0]);
+            return Iterator(&data_[0]);
         }
 
         Iterator end() const {
-            return Iterator(&m_data[m_size]);
+            return Iterator(&data_[size_]);
         }
     };
 
@@ -565,7 +561,7 @@ namespace Grain {
          */
         virtual void clear() noexcept override {
             auto p = (Object** )List<T>::mutDataPtr();
-            for (int64_t i = 0; i < List<T>::m_size; i++) {
+            for (int64_t i = 0; i < List<T>::size_; i++) {
                 GRAIN_RELEASE(p[i]);
             }
             List<T>::clear();
@@ -609,10 +605,10 @@ namespace Grain {
             if (!ob) {
                 return ErrorCode::BadArgs;
             }
-            if (index < 0 || index > this->m_size) {
+            if (index < 0 || index > this->size_) {
                 return ErrorCode::BadArgs;
             }
-            if (this->m_size >= this->m_capacity) {
+            if (this->size_ >= this->m_capacity) {
                 auto flag = List<T>::reserve(this->m_capacity + this->m_grow_step);
                 if (!flag) {
                     return ErrorCode::MemCantGrow;
@@ -622,13 +618,13 @@ namespace Grain {
             auto data = List<T>::mutDataPtr();
 
             // Move all references behind index position to the right
-            for (int64_t i = this->m_size; i > index; i--) {
+            for (int64_t i = this->size_; i > index; i--) {
                 data[i] = data[i - 1];
             }
 
             // Insert the new reference
             data[index] = ob;
-            this->m_size++;
+            this->size_++;
 
             return ErrorCode::None;
         }

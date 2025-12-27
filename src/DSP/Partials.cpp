@@ -9,387 +9,161 @@
 #include "Type/Type.hpp"
 #include "DSP/Freq.hpp"
 #include "DSP/LUT1.hpp"
-
-#include "Bezier/Bezier.hpp"
 #include "Bezier/BezierValueCurve.hpp"
-#include "DSP/FFT.hpp"
 #include "Signal/Audio.hpp"
 
 
 namespace Grain {
 
-    Partials::Partials(int32_t resolution, Mode mode) noexcept : Object() {
-        m_mode = mode;
+    [[nodiscard]] float PartialsRange::t(int32_t index) const {
+        if (index < 0 || m_base_freq <= 0.0f || m_p_min < 0.0f || m_p_max <= 0.0f || m_p_max <= m_p_min) {
+            return -1.0f; // Invalid
+        }
+        const float bin_freq = m_base_freq * (index + 1);
+        const float bin_pitch = Audio::pitchFromFreq(bin_freq);
+        return (bin_pitch - m_p_min) / (m_p_max - m_p_min);
+    }
+
+
+    [[nodiscard]] float PartialsRange::f(int32_t index) const {
+        auto t = this->t(index);
+        return t < 0.0f ? 0.0f : DSP::hanningWindow(t);
+    }
+
+
+    Partials::Partials(int32_t resolution) noexcept : Object() {
         m_resolution = resolution;
-        m_primary = static_cast<float*>(std::malloc(memSize()));
-        m_secondary = _secondary();
+        m_ma = static_cast<float*>(std::malloc(memSize()));
+        m_ph = m_ma ? &m_ma[m_resolution] : nullptr;
         m_use_extern_mem = false;
         clear();
     }
 
 
-    Partials::Partials(int32_t resolution, float* mem, Mode mode) noexcept : Object() {
-        m_mode = mode;
+    Partials::Partials(int32_t resolution, float* mem) noexcept : Object() {
         m_resolution = resolution;
-        m_primary = mem;
-        m_secondary = _secondary();
+        m_ma = mem;
+        m_ph = m_ma ? &m_ma[m_resolution] : nullptr;
         m_use_extern_mem = true;
         clear();
     }
 
 
-    Partials::Partials(const Partials& other) noexcept : Object() {
-        m_mode = other.m_mode;
-        m_resolution = other.m_resolution;
-        m_primary = static_cast<float*>(std::malloc(memSize()));
-        m_secondary = _secondary();
-        if (m_primary) {
-            memcpy(m_primary, other.m_primary, memSize());
+    Partials::Partials(const Partials* other) noexcept : Object() {
+        if (other) {
+            m_resolution = other->resolution();
+            m_ma = static_cast<float*>(std::malloc(memSize()));
+            m_ph = m_ma ? &m_ma[m_resolution] : nullptr;
+            m_use_extern_mem = false;
+            m_dc = other->m_dc;
+            if (m_ma && other->m_ma) {
+                memcpy(m_ma, other->m_ma, memSize());
+            }
+            m_use_extern_mem = false;
         }
-        m_use_extern_mem = false;
     }
 
 
     Partials::~Partials() noexcept {
-        if (m_primary && !m_use_extern_mem) {
-            std::free(m_primary);
+        if (m_ma && !m_use_extern_mem) {
+            std::free(m_ma);
         }
     }
 
-
-    void Partials::updateCartesian() noexcept {
-        if (m_mode != Mode::Cartesian) {
-#if defined(__APPLE__) && defined(__MACH__)
-            m_primary[0] = m_primary[0] * cosf(m_secondary[0]); // DC -> realp[0]
-            m_secondary[0] = m_primary[m_resolution]; // Nyquist -> imagp[0]
-            for (int i = 1; i < m_resolution; ++i) {
-                float mag = m_primary[i];
-                float phase = m_secondary[i];
-                m_primary[i]   = mag * cosf(phase); // realp[i]
-                m_secondary[i] = mag * sinf(phase); // imagp[i]
-            }
-#else
-            for (int i = 0; i <= m_resolution; ++i) {
-                float mag = m_primary[i];
-                float phase = m_secondary[i];
-                m_primary[i] = mag * cosf(phase);
-                m_secondary[i] = mag * sinf(phase);
-            }
-#endif
-            m_mode = Mode::Cartesian;
-        }
-    }
-
-
-    void Partials::updatePolar() noexcept {
-        if (m_mode != Mode::Polar) {
-#if defined(__APPLE__) && defined(__MACH__)
-            // DC (bin 0)
-            float re0 = m_primary[0]; // realp[0]
-            m_primary[0] = sqrtf(re0 * re0); // DC magnitude, no phase
-            m_secondary[0] = 0.0f; // DC phase, allways 0
-            // Nyquist (bin N/2), stored in imagp[0]
-            float re_ny = m_secondary[0]; // Nyquist has no real part in vDSP
-            m_primary[m_resolution] = sqrtf(re_ny * re_ny); // Nyquist magnitude, no phase
-            m_secondary[m_resolution] = 0.0f;  //  Nyquist phase, allways 0
-            // bins 1..N/2-1
-            for (int i = 1; i < m_resolution; ++i) {
-                float re = m_primary[i]; // realp[i]
-                float im = m_secondary[i]; // imagp[i]
-                m_primary[i] = sqrtf(re * re + im * im); // magnitude
-                m_secondary[i] = atan2f(im, re); // phase
-            }
-#else
-            // FFTW: all bins explicit
-            for (int i = 0; i <= m_resolution; ++i) {
-                float re = m_primary[i];
-                float im = m_secondary[i];
-                m_primary[i]   = sqrtf(re*re + im*im);  // magnitude
-                m_secondary[i] = atan2f(im, re);        // phase
-            }
-#endif
-            m_mode = Mode::Polar;
-        }
-    }
-
-
-    void Partials::valueAndPhaseAtIndex(int32_t index, float& out_amplitude, float& out_phase) const noexcept {
-        if (isPartialIndex(index)) {
-            if (m_mode == Mode::Cartesian) {
-                float re = m_primary[index];
-                float im = m_secondary[index];
-                out_amplitude = sqrtf(re * re + im * im);
-                out_phase = atan2f(im, re);
-            }
-            else {
-                out_amplitude = m_primary[index];
-                out_phase = m_secondary[index];
-            }
-        }
-    }
-
-
-    float Partials::amplitudeAtIndex(int32_t index) const noexcept {
-        if (isPartialIndex(index)) {
-            if (m_mode == Mode::Cartesian) {
-                float re = m_primary[index];
-                float im = m_secondary[index];
-                return sqrtf(re * re + im * im);
-            }
-            else {
-                return m_primary[index];
-            }
+    float Partials::mag(int32_t bin_index) const noexcept {
+        if (isBin(bin_index)) {
+            return m_ma[bin_index];
         }
         return 0.0f;
     }
 
 
-    float Partials::amplitudeLerpAtIndex(float index) const noexcept {
-        if (index <= 0.0f) {
-            return amplitudeAtIndex(0);
+    float Partials::phase(int32_t bin_index) const noexcept {
+        if (isBin(bin_index)) {
+            return m_ph[bin_index];
+        }
+        return 0.0f;
+    }
+
+
+    float Partials::magInterpolated(float bin_index) const noexcept {
+        if (bin_index <= 0.0f) {
+            return mag(0);
         }
 
-        if (index >= static_cast<float>(m_resolution - 1)) {
-            return amplitudeAtIndex(m_resolution - 1);
+        if (bin_index >= static_cast<float>(m_resolution)) {
+            return mag(m_resolution);
         }
 
-        auto int_index = static_cast<int32_t>(index);
-        float f1 = index - static_cast<float>(int_index);
+        auto i0 = static_cast<int32_t>(bin_index);
+        auto i1 = i0 + 1;
+        float f1 = bin_index - static_cast<float>(i0);
         float f0 = 1.0f - f1;
 
-        return amplitudeAtIndex(int_index) * f0 + amplitudeAtIndex(int_index + 1) * f1;
+        return mag(i0) * f0 + mag(i1) * f1;
     }
 
 
-    float Partials::amplitudeAtT(float t) const noexcept {
-        return amplitudeLerpAtIndex(t * static_cast<float>(m_resolution - 1));
-    }
-
-
-    void Partials::scaleAmplitudeAtIndex(int32_t index, float scale) noexcept {
-        if (isPartialIndex(index)) {
-            updatePolar();
-            m_primary[index] *= scale;
-        }
-    }
-
-
-    float Partials::phaseAtIndex(int32_t index) const noexcept {
-        if (isPartialIndex(index)) {
-            if (m_mode == Mode::Cartesian) {
-                float re = m_primary[index];
-                float im = m_secondary[index];
-                return atan2f(im, re);
-            }
-            else {
-                return m_secondary[index];
-            }
-        }
-        return 0.0f;
+    float Partials::magLerp(float t) const noexcept {
+        return magInterpolated(t * static_cast<float>(m_resolution));
     }
 
 
     void Partials::clear() noexcept {
         if (hasData()) {
-            memset(m_primary, 0, memSize());
+            memset(m_ma, 0, memSize());
         }
     }
 
 
-    void Partials::clearAmplitudes() noexcept {
-        setAmplitudes(0);
-    }
-
-
-    void Partials::setAmplitudes(float value) noexcept {
-        if (hasData()) {
-            updatePolar();
-            for (int32_t i = 0; i < m_resolution; i++) {
-                m_primary[i] = value;
-            }
-        }
-    }
-
-
-    void Partials::clearPhases() noexcept {
-        setPhases(0);
-    }
-
-
-    void Partials::setPhases(float value) noexcept {
-        if (hasData()) {
-            updatePolar();
-            for (int32_t i = 0; i < m_resolution; i++) {
-                m_secondary[i] = value;
-            }
-        }
-    }
-
-
-    void Partials::sawtooth() noexcept {
-        if (hasData()) {
-            m_mode = Mode::Polar;
-            m_primary[0] = 0.0f;
-            m_secondary[0] = 0.0f;
-            for (int32_t i = 1; i < m_resolution; i++) {
-                m_primary[i] = 1.0f / i;
-                m_secondary[i] = 0.0f;
-            }
-        }
-    }
-
-
-    void Partials::square() noexcept {
-        if (hasData()) {
-            m_mode = Mode::Polar;
-            m_primary[0] = 1.0f;
-            m_secondary[0] = 0.0f;
-            for (int32_t i = 1; i < m_resolution; i++) {
-                m_primary[i] = i % 2 ? 1 / i : 0;
-                m_secondary[i] = 0.0f;
-            }
-        }
-    }
-
-
-    float Partials::maxAmplitude() const noexcept {
-        float max = 0;
-        if (m_mode == Mode::Polar) {
-            for (int32_t i = 0; i < m_resolution; i++) {
-                float a = m_primary[i];
-                if (a > max) {
-                    max = a;
-                }
-            }
-        }
-        else {
-            for (int32_t i = 0; i < m_resolution; i++) {
-                float a = amplitudeAtIndex(i);
-                if (a > max) {
-                    max = a;
-                }
+    float Partials::magMax() const noexcept {
+        float max = 0.0f;
+        for (int32_t i = 0; i < m_resolution; i++) {
+            if (m_ma[i] > max) {
+                max = m_ma[i];
             }
         }
         return max;
     }
 
 
-    void Partials::setPartialAtIndex(int32_t index, float amplitude, float phase) noexcept {
-        if (isPartialIndex(index)) {
-            setAmplitudeAtIndex(index, amplitude);
-            setPhaseAtIndex(index, phase);
+    void Partials::setMag(int32_t bin_index, float mag) noexcept {
+        if (isBin(bin_index)) {
+            m_ma[bin_index] = mag;
         }
     }
 
 
-    void Partials::setPartialsInRange(int32_t start_index, int32_t end_index, float amplitude, float phase) noexcept {
-        start_index = std::clamp(start_index, 0, m_resolution - 1);
-        end_index = std::clamp(end_index, start_index, m_resolution - 1);
-
-        for (int32_t i = start_index; i <= end_index; i++) {
-            setAmplitudeAtIndex(i, amplitude);
-            setPhaseAtIndex(i, phase);
+    void Partials::addMag(int32_t bin_index, float mag) noexcept {
+        if (isBin(bin_index)) {
+            m_ma[bin_index] += mag;
         }
     }
 
 
-    void Partials::setAllPartials(float amplitude, float phase) noexcept {
-        for (int32_t i = 0; i < m_resolution; i++) {
-            setAmplitudeAtIndex(i, amplitude);
-            setPhaseAtIndex(i, phase);
+    void Partials::scaleMag(int32_t bin_index, float mag) noexcept {
+        if (isBin(bin_index)) {
+            m_ma[bin_index] *= mag;
         }
     }
 
 
-    void Partials::setAmplitudeAtIndex(int32_t index, float value) noexcept {
-        if (isPartialIndex(index)) {
-            updatePolar();
-            m_primary[index] = value;
-        }
+    void Partials::setMagNyquist(float mag) noexcept {
+        m_ma[m_resolution - 1] = mag;
+        m_ph[m_resolution - 1] = 0.0f;
     }
 
 
-    void Partials::setAmplitudesInRange(int32_t start_index, int32_t end_index, float value) noexcept {
-        start_index = std::clamp(start_index, 0, m_resolution - 1);
-        end_index = std::clamp(end_index, start_index, m_resolution - 1);
-        updatePolar();
-        for (int32_t i = start_index; i <= end_index; i++) {
-            m_primary[i] = value;
+    void Partials::setPhase(int32_t bin_index, float phase) noexcept {
+        if (isBin(bin_index)) {
+            m_ph[bin_index] = phase;
         }
-    }
-
-
-    void Partials::setAllAmplitudes(float value) noexcept {
-        updatePolar();
-        for (int32_t i = 0; i < m_resolution; i++) {
-            m_primary[i] = value;
-        }
-    }
-
-
-    void Partials::setAllAmplitudes(const float* values) noexcept {
-        if (values) {
-            updatePolar();
-            for (int32_t i = 0; i < m_resolution; i++) {
-                m_primary[i] = values[i];
-            }
-        }
-    }
-
-
-    void Partials::addAmplitudeAtIndex(int32_t index, float value) noexcept {
-        /* TODO: !!!!
-        if (isPartial(index)) {
-            m_amplitude_data[index] = m_amplitude_data[index] + value;
-        }
-         */
-    }
-
-
-    void Partials::setPhaseAtIndex(int32_t index, float value) noexcept {
-        /* TODO: !!!!
-        if (isPartial(index)) {
-            m_phase_data[index] = Type::wrappedBipolarPI<float>(value);
-        }
-         */
-    }
-
-
-    void Partials::rotatePhaseAtIndex(int32_t index, float amount) noexcept {
-        /* TODO: !!!!
-        if (isPartial(index)) {
-            m_phase_data[index] = Type::wrappedBipolarPI<float>(m_phase_data[index] + amount);
-        }
-         */
-    }
-
-
-    void Partials::setPhasesInRange(int32_t start_index, int32_t end_index, float value) noexcept {
-        start_index = std::clamp(start_index, 0, m_resolution - 1);
-        end_index = std::clamp(end_index, start_index, m_resolution - 1);
-        value = Type::wrappedBipolarPI<float>(value);
-        /* TODO: !!!!
-        for (int32_t i = start_index; i <= end_index; i++) {
-            m_phase_data[i] = value;
-        }
-         */
-    }
-
-
-    void Partials::setAllPhases(float value) noexcept {
-        value = std::clamp(value, static_cast<float>(-std::numbers::pi), static_cast<float>(std::numbers::pi));
-        /* TODO: !!!!
-        for (int32_t i = 0; i < m_resolution ; i++) {
-            m_phase_data[i] = value;
-        }
-         */
     }
 
 
     bool Partials::set(const Partials* other) noexcept {
         if (other && other->m_resolution == m_resolution && hasData() && other->hasData()) {
-            memcpy(m_primary, other->m_primary, memSize());
-            m_mode = other->m_mode;
+            memcpy(m_ma, other->m_ma, memSize());
             return true;
         }
         else {
@@ -398,74 +172,82 @@ namespace Grain {
     }
 
 
-    bool Partials::multiply(const Partials* other) noexcept {
-        if (other &&
-            other->m_mode == Partials::Mode::Cartesian && m_mode == Partials::Mode::Cartesian &&
-            other->m_resolution == m_resolution &&
-            hasData() && other->hasData())
+    void Partials::setByFormantData(int32_t n, const float* formant_data, int32_t sample_rate) noexcept {
+        float f = static_cast<float>(m_resolution - 1) / (static_cast<float>(sample_rate) / 2.0f);
+        float base_freq = static_cast<float>(sample_rate) / static_cast<float>(m_resolution * 2);
+
+        clear();
+
+        for (int32_t i = 0; i < n; i++) {
+            float freq = formant_data[i * 3 + 0];
+            float db  = formant_data[i * 3 + 1];
+            float mag  = Audio::dbToLinear(db);
+            float bw_cent = formant_data[i * 3 + 2] * 4;
+
+            PartialsRange partials_range;
+            rangeAtFreq(base_freq, freq, bw_cent, partials_range);
+
+            if (partials_range.m_window_sum > 0.0001f) {
+                for (int32_t j = partials_range.m_min_bin_index; j <= partials_range.m_max_bin_index; j++) {
+                    addMag(j, mag * partials_range.f(j));
+                }
+            }
+        }
+    }
+
+
+    bool Partials::accumulateProduct(const Partials* a, const Partials* b) noexcept {
+        if (!a || !b) return false;
+        if (a->m_resolution != m_resolution || b->m_resolution != m_resolution) {
+            return false; // resolution mismatch
+        }
+
+        // Handle DC separately
         {
-            float* ar = m_primary;
-            float* ai = m_secondary;
-            float* br = other->m_primary;
-            float* bi = other->m_secondary;
-
-            for (int32_t i = 0; i < m_resolution; i++) {
-                float rr =  (ar[i] * br[i]) + (ai[i] * bi[i] * -1.0f);
-                float ri =  ar[i] * bi[i] + ai[i] * br[i];
-                ar[i] = rr;
-                ai[i] = ri;
-            }
-
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
-
-
-    bool Partials::add(const Partials* other) noexcept {
-        if (other &&
-            other->m_mode == Partials::Mode::Cartesian && m_mode == Partials::Mode::Cartesian &&
-            other->m_resolution == m_resolution &&
-            hasData() && other->hasData())
-        {
-            for (int i = 0; i < m_resolution; ++i) {
-                m_primary[i] += other->m_primary[i];
-                m_secondary[i] += other->m_secondary[i];
-            }
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
-
-
-    bool Partials::octaveUp() noexcept {
-        // TODO: Implement!
-        /*
-        for (int32_t i = m_resolution - 1; i > 1; i--) {
-            if (!(i % 2)) {
-                int32_t j = i / 2;
-                m_amplitude_data[i] = m_amplitude_data[j];
-                m_phase_data[i] = m_phase_data[j];
-            }
-            else {
-                m_amplitude_data[i] = 0;
-                m_phase_data[i] = 0;
-            }
+            // Convert polar to complex
+            float ar = a->m_dc; // if m_dc is magnitude of bin0 (phase = 0)
+            float br = b->m_dc;
+            // DC is real-only, so product is just multiply
+            m_dc += ar * br;
         }
 
-        m_amplitude_data[1] = 0;
-        m_phase_data[1] = 0;
-        */
-        return false;
+        // Accumulate over bins
+        for (int i = 0; i < m_resolution; ++i) {
+            // Convert polar -> cartesian
+            float ma = a->m_ma[i];
+            float ph_a = a->m_ph[i];
+            float ar = ma * std::cos(ph_a);
+            float ai = ma * std::sin(ph_a);
+
+            float mb = b->m_ma[i];
+            float ph_b = b->m_ph[i];
+            float br = mb * std::cos(ph_b);
+            float bi = mb * std::sin(ph_b);
+
+            // Complex multiply
+            float pr = ar * br - ai * bi;
+            float pi = ar * bi + ai * br;
+
+            // Existing accumulator value in cartesian
+            float mc = m_ma[i];
+            float ph_c = m_ph[i];
+            float cr = mc * std::cos(ph_c);
+            float ci = mc * std::sin(ph_c);
+
+            // Accumulate
+            cr += pr;
+            ci += pi;
+
+            // Back to polar
+            m_ma[i] = std::sqrt(cr * cr + ci * ci);
+            m_ph[i] = std::atan2(ci, cr);
+        }
+        return true;
     }
 
 
     bool Partials::interpolate(int32_t first_index, int32_t last_index, int16_t mode) noexcept {
-        /* TODO: !!!!
+        /* TODO: !!!! Implement!
         if (first_index < 0 || first_index > m_resolution || last_index < 0 || last_index > m_resolution) {
             return false;
         }
@@ -484,20 +266,6 @@ namespace Grain {
         }
         */
         return true;
-    }
-
-
-    void Partials::normalizeAmplitude() noexcept {
-        float max = maxAmplitude();
-        /* TODO: !!!!
-        if (max > std::numeric_limits<float>::min()) {
-            float f = 1.0f / max;
-
-            for (int32_t i = 0; i < m_resolution; i++) {
-                m_amplitude_data[i] *= f;
-            }
-        }
-         */
     }
 
 
@@ -527,14 +295,13 @@ namespace Grain {
         lut.setEaseValuesInRange(Math::EaseMode::OutQuint, t_left, t_center, 0.0f, 1.0f);
         lut.setEaseValuesInRange(Math::EaseMode::InQuint, t_center, t_right, 1.0f, 0.0f);
 
-        setAmplitudeAtIndex(0, 0);
+        setMag(0, 0);
 
         for (int32_t i = 1; i < m_resolution; i++) {
             double freq = root_freq * i;
             double pos = Freq::freqToPos(freq, root_freq, high_freq, 0, 1);
             float value = lut.lookup(static_cast<float>(pos));
-
-            setAmplitudeAtIndex(i, Audio::amplitudeFromLevel(value * amount));
+            setMag(i, value * amount);
         }
     }
 
@@ -542,28 +309,30 @@ namespace Grain {
     void Partials::setByBezierValueCurve(
             BezierValueCurve* bezier_value_curve,
             int32_t sample_rate,
-            float amount,
-            float shift
+            float lo_hz,
+            float hi_hz,
+            float shift_hz
     ) noexcept
     {
         if (bezier_value_curve) {
-            float root_freq = static_cast<float>(sample_rate) / static_cast<float>(m_resolution) / 2;
-            float high_freq = root_freq * static_cast<float>(m_resolution - 1);
+            float lo_pitch = Audio::pitchFromFreq(lo_hz);
+            float hi_pitch = Audio::pitchFromFreq(hi_hz);
+            std::cout << "lo_hz: " << lo_hz << ", hi_hz: " << hi_hz;
+            std::cout << ", lo_pitch: " << lo_pitch;
+            std::cout << ", hi_pitch: " << hi_pitch << std::endl;
 
-            setAmplitudeAtIndex(0, 0.0f);
+            for (int32_t bin_index = 0; bin_index < m_resolution; bin_index++) {
+                auto bin_hz =
+                        static_cast<float>(bin_index + 1) /
+                        static_cast<float>(m_resolution) *
+                        static_cast<float>(sample_rate) * 0.5f;
+                auto bin_pitch = Audio::pitchFromFreq(bin_hz);
+                auto t = Math::remapf(lo_pitch, hi_pitch, 0.0f, 1.0f, bin_pitch);
 
-            for (int32_t i = 1; i < m_resolution; i++) {
-                float freq = root_freq * i;
-                freq = Audio::freqFromPitch(Audio::pitchFromFreq(static_cast<float>(freq)) + shift);
-                float pos = static_cast<float>(Freq::freqToPos(freq, root_freq, high_freq, 0, 1));
-                float value = bezier_value_curve->lookup(pos, 1024);
-                setAmplitudeAtIndex(i, Audio::amplitudeFromLevel(value * amount));
-                std::cout << i << ": " << Audio::amplitudeFromLevel(value * amount) << std::endl;
-            }
 
-            std::cout << "Partial: " << this << std::endl;
-            for (int32_t i = 0; i < m_resolution; i++) {
-                std::cout << i << " ... " << m_primary[i] << " / " << m_secondary[i] << std::endl;
+                t = Math::remapf(lo_hz, hi_hz, 0.0f, 1.0f, bin_hz);
+                float value = bezier_value_curve->lookup(t, 2048);
+                setMag(bin_index, value);
             }
         }
     }
@@ -571,6 +340,64 @@ namespace Grain {
 
     void Partials::setByEQ21(const EQ21& eq) noexcept {
         // TODO: Implement
+    }
+
+
+    Partials* Partials::doubleResolution() noexcept {
+        // TODO: !!!! Check!
+        auto expanded = new (std::nothrow) Partials(m_resolution * 2);
+        if (!expanded) {
+            return nullptr;
+        }
+
+        expanded->setDC(m_dc);
+        auto o = expanded->mutMagPtr();
+
+        int32_t last_bin_index = expanded->resolution();
+        for (int32_t bin_index = 1; bin_index <= last_bin_index; bin_index++) {
+            auto t = Math::remapf(static_cast<float>(bin_index), static_cast<float>(last_bin_index), 0.0f, 1.0f, static_cast<float>(bin_index));
+            o[bin_index] = magLerp(t);
+        }
+
+        return expanded;
+    }
+
+
+    void Partials::rangeAtFreq(
+            float base_freq, float freq, float cent_range,
+            PartialsRange& out_range
+    ) const noexcept
+    {
+        out_range.clear();
+        out_range.m_base_freq = base_freq;
+
+        float semitone_range = cent_range / 100.0f;
+        float pitch = Audio::pitchFromFreq(freq);
+        float p_min = pitch - semitone_range;
+        float p_max = pitch + semitone_range;
+        out_range.m_p_min = p_min;
+        out_range.m_p_max = p_max;
+
+        for (int32_t bin_index = 0; bin_index < m_resolution; bin_index++) {
+            float bin_freq = base_freq * (bin_index + 1);
+            float bin_pitch = Audio::pitchFromFreq(bin_freq);
+
+            if (bin_pitch >= p_min && bin_pitch <= p_max) {
+                auto t = (bin_pitch - p_min) / (p_max - p_min);
+
+                if (out_range.m_min_bin_index < 0) {
+                    out_range.m_min_bin_index = bin_index;
+                    out_range.m_min_t = t;
+                }
+                out_range.m_max_bin_index = bin_index;
+                out_range.m_max_t = t;
+                out_range.count_++;
+                out_range.m_window_sum += DSP::hanningWindow(t);
+            }
+            else if (bin_pitch > p_max) {
+                return;
+            }
+        }
     }
 
 

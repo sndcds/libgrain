@@ -27,7 +27,7 @@ namespace Grain {
 
 
     void CairoContext::_cairoInit() noexcept {
-        m_magic = Type::fourcc('c', 'a', 'i', 'r');
+        magic_ = Type::fourcc('c', 'a', 'i', 'r');
     }
 
 
@@ -49,7 +49,7 @@ namespace Grain {
                 m_fill_color.m_data[0],
                 m_fill_color.m_data[1],
                 m_fill_color.m_data[2],
-                m_fill_color.m_alpha);
+                m_fill_color.alpha_);
     }
 
 
@@ -59,7 +59,7 @@ namespace Grain {
                 m_stroke_color.m_data[0],
                 m_stroke_color.m_data[1],
                 m_stroke_color.m_data[2],
-                m_stroke_color.m_alpha);
+                m_stroke_color.alpha_);
     }
 
 
@@ -142,7 +142,7 @@ namespace Grain {
 
 
     void CairoContext::setAlpha(float alpha) noexcept {
-        m_alpha = alpha;
+        alpha_ = alpha;
     }
 
 
@@ -329,8 +329,8 @@ namespace Grain {
 
     void CairoContext::lineTo(double x, double y) noexcept {
         cairo_line_to(m_cairo_cr, x, y);
-        m_last_pos.m_x = x;
-        m_last_pos.m_y = y;
+        m_last_pos.x_ = x;
+        m_last_pos.y_ = y;
     }
 
 
@@ -341,31 +341,31 @@ namespace Grain {
         else {
             cairo_line_to(m_cairo_cr, x, y);
         }
-        m_last_pos.m_x = x;
-        m_last_pos.m_y = y;
+        m_last_pos.x_ = x;
+        m_last_pos.y_ = y;
     }
 
 
     void CairoContext::curveTo(double c1x, double c1y, double c2x, double c2y, double x, double y) noexcept {
         cairo_curve_to(m_cairo_cr, c1x, c1y, c2x, c2y, x, y);
-        m_last_pos.m_x = x;
-        m_last_pos.m_y = y;
+        m_last_pos.x_ = x;
+        m_last_pos.y_ = y;
     }
 
     void CairoContext::curveTo(const Vec2d& control1, const Vec2d& control2, const Vec2d& point) noexcept {
-        cairo_curve_to(m_cairo_cr, control1.m_x, control1.m_y, control2.m_x, control2.m_y, point.m_x, point.m_y);
+        cairo_curve_to(m_cairo_cr, control1.x_, control1.y_, control2.x_, control2.y_, point.x_, point.y_);
         m_last_pos = point;
     }
 
     void CairoContext::curveTo(double cx, double cy, double x, double y) noexcept {
-        double c1x = m_last_pos.m_x + 2.0 / 3.0 * (cx - m_last_pos.m_x);
+        double c1x = m_last_pos.x_ + 2.0 / 3.0 * (cx - m_last_pos.x_);
         double c2x = x + 2.0 / 3.0 * (cx - x);
-        double c1y = m_last_pos.m_y + 2.0 / 3.0 * (cy - m_last_pos.m_y);
+        double c1y = m_last_pos.y_ + 2.0 / 3.0 * (cy - m_last_pos.y_);
         double c2y = y + 2.0 / 3.0 * (cy - y);
 
         cairo_curve_to(m_cairo_cr, c1x, c1y, c2x, c2y, x, y);
-        m_last_pos.m_x = x;
-        m_last_pos.m_y = y;
+        m_last_pos.x_ = x;
+        m_last_pos.y_ = y;
     }
 
 
@@ -410,21 +410,21 @@ namespace Grain {
 
     void CairoContext::addEllipsePath(const Rectd& rect) noexcept {
         // Approximate ellipse with cairo_scale + circle
-        double cx = rect.m_x + rect.m_width / 2.0;
-        double cy = rect.m_y + rect.m_height / 2.0;
-        double rx = rect.m_width / 2.0;
-        double ry = rect.m_height / 2.0;
+        double cx = rect.x_ + rect.width_ / 2.0;
+        double cy = rect.y_ + rect.height_ / 2.0;
+        double rx = rect.width_ / 2.0;
+        double ry = rect.height_ / 2.0;
 
         cairo_save(m_cairo_cr);
         cairo_translate(m_cairo_cr, cx, cy);
         cairo_scale(m_cairo_cr, rx, ry);
-        cairo_arc(m_cairo_cr, 0.0, 0.0, 1.0, 0.0, 2.0 * M_PI);
+        cairo_arc(m_cairo_cr, 0.0, 0.0, 1.0, 0.0, 2.0 * std::numbers::pi);
         cairo_restore(m_cairo_cr);
     }
 
 
     void CairoContext::addCirclePath(double x, double y, double radius) noexcept {
-        cairo_arc(m_cairo_cr, x, y, radius, 0.0, 2.0 * M_PI);
+        cairo_arc(m_cairo_cr, x, y, radius, 0.0, 2.0 * std::numbers::pi);
     }
 
 
@@ -437,15 +437,15 @@ namespace Grain {
     {
         if (span_degrees <= 0.0) return;
 
-        double angle = angle_degrees * M_PI / 180.0;
-        double span  = span_degrees * M_PI / 180.0;
+        double angle = angle_degrees * std::numbers::pi / 180.0;
+        double span  = span_degrees * std::numbers::pi / 180.0;
         double endAngle = angle + span;
 
         // Outer arc (counter-clockwise by default)
-        cairo_arc(m_cairo_cr, center.m_x, center.m_y, outer_radius, angle, endAngle);
+        cairo_arc(m_cairo_cr, center.x_, center.y_, outer_radius, angle, endAngle);
 
         // Inner arc in reverse (clockwise)
-        cairo_arc_negative(m_cairo_cr, center.m_x, center.m_y, inner_radius, endAngle, angle);
+        cairo_arc_negative(m_cairo_cr, center.x_, center.y_, inner_radius, endAngle, angle);
 
         // Close the path to make a proper ring
         cairo_close_path(m_cairo_cr);
@@ -474,7 +474,7 @@ namespace Grain {
         cairo_save(m_cairo_cr);
         cairo_translate(m_cairo_cr, x, y);
         cairo_scale(m_cairo_cr, rh, rv);
-        cairo_arc(m_cairo_cr, 0.0, 0.0, 1.0, 0.0, 2.0 * M_PI);
+        cairo_arc(m_cairo_cr, 0.0, 0.0, 1.0, 0.0, 2.0 * std::numbers::pi);
         cairo_restore(m_cairo_cr);
         cairo_fill(m_cairo_cr);
     }
@@ -522,8 +522,8 @@ namespace Grain {
 
         // Create a Cairo linear gradient pattern
         cairo_pattern_t* pattern = cairo_pattern_create_linear(
-                start_pos.m_x, start_pos.m_y,
-                end_pos.m_x, end_pos.m_y
+                start_pos.x_, start_pos.y_,
+                end_pos.x_, end_pos.y_
         );
 
         // Add gradient stops
@@ -575,8 +575,8 @@ namespace Grain {
         // Create a Cairo radial gradient pattern
         // Inner circle radius = 0 (like CGContext), outer circle radius = radius
         cairo_pattern_t* pattern = cairo_pattern_create_radial(
-                center.m_x, center.m_y, 0.0,  // inner circle
-                center.m_x, center.m_y, radius // outer circle
+                center.x_, center.y_, 0.0,  // inner circle
+                center.x_, center.y_, radius // outer circle
         );
 
         // Add gradient stops
@@ -656,7 +656,7 @@ namespace Grain {
 
 
     void CairoContext::rotate(double angle_degrees) noexcept {
-        double angle_radians = angle_degrees * M_PI / 180.0;
+        double angle_radians = angle_degrees * std::numbers::pi / 180.0;
         cairo_rotate(m_cairo_cr, angle_radians);
     }
 

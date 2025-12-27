@@ -190,7 +190,7 @@ namespace Grain {
         int32_t m_signal_bytes_per_frame = 0;
         int32_t m_signal_bits_per_channel = 0;
 
-        bool m_scan_done = false;
+        bool scan_done_ = false;
         ErrorCode m_scan_err_code = ErrorCode::None;
         DataType m_write_data_type = DataType::Int16;
 

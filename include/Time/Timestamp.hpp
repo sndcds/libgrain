@@ -206,6 +206,13 @@ namespace Grain {
         timestamp_t m_value;
     };
 
+    using Clock = std::chrono::steady_clock;
+    using TimePoint = Clock::time_point;
+    using Duration = std::chrono::duration<double>;
+
+    inline TimePoint now() {
+        return Clock::now();
+    }
 
 } // End of namespace Grain
 

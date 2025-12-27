@@ -26,20 +26,20 @@ namespace Grain {
         friend class SplitView;
 
     protected:
-        int32_t m_size = 40;
-        int32_t m_min = 40;
-        int32_t m_max = 10000;
-        View* m_view = nullptr;
-        double m_real_pos = 0;
-        double m_real_size = 0;
+        int32_t size_ = 40;
+        int32_t min_ = 40;
+        int32_t max_ = 10000;
+        View* view_ = nullptr;
+        double real_pos_ = 0.0;
+        double real_size_ = 0.0;
 
     public:
-        int32_t size() const noexcept { return m_size; }
-        double realSize() const noexcept { return m_real_size; }
-        void limitSize() noexcept { if (m_size < m_min) m_size = m_min; else if (m_size > m_max) m_size = m_max; }
-        void setSize(double size) noexcept { m_size = size < m_min ? m_min : (size > m_max ? m_max : size); }
-        bool canShrink() noexcept { return m_min < m_size; }
-        bool canGrow() noexcept { return m_max > m_size; }
+        int32_t size() const noexcept { return size_; }
+        double realSize() const noexcept { return real_size_; }
+        void limitSize() noexcept { if (size_ < min_) size_ = min_; else if (size_ > max_) size_ = max_; }
+        void setSize(double size) noexcept { size_ = size < min_ ? min_ : (size > max_ ? max_ : size); }
+        bool canShrink() noexcept { return min_ < size_; }
+        bool canGrow() noexcept { return max_ > size_; }
     };
 
 
@@ -71,10 +71,10 @@ namespace Grain {
         bool m_must_init = true;
 
     public:
-        SplitView(const Rectd& rect, int32_t tag = 0) noexcept;
-        ~SplitView() noexcept;
+        explicit SplitView(const Rectd& rect, int32_t tag = 0) noexcept;
+        virtual ~SplitView() noexcept;
 
-        const char* className() const noexcept override { return "SplitView"; }
+        [[nodiscard]] const char* className() const noexcept override { return "SplitView"; }
 
         static SplitView* add(View* view, int32_t tag = 0) { return add(view, Rectd(), tag); }
         static SplitView* add(View* view, const Rectd& rect, int32_t tag = 0);
@@ -96,8 +96,8 @@ namespace Grain {
         [[nodiscard]] SplitViewItem* itemByView(Component* component) noexcept;
         [[nodiscard]] int32_t viewCount() const noexcept { return m_view_count; }
         [[nodiscard]] bool isViewIndex(int32_t index) const noexcept { return index >= 0 && index < viewCount(); }
-        [[nodiscard]] bool isVertical() const noexcept { return m_vertical; }
-        [[nodiscard]] bool isHorizontal() const noexcept { return !m_vertical; }
+        [[nodiscard]] bool isVertical() const noexcept override { return m_vertical; }
+        [[nodiscard]] bool isHorizontal() const noexcept override { return !m_vertical; }
         [[nodiscard]] View* viewAtIndex(int32_t index) const noexcept;
         [[nodiscard]] Rectd getViewRect(int32_t index) const noexcept;
         [[nodiscard]] int32_t dividerSize() const noexcept { return m_divider_size; }

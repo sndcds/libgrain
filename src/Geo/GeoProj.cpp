@@ -55,19 +55,19 @@ namespace Grain {
             return m_transform_action(pos, out_pos); // Call specific method, TODO: Handle inverse!
         }
         else {
-            if (m_must_update) {
+            if (must_update_) {
                 _update();
             }
 
-            PJ_COORD in_coord = proj_coord(pos.m_x, pos.m_y, 0, 0);
+            PJ_COORD in_coord = proj_coord(pos.x_, pos.y_, 0, 0);
             PJ_COORD out_coord = proj_trans((PJ*)m_proj, pj_direction, in_coord);
 
             if (proj_errno((PJ*)m_proj)) {
                 return false;
             }
 
-            out_pos.m_x = out_coord.xy.x;
-            out_pos.m_y = out_coord.xy.y;
+            out_pos.x_ = out_coord.xy.x;
+            out_pos.y_ = out_coord.xy.y;
 
             return true;
         }
@@ -76,8 +76,8 @@ namespace Grain {
 
     bool GeoProj::transform(const RangeRectd& range_rect, RangeRectd& out_range_rect, Direction direction) noexcept {
 
-        Vec2d v1(range_rect.m_min_x, range_rect.m_min_y);
-        Vec2d v2(range_rect.m_max_x, range_rect.m_max_y);
+        Vec2d v1(range_rect.min_x_, range_rect.min_y_);
+        Vec2d v2(range_rect.max_x_, range_rect.max_y_);
 
         if (!transform(v1, direction)) {
             return false;
@@ -87,10 +87,10 @@ namespace Grain {
             return false;
         }
 
-        out_range_rect.m_min_x = v1.m_x;
-        out_range_rect.m_min_y = v1.m_y;
-        out_range_rect.m_max_x = v2.m_x;
-        out_range_rect.m_max_y = v2.m_y;
+        out_range_rect.min_x_ = v1.x_;
+        out_range_rect.min_y_ = v1.y_;
+        out_range_rect.max_x_ = v2.x_;
+        out_range_rect.max_y_ = v2.y_;
 
         return true;
     }
@@ -98,8 +98,8 @@ namespace Grain {
 
     bool GeoProj::transform(RangeRectd& range_rect, Direction direction) noexcept {
 
-        Vec2d v1(range_rect.m_min_x, range_rect.m_min_y);
-        Vec2d v2(range_rect.m_max_x, range_rect.m_max_y);
+        Vec2d v1(range_rect.min_x_, range_rect.min_y_);
+        Vec2d v2(range_rect.max_x_, range_rect.max_y_);
 
         if (!transform(v1, direction)) {
             return false;
@@ -109,18 +109,18 @@ namespace Grain {
             return false;
         }
 
-        range_rect.m_min_x = v1.m_x;
-        range_rect.m_min_y = v1.m_y;
-        range_rect.m_max_x = v2.m_x;
-        range_rect.m_max_y = v2.m_y;
+        range_rect.min_x_ = v1.x_;
+        range_rect.min_y_ = v1.y_;
+        range_rect.max_x_ = v2.x_;
+        range_rect.max_y_ = v2.y_;
 
         return true;
     }
 
 
     bool GeoProj::transform(const RangeRectFix& range_rect, RangeRectFix& out_range_rect, Direction direction) noexcept {
-        Vec2d v1(range_rect.m_min_x.asDouble(), range_rect.m_min_y.asDouble());
-        Vec2d v2(range_rect.m_max_x.asDouble(), range_rect.m_max_y.asDouble());
+        Vec2d v1(range_rect.min_x_.asDouble(), range_rect.min_y_.asDouble());
+        Vec2d v2(range_rect.max_x_.asDouble(), range_rect.max_y_.asDouble());
 
         if (!transform(v1, direction)) {
             return false;
@@ -130,18 +130,18 @@ namespace Grain {
             return false;
         }
 
-        out_range_rect.m_min_x = v1.m_x;
-        out_range_rect.m_min_y = v1.m_y;
-        out_range_rect.m_max_x = v2.m_x;
-        out_range_rect.m_max_y = v2.m_y;
+        out_range_rect.min_x_ = v1.x_;
+        out_range_rect.min_y_ = v1.y_;
+        out_range_rect.max_x_ = v2.x_;
+        out_range_rect.max_y_ = v2.y_;
 
         return true;
     }
 
 
     bool GeoProj::transform(RangeRectFix& range_rect, Direction direction) noexcept {
-        Vec2d v1(range_rect.m_min_x.asDouble(), range_rect.m_min_y.asDouble());
-        Vec2d v2(range_rect.m_max_x.asDouble(), range_rect.m_max_y.asDouble());
+        Vec2d v1(range_rect.min_x_.asDouble(), range_rect.min_y_.asDouble());
+        Vec2d v2(range_rect.max_x_.asDouble(), range_rect.max_y_.asDouble());
 
         if (!transform(v1, direction)) {
             return false;
@@ -151,20 +151,20 @@ namespace Grain {
             return false;
         }
 
-        range_rect.m_min_x = v1.m_x;
-        range_rect.m_min_y = v1.m_y;
-        range_rect.m_max_x = v2.m_x;
-        range_rect.m_max_y = v2.m_y;
+        range_rect.min_x_ = v1.x_;
+        range_rect.min_y_ = v1.y_;
+        range_rect.max_x_ = v2.x_;
+        range_rect.max_y_ = v2.y_;
 
         return true;
     }
 
 
     bool GeoProj::transform(Quadrilateral& quadrilateral, Direction direction) noexcept {
-        if (!transform(quadrilateral.m_points[0], direction)) { return false; }
-        if (!transform(quadrilateral.m_points[1], direction)) { return false; }
-        if (!transform(quadrilateral.m_points[2], direction)) { return false; }
-        if (!transform(quadrilateral.m_points[3], direction)) { return false; }
+        if (!transform(quadrilateral.points_[0], direction)) { return false; }
+        if (!transform(quadrilateral.points_[1], direction)) { return false; }
+        if (!transform(quadrilateral.points_[2], direction)) { return false; }
+        if (!transform(quadrilateral.points_[3], direction)) { return false; }
 
         return true;
     }
@@ -229,8 +229,8 @@ namespace Grain {
      *  This function performs a forward projection from latitude/longitude (in degrees)
      *  to Web Mercator meters using the spherical Mercator approximation.
      *
-     *  @param pos       Input position in degrees: pos.m_x = latitude, pos.m_y = longitude.
-     *  @param out_pos   Output projected position in meters: out_pos.m_x = X, out_pos.m_y = Y.
+     *  @param pos       Input position in degrees: pos.x_ = latitude, pos.y_ = longitude.
+     *  @param out_pos   Output projected position in meters: out_pos.x_ = X, out_pos.y_ = Y.
      *  @return          Always returns true (for consistency or future error checking).
      *
      *  @note This projection assumes a spherical Earth using the constant Geo::kEarthRadius_m.
@@ -238,10 +238,10 @@ namespace Grain {
      *        slightly less accurate than an ellipsoidal model like WGS84.
      */
     bool GeoProj::earthProject4326To3857(const Vec2d& pos, Vec2d& out_pos) noexcept {
-        double lat_rad = pos.m_x * std::numbers::pi / 180;
-        double lon_rad = pos.m_y * std::numbers::pi / 180;
-        out_pos.m_x = Geo::kEarthRadius_m * lon_rad;
-        out_pos.m_y = Geo::kEarthRadius_m * log(tan(std::numbers::pi / 4 + lat_rad / 2));
+        double lat_rad = pos.x_ * std::numbers::pi / 180;
+        double lon_rad = pos.y_ * std::numbers::pi / 180;
+        out_pos.x_ = Geo::kEarthRadius_m * lon_rad;
+        out_pos.y_ = Geo::kEarthRadius_m * log(tan(std::numbers::pi / 4 + lat_rad / 2));
         return true;
     }
 
@@ -252,8 +252,8 @@ namespace Grain {
      *  This function performs an inverse projection from Web Mercator X/Y (in meters)
      *  back to latitude/longitude (in degrees).
      *
-     *  @param pos       Input Web Mercator position in meters: pos.m_x = X, pos.m_y = Y.
-     *  @param out_pos   Output geographic position in degrees: out_pos.m_x = latitude, out_pos.m_y = longitude.
+     *  @param pos       Input Web Mercator position in meters: pos.x_ = X, pos.y_ = Y.
+     *  @param out_pos   Output geographic position in degrees: out_pos.x_ = latitude, out_pos.y_ = longitude.
      *  @return          Always returns true (for consistency or future error checking).
      *
      *  @note Assumes the same spherical Earth model used in the forward projection.
@@ -261,11 +261,11 @@ namespace Grain {
      *        slightly less accurate than an ellipsoidal model like WGS84.
      */
     bool GeoProj::earthProject3857To4326(const Vec2d& pos, Vec2d& out_pos) noexcept {
-        double lon = (pos.m_x / Geo::kEarthRadius_m) * (180 / std::numbers::pi);
-        double temp = exp(-pos.m_y / Geo::kEarthRadius_m);
+        double lon = (pos.x_ / Geo::kEarthRadius_m) * (180 / std::numbers::pi);
+        double temp = exp(-pos.y_ / Geo::kEarthRadius_m);
         double lat = (std::numbers::pi / 2 - 2 * std::atan(temp)) * (180 / std::numbers::pi);
-        out_pos.m_x = lat;
-        out_pos.m_y = lon;
+        out_pos.x_ = lat;
+        out_pos.y_ = lon;
         return true;
     }
 
@@ -275,7 +275,7 @@ namespace Grain {
         auto result = ErrorCode::None;
 
         try {
-            if (m_must_update) {
+            if (must_update_) {
 
                 if (!m_proj_context) {
                     m_proj_context = proj_context_create();
@@ -306,7 +306,7 @@ namespace Grain {
                     m_ignore = true;
                 }
 
-                m_must_update = false;
+                must_update_ = false;
             }
         }
         catch (ErrorCode err) {

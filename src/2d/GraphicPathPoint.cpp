@@ -14,150 +14,120 @@
 namespace Grain {
 
 
-    GraphicPathPoint::GraphicPathPoint(double x, double y) noexcept {
+GraphicPathPoint::GraphicPathPoint(double x, double y) noexcept {
+    anchor_.x_ = left_.x_ = right_.x_ = x;
+    anchor_.y_ = left_.y_ = right_.y_ = y;
+}
 
-        m_anchor.m_x = m_left.m_x = m_right.m_x = x;
-        m_anchor.m_y = m_left.m_y = m_right.m_y = y;
+
+/**
+ *  @brief Move constructor.
+ */
+GraphicPathPoint::GraphicPathPoint(GraphicPathPoint&& point) noexcept
+        : anchor_(std::move(point.anchor_)),
+          left_(std::move(point.left_)),
+          right_(std::move(point.right_)),
+          left_flag_(point.left_flag_),
+          right_flag_(point.right_flag_),
+          bezier_segment_length_(point.bezier_segment_length_) {
+}
+
+
+GraphicPathPoint::GraphicPathPoint(double x, double y, double lx, double ly, double rx, double ry) noexcept {
+    anchor_.set(x, y);
+    left_.set(lx, ly);
+    right_.set(rx, ry);
+    left_flag_ = anchor_.distance(left_) > std::numeric_limits<float>::min();
+    right_flag_ = anchor_.distance(right_) > std::numeric_limits<float>::min();
+}
+
+
+GraphicPathPoint::GraphicPathPoint(double x, double y, bool left_flag, double lx, double ly, bool right_flag, double rx, double ry) noexcept {
+    anchor_.set(x, y);
+    left_.set(lx, ly);
+    right_.set(rx, ry);
+    left_flag_ = left_flag;
+    right_flag_ = right_flag;
+}
+
+
+GraphicPathPoint::GraphicPathPoint(const Vec2d& anchor, bool left_flag, const Vec2d& left, bool right_flag, const Vec2d& right) noexcept
+        : anchor_(anchor),
+          left_(left),
+          right_(right),
+          left_flag_(left_flag),
+          right_flag_(right_flag),
+          bezier_segment_length_(0.0) {
+}
+
+
+/**
+ *  @brief Copy assignment operator.
+ */
+GraphicPathPoint& GraphicPathPoint::operator = (const GraphicPathPoint& point) noexcept {
+    if (this != &point) {
+        // Copy data from 'other' to 'this'
+        anchor_ = point.anchor_;
+        left_ = point.left_;
+        right_ = point.right_;
+        left_flag_ = point.left_flag_;
+        right_flag_ = point.right_flag_;
+        bezier_segment_length_ = point.bezier_segment_length_;
     }
 
+    return *this;
+}
 
-    /**
-     *  @brief Copy constructor.
-     */
-    GraphicPathPoint::GraphicPathPoint(const GraphicPathPoint& point) noexcept
-            : m_anchor(point.m_anchor),
-              m_left(point.m_left),
-              m_right(point.m_right),
-              m_left_flag(point.m_left_flag),
-              m_right_flag(point.m_right_flag),
-              m_bezier_segment_length(point.m_bezier_segment_length) {
+
+/**
+ *  @brief Move assignment operator.
+ */
+GraphicPathPoint& GraphicPathPoint::operator = (GraphicPathPoint&& point) noexcept {
+    if (this != &point) {
+        // Move data from 'other' to 'this'
+        anchor_ = std::move(point.anchor_);
+        left_ = std::move(point.left_);
+        right_ = std::move(point.right_);
+        left_flag_ = point.left_flag_;
+        right_flag_ = point.right_flag_;
+        bezier_segment_length_ = point.bezier_segment_length_;
     }
 
+    return *this;
+}
 
-    /**
-     *  @brief Move constructor.
-     */
-    GraphicPathPoint::GraphicPathPoint(GraphicPathPoint&& point) noexcept
-            : m_anchor(std::move(point.m_anchor)),
-              m_left(std::move(point.m_left)),
-              m_right(std::move(point.m_right)),
-              m_left_flag(point.m_left_flag),
-              m_right_flag(point.m_right_flag),
-              m_bezier_segment_length(point.m_bezier_segment_length) {
+
+void GraphicPathPoint::translate(const Vec2d& t) noexcept {
+    anchor_.translate(t);
+    left_.translate(t);
+    right_.translate(t);
+}
+
+
+void GraphicPathPoint::translate(double tx, double ty) noexcept {
+    anchor_.translate(tx, ty);
+    left_.translate(tx, ty);
+    right_.translate(tx, ty);
+}
+
+
+void GraphicPathPoint::rotate(double angle) noexcept {
+    left_.rotate(anchor_, angle);
+    right_.rotate(anchor_, angle);
+}
+
+
+void GraphicPathPoint::projectToQuadrilateral(const Quadrilateral& quadrilateral, const Mat3d* matrix) noexcept {
+    if (matrix) {
+        matrix->transformVec2(anchor_);
+        matrix->transformVec2(left_);
+        matrix->transformVec2(right_);
     }
 
-
-    GraphicPathPoint::GraphicPathPoint(double x, double y, double lx, double ly, double rx, double ry) noexcept {
-
-        m_anchor.set(x, y);
-        m_left.set(lx, ly);
-        m_right.set(rx, ry);
-
-        m_left_flag = m_anchor.distance(m_left) > std::numeric_limits<float>::min();
-        m_right_flag = m_anchor.distance(m_right) > std::numeric_limits<float>::min();
-    }
+    quadrilateral.project(anchor_);
+    quadrilateral.project(left_);
+    quadrilateral.project(right_);
+}
 
 
-    GraphicPathPoint::GraphicPathPoint(double x, double y, bool left_flag, double lx, double ly, bool right_flag, double rx, double ry) noexcept {
-
-        m_anchor.set(x, y);
-        m_left.set(lx, ly);
-        m_right.set(rx, ry);
-
-        m_left_flag = left_flag;
-        m_right_flag = right_flag;
-    }
-
-
-    GraphicPathPoint::GraphicPathPoint(const Vec2d& anchor, bool left_flag, const Vec2d& left, bool right_flag, const Vec2d& right) noexcept
-            : m_anchor(anchor),
-              m_left(left),
-              m_right(right),
-              m_left_flag(left_flag),
-              m_right_flag(right_flag),
-              m_bezier_segment_length(0.0) {
-    }
-
-
-    GraphicPathPoint::~GraphicPathPoint() {
-    }
-
-
-    /**
-     *  @brief Copy assignment operator.
-     */
-    GraphicPathPoint& GraphicPathPoint::operator = (const GraphicPathPoint& point) noexcept {
-
-        if (this != &point) {
-
-            // Copy data from 'other' to 'this'
-            m_anchor = point.m_anchor;
-            m_left = point.m_left;
-            m_right = point.m_right;
-            m_left_flag = point.m_left_flag;
-            m_right_flag = point.m_right_flag;
-            m_bezier_segment_length = point.m_bezier_segment_length;
-        }
-
-        return *this;
-    }
-
-
-    /**
-     *  @brief Move assignment operator.
-     */
-    GraphicPathPoint& GraphicPathPoint::operator = (GraphicPathPoint&& point) noexcept {
-
-        if (this != &point) {
-
-            // Move data from 'other' to 'this'
-            m_anchor = std::move(point.m_anchor);
-            m_left = std::move(point.m_left);
-            m_right = std::move(point.m_right);
-            m_left_flag = point.m_left_flag;
-            m_right_flag = point.m_right_flag;
-            m_bezier_segment_length = point.m_bezier_segment_length;
-        }
-
-        return *this;
-    }
-
-
-    void GraphicPathPoint::translate(const Vec2d& t) noexcept {
-
-        m_anchor.translate(t);
-        m_left.translate(t);
-        m_right.translate(t);
-    }
-
-
-    void GraphicPathPoint::translate(double tx, double ty) noexcept {
-
-        m_anchor.translate(tx, ty);
-        m_left.translate(tx, ty);
-        m_right.translate(tx, ty);
-    }
-
-
-    void GraphicPathPoint::rotate(double angle) noexcept {
-
-        m_left.rotate(m_anchor, angle);
-        m_right.rotate(m_anchor, angle);
-    }
-
-
-    void GraphicPathPoint::projectToQuadrilateral(const Quadrilateral& quadrilateral, const Mat3d* matrix) noexcept {
-
-        if (matrix) {
-            matrix->transformVec2(m_anchor);
-            matrix->transformVec2(m_left);
-            matrix->transformVec2(m_right);
-        }
-
-        quadrilateral.project(m_anchor);
-        quadrilateral.project(m_left);
-        quadrilateral.project(m_right);
-    }
-
-
-} // End of namespace Grain.
+} // End of namespace Grain

@@ -66,9 +66,9 @@ namespace Grain {
         }
 
         if (screen_count > 0) {
-            app->m_smallest_screen_index = -1;      // Undefined
-            app->m_largest_screen_index = -1;       // Undefined
-            app->m_total_screen_pixel_count = 0;
+            app->smallest_screen_index_ = -1;      // Undefined
+            app->largest_screen_index_ = -1;       // Undefined
+            app->total_screen_pixel_count_ = 0;
 
             int32_t min_pixel_count = std::numeric_limits<int32_t>::max();
             int32_t max_pixel_count = std::numeric_limits<int32_t>::min();
@@ -76,30 +76,30 @@ namespace Grain {
 
             for (int32_t i = 0; i < screen_count; i++) {
                 auto screen = new (std::nothrow) Screen();
-                app->m_screens.push(screen);
+                app->screens_.push(screen);
                 if (screen) {
                     NSScreen* ns_screen = [ns_screens objectAtIndex:(NSUInteger) i];
                     NSRect ns_screen_rect = [ns_screen frame];
                     NSRect ns_visible_rect = [ns_screen visibleFrame];
 
-                    screen->m_width = static_cast<int32_t>(ns_screen_rect.size.width);
-                    screen->m_height = static_cast<int32_t>(ns_screen_rect.size.height);
-                    screen->m_visible_width = static_cast<int32_t>(ns_visible_rect.size.width);
-                    screen->m_visible_height = static_cast<int32_t>(ns_visible_rect.size.height);
-                    screen->_m_ns_screen = (__bridge void*) ns_screen;
+                    screen->width_ = static_cast<int32_t>(ns_screen_rect.size.width);
+                    screen->height_ = static_cast<int32_t>(ns_screen_rect.size.height);
+                    screen->visible_width_ = static_cast<int32_t>(ns_visible_rect.size.width);
+                    screen->visible_height_ = static_cast<int32_t>(ns_visible_rect.size.height);
+                    screen->ns_screen_ = (__bridge void*) ns_screen;
 
                     curr_pixel_count = screen->pixelCount();
 
                     if (curr_pixel_count > max_pixel_count) {
                         max_pixel_count = curr_pixel_count;
-                        app->m_largest_screen_index = i;
+                        app->largest_screen_index_ = i;
                     }
 
                     if (curr_pixel_count < min_pixel_count) {
                         min_pixel_count = curr_pixel_count;
-                        app->m_smallest_screen_index = i;
+                        app->smallest_screen_index_ = i;
                     }
-                    app->m_total_screen_pixel_count += curr_pixel_count;
+                    app->total_screen_pixel_count_ += curr_pixel_count;
                 }
             }
         }

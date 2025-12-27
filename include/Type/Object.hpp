@@ -32,8 +32,10 @@ namespace Grain {
     public:
         BaseObject() = default;
         virtual ~BaseObject() = default;
+
         [[nodiscard]] virtual const char* className() const noexcept;
         [[nodiscard]] virtual bool isClass(const char* name) const noexcept;
+
         virtual ErrorCode setParam(const String& name, const String& value) noexcept;
         virtual ErrorCode handleMessage(const char* message, const char* value) noexcept;
     };
@@ -54,6 +56,7 @@ namespace Grain {
     public:
         Object();
         ~Object() override;
+
         [[nodiscard]] const char* className() const noexcept override;
 
         [[nodiscard]] int64_t retainCounter() const noexcept;

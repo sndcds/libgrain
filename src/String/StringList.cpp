@@ -16,8 +16,8 @@ namespace Grain {
     void StringList::log(Log& l) {
         l << className() << l.endl;
         l++;
-        l << "m_size: " << m_size << l.endl;
-        l << "m_capacity: " << m_capacity << l.endl;
+        l << "size_: " << size_ << l.endl;
+        l << "m_capacity: " << capacity_ << l.endl;
         l++;
         int64_t index = 0;
         for (auto string : *this) {
@@ -28,8 +28,8 @@ namespace Grain {
             l << index << ": " << string << l.endl;
             index++;
         }
-        if (index < m_size) {
-            l << (m_size - 1) << ": " << last() << l.endl;
+        if (index < size_) {
+            l << (size_ - 1) << ": " << last() << l.endl;
         }
         l--;
         l--;
@@ -127,8 +127,8 @@ namespace Grain {
 
 
     bool StringList::removeStr(const char* str) noexcept {
-        for (int64_t i = 0; i < m_size; ++i) {
-            auto s = m_data[i];
+        for (int64_t i = 0; i < size_; ++i) {
+            auto s = data_[i];
             if (s && s->compare(str) == 0) {
                 auto err = removeAtIndex(i);  // safe: i is still valid
                 return err == ErrorCode::None;

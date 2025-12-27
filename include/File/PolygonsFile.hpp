@@ -39,7 +39,7 @@ namespace Grain {
         uint32_t m_polygon_count{};                 ///< Number of polygons in file
         List<PolygonsFileEntry> m_polygon_entries;  ///< All file entries
         RangeRectd m_bounding_box{};                ///< Bound box in WGS84/EPSG:4326 coordinates
-        int64_t m_srid{};                           ///< SRID, Spatial Reference System Identifier
+        int64_t srid_{};                            ///< SRID, Spatial Reference System Identifier
         int64_t m_info_read_time{};                 ///< Time used for reading the file info
 
     public:
@@ -56,14 +56,14 @@ namespace Grain {
         friend std::ostream& operator << (std::ostream& os, const PolygonsFile& o) {
             os << "polygon_count: " << o.m_polygon_count;
             os << ", bounding_box: " << o.m_bounding_box;
-            os << ", srid: " << o.m_srid;
+            os << ", srid: " << o.srid_;
             os << ", info_read_time: " << (o.m_info_read_time / 1000) << "milliseconds";
             return os;
         }
 
         [[nodiscard]] uint32_t polygonCount() const noexcept { return m_polygon_count; }
         [[nodiscard]] RangeRectd boundingBox() const noexcept { return m_bounding_box; }
-        [[nodiscard]] int32_t srid() const noexcept { return static_cast<int32_t>(m_srid); }
+        [[nodiscard]] int32_t srid() const noexcept { return static_cast<int32_t>(srid_); }
         [[nodiscard]] int64_t infoReadTime() const noexcept { return m_info_read_time; }
 
         [[nodiscard]] const PolygonsFileEntry* entryPtrAtIndex(int32_t index) const noexcept {

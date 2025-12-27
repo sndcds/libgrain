@@ -567,7 +567,7 @@ namespace Grain {
 
     void LUT1Stepper::start() noexcept {
         m_pos = 0.0;
-        m_running = true;
+        running_ = true;
     }
 
 
@@ -579,13 +579,13 @@ namespace Grain {
     bool LUT1Stepper::next(float step, float* out_value) noexcept {
         bool result = m_pos < m_duration;
 
-        if (!m_running) {
+        if (!running_) {
             return false;
         }
 
         if (m_pos >= m_duration) {
             m_pos = m_duration;
-            m_running = false;
+            running_ = false;
         }
 
         if (out_value) {

@@ -369,7 +369,7 @@ NSDictionary* Font::buildNSFontAttributes(const Font& font, const GrRGB& color, 
         m_underline_thickness = font.m_underline_thickness;
 
         m_color = color;
-        m_alpha = alpha;
+        alpha_ = alpha;
 
         /* TODO: !
         NSColor* nsColor = color.createNSColor(alpha);

@@ -106,10 +106,10 @@ namespace Grain {
 
                             _projectFunc(proj, this, point_ptr);
                             if (poly_point_index == 0) {
-                                poly->m_bbox.set(*point_ptr);
+                                poly->bbox_.set(*point_ptr);
                             }
                             else {
-                                poly->m_bbox.add(*point_ptr);
+                                poly->bbox_.add(*point_ptr);
                             }
                             poly_point_index++;
                         }
@@ -118,7 +118,7 @@ namespace Grain {
             }
         }
         else if (shapeType() == ShapeType::Point) {
-            for (auto& point : m_points) {
+            for (auto& point : points_) {
                 _projectFunc(proj, this, &point);
             }
         }
@@ -129,7 +129,7 @@ namespace Grain {
 
     RangeRectd GeoShape::polyBbox(int32_t index) noexcept {
         if (auto poly = polyPtrAtIndex(index)) {
-            return poly->m_bbox;
+            return poly->bbox_;
         }
         else {
             return RangeRectd(0, 0, 0, 0);
@@ -171,8 +171,8 @@ namespace Grain {
 
 
     bool GeoShape::pointAtIndex(int32_t index, Vec2d& out_point) noexcept {
-        if (index >= 0 && index < m_points.size()) {
-            out_point = m_points[index];
+        if (index >= 0 && index < points_.size()) {
+            out_point = points_[index];
             return true;
         }
         else {
@@ -182,8 +182,8 @@ namespace Grain {
 
 
     void GeoShape::pointAtIndex(int32_t index, const RemapRectd& remap_rect, Vec2d& out_point) noexcept {
-        if (index >= 0 && index < m_points.size()) {
-            out_point = m_points[index];
+        if (index >= 0 && index < points_.size()) {
+            out_point = points_[index];
             remap_rect.mapVec2(out_point);
         }
     }
@@ -242,7 +242,7 @@ namespace Grain {
 
     void GeoShape::drawAll(GraphicContext* gc, const RemapRectd& remap_rect, DrawMode draw_mode) noexcept {
         if (shouldDrawAsPoints()) {
-            for (int32_t point_index = 0; point_index < m_points.size(); point_index++) {
+            for (int32_t point_index = 0; point_index < points_.size(); point_index++) {
                 Vec2d point;
 
                 pointAtIndex(point_index, point);

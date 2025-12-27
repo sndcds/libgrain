@@ -34,11 +34,11 @@ namespace Grain {
         void setSelected(bool selected) noexcept override;
 
 
-        [[nodiscard]] int32_t radioGroup() const noexcept override { return m_radio_group; }
-        [[nodiscard]] int32_t radioValue() const noexcept override { return m_radio_value; }
+        [[nodiscard]] int32_t radioGroup() const noexcept override { return radio_group_; }
+        [[nodiscard]] int32_t radioValue() const noexcept override { return radio_value_; }
 
-        void setRadioGroup(int32_t radio_group) noexcept override { m_radio_group = radio_group; }
-        void setRadioValue(int32_t radio_value) noexcept override { m_radio_value = radio_value; }
+        void setRadioGroup(int32_t radio_group) noexcept override { radio_group_ = radio_group; }
+        void setRadioValue(int32_t radio_value) noexcept override { radio_value_ = radio_value; }
 
         void draw(const Rectd& dirty_rect) noexcept override;
 
@@ -46,11 +46,11 @@ namespace Grain {
         void handleMouseDrag(const Event& event) noexcept override;
         void handleMouseUp(const Event& event) noexcept override;
 
-        [[nodiscard]] bool isPopUpButton() const noexcept { return m_type == ComponentType::PopUpButton; }
+        [[nodiscard]] bool isPopUpButton() const noexcept { return type_ == ComponentType::PopUpButton; }
 
     protected:
-        int32_t m_radio_group = 0;
-        int32_t m_radio_value = 0;
+        int32_t radio_group_ = 0;
+        int32_t radio_value_ = 0;
     };
 
 

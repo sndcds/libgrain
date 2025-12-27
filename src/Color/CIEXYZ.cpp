@@ -20,25 +20,25 @@ namespace Grain {
         float r = Color::gamma_to_linear(rgb.m_data[0]);
         float g = Color::gamma_to_linear(rgb.m_data[1]);
         float b = Color::gamma_to_linear(rgb.m_data[2]);
-        m_data[0] = 0.4124f * r + 0.3576f * g + 0.1805f * b;
-        m_data[1] = 0.2126f * r + 0.7152f * g + 0.0722f * b;
-        m_data[2] = 0.0193f * r + 0.1192f * g + 0.9505f * b;
+        data_[0] = 0.4124f * r + 0.3576f * g + 0.1805f * b;
+        data_[1] = 0.2126f * r + 0.7152f * g + 0.0722f * b;
+        data_[2] = 0.0193f * r + 0.1192f * g + 0.9505f * b;
     }
 
 
     CIEXYZ::CIEXYZ(const CIExyY& xyY) noexcept {
 
-        float x = xyY.m_pos.m_x;
-        float y = xyY.m_pos.m_y;
-        float Y = xyY.m_y;
+        float x = xyY.m_pos.x_;
+        float y = xyY.m_pos.y_;
+        float Y = xyY.y_;
 
         if (y == 0.0f) {
-            m_data[0] = m_data[1] = m_data[2] = 0.0f;
+            data_[0] = data_[1] = data_[2] = 0.0f;
         }
         else {
-            m_data[0] = (x * Y) / y;
-            m_data[1] = Y;
-            m_data[2] = ((1.0f - x - y) * Y) / y;
+            data_[0] = (x * Y) / y;
+            data_[1] = Y;
+            data_[2] = ((1.0f - x - y) * Y) / y;
         }
     }
 
@@ -109,9 +109,9 @@ namespace Grain {
 
         double norm = std::max({ ax, ay, az });
         if (norm > 0.0) {
-            m_data[0] = static_cast<float>(ax / norm);
-            m_data[1] = static_cast<float>(ay / norm);
-            m_data[2] = static_cast<float>(az / norm);
+            data_[0] = static_cast<float>(ax / norm);
+            data_[1] = static_cast<float>(ay / norm);
+            data_[2] = static_cast<float>(az / norm);
         }
     }
 
@@ -129,10 +129,10 @@ namespace Grain {
          *  y = Y / (X + Y + Z)
          */
 
-        float sum = m_data[0] + m_data[1] + m_data[2];
+        float sum = data_[0] + data_[1] + data_[2];
 
         if (sum != 0.0f) {
-            return Vec2f(m_data[0] / sum, m_data[1] / sum);
+            return Vec2f(data_[0] / sum, data_[1] / sum);
         }
         else {
             return Vec2f(std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
@@ -191,15 +191,15 @@ namespace Grain {
         int32_t i;
 
 
-        if ((m_data[0] < std::numeric_limits<float>::min()) &&
-            (m_data[1] < std::numeric_limits<float>::min()) &&
-            (m_data[2] < std::numeric_limits<float>::min())) {
+        if ((data_[0] < std::numeric_limits<float>::min()) &&
+            (data_[1] < std::numeric_limits<float>::min()) &&
+            (data_[2] < std::numeric_limits<float>::min())) {
             // Protect against possible divide-by-zero failure
             return false;
         }
 
-        us = (4.0 * m_data[0]) / (m_data[0] + 15.0 * m_data[1] + 3.0 * m_data[2]);
-        vs = (6.0 * m_data[1]) / (m_data[0] + 15.0 * m_data[1] + 3.0 * m_data[2]);
+        us = (4.0 * data_[0]) / (data_[0] + 15.0 * data_[1] + 3.0 * data_[2]);
+        vs = (6.0 * data_[1]) / (data_[0] + 15.0 * data_[1] + 3.0 * data_[2]);
         dm = 0.0;
 
         for (i = 0; i < 31; i++) {
@@ -238,7 +238,7 @@ namespace Grain {
 
     void CIEXYZ::transform(const Mat3f& matrix, RGB& out_rgb) const noexcept {
 
-        matrix.transform3(m_data, out_rgb.mutValuePtr());
+        matrix.transform3(data_, out_rgb.mutValuePtr());
     }
 
 

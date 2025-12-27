@@ -16,7 +16,6 @@
 #include "Type/Object.hpp"
 #include "Geometry.hpp"
 #include "Color/RGBA.hpp"
-#include "2d/RectEdges.hpp"
 
 
 namespace Grain {
@@ -84,7 +83,7 @@ namespace Grain {
         [[nodiscard]] RGBA textSelectionBackgroundColor() const noexcept { return m_text_selection_background_color; }
         [[nodiscard]] RGBA textInfoColor() const noexcept { return m_text_info_color; }
         [[nodiscard]] RGBA textCursorColor() const noexcept { return m_text_cursor_color; }
-        [[nodiscard]] RGBA scrollBarColor() const { return { 1, 0, 0, 1 }; }
+        [[nodiscard]] RGBA scrollBarHandleColor() const { return m_scrollbar_handle_color; }
 
         [[nodiscard]] float labelGap() const { return m_label_gap; }
         [[nodiscard]] float scrollBarPadding() const { return 3.0f; }
@@ -175,9 +174,10 @@ namespace Grain {
         Font* m_font = nullptr;                         ///< Fallback font
         RGBA m_text_color = { 1, 0, 0, 1 };
         RGBA m_text_background_color = { 1, 0.6f, 0, 1 };
-        RGBA m_text_selection_color = { 0.6f, 1, 0, 1 };;
+        RGBA m_text_selection_color = { 0.6f, 1, 0, 1 };
         RGBA m_text_selection_background_color = { 0, 1, 0.6f, 1 };
         RGBA m_text_cursor_color = { 0.6f, 0, 1, 1 };
+        RGBA m_scrollbar_handle_color = { 0.6, 0.6, 0.6, 1 };
         RGBA m_text_info_color;
 
         RGBA m_label_color{};

@@ -26,8 +26,8 @@ namespace Grain {
 
     bool CSVLineParser::setLine(const char *str) noexcept {
 
-        m_length = str ? static_cast<int64_t>(strlen(str)) : 0;
-        if (m_length < 1) {
+        length_ = str ? static_cast<int64_t>(strlen(str)) : 0;
+        if (length_ < 1) {
             return false;
         }
 
@@ -381,7 +381,7 @@ namespace Grain {
 
                     if (check_header_flag) {
                         std::cout << m_header_labels << std::endl;
-                        for (auto &label : *m_header_labels) {
+                        for (auto& label : *m_header_labels) {
                             std::cout << label << std::endl;
                         }
                         check_header_flag = false;

@@ -420,7 +420,7 @@ namespace Grain {
         Vec2f vb(0.0, 1.0);
         Vec2f vc(yuv.m_data[1], yuv.m_data[2]);
         float angle = va.angle(vb, vc);
-        return vc.m_x > 0 ? -angle : angle;
+        return vc.x_ > 0 ? -angle : angle;
     }
 
 
@@ -542,9 +542,9 @@ namespace Grain {
 
 
     void RGB::setXYZ(const CIEXYZ& xyz) noexcept {
-        float r =  3.2406f * xyz.m_data[0] - 1.5372f * xyz.m_data[1] - 0.4986f * xyz.m_data[2];
-        float g = -0.9689f * xyz.m_data[0] + 1.8758f * xyz.m_data[1] + 0.0415f * xyz.m_data[2];
-        float b =  0.0557f * xyz.m_data[0] - 0.2040f * xyz.m_data[1] + 1.0570f * xyz.m_data[2];
+        float r =  3.2406f * xyz.data_[0] - 1.5372f * xyz.data_[1] - 0.4986f * xyz.data_[2];
+        float g = -0.9689f * xyz.data_[0] + 1.8758f * xyz.data_[1] + 0.0415f * xyz.data_[2];
+        float b =  0.0557f * xyz.data_[0] - 0.2040f * xyz.data_[1] + 1.0570f * xyz.data_[2];
         m_data[0] = std::clamp<float>(Color::linear_to_gamma(r), 0.0f, 1.0f);
         m_data[1] = std::clamp<float>(Color::linear_to_gamma(g), 0.0f, 1.0f);
         m_data[2] = std::clamp<float>(Color::linear_to_gamma(b), 0.0f, 1.0f);
@@ -558,7 +558,7 @@ namespace Grain {
 
 
     void RGB::setCIExy(const Vec2f& xy) noexcept {
-        CIEXYZ xyz(xy.m_x, xy.m_y, 1);
+        CIEXYZ xyz(xy.x_, xy.y_, 1);
         setXYZ(xyz);
     }
 
@@ -660,7 +660,7 @@ namespace Grain {
 
     void RGB::setPosColor(const Vec3d& pos) noexcept {
         Vec3d loc = pos.posToLoc();
-        setByPosOnCircle(static_cast<float>(loc.m_x), static_cast<float>(loc.m_y));
+        setByPosOnCircle(static_cast<float>(loc.x_), static_cast<float>(loc.y_));
     }
 
 
@@ -789,9 +789,9 @@ namespace Grain {
 
 
     void RGB::applyCDL(const CDL_RGB& cdl_rgb) noexcept {
-        m_data[0] = (std::pow(m_data[0], cdl_rgb.m_gamma_rgb.m_data[0]) - cdl_rgb.m_shift1_rgb.m_data[0]) * cdl_rgb.m_gain_rgb.m_data[0] + cdl_rgb.m_shift2_rgb.m_data[0];
-        m_data[1] = (std::pow(m_data[1], cdl_rgb.m_gamma_rgb.m_data[1]) - cdl_rgb.m_shift1_rgb.m_data[1]) * cdl_rgb.m_gain_rgb.m_data[1] + cdl_rgb.m_shift2_rgb.m_data[1];
-        m_data[2] = (std::pow(m_data[2], cdl_rgb.m_gamma_rgb.m_data[2]) - cdl_rgb.m_shift1_rgb.m_data[2]) * cdl_rgb.m_gain_rgb.m_data[2] + cdl_rgb.m_shift2_rgb.m_data[2];
+        m_data[0] = (std::pow(m_data[0], cdl_rgb.gamma_rgb_.m_data[0]) - cdl_rgb.shift1_rgb_.m_data[0]) * cdl_rgb.gain_rgb_.m_data[0] + cdl_rgb.shift2_rgb_.m_data[0];
+        m_data[1] = (std::pow(m_data[1], cdl_rgb.gamma_rgb_.m_data[1]) - cdl_rgb.shift1_rgb_.m_data[1]) * cdl_rgb.gain_rgb_.m_data[1] + cdl_rgb.shift2_rgb_.m_data[1];
+        m_data[2] = (std::pow(m_data[2], cdl_rgb.gamma_rgb_.m_data[2]) - cdl_rgb.shift1_rgb_.m_data[2]) * cdl_rgb.gain_rgb_.m_data[2] + cdl_rgb.shift2_rgb_.m_data[2];
     }
 
 

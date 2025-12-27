@@ -17,7 +17,7 @@ namespace Grain {
         m_value = 0;
         m_min = 0;
         m_max = 100;
-        m_offset = 0;
+        offs_ = 0;
         m_default = 0;
         m_step = 1;
         m_big_step = 10;
@@ -41,7 +41,7 @@ namespace Grain {
         m_value = default_value;
         m_min = min;
         m_max = max;
-        m_offset = offset;
+        offs_ = offset;
         m_default = default_value;
         m_step = step;
         m_big_step = big_step;

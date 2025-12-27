@@ -17,11 +17,15 @@
 #include "String/String.hpp"
 #include "Color/Gradient.hpp"
 #include "Graphic/GraphicContext.hpp"
+#include "Graphic/AppleCGContext.hpp"
 #include "Graphic/Font.hpp"
 
 
 namespace Grain {
-
+    void Component::fireActionAndDisplay(ActionType action_type, const Component* excluded_component) noexcept {
+        fireAction(action_type, excluded_component);
+        needsDisplay();
+    }
 #if defined(__APPLE__) && defined(__MACH__)
     void _macosView_initForUI(Component* component, const Grain::Rectd& rect);
     void _macosView_releaseView(Component* component);
@@ -36,10 +40,11 @@ namespace Grain {
     void _macosView_setFrame(Component* component, Rectd& rect);
     void _macosView_setFrameOrigin(Component* component, double x, double y);
     void _macosView_setFrameSize(Component* component, double width, double height);
+    void _macosView_updateCGContext(Component* component) noexcept;
 #endif
 
 
-    Component::Component(const Rectd& rect, int32_t tag) noexcept : m_tag(tag), m_rect(rect) {
+    Component::Component(const Rectd& rect, int32_t tag) noexcept : tag_(tag), rect_(rect) {
 #if defined(__APPLE__) && defined(__MACH__)
         _macosView_initForUI(this, rect);
 #endif
@@ -51,7 +56,8 @@ namespace Grain {
         _macosView_releaseView(this);
 #endif
 
-        delete m_text;
+        delete text_;
+        delete animation_frame_driver_;
     }
 
 
@@ -65,7 +71,7 @@ namespace Grain {
     }
 
 
-    bool Component::setEnabled(Component *component, bool enabled) noexcept {
+    bool Component::setEnabled(Component* component, bool enabled) noexcept {
         return component != nullptr ? component->setEnabled(enabled) : false;
     }
 
@@ -73,8 +79,8 @@ namespace Grain {
     bool Component::setEnabled(bool enabled) noexcept {
         bool result = false;
 
-        if (enabled != m_is_enabled) {
-            m_is_enabled = enabled;
+        if (enabled != is_enabled_) {
+            is_enabled_ = enabled;
 
 #if defined(__APPLE__) && defined(__MACH__)
             _macosView_selectNextKeyView(this);
@@ -90,50 +96,50 @@ namespace Grain {
             needsDisplay();
         }
 
-        if (m_textfield) {
-            m_textfield->setEnabled(enabled);
+        if (textfield_) {
+            textfield_->setEnabled(enabled);
         }
-/*
-        if (m_label) {
-            m_label->setEnabled(enabled);
-        }
+        /*
+                if (m_label) {
+                    m_label->setEnabled(enabled);
+                }
 
-        if (m_color_well) {
-            // m_color_well->setEnabled(enabled);  TODO: Uncomment!
-        }
-        */
+                if (m_color_well) {
+                    // m_color_well->setEnabled(enabled);  TODO: Uncomment!
+                }
+                */
 
         return result;
     }
 
     void Component::setVisibility(bool visibility) noexcept {
-        if (m_textfield) {
-            m_textfield->setVisibility(visibility);
+        if (textfield_) {
+            textfield_->setVisibility(visibility);
         }
 
-        m_is_visible = visibility;
+        is_visible_ = visibility;
 #if defined(__APPLE__) && defined(__MACH__)
-        _macosView_setHidden(this, !m_is_visible);
+        _macosView_setHidden(this, !is_visible_);
 #endif
     }
 
 
     GUIStyle* Component::guiStyle() const noexcept {
-        return App::guiStyleAtIndex(m_style_index);
+        return App::guiStyleAtIndex(style_index_);
     }
 
 
-    void Component::setText(const char *text_str) noexcept {
+    void Component::setText(const char* text_str) noexcept {
         if (!text_str) {
             text_str = "";
         }
 
-        if (!m_text) {
-            m_text = new (std::nothrow) String();
+        if (!text_) {
+            text_ = new(std::nothrow) String();
         }
 
-        if (m_text) {
-            m_text->set(text_str);
+        if (text_) {
+            text_->set(text_str);
         }
 
         needsDisplay();
@@ -141,15 +147,15 @@ namespace Grain {
     }
 
 
-    void Component::setText(const String &text) noexcept {
+    void Component::setText(const String& text) noexcept {
         setText(text.utf8());
     }
 
 
     void Component::setNextKeyComponent(Component* component) noexcept {
-        m_next_key_component = component;
+        next_key_component_ = component;
         if (component) {
-            component->m_previous_key_component = this;
+            component->previous_key_component_ = this;
         }
     }
 
@@ -180,33 +186,27 @@ namespace Grain {
 
 
     bool Component::gotoNextKeyComponent() noexcept {
-        return gotoComponent(m_next_key_component);
+        return gotoComponent(next_key_component_);
     }
 
 
     bool Component::gotoPreviousKeyComponent() noexcept {
-        std::cout << (long)m_previous_key_component << std::endl;
-        return gotoComponent(m_previous_key_component);
+        std::cout << (long) previous_key_component_ << std::endl;
+        return gotoComponent(previous_key_component_);
     }
 
 
-    void Component::fireAction(ActionType action_type, const Component *excluded_component) noexcept {
-        _m_action_type = action_type;
+    void Component::fireAction(ActionType action_type, const Component* excluded_component) noexcept {
+        action_type_ = action_type;
         updateRepresentations(excluded_component);
         transmit();
-        if (m_action) {
-            m_action(this);
+        if (action_) {
+            action_(this);
         }
     }
 
 
-    void Component::fireActionAndDisplay(ActionType action_type, const Component *excluded_component) noexcept {
-        fireAction(action_type, excluded_component);
-        needsDisplay();
-    }
-
-
-    void Component::updateRepresentations(const Component *excluded_component) noexcept {
+    void Component::updateRepresentations(const Component* excluded_component) noexcept {
         /* !!!!!
         if (m_textfield && m_textfield != excluded_component) {
             m_textfield->setValue(value());
@@ -218,16 +218,16 @@ namespace Grain {
     }
 
 
-    void Component::setRect(const Rectd &rect) noexcept {
+    void Component::setRect(const Rectd& rect) noexcept {
         Rectd new_rect = rect;
         new_rect.avoidNegativeSize();
 
-        if (new_rect != m_rect) {
-            m_rect = new_rect;
+        if (new_rect != rect_) {
+            rect_ = new_rect;
             geometryChanged();
 
 #if defined(__APPLE__) && defined(__MACH__)
-            _macosView_setFrame(this, m_rect);
+            _macosView_setFrame(this, rect_);
 #endif
 
             needsDisplay();
@@ -235,9 +235,9 @@ namespace Grain {
     }
 
     void Component::setPosition(double x, double y) noexcept {
-        if (x != m_rect.m_x || y != m_rect.m_y) {
-            m_rect.m_x = x;
-            m_rect.m_y = y;
+        if (x != rect_.x_ || y != rect_.y_) {
+            rect_.x_ = x;
+            rect_.y_ = y;
 
 #if defined(__APPLE__) && defined(__MACH__)
             _macosView_setFrameOrigin(this, x, y);
@@ -255,9 +255,9 @@ namespace Grain {
         if (height < 0) {
             height = 0;
         }
-        if (width != m_rect.m_width || height != m_rect.m_height) {
-            m_rect.m_width = width;
-            m_rect.m_height = height;
+        if (width != rect_.width_ || height != rect_.height_) {
+            rect_.width_ = width;
+            rect_.height_ = height;
 
 #if defined(__APPLE__) && defined(__MACH__)
             _macosView_setFrameSize(this, width, height);
@@ -268,42 +268,41 @@ namespace Grain {
         }
     }
 
-
     void Component::setEdgeAligned() noexcept {
         setEdgeAligned(Alignment::Center, 0.0f, 0.0f, 0.0f, 0.0f);
     }
 
-
     void Component::setEdgeAligned(Alignment alignment, float top, float right, float bottom, float left) noexcept {
-        m_edge_alignment = alignment;
-        m_margin.m_top = top;
-        m_margin.m_right = right;
-        m_margin.m_bottom = bottom;
-        m_margin.m_left = left;
+        edge_alignment_ = alignment;
+        margin_.top_ = top;
+        margin_.right_ = right;
+        margin_.bottom_ = bottom;
+        margin_.left_ = left;
 
         parentGeometryChanged();
     }
 
     void Component::parentGeometryChanged() noexcept {
-        if (m_parent && m_edge_alignment != Alignment::No) {
-            Rectd rect = m_parent->m_rect.edgeAlignedRectRelative(m_edge_alignment, m_margin.m_top, m_margin.m_right, m_margin.m_bottom, m_margin.m_left);
-            if (rect != m_rect) {
+        if (parent_ && edge_alignment_ != Alignment::No) {
+            Rectd rect =
+                parent_->rect_.edgeAlignedRectRelative(
+                    edge_alignment_, margin_.top_, margin_.right_,
+                    margin_.bottom_, margin_.left_);
+            if (rect != rect_) {
                 setRect(rect);
             }
         }
     }
 
-
     void Component::setHighlighted(bool highlighted) noexcept {
-        if (m_is_highlighted != highlighted) {
-            m_is_highlighted = highlighted;
+        if (is_highlighted_ != highlighted) {
+            is_highlighted_ = highlighted;
             needsDisplay();
         }
     }
 
-
-    void Component::handleEvent(const Event &event) noexcept {
-        if (!m_is_enabled) {
+    void Component::handleEvent(const Event& event) noexcept {
+        if (!is_enabled_) {
             return;
         }
 
@@ -318,9 +317,9 @@ namespace Grain {
         switch (event_type) {
             case Event::EventType::MouseDown:
             case Event::EventType::RightMouseDown:
-                m_is_modified_while_mouse_drag = false;
-                m_is_modified_since_mouse_down = false;
-                m_mouse_precision_mode = event.isControlPressedOnly();
+                is_modified_while_mouse_drag_ = false;
+                is_modified_since_mouse_down_ = false;
+                mouse_precision_mode_ = event.isControlPressedOnly();
                 updateAtMouseDown(event);
                 if (event_type == Event::EventType::RightMouseDown) {
                     handleRightMouseDown(event);
@@ -349,12 +348,12 @@ namespace Grain {
                 break;
 
             case Event::EventType::MouseEntered:
-                m_mouse_is_in_view = true;
+                mouse_is_in_view_ = true;
                 handleMouseEntered(event);
                 break;
 
             case Event::EventType::MouseExited:
-                m_mouse_is_in_view = false;
+                mouse_is_in_view_ = false;
                 handleMouseExited(event);
                 break;
 
@@ -384,15 +383,15 @@ namespace Grain {
     }
 
 
-    void Component::setHandleEventFunction(ComponentHandleEventFunc func, void *ref) noexcept {
-        _m_handle_event_func = func;
-        _m_handle_event_func_ref = ref;
+    void Component::setHandleEventFunction(ComponentHandleEventFunc func, void* ref) noexcept {
+        handle_event_func_ = func;
+        handle_event_func_ref_ = ref;
     }
 
 
-    bool Component::callHandleEventFunction(const Event &event) noexcept {
+    bool Component::callHandleEventFunction(const Event& event) noexcept {
         if (hasHandleEventFunction()) {
-            return _m_handle_event_func(this, event, _m_handle_event_func_ref);
+            return handle_event_func_(this, event, handle_event_func_ref_);
         }
         else {
             return false;
@@ -408,17 +407,16 @@ namespace Grain {
     }
 
 
-
     void Component::setDrawFunction(ComponentDrawFunc func, void* ref) noexcept {
-        _m_draw_func = func;
-        _m_draw_func_ref = ref;
+        draw_func_ = func;
+        draw_func_ref_ = ref;
         needsDisplay();
     }
 
 
     void Component::callDrawFunction(GraphicContext* gc) noexcept {
-        if (hasDrawFunction()) {
-            _m_draw_func(gc, this, _m_draw_func_ref);
+        if (gc && hasDrawFunction()) {
+            draw_func_(gc, this, draw_func_ref_);
         }
     }
 
@@ -429,12 +427,12 @@ namespace Grain {
 #endif
     }
 
+
     void Component::forcedDisplay() const noexcept {
 #if defined(__APPLE__) && defined(__MACH__)
         _macosView_forcedDisplay(this);
 #endif
     }
-
 
 
     bool Component::hit(const Vec2d& pos) noexcept {
@@ -458,11 +456,12 @@ namespace Grain {
     }
 
 
+    /*
     void Component::drawRect(GraphicContext* gc, const Rectd& rect) const noexcept {
         gc->setFillColor(0, 0, 1, 1);
         gc->fillRect(rect);
     }
-
+    */
 
     Component* Component::addComponentToView(Component* component, View* view, AddFlags flags) noexcept {
         if (component && view) {
@@ -471,12 +470,31 @@ namespace Grain {
         return component;
     }
 
-
     GraphicContext* Component::graphicContextPtr() noexcept {
         auto component = this;
         while (!component->m_gc_ptr) {
-            if (component->m_parent) {
-                component = component->m_parent;
+            if (component->parent_) {
+                component = component->parent_;
+            }
+            else {
+                return nullptr;
+            }
+        }
+        component->m_gc_ptr->setComponent(component);
+
+#if defined(__APPLE__) && defined(__MACH__)
+        _macosView_updateCGContext(this);
+#endif
+
+        return component->m_gc_ptr;
+    }
+
+/*
+    GraphicContext* Component::graphicContextPtr() noexcept {
+        auto component = this;
+        while (!component->m_gc_ptr) {
+            if (component->parent_) {
+                component = component->parent_;
             }
             else {
                 return nullptr;
@@ -485,5 +503,5 @@ namespace Grain {
         component->m_gc_ptr->setComponent(component);
         return component->m_gc_ptr;
     }
-
+    */
 } // End of namespace Grain

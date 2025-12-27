@@ -122,7 +122,7 @@ namespace Grain {
         void _init(const char* title, const Rectd& rect, Window::Style style, Screen* screen) noexcept;
 
     protected:
-        String m_title = "Untitled";
+        String m_title{ "Untitled" };
         int32_t m_tag = -1;
 
         void* m_ns_window = nullptr;    ///< Pointer to macOS NSWindow

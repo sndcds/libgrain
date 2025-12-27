@@ -57,10 +57,10 @@ namespace Grain {
             // m_cg_color_space = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);  // TODO: An alternative?
 
             m_flipped_y = true;
-            m_width = pdf_writer->m_media_box_pt.width();
-            m_height = pdf_writer->m_media_box_pt.height();
+            width_ = pdf_writer->m_media_box_pt.width();
+            height_ = pdf_writer->m_media_box_pt.height();
 
-            double s = Geometry::convertLength(1, pdf_writer->m_unit, LengthUnit::Point);
+            double s = Geometry::convertLength(1, pdf_writer->unit_, LengthUnit::Point);
             scale(s, -s);
             translate(pdf_writer->bleedLeft(), - pdf_writer->trimBox().height() - pdf_writer->bleedTop());
         }
@@ -131,20 +131,20 @@ namespace Grain {
 
                 if (point_index == 0) {
                     // first_point = point; // Unused
-                    moveTo(point->m_anchor);
+                    moveTo(point->anchor_);
                 }
                 else {
-                    if (prev_point->m_right_flag && point->m_left_flag) {
-                        curveTo(prev_point->m_right, point->m_left, point->m_anchor);
+                    if (prev_point->right_flag_ && point->left_flag_) {
+                        curveTo(prev_point->right_, point->left_, point->anchor_);
                     }
-                    else if (prev_point->m_right_flag) {
-                        curveTo(prev_point->m_right, point->m_anchor, point->m_anchor);
+                    else if (prev_point->right_flag_) {
+                        curveTo(prev_point->right_, point->anchor_, point->anchor_);
                     }
-                    else if (point->m_left_flag) {
-                        curveTo(prev_point->m_anchor, point->m_left, point->m_anchor);
+                    else if (point->left_flag_) {
+                        curveTo(prev_point->anchor_, point->left_, point->anchor_);
                     }
                     else {
-                        lineTo(point->m_anchor);
+                        lineTo(point->anchor_);
                     }
                 }
 
@@ -162,21 +162,21 @@ namespace Grain {
             double ts = 0.0;
             double te = 1.0;
 
-            ts = split_param.m_t0;
-            for (int32_t i = split_param.m_start_index; i <= split_param.m_end_index; i++) {
+            ts = split_param.t0_;
+            for (int32_t i = split_param.start_index_; i <= split_param.end_index_; i++) {
 
                 Bezier bezier;
                 path->bezierAtIndex(i, bezier);
 
-                if (i == split_param.m_start_index) {
-                    ts = split_param.m_t0;
+                if (i == split_param.start_index_) {
+                    ts = split_param.t0_;
                 }
                 else {
                     ts = 0.0;
                 }
 
-                if (i == split_param.m_end_index) {
-                    te = split_param.m_t1;
+                if (i == split_param.end_index_) {
+                    te = split_param.t1_;
                 }
                 else {
                     te = 1.0;
@@ -184,14 +184,14 @@ namespace Grain {
 
                 if (bezier.truncate(ts, te, bezier)) {
 
-                    if (i == split_param.m_start_index) {
-                        moveTo(bezier.m_pos[0]);
+                    if (i == split_param.start_index_) {
+                        moveTo(bezier.pos_[0]);
                     }
 
-                    curveTo(bezier.m_pos[1], bezier.m_pos[2], bezier.m_pos[3]);
+                    curveTo(bezier.pos_[1], bezier.pos_[2], bezier.pos_[3]);
                 }
 
-                if (path->m_closed) {
+                if (path->closed_) {
                     closePath();
                 }
             }
@@ -233,23 +233,23 @@ namespace Grain {
         bottom = std::min<double>(bottom, 0.0);
         left = std::min<double>(left, 0.0);
 
-        double w = rect.m_width;
-        double h = rect.m_height;
-        double x0 = rect.m_x;
+        double w = rect.width_;
+        double h = rect.height_;
+        double x0 = rect.x_;
         double x3 = rect.x2();
         double x1 = x0 + left;
         double x2 = x3 - right;
 
         double y0, y1, y2, y3;
         if (m_flipped_y) {
-            y0 = rect.m_y;
+            y0 = rect.y_;
             y3 = rect.y2();
             y1 = y0 + top;
             y2 = y3 - bottom;
         }
         else {
             y0 = rect.y2();
-            y3 = rect.m_y;
+            y3 = rect.y_;
             y1 = y0 - top;
             y2 = y3 + bottom;
         }
@@ -417,7 +417,7 @@ namespace Grain {
     void GraphicContext::addRoundBarPath(double x, double y, double width, double height) noexcept {
         if (std::fabs(width - height) < std::numeric_limits<float>::epsilon()) {
             // Draw as circle
-            addCirclePath(x + width / 2.0, y + height / 2.0, width);
+            addCirclePath(x + width / 2.0, y + height / 2.0, width / 2.0);
         }
         else {
             bool horizontal = width > height;
@@ -563,9 +563,9 @@ namespace Grain {
     }
 
     void GraphicContext::addTrianglePath(const Triangled& triangle) noexcept {
-        moveTo(triangle.m_points[0]);
-        lineTo(triangle.m_points[1]);
-        lineTo(triangle.m_points[2]);
+        moveTo(triangle.points_[0]);
+        lineTo(triangle.points_[1]);
+        lineTo(triangle.points_[2]);
         closePath();
     }
 
@@ -608,7 +608,7 @@ namespace Grain {
     }
 
     void GraphicContext::addTrianglePath(const Rectd& rect, Direction direction) noexcept {
-        addTrianglePath(rect.m_x, rect.m_y, rect.m_width, rect.m_height, direction);
+        addTrianglePath(rect.x_, rect.y_, rect.width_, rect.height_, direction);
     }
 
     void GraphicContext::addPolygonPath(int32_t point_count, const Vec2d* points) noexcept {
@@ -671,22 +671,22 @@ namespace Grain {
 
     void GraphicContext::strokeLineXZ(const Vec3d& point1, const Vec3d& point2) noexcept {
         beginPath();
-        moveTo(point1.m_x, point1.m_z);
-        lineTo(point2.m_x, point2.m_z);
+        moveTo(point1.x_, point1.z_);
+        lineTo(point2.x_, point2.z_);
         strokePath();
     }
 
     void GraphicContext::strokeLineXY(const Vec3d& point1, const Vec3d& point2) noexcept {
         beginPath();
-        moveTo(point1.m_x, point1.m_y);
-        lineTo(point2.m_x, point2.m_y);
+        moveTo(point1.x_, point1.y_);
+        lineTo(point2.x_, point2.y_);
         strokePath();
     }
 
     void GraphicContext::strokeLine(const Lined& line) noexcept {
         beginPath();
-        moveTo(line.m_p1);
-        lineTo(line.m_p2);
+        moveTo(line.p1_);
+        lineTo(line.p2_);
         strokePath();
     }
 
@@ -705,14 +705,14 @@ namespace Grain {
     }
 
     void GraphicContext::strokeHorizontalConnection(const Vec2d& start_point, const Vec2d& end_point) noexcept {
-        double a = std::fabs(end_point.m_x - start_point.m_x) / 2.0;
+        double a = std::fabs(end_point.x_ - start_point.x_) / 2.0;
         if (a < 8.0) {
             a = 8.0;
         }
 
         beginPath();
         moveTo(start_point);
-        curveTo(start_point.m_x + a, start_point.m_y, end_point.m_x - a, end_point.m_y, end_point.m_x, end_point.m_y);
+        curveTo(start_point.x_ + a, start_point.y_, end_point.x_ - a, end_point.y_, end_point.x_, end_point.y_);
         strokePath();
     }
 
@@ -721,8 +721,8 @@ namespace Grain {
      */
     void GraphicContext::strokeBezier(const Bezier& bezier) noexcept {
         beginPath();
-        moveTo(bezier.m_pos[0]);
-        curveTo(bezier.m_pos[1], bezier.m_pos[2], bezier.m_pos[3]);
+        moveTo(bezier.pos_[0]);
+        curveTo(bezier.pos_[1], bezier.pos_[2], bezier.pos_[3]);
         strokePath();
     }
 
@@ -796,7 +796,7 @@ namespace Grain {
     }
 
     void GraphicContext::fillRect(const Rectd& rect) noexcept {
-        fillRect(rect.m_x, rect.m_y, rect.m_width, rect.m_height);
+        fillRect(rect.x_, rect.y_, rect.width_, rect.height_);
     }
 
     void GraphicContext::fillRect(const Rectd& rect, double radius) noexcept {
@@ -815,7 +815,7 @@ namespace Grain {
     }
 
     void GraphicContext::fillRoundRect(const Rectd& rect, double radius) noexcept {
-        fillRoundRect(rect.m_x, rect.m_y, rect.m_width, rect.m_height, radius);
+        fillRoundRect(rect.x_, rect.y_, rect.width_, rect.height_, radius);
     }
 
     void GraphicContext::fillRoundRect(double x, double y, double width, double height, double radius1, double radius2, double radius3, double radius4) noexcept {
@@ -825,7 +825,7 @@ namespace Grain {
     }
 
     void GraphicContext::fillRoundRect(const Rectd& rect, double radius1, double radius2, double radius3, double radius4) noexcept {
-        fillRoundRect(rect.m_x, rect.m_y, rect.m_width, rect.m_height, radius1, radius2, radius3, radius4);
+        fillRoundRect(rect.x_, rect.y_, rect.width_, rect.height_, radius1, radius2, radius3, radius4);
     }
 
     void GraphicContext::fillRoundBar(double x, double y, double width, double height) noexcept {
@@ -835,20 +835,20 @@ namespace Grain {
     }
 
     void GraphicContext::fillRoundBar(const Rectd& rect) noexcept {
-        fillRoundBar(rect.m_x, rect.m_y, rect.m_width, rect.m_height);
+        fillRoundBar(rect.x_, rect.y_, rect.width_, rect.height_);
     }
 
     void GraphicContext::fillFrame(const Rectd& rect, double size) noexcept {
         beginPath();
         addRectPath(rect);
-        addRectPath(rect.m_x + size, rect.m_y + size, rect.m_width - size * 2, rect.m_height - size * 2);
+        addRectPath(rect.x_ + size, rect.y_ + size, rect.width_ - size * 2, rect.height_ - size * 2);
         fillPathEvenOdd();
     }
 
     void GraphicContext::fillFrame(const Rectd& rect, double width, double height) noexcept {
         beginPath();
         addRectPath(rect);
-        addRectPath(rect.m_x + width, rect.m_y + height, rect.m_width - width * 2, rect.m_height - height * 2);
+        addRectPath(rect.x_ + width, rect.y_ + height, rect.width_ - width * 2, rect.height_ - height * 2);
         fillPathEvenOdd();
     }
 
@@ -865,7 +865,7 @@ namespace Grain {
     }
 
     void GraphicContext::strokeRoundBar(const Rectd& rect) noexcept {
-        strokeRoundBar(rect.m_x, rect.m_y, rect.m_width, rect.m_height);
+        strokeRoundBar(rect.x_, rect.y_, rect.width_, rect.height_);
     }
 
     void GraphicContext::strokeRoundRect(double x, double y, double width, double height, double radius) noexcept {
@@ -881,7 +881,7 @@ namespace Grain {
     }
 
     void GraphicContext::strokeRoundRect(const Rectd& rect, double radius1, double radius2, double radius3, double radius4) noexcept {
-        strokeRoundRect(rect.m_x, rect.m_y, rect.m_width, rect.m_height, radius1, radius2, radius3, radius4);
+        strokeRoundRect(rect.x_, rect.y_, rect.width_, rect.height_, radius1, radius2, radius3, radius4);
     }
 
     void GraphicContext::addQuadrilateralPath(const Vec2d* points) noexcept {
@@ -895,10 +895,10 @@ namespace Grain {
     }
 
     void GraphicContext::addQuadrilateralPath(const Quadrilateral& quadrilateral) noexcept {
-        moveTo(quadrilateral.m_points[0]);
-        lineTo(quadrilateral.m_points[1]);
-        lineTo(quadrilateral.m_points[2]);
-        lineTo(quadrilateral.m_points[3]);
+        moveTo(quadrilateral.points_[0]);
+        lineTo(quadrilateral.points_[1]);
+        lineTo(quadrilateral.points_[2]);
+        lineTo(quadrilateral.points_[3]);
         closePath();
     }
 
@@ -941,23 +941,23 @@ namespace Grain {
     }
 
     void GraphicContext::fillEllipse(const Rectd& rect) noexcept {
-        fillEllipse(rect.centerX(), rect.centerY(), rect.m_width / 2.0, rect.m_height / 2.0);
+        fillEllipse(rect.centerX(), rect.centerY(), rect.width_ / 2.0, rect.height_ / 2.0);
     }
 
     void GraphicContext::fillEllipse(const Vec2d& center, double rh, double rv) noexcept {
-        fillEllipse(center.m_x, center.m_y, rh, rv);
+        fillEllipse(center.x_, center.y_, rh, rv);
     }
 
     void GraphicContext::strokeEllipse(const Rectd& rect) noexcept {
-        strokeEllipse(rect.centerX(), rect.centerY(), rect.m_width / 2.0, rect.m_height / 2.0);
+        strokeEllipse(rect.centerX(), rect.centerY(), rect.width_ / 2.0, rect.height_ / 2.0);
     }
 
     void GraphicContext::strokeEllipse(const Vec2d& center, double rh, double rv) noexcept {
-        strokeEllipse(center.m_x, center.m_y, rh, rv);
+        strokeEllipse(center.x_, center.y_, rh, rv);
     }
 
     void GraphicContext::fillCircle(const Circled& circle) noexcept {
-        fillCircle(circle.m_center, circle.m_radius);
+        fillCircle(circle.center_, circle.radius_);
     }
 
     void GraphicContext::fillCircle(const Rectd& rect) noexcept {
@@ -970,7 +970,7 @@ namespace Grain {
     }
 
     void GraphicContext::fillCircle(const Vec2d& center, double radius) noexcept {
-        fillCircle(center.m_x, center.m_y, radius);
+        fillCircle(center.x_, center.y_, radius);
     }
 
     void GraphicContext::strokeCircle(const Rectd& rect) noexcept {
@@ -978,7 +978,7 @@ namespace Grain {
     }
 
     void GraphicContext::strokeCircle(const Circled& circle) noexcept {
-        strokeCircle(circle.m_center, circle.m_radius);
+        strokeCircle(circle.center_, circle.radius_);
     }
 
     void GraphicContext::strokeCircle(const Rectd& rect, double min_radius, double max_radius) noexcept {
@@ -987,7 +987,7 @@ namespace Grain {
     }
 
     void GraphicContext::strokeCircle(const Vec2d& center, double radius) noexcept {
-        strokeCircle(center.m_x, center.m_y, radius);
+        strokeCircle(center.x_, center.y_, radius);
     }
 
     void GraphicContext::fillRing(const Vec2d& center, double inner_radius, double outer_radius, double angle, double span) noexcept {
@@ -1043,10 +1043,10 @@ namespace Grain {
     void GraphicContext::drawDebugText(const char* text, Vec2d& pos, int32_t spacing) noexcept {
         if (text) {
             Rectd textRect = this->textRect(text, App::uiFont());
-            textRect.m_x = pos.m_x;
-            textRect.m_y = pos.m_y;
-            textRect.m_width += 10;
-            textRect.m_height = std::round(App::uiFont()->lineHeight() * 1.2f);
+            textRect.x_ = pos.x_;
+            textRect.y_ = pos.y_;
+            textRect.width_ += 10;
+            textRect.height_ = std::round(App::uiFont()->lineHeight() * 1.2f);
 
             setFillRGB(m_debug_bg_color);
             fillRect(textRect);
@@ -1054,7 +1054,7 @@ namespace Grain {
             textRect.insetLeft(5);
             drawTextInRect(text, textRect, Alignment::Left, App::uiFont(), m_debug_fg_color);
 
-            pos.m_y += textRect.m_height + spacing;
+            pos.y_ += textRect.height_ + spacing;
         }
     }
 
@@ -1113,9 +1113,9 @@ namespace Grain {
     }
 
     void GraphicContext::transformToFitRectProportionally(const Rectd& src_rect, const Rectd& dst_rect) noexcept {
-        if (src_rect.m_width > std::numeric_limits<float>::epsilon() && src_rect.m_height > std::numeric_limits<float>::epsilon()) {
-            double sx = dst_rect.m_width / src_rect.m_width;
-            double sy = dst_rect.m_height / src_rect.m_height;
+        if (src_rect.width_ > std::numeric_limits<float>::epsilon() && src_rect.height_ > std::numeric_limits<float>::epsilon()) {
+            double sx = dst_rect.width_ / src_rect.width_;
+            double sy = dst_rect.height_ / src_rect.height_;
             double s = sx < sy ? sx : sy;
             translate(dst_rect.center());
             scale(s);

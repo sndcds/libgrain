@@ -15,24 +15,21 @@
 
 namespace Grain {
 
-    ScrollBar::ScrollBar(const Rectd &rect, bool vertical) : Component(rect) {
-        m_type = ComponentType::ScrollBar;
-        m_is_delayed = true;
-        m_bar_size = 12.0f;
-        m_vertical = vertical;
-        m_visible_fraction = 1.0f;
-        m_scroll_position = 0.0f;
-        m_track_rect.zero();
-        m_handle_rect.zero();
+    ScrollBar::ScrollBar(const Rectd& rect, bool vertical) : Component(rect) {
+        type_ = ComponentType::ScrollBar;
+        is_delayed_ = true;
+        bar_size_ = 12.0f;
+        is_vertical_ = vertical;
+        visible_fraction_ = 1.0f;
+        scroll_position_ = 0.0f;
+        track_rect_.zero();
+        handle_rect_.zero();
     }
 
+    ScrollBar::~ScrollBar() = default;
 
-    ScrollBar::~ScrollBar() {
-    }
-
-
-    ScrollBar *ScrollBar::add(View *view, const Rectd &rect, bool vertical) {
-        ScrollBar *scroll_bar = nullptr;
+    ScrollBar* ScrollBar::add(View* view, const Rectd& rect, bool vertical) {
+        ScrollBar* scroll_bar = nullptr;
         if (view) {
             scroll_bar = new (std::nothrow) ScrollBar(rect, vertical);
             if (scroll_bar) {
@@ -42,26 +39,22 @@ namespace Grain {
         return scroll_bar;
     }
 
-
     void ScrollBar::setVisibleFraction(double visible_fraction) {
-        m_visible_fraction = std::clamp<double>(visible_fraction, 0.00001, 1.0);
+        visible_fraction_ = std::clamp<double>(visible_fraction, 0.00001, 1.0);
         needsDisplay();
     }
-
 
     void ScrollBar::setVisibleFraction(double total_size, double visible_size) {
         setVisibleFraction(total_size > DBL_MIN ? visible_size / total_size : 1.0f);
         needsDisplay();
     }
 
-
     void ScrollBar::setScrollPosition(double scroll_position) {
-        if (scroll_position != m_scroll_position) {
-            m_scroll_position = std::clamp<double>(scroll_position, 0.0, 1.0);
+        if (scroll_position != scroll_position_) {
+            scroll_position_ = std::clamp<double>(scroll_position, 0.0, 1.0);
             needsDisplay();
         }
     }
-
 
     void ScrollBar::setScrollPosition(double offset, double max_offset) {
         if (max_offset < 0.00001) {
@@ -72,8 +65,7 @@ namespace Grain {
         }
     }
 
-
-    void ScrollBar::draw(const Rectd &dirty_rect) noexcept {
+    void ScrollBar::draw(const Rectd& dirty_rect) noexcept {
         auto gc = graphicContextPtr();
 
         auto style = guiStyle();
@@ -85,37 +77,36 @@ namespace Grain {
         gc->save();
 
         Rectd bounds_rect = boundsRect();
-        RGB bg_color = style->backgroundColor();
+        RGBA bg_color = style->backgroundColor();
 
         gc->setFillRGB(bg_color);
         gc->fillRect(bounds_rect);
 
-        m_track_rect = bounds_rect;
-        m_track_rect.inset(style->scrollBarPadding());
-        m_handle_rect = m_track_rect;
+        track_rect_ = bounds_rect;
+        track_rect_.inset(style->scrollBarPadding());
+        handle_rect_ = track_rect_;
 
-        if (m_vertical) {
-            double min_size = m_track_rect.m_width;
-            m_handle_rect.m_height = std::clamp<double>(m_track_rect.m_height * m_visible_fraction, min_size, m_track_rect.m_height);
-            m_handle_rect.m_y = m_track_rect.m_y + (m_track_rect.m_height - m_handle_rect.m_height) * m_scroll_position;
+        if (is_vertical_) {
+            double min_size = track_rect_.width_;
+            handle_rect_.height_ = std::clamp<double>(track_rect_.height_ * visible_fraction_, min_size, track_rect_.height_);
+            handle_rect_.y_ = track_rect_.y_ + (track_rect_.height_ - handle_rect_.height_) * scroll_position_;
         }
         else {
-            double min_size = m_track_rect.m_height;
-            m_handle_rect.m_width = std::clamp<double>(m_handle_rect.m_width * m_visible_fraction, min_size, m_track_rect.m_width);
-            m_handle_rect.m_x = m_track_rect.m_x + (m_track_rect.m_width - m_handle_rect.m_width) * m_scroll_position;
+            double min_size = track_rect_.height_;
+            handle_rect_.width_ = std::clamp<double>(handle_rect_.width_ * visible_fraction_, min_size, track_rect_.width_);
+            handle_rect_.x_ = track_rect_.x_ + (track_rect_.width_ - handle_rect_.width_) * scroll_position_;
         }
 
-        RGB handle_color = style->scrollBarColor();
-        gc->setFillRGB(handle_color);
-        gc->fillRoundBar(m_handle_rect);
+        RGBA handle_color = style->scrollBarHandleColor();
+        gc->setFillRGBA(handle_color);
+        gc->fillRoundBar(handle_rect_);
 
         gc->restore();
     }
 
-
-    void ScrollBar::handleMouseDown(const Event &event) noexcept {
-        if (m_handle_rect.contains(event.mouseDownPos())) {
-            m_remembered_scroll_position = m_scroll_position;
+    void ScrollBar::handleMouseDown(const Event& event) noexcept {
+        if (handle_rect_.contains(event.mouseDownPos())) {
+            remembered_scroll_position_ = scroll_position_;
             highlight();
         }
         else {
@@ -123,30 +114,27 @@ namespace Grain {
         }
     }
 
-
-    void ScrollBar::handleMouseDrag(const Event &event) noexcept {
-        if (m_visible_fraction < 1.0f) {
-            if (m_vertical) {
-                double length = (m_track_rect.m_height - m_handle_rect.m_height);
+    void ScrollBar::handleMouseDrag(const Event& event) noexcept {
+        if (visible_fraction_ < 1.0f) {
+            if (is_vertical_) {
+                double length = (track_rect_.height_ - handle_rect_.height_);
                 if (length > DBL_EPSILON) {
-                    m_scroll_position = std::clamp<double>(m_remembered_scroll_position + event.mouseDragDeltaY() / length, 0.0, 1.0);
+                    scroll_position_ = std::clamp<double>(remembered_scroll_position_ + event.mouseDragDeltaY() / length, 0.0, 1.0);
                     fireActionAndDisplay(ActionType::None, nullptr);
                 }
             }
             else {
-                double length = (m_track_rect.m_width - m_handle_rect.m_width);
+                double length = (track_rect_.width_ - handle_rect_.width_);
                 if (length > DBL_EPSILON) {
-                    m_scroll_position = std::clamp<double>(m_remembered_scroll_position + event.mouseDragDeltaX() / length, 0.0, 1.0);
+                    scroll_position_ = std::clamp<double>(remembered_scroll_position_ + event.mouseDragDeltaX() / length, 0.0, 1.0);
                     fireActionAndDisplay(ActionType::None, nullptr);
                 }
             }
         }
     }
 
-
-    void ScrollBar::handleMouseUp(const Event &event) noexcept {
+    void ScrollBar::handleMouseUp(const Event& event) noexcept {
         deHighlight();
     }
-
 
 } // End of namespace Grain.
