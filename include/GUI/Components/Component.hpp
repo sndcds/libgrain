@@ -43,66 +43,6 @@ namespace Grain {
     typedef void (*ComponentDrawFunc)(GraphicContext* gc, Component* component, void* ref);
     typedef bool (*ComponentHandleEventFunc)(Component* component, const Event& event, void* ref);
     typedef bool (*ComponentHandleMessageFunc)(Component* component, const char* message, void* ref, void* data);
-    typedef void (*ComponentAnimationFunc)(Component* component, void* ref);
-
-
-    class ComponentAnimationFrameDriver {
-    public:
-        using TimePoint = std::chrono::steady_clock::time_point;
-
-        ComponentAnimationFrameDriver() = default;
-        virtual ~ComponentAnimationFrameDriver() {
-#if defined(__APPLE__) && defined(__MACH__)
-            stop();
-            if (link_) CVDisplayLinkRelease(link_);
-#endif
-        }
-
-        void setCallback(std::function<void(TimePoint)> cb) {
-            callback_ = std::move(cb);
-        }
-
-        void start() {
-#if defined(__APPLE__) && defined(__MACH__)
-            if (!link_) {
-                CVDisplayLinkCreateWithActiveCGDisplays(&link_);
-                CVDisplayLinkSetOutputCallback(
-                    link_,
-                    [](CVDisplayLinkRef, const CVTimeStamp*, const CVTimeStamp*,
-                       CVOptionFlags, CVOptionFlags*, void* userData) -> CVReturn {
-                        auto* driver = static_cast<ComponentAnimationFrameDriver*>(userData);
-                        driver->tick(std::chrono::steady_clock::now());
-                        return kCVReturnSuccess;
-                    },
-                    this
-                );
-            }
-
-            if (!CVDisplayLinkIsRunning(link_)) {
-                CVDisplayLinkStart(link_);
-            }
-#endif
-        }
-
-        void stop() {
-#if defined(__APPLE__) && defined(__MACH__)
-            if (link_ && CVDisplayLinkIsRunning(link_)) {
-                CVDisplayLinkStop(link_);
-            }
-#endif
-        }
-
-    protected:
-        void tick(TimePoint now) {
-            if (callback_) callback_(now);
-        }
-
-    private:
-        std::function<void(TimePoint)> callback_;
-#if defined(__APPLE__) && defined(__MACH__)
-        CVDisplayLinkRef link_{nullptr};
-#endif
-    };
 
     class Component : Object {
 
@@ -155,12 +95,6 @@ namespace Grain {
             None = 0,
             StateChanged,
             ViewportChanged
-        };
-
-        enum class AnimationMode {
-            None,
-            Finite,
-            Continuous
         };
 
     protected:
@@ -226,15 +160,7 @@ namespace Grain {
         // Action
         ActionType action_type_ = ActionType::None;
 
-        // Animation
-        AnimationMode animation_mode_ = AnimationMode::None;
-        bool is_animating_ = false;
-        TimePoint animation_start_{};
-        Duration animation_duration_{};
         double animation_progress_{};
-        ComponentAnimationFrameDriver* animation_frame_driver_ = nullptr;
-        ComponentAnimationFunc animation_func_ = nullptr;
-        void* animation_ref_ = nullptr;
 
 
         // Component specific functions
@@ -405,133 +331,8 @@ namespace Grain {
             }
         }
 
-        bool ensureAnimationDriver() {
-            if (!animation_frame_driver_) {
-                animation_frame_driver_ = new(std::nothrow) ComponentAnimationFrameDriver();
-                if (!animation_frame_driver_) {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        void setAnimationFunc(ComponentAnimationFunc func, void* ref) {
-            animation_func_ = func;
-            animation_ref_ = ref;
-        }
-
-        void animate(double start, double duration) {
-            if (!ensureAnimationDriver()) { return; }
-            if (is_animating_) { return; }
-
-            animation_mode_ = AnimationMode::Finite;
-
-            if (start <= 0.0) {
-                animation_start_ = Clock::now();
-            } else {
-                animation_start_ = Clock::time_point{
-                    std::chrono::duration_cast<Clock::duration>(
-                        std::chrono::duration<double>(start)
-                    )
-                };
-            }
-
-            animation_duration_ =
-                std::chrono::duration_cast<Duration>(
-                    std::chrono::duration<double>(duration)
-                );
-
-            is_animating_ = true;
-
-            animation_frame_driver_->setCallback([this](TimePoint now){
-                if (!is_animating_) return;
-
-                auto elapsed = std::chrono::duration_cast<Duration>(now - animation_start_);
-                double progress = double(elapsed.count()) / double(animation_duration_.count());
-
-                if (progress >= 1.0) {
-                    progress = 1.0;
-                    is_animating_ = false;
-                    animation_frame_driver_->stop();
-                }
-
-                // Post to main thread using pure C dispatch
-                struct CallbackContext {
-                    Component* self;
-                    double progress;
-                };
-                auto* ctx = new CallbackContext{this, progress};
-
-                dispatch_async_f(dispatch_get_main_queue(), ctx, [](void* context){
-                    auto* c = static_cast<CallbackContext*>(context);
-                    c->self->onAnimationFrame(c->progress);
-                    delete c;
-                });
-            });
-
-            animation_frame_driver_->start();
-        }
-
-        void startAnimation() {
-            if (!ensureAnimationDriver()) return;
-            if (is_animating_) return;
-
-            animation_mode_ = AnimationMode::Continuous;
-            animation_start_ = std::chrono::steady_clock::now();
-            is_animating_ = true;
-
-            animation_frame_driver_->setCallback([this](TimePoint now) {
-                if (!is_animating_) return;
-
-                auto elapsed =
-                    std::chrono::duration_cast<std::chrono::duration<double>>(now - animation_start_);
-
-                struct Context {
-                    Component* self;
-                    double t;
-                };
-
-                auto* ctx = new Context{ this, elapsed.count() };
-
-                dispatch_async_f(
-                    dispatch_get_main_queue(),
-                    ctx,
-                    [](void* p) {
-                        auto* c = static_cast<Context*>(p);
-                        c->self->onAnimationTick(c->t);
-                        delete c;
-                    }
-                );
-            });
-
-            animation_frame_driver_->start();
-        }
-
-        void stopAnimation() {
-            if (!is_animating_) return;
-
-            is_animating_ = false;
-            animation_mode_ = AnimationMode::None;
-
-            if (animation_frame_driver_) {
-                animation_frame_driver_->stop();
-            }
-        }
-
-        virtual void onAnimationFrame(double progress) {
+        void setAnimationProgress(double progress) noexcept {
             animation_progress_ = progress;
-            if (animation_func_) {
-                animation_func_(this, animation_ref_);
-            }
-            needsDisplay();
-        }
-
-        virtual void onAnimationTick(double seconds_since_start) {
-            animation_progress_ = seconds_since_start;
-            if (animation_func_) {
-                animation_func_(this, animation_ref_);
-            }
-            needsDisplay();
         }
 
         [[nodiscard]] double animationProgress() const noexcept {

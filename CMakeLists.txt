@@ -132,6 +132,7 @@ add_library(libgrain STATIC
         src/Graphic/CairoContext.cpp
         src/Graphic/Font.cpp
         src/Graphic/StrokeStyle.cpp
+        src/Graphic/AnimationFrameDriver.cpp
 
         src/Image/Image.cpp
 
@@ -182,6 +183,8 @@ add_library(libgrain STATIC
         src/Audio/AudioInterface.cpp
         include/Data/DataComposer.hpp
         src/Data/DataComposer.cpp
+        src/Graphic/AnimationFrameDriver.cpp
+        include/Graphic/AnimationFrameDriver.hpp
 )
 
 # Add the warning flag for GCC/Clang

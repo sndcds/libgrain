@@ -102,6 +102,7 @@
 #include "Graphic/CairoContext.hpp"
 #include "Graphic/Font.hpp"
 #include "Graphic/StrokeStyle.hpp"
+#include "Graphic/AnimationFrameDriver.hpp"
 
 #include "GUI/Screen.hpp"
 #include "GUI/Window.hpp"

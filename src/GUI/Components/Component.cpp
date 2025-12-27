@@ -57,7 +57,6 @@ namespace Grain {
 #endif
 
         delete text_;
-        delete animation_frame_driver_;
     }
 
 
