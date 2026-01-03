@@ -36,32 +36,32 @@ namespace Grain {
             using pointer = T*;
             using reference = T&;
 
-            explicit Iterator(pointer ptr) : m_ptr(ptr) {}
+            explicit Iterator(pointer ptr) : ptr_(ptr) {}
 
-            reference operator * () const { return *m_ptr; }
-            pointer operator -> () { return m_ptr; }
-            Iterator& operator ++ () { m_ptr++; return *this; }
+            reference operator * () const { return *ptr_; }
+            pointer operator -> () { return ptr_; }
+            Iterator& operator ++ () { ptr_++; return *this; }
             Iterator operator ++ (int) { Iterator tmp = *this; ++(*this); return tmp; }
-            Iterator& operator -- () { m_ptr--; return *this; }
+            Iterator& operator -- () { ptr_--; return *this; }
             Iterator operator -- (int) { Iterator tmp = *this; --(*this); return tmp; }
-            Iterator operator + (difference_type n) const { return Iterator(m_ptr + n); }
-            Iterator operator - (difference_type n) const { return Iterator(m_ptr - n); }
-            difference_type operator - (const Iterator& other) const { return m_ptr - other.m_ptr; }
+            Iterator operator + (difference_type n) const { return Iterator(ptr_ + n); }
+            Iterator operator - (difference_type n) const { return Iterator(ptr_ - n); }
+            difference_type operator - (const Iterator& other) const { return ptr_ - other.ptr_; }
 
-            Iterator& operator += (difference_type n) { m_ptr += n; return *this; }
-            Iterator& operator -= (difference_type n) { m_ptr -= n; return *this; }
+            Iterator& operator += (difference_type n) { ptr_ += n; return *this; }
+            Iterator& operator -= (difference_type n) { ptr_ -= n; return *this; }
 
-            reference operator [] (difference_type n) const { return m_ptr[n]; }
+            reference operator [] (difference_type n) const { return ptr_[n]; }
 
-            friend bool operator == (const Iterator& a, const Iterator& b) { return a.m_ptr == b.m_ptr; }
-            friend bool operator != (const Iterator& a, const Iterator& b) { return a.m_ptr != b.m_ptr; }
-            friend bool operator < (const Iterator& a, const Iterator& b) { return a.m_ptr < b.m_ptr; }
-            friend bool operator > (const Iterator& a, const Iterator& b) { return a.m_ptr > b.m_ptr; }
-            friend bool operator <= (const Iterator& a, const Iterator& b) { return a.m_ptr <= b.m_ptr; }
-            friend bool operator >= (const Iterator& a, const Iterator& b) { return a.m_ptr >= b.m_ptr; }
+            friend bool operator == (const Iterator& a, const Iterator& b) { return a.ptr_ == b.ptr_; }
+            friend bool operator != (const Iterator& a, const Iterator& b) { return a.ptr_ != b.ptr_; }
+            friend bool operator < (const Iterator& a, const Iterator& b) { return a.ptr_ < b.ptr_; }
+            friend bool operator > (const Iterator& a, const Iterator& b) { return a.ptr_ > b.ptr_; }
+            friend bool operator <= (const Iterator& a, const Iterator& b) { return a.ptr <= b.ptr_; }
+            friend bool operator >= (const Iterator& a, const Iterator& b) { return a.ptr_ >= b.ptr_; }
 
         protected:
-            pointer m_ptr;
+            pointer ptr_;
         };
 
     protected:

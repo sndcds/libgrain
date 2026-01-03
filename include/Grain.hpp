@@ -263,6 +263,7 @@ namespace Grain {
         explicit Exception(ErrorCode code, const char* message);
 
         [[nodiscard]] ErrorCode code() const noexcept;
+        [[nodiscard]] int32_t codeAsInt() const noexcept { return static_cast<int32_t>(code()); }
         [[nodiscard]] const char* message() const noexcept;
 
         void log(Log& l) const;

@@ -114,6 +114,9 @@ public:
     }
 #endif
 
+    virtual ~Rect() = default;
+
+
     [[nodiscard]] virtual const char* className() const noexcept {
         return "Rect";
     }
@@ -781,10 +784,10 @@ public:
 
     void zero() noexcept { x_ = y_ = width_ = height_ = 0; }
 
-    void set(T x, T y, T width, T height) noexcept { x_ = x; y_ = y; width_ = width; height_ = height; }
-    void set(T x, T y, T size) noexcept { x_ = x; y_ = y; width_ = height_ = size;}
-    void set(const Rect& r) noexcept { x_ = r.x_; y_ = r.y_; width_ = r.width_; height_ = r.height_; }
-    void set(T width, T height) noexcept { x_ = y_ = 0; width_ = width; height_ = height; }
+    virtual void set(T x, T y, T width, T height) noexcept { x_ = x; y_ = y; width_ = width; height_ = height; }
+    virtual void set(T x, T y, T size) noexcept { x_ = x; y_ = y; width_ = height_ = size;}
+    virtual void set(const Rect& r) noexcept { x_ = r.x_; y_ = r.y_; width_ = r.width_; height_ = r.height_; }
+    virtual void set(T width, T height) noexcept { x_ = y_ = 0; width_ = width; height_ = height; }
 
     void set(const Vec2<T>& center, T radius) noexcept {
         x_ = center.x_ - radius;
@@ -1292,6 +1295,9 @@ public:
     explicit RectFix(Fix size) noexcept : width_(size), height_(size) {}
     explicit RectFix(Fix width, Fix height) noexcept : width_(width), height_(height) {}
     explicit RectFix(Fix x, Fix y, Fix width, Fix height) noexcept : x_(x), y_(y), width_(width), height_(height) {}
+
+    virtual ~RectFix() noexcept = default;
+
 
     [[nodiscard]] virtual const char* className() const noexcept { return "RectFix"; }
 

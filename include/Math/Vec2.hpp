@@ -479,6 +479,19 @@ public:
         return angle;
     }
 
+    [[nodiscard]] static double signedAngleRad(T ux, T uy, T vx, T vy) noexcept {
+        double dot = ux * vx + uy * vy;
+        double length = std::sqrt((ux * ux + uy * uy) * (vx * vx + vy * vy));
+        if (length == 0.0) {
+            return 0.0;
+        }
+        double angle = std::acos(std::max(-1.0, std::min(1.0, dot / length)));
+        if (ux * vy - uy * vx < 0) {
+            angle = -angle;
+        }
+        return angle;
+    }
+
     /**
      *  @brief Computes the angle between vectors `a` and `b` with respect to
      *         this vector.

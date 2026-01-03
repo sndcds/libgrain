@@ -25,20 +25,20 @@ namespace Grain {
         RingBuffer() noexcept = default;
 
         explicit RingBuffer(int64_t capacity) noexcept {
-            m_capacity = capacity > 0 ? capacity : 1;
-            m_data = (T*)std::malloc(capacity * sizeof(T));
-            m_use_external_mem = false;
+            capacity_ = capacity > 0 ? capacity : 1;
+            data_ = (T*)std::malloc(capacity * sizeof(T));
+            use_external_mem_ = false;
         }
 
         RingBuffer(int64_t capacity, T* mem) noexcept {
-            m_data = nullptr;
-            m_use_external_mem = false;
+            data_ = nullptr;
+            use_external_mem_ = false;
             setupExternalMem(capacity, mem);
         }
 
         ~RingBuffer() noexcept override {
-            if (!m_use_external_mem && m_data) {
-                std::free(m_data);
+            if (!use_external_mem_ && data_) {
+                std::free(data_);
             }
         }
 
@@ -50,54 +50,54 @@ namespace Grain {
         }
 
         friend std::ostream& operator << (std::ostream& os, const RingBuffer& o) {
-            os << "Ringbuffer m_capacity: " << o.m_capacity;
-            os << ", m_read_pos: " << o.m_read_pos;
-            os << ", m_write_pos: " << o.m_write_pos;
+            os << "Ringbuffer m_capacity: " << o.capacity_;
+            os << ", m_read_pos: " << o.read_pos_;
+            os << ", m_write_pos: " << o.write_pos_;
             return os;
         }
 
-        [[nodiscard]] int64_t capacity() const noexcept { return m_capacity; }
-        [[nodiscard]] int64_t readPos() const noexcept { return m_read_pos; }
-        [[nodiscard]] int64_t writePos() const noexcept { return m_write_pos; }
-        [[nodiscard]] T* mutDataPtr() const noexcept { return m_data; }
-        [[nodiscard]] bool usesExternalMemory() const noexcept { return m_use_external_mem; }
-        [[nodiscard]] bool isUsable() const noexcept { return m_data && m_capacity > 0; }
+        [[nodiscard]] int64_t capacity() const noexcept { return capacity_; }
+        [[nodiscard]] int64_t readPos() const noexcept { return read_pos_; }
+        [[nodiscard]] int64_t writePos() const noexcept { return write_pos_; }
+        [[nodiscard]] T* mutDataPtr() const noexcept { return data_; }
+        [[nodiscard]] bool usesExternalMemory() const noexcept { return use_external_mem_; }
+        [[nodiscard]] bool isUsable() const noexcept { return data_ && capacity_ > 0; }
 
         int64_t setReadPos(int64_t pos) noexcept {
-            m_read_pos = ((pos % m_capacity) + m_capacity) % m_capacity;
-            return m_read_pos;
+            read_pos_ = ((pos % capacity_) + capacity_) % capacity_;
+            return read_pos_;
         }
 
         int64_t setWritePos(int64_t pos) noexcept {
-            m_write_pos = ((pos % m_capacity) + m_capacity) % m_capacity;
-            return m_write_pos;
+            write_pos_ = ((pos % capacity_) + capacity_) % capacity_;
+            return write_pos_;
         }
 
         void shiftReadPos(int64_t n) noexcept {
-            setReadPos(m_read_pos + n);
+            setReadPos(read_pos_ + n);
         }
 
         void shiftWritePos(int64_t n) noexcept {
-            setWritePos(m_write_pos + n);
+            setWritePos(write_pos_ + n);
         }
 
         T read() noexcept {
-            int64_t pos = m_read_pos;
-            m_read_pos++;
-            if (m_read_pos >= m_capacity) {
-                m_read_pos = 0;
+            int64_t pos = read_pos_;
+            read_pos_++;
+            if (read_pos_ >= capacity_) {
+                read_pos_ = 0;
             }
-            return m_data[pos];
+            return data_[pos];
         }
 
         void read(int64_t length, int64_t stride, T* out_values) noexcept {
             if (out_values) {
                 float *d = out_values;
                 for (int64_t i = 0; i < length; i++) {
-                    *d = m_data[m_read_pos];
-                    m_read_pos++;
-                    if (m_read_pos >= m_capacity) {
-                        m_read_pos = 0;
+                    *d = data_[read_pos_];
+                    read_pos_++;
+                    if (read_pos_ >= capacity_) {
+                        read_pos_ = 0;
                     }
                     d += stride;
                 }
@@ -105,27 +105,27 @@ namespace Grain {
         }
 
         void skipRead() noexcept {
-            m_read_pos++;
-            if (m_read_pos >= m_capacity) {
-                m_read_pos = 0;
+            read_pos_++;
+            if (read_pos_ >= capacity_) {
+                read_pos_ = 0;
             }
         }
 
 
         void write(T value) noexcept {
-            m_data[m_write_pos] = value;
-            m_write_pos++;
-            if (m_write_pos >= m_capacity) {
-                m_write_pos = 0;
+            data_[write_pos_] = value;
+            write_pos_++;
+            if (write_pos_ >= capacity_) {
+                write_pos_ = 0;
             }
         }
 
         void writeZeros(int64_t length) noexcept {
             for (int64_t i = 0; i < length; i++) {
-                m_data[m_write_pos] = 0;
-                m_write_pos++;
-                if (m_write_pos >= m_capacity) {
-                    m_write_pos = 0;
+                data_[write_pos_] = 0;
+                write_pos_++;
+                if (write_pos_ >= capacity_) {
+                    write_pos_ = 0;
                 }
             }
         }
@@ -133,72 +133,72 @@ namespace Grain {
         void write(const T* values, int64_t length) noexcept {
             if (values) {
                 for (int64_t i = 0; i < length; i++) {
-                    m_data[m_write_pos] = values[i];
-                    m_write_pos++;
-                    if (m_write_pos >= m_capacity) {
-                        m_write_pos = 0;
+                    data_[write_pos_] = values[i];
+                    write_pos_++;
+                    if (write_pos_ >= capacity_) {
+                        write_pos_ = 0;
                     }
                 }
             }
         }
 
         void add(T value) noexcept {
-            m_data[m_write_pos] += value;
-            m_write_pos++;
-            if (m_write_pos >= m_capacity) {
-                m_write_pos = 0;
+            data_[write_pos_] += value;
+            write_pos_++;
+            if (write_pos_ >= capacity_) {
+                write_pos_ = 0;
             }
         }
 
         void add(const T* values, int64_t length) noexcept {
             if (values) {
                 for (int64_t i = 0; i < length; i++) {
-                    m_data[m_write_pos] += values[i];
-                    m_write_pos++;
-                    if (m_write_pos >= m_capacity) {
-                        m_write_pos = 0;
+                    data_[write_pos_] += values[i];
+                    write_pos_++;
+                    if (write_pos_ >= capacity_) {
+                        write_pos_ = 0;
                     }
                 }
             }
         }
 
         void mul(T value) noexcept {
-            m_data[m_write_pos] *= value;
-            m_write_pos++;
-            if (m_write_pos >= m_capacity) {
-                m_write_pos = 0;
+            data_[write_pos_] *= value;
+            write_pos_++;
+            if (write_pos_ >= capacity_) {
+                write_pos_ = 0;
             }
         }
 
         void mul(const T* values, int64_t length) noexcept {
             if (values) {
                 for (int64_t i = 0; i < length; i++) {
-                    m_data[m_write_pos] *= values[i];
-                    m_write_pos++;
-                    if (m_write_pos >= m_capacity) {
-                        m_write_pos = 0;
+                    data_[write_pos_] *= values[i];
+                    write_pos_++;
+                    if (write_pos_ >= capacity_) {
+                        write_pos_ = 0;
                     }
                 }
             }
         }
 
         void setupExternalMem(int64_t capacity, T* mem) noexcept {
-            if (m_data && !m_use_external_mem) {
-                std::free(m_data);
+            if (data_ && !use_external_mem_) {
+                std::free(data_);
             }
-            m_capacity = capacity;
-            m_read_pos = 0;
-            m_write_pos = 0;
-            m_data = mem;
-            m_use_external_mem = true;
+            capacity_ = capacity;
+            read_pos_ = 0;
+            write_pos_ = 0;
+            data_ = mem;
+            use_external_mem_ = true;
         }
 
     protected:
-        int64_t m_capacity = 0;
-        int64_t m_read_pos = 0;
-        int64_t m_write_pos = 0;
-        T* m_data = nullptr;
-        bool m_use_external_mem = false;
+        int64_t capacity_ = 0;
+        int64_t read_pos_ = 0;
+        int64_t write_pos_ = 0;
+        T* data_ = nullptr;
+        bool use_external_mem_ = false;
     };
 
 

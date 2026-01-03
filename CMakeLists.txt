@@ -44,12 +44,16 @@ add_library(libgrain STATIC
         src/Audio/AudioInterface.cpp
 
         src/2d/RangeRect.cpp
+        src/2d/PosRect.cpp
         src/2d/Polygon.cpp
+        src/2d/Arc.cpp
         src/2d/GraphicPathPoint.cpp
         src/2d/GraphicPath.cpp
         src/2d/GraphicCompoundPath.cpp
         src/2d/CatmullRomCurve.cpp
         src/2d/Superellipse.cpp
+        src/2d/PoissonDisc.cpp
+        src/2d/Delaunay.cpp
 
         src/2d/Data/CVF2.cpp
         src/2d/Data/CVF2File.cpp

@@ -74,7 +74,6 @@ public:
         return os;
     }
 
-
     void _init(int32_t point_capacity) noexcept;
     void _update() noexcept;
     void _updateLength(int32_t bezier_resolution = 100) noexcept;
@@ -85,7 +84,6 @@ public:
     double length() noexcept;
     double polygonCentroid(Vec2d& out_centroid) const noexcept;
     [[nodiscard]] Vec2d simplePolygonCentroid() const noexcept;
-
 
 
     [[nodiscard]] int32_t lastPointIndex() const noexcept { return pointCount() - 1; }
@@ -129,7 +127,6 @@ public:
     void rotatePoint(int32_t index, double angle) noexcept;
 
     void projectToQuadrilateral(const Quadrilateral& quadrilateral, const Mat3d* matrix = nullptr) noexcept;
-
 
     void fill(GraphicContext& gc) const noexcept;
     void stroke(GraphicContext& gc) const noexcept;

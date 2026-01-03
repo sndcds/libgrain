@@ -22,6 +22,7 @@
 
 #include "2d/Line.hpp"
 #include "2d/Rect.hpp"
+#include "2d/PosRect.hpp"
 #include "2d/Circle.hpp"
 #include "2d/Triangle.hpp"
 #include "2d/Quadrilateral.hpp"
@@ -34,6 +35,9 @@
 #include "2d/CatmullRomCurve.hpp"
 #include "2d/RangeRect.hpp"
 #include "2d/Superellipse.hpp"
+#include "2d/Arc.hpp"
+#include "2d/PoissonDisc.hpp"
+#include "2d/Delaunay.hpp"
 
 #include "2d/Data/CVF2.hpp"
 #include "2d/Data/CVF2File.hpp"
@@ -167,6 +171,7 @@
 #include "Type/Flags.hpp"
 #include "Type/Range.hpp"
 #include "Type/Type.hpp"
+#include "Type/List.hpp"
 #include "Type/FixProperty.hpp"
 
 
