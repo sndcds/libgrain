@@ -108,21 +108,24 @@ namespace Grain {
         gc->setCGContextByComponent([[NSGraphicsContext currentContext] CGContext], component);
     }
 
-    void _macosView_updateCGContext(Component* component) noexcept {
-        if (!component) return;
+    Grain::AppleCGContext* _macosView_updateCGContext(Component* component) noexcept {
+        /*
+            Important: Call only from main thread, typically from within component->draw()
+        */
+        if (!component) return nullptr;
 
-        dispatch_async(dispatch_get_main_queue(), ^{
-            auto ns_view = static_cast<NSView*>(component->nsView());
-            if (!ns_view) return;
+        auto ns_view = static_cast<NSView*>(component->nsView());
+        if (!ns_view) return nullptr;
 
-            CGContextRef cgContext = [[NSGraphicsContext currentContext] CGContext];
-            if (!cgContext) return;
+        CGContextRef ns_cg_context = [[NSGraphicsContext currentContext] CGContext];
+        if (!ns_cg_context) return nullptr;
 
-            auto agc = dynamic_cast<AppleCGContext*>(component->graphicContextPtr());
-            if (agc) {
-                agc->setCGContext(cgContext);
-            }
-        });
+        auto agc = dynamic_cast<Grain::AppleCGContext*>(component->graphicContextPtr());
+        if (agc) {
+            agc->setCGContext(ns_cg_context);
+        }
+
+        return agc;
     }
 }
 
@@ -270,24 +273,18 @@ if (i > 10) {
 
 
 - (void)drawRect:(NSRect)dirty_rect {
-    // [super drawRect:dirty_rect]; // TODO: Check!
-    if (m_component) {
-        Grain::Rectd rect(dirty_rect);
-        m_component->updateBeforeDrawing(rect);
+    if (!m_component) { return; }
 
-        if (m_component->isRectUsable()) {
-            m_component->draw(rect);
-        }
+    CGContextRef ns_cg = [[NSGraphicsContext currentContext] CGContext];
+    if (!ns_cg) return;
 
-        /** TODO: Debug!
-        if (m_component->canHaveChildren()) {
-            NSRect trackingRect = [m_tracking_area rect];
-            [[NSColor redColor] setStroke];
-            NSBezierPath *path = [NSBezierPath bezierPathWithRect:trackingRect];
-            [path setLineWidth:2.0];
-            [path stroke];
-        }
-         */
+    auto agc =_macosView_updateCGContext(m_component);
+
+    Grain::Rectd rect(dirty_rect);
+    m_component->updateBeforeDrawing(rect);
+
+    if (m_component->isRectUsable()) {
+        m_component->draw(agc, rect);
     }
 }
 

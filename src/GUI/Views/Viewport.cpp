@@ -76,10 +76,7 @@ void Viewport::updateBeforeDrawing(const Rectd& dirty_rect) noexcept {
 }
 
 
-void Viewport::draw(const Rectd& dirty_rect) noexcept {
-	auto gc = graphicContextPtr();
-	if (!gc) { return; }
-
+void Viewport::draw(GraphicContext* gc, const Rectd& dirty_rect) noexcept {
 	gc->save();
 	gc->translate(-offs_);
 	gc->scale(scale_);

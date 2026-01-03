@@ -73,8 +73,8 @@ namespace Grain {
 
 
 #if defined(__APPLE__) && defined(__MACH__)
-    void TextField::draw(const Rectd& dirty_rect) noexcept {
-        auto gc = dynamic_cast<AppleCGContext*>(graphicContextPtr());
+    void TextField::draw(GraphicContext* gc, const Rectd& dirty_rect) noexcept {
+        auto agc = dynamic_cast<AppleCGContext*>(gc);
 
         gc->disableFontSubpixelQuantization();
 
@@ -84,7 +84,7 @@ namespace Grain {
             return;
         }
 
-        CGContextRef cg_context = gc->cgContext();
+        CGContextRef cg_context = agc->cgContext();
 
         _checkSelectionAndCursor();
 
@@ -254,7 +254,7 @@ namespace Grain {
         }
     }
 #else
-    void TextField::draw(const Rectd& dirty_rect) noexcept {
+    void TextField::draw(GraphicContext* gc, const Rectd& dirty_rect) noexcept {
         #warning "TextField::draw() is not implemented for Linux"
     }
 #endif

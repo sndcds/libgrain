@@ -50,13 +50,13 @@ namespace Grain {
         out_cdl_rgb.gain_rgb_ *= gain_;
 
         // Shift values, necessary for black point
-        out_cdl_rgb.shift1_rgb_.m_data[0] = black_point_ - out_cdl_rgb.lift_rgb_.m_data[0];
-        out_cdl_rgb.shift1_rgb_.m_data[1] = black_point_ - out_cdl_rgb.lift_rgb_.m_data[1];
-        out_cdl_rgb.shift1_rgb_.m_data[2] = black_point_ - out_cdl_rgb.lift_rgb_.m_data[2];
+        out_cdl_rgb.shift1_rgb_.data_[0] = black_point_ - out_cdl_rgb.lift_rgb_.data_[0];
+        out_cdl_rgb.shift1_rgb_.data_[1] = black_point_ - out_cdl_rgb.lift_rgb_.data_[1];
+        out_cdl_rgb.shift1_rgb_.data_[2] = black_point_ - out_cdl_rgb.lift_rgb_.data_[2];
 
-        out_cdl_rgb.shift2_rgb_.m_data[0] = out_cdl_rgb.lift_rgb_.m_data[0] + out_cdl_rgb.shift1_rgb_.m_data[0];
-        out_cdl_rgb.shift2_rgb_.m_data[1] = out_cdl_rgb.lift_rgb_.m_data[1] + out_cdl_rgb.shift1_rgb_.m_data[1];
-        out_cdl_rgb.shift2_rgb_.m_data[2] = out_cdl_rgb.lift_rgb_.m_data[2] + out_cdl_rgb.shift1_rgb_.m_data[2];
+        out_cdl_rgb.shift2_rgb_.data_[0] = out_cdl_rgb.lift_rgb_.data_[0] + out_cdl_rgb.shift1_rgb_.data_[0];
+        out_cdl_rgb.shift2_rgb_.data_[1] = out_cdl_rgb.lift_rgb_.data_[1] + out_cdl_rgb.shift1_rgb_.data_[1];
+        out_cdl_rgb.shift2_rgb_.data_[2] = out_cdl_rgb.lift_rgb_.data_[2] + out_cdl_rgb.shift1_rgb_.data_[2];
     }
 
 

@@ -66,7 +66,7 @@ namespace Grain {
      *               black, `1` represents white, and intermediate values represent
      *               shades of gray.
      */
-    RGB::RGB(float value) noexcept : m_data { value, value, value } {
+    RGB::RGB(float value) noexcept : data_ { value, value, value } {
 
     }
 
@@ -88,7 +88,7 @@ namespace Grain {
      *        outside this range may lead to undefined behavior or clamping,
      *        depending on the implementation.
      */
-    RGB::RGB(float r, float g, float b) noexcept : m_data { r, g, b } {
+    RGB::RGB(float r, float g, float b) noexcept : data_ { r, g, b } {
 
     }
 
@@ -120,13 +120,13 @@ namespace Grain {
      */
     RGB::RGB(int32_t r, int32_t g, int32_t b, int32_t max) noexcept {
         if (max == 0) {
-            m_data[0] = m_data[1] = m_data[2] = 1.0f;
+            data_[0] = data_[1] = data_[2] = 1.0f;
         }
         else {
             float f = 1.0f / static_cast<float>(max);
-            m_data[0] = f * static_cast<float>(r);
-            m_data[1] = f * static_cast<float>(g);
-            m_data[2] = f * static_cast<float>(b);
+            data_[0] = f * static_cast<float>(r);
+            data_[1] = f * static_cast<float>(g);
+            data_[2] = f * static_cast<float>(b);
         }
     }
 
@@ -151,9 +151,9 @@ namespace Grain {
      */
     RGB::RGB(const float *values) noexcept {
         if (values) {
-            m_data[0] = values[0];
-            m_data[1] = values[1];
-            m_data[2] = values[2];
+            data_[0] = values[0];
+            data_[1] = values[1];
+            data_[2] = values[2];
         }
     }
 
@@ -176,9 +176,9 @@ namespace Grain {
      *        (e.g., clamping) may be required depending on the context.
      */
     RGB::RGB(const RGB& rgb, float scale) noexcept {
-        m_data[0] = rgb.m_data[0] * scale;
-        m_data[1] = rgb.m_data[1] * scale;
-        m_data[2] = rgb.m_data[2] * scale;
+        data_[0] = rgb.data_[0] * scale;
+        data_[1] = rgb.data_[1] * scale;
+        data_[2] = rgb.data_[2] * scale;
     }
 
 
@@ -225,7 +225,7 @@ namespace Grain {
      *  @see HSV
      */
     RGB::RGB(const HSV& hsv) noexcept {
-        Color::hsv_to_rgb(hsv.m_data, m_data);
+        Color::hsv_to_rgb(hsv.m_data, data_);
     }
 
 
@@ -233,7 +233,7 @@ namespace Grain {
      *  @brief Constructor for converting an HSL color to an RGB color.
      */
     RGB::RGB(const HSL& hsl) noexcept {
-        Color::hsl_to_rgb(hsl.m_data, m_data);
+        Color::hsl_to_rgb(hsl.m_data, data_);
     }
 
 
@@ -265,7 +265,7 @@ namespace Grain {
      *  @brief Constructor for converting an OKLab color to an RGB color.
      */
     RGB::RGB(const OKLab& oklab) noexcept {
-        Color::oklab_to_rgb(oklab.m_data, m_data);
+        Color::oklab_to_rgb(oklab.m_data, data_);
     }
 
 
@@ -273,7 +273,7 @@ namespace Grain {
      *  @brief Constructor for converting an OKLCh color to an RGB color.
      */
     RGB::RGB(const OKLCh& oklch) noexcept {
-        Color::oklch_to_rgb(oklch.m_data, m_data);
+        Color::oklch_to_rgb(oklch.m_data, data_);
     }
 
 
@@ -281,9 +281,9 @@ namespace Grain {
      *  @brief Constructor for converting a LMS color to an RGB color.
      */
     RGB::RGB(const LMS& lms) noexcept {
-        m_data[0] =  4.0767416621f * lms.m_data[0] - 3.3077115913f * lms.m_data[1] + 0.2309699292f * lms.m_data[2];
-        m_data[1] = -1.2684380046f * lms.m_data[0] + 2.6097574011f * lms.m_data[1] - 0.3413193965f * lms.m_data[2];
-        m_data[2] = -0.0041960863f * lms.m_data[0] - 0.7034186147f * lms.m_data[1] + 1.7076147010f * lms.m_data[2];
+        data_[0] =  4.0767416621f * lms.m_data[0] - 3.3077115913f * lms.m_data[1] + 0.2309699292f * lms.m_data[2];
+        data_[1] = -1.2684380046f * lms.m_data[0] + 2.6097574011f * lms.m_data[1] - 0.3413193965f * lms.m_data[2];
+        data_[2] = -0.0041960863f * lms.m_data[0] - 0.7034186147f * lms.m_data[1] + 1.7076147010f * lms.m_data[2];
     }
 
 
@@ -331,25 +331,25 @@ namespace Grain {
 
 
     RGB& RGB::operator = (const HSV& v) {
-        Color::hsv_to_rgb(v.m_data, m_data);
+        Color::hsv_to_rgb(v.m_data, data_);
         return *this;
     }
 
 
     RGB& RGB::operator = (const HSL& v) {
-        Color::hsl_to_rgb(v.m_data, m_data);
+        Color::hsl_to_rgb(v.m_data, data_);
         return *this;
     }
 
 
     RGB& RGB::operator = (const OKLCh& v) {
-        Color::oklch_to_rgb(v.m_data, m_data);
+        Color::oklch_to_rgb(v.m_data, data_);
         return *this;
     }
 
 
     RGB& RGB::operator = (const OKLab& v) {
-        Color::oklab_to_rgb(v.m_data, m_data);
+        Color::oklab_to_rgb(v.m_data, data_);
         return *this;
     }
 
@@ -368,17 +368,17 @@ namespace Grain {
 
     uint32_t RGB::rgb24bit() const noexcept {
         return
-            (static_cast<uint32_t>(Type::floatToUInt8(m_data[0])) << 16) +
-            (static_cast<uint32_t>(Type::floatToUInt8(m_data[1])) << 8) +
-            static_cast<uint32_t>(Type::floatToUInt8(m_data[2]));
+            (static_cast<uint32_t>(Type::floatToUInt8(data_[0])) << 16) +
+            (static_cast<uint32_t>(Type::floatToUInt8(data_[1])) << 8) +
+            static_cast<uint32_t>(Type::floatToUInt8(data_[2]));
     }
 
 
     void RGB::values(float* out_values) const noexcept {
         if (out_values) {
-            out_values[0] = m_data[0];
-            out_values[1] = m_data[1];
-            out_values[2] = m_data[2];
+            out_values[0] = data_[0];
+            out_values[1] = data_[1];
+            out_values[2] = data_[2];
         }
     }
 
@@ -395,17 +395,17 @@ namespace Grain {
 
 
     float RGB::lumina601() const noexcept {
-        return Color::kLumina601ScaleR * m_data[0] + Color::kLumina601ScaleG * m_data[1] + Color::kLumina601ScaleB * m_data[2];
+        return Color::kLumina601ScaleR * data_[0] + Color::kLumina601ScaleG * data_[1] + Color::kLumina601ScaleB * data_[2];
     }
 
 
     float RGB::lumina709() const noexcept {
-        return Color::kLumina709ScaleR * m_data[0] + Color::kLumina709ScaleG * m_data[1] + Color::kLumina709ScaleB * m_data[2];
+        return Color::kLumina709ScaleR * data_[0] + Color::kLumina709ScaleG * data_[1] + Color::kLumina709ScaleB * data_[2];
     }
 
 
     float RGB::hsvValue() const noexcept {
-        return Type::maxOf3(m_data[0], m_data[1], m_data[2]);
+        return Type::maxOf3(data_[0], data_[1], data_[2]);
     }
 
 
@@ -425,17 +425,17 @@ namespace Grain {
 
 
     float RGB::distance(const RGB& rgb) const noexcept {
-        float dr = rgb.m_data[0] - m_data[0];
-        float dg = rgb.m_data[1] - m_data[1];
-        float db = rgb.m_data[2] - m_data[2];
+        float dr = rgb.data_[0] - data_[0];
+        float dg = rgb.data_[1] - data_[1];
+        float db = rgb.data_[2] - data_[2];
         return std::sqrt(dr * dr + dg * dg + db * db);
     }
 
 
     float RGB::perceptualDistance(const RGB& rgb) const noexcept {
-        float dr = rgb.m_data[0] - m_data[0];
-        float dg = rgb.m_data[1] - m_data[1];
-        float db = rgb.m_data[2] - m_data[2];
+        float dr = rgb.data_[0] - data_[0];
+        float dg = rgb.data_[1] - data_[1];
+        float db = rgb.data_[2] - data_[2];
         return static_cast<float>(std::sqrt(0.299 * dr * dr + 0.587 * dg * dg + 0.114 * db * db));
     }
 
@@ -446,40 +446,40 @@ namespace Grain {
 
 
     bool RGB::isSame(const RGB& rgb, float tolerance) const noexcept {
-        return (std::fabs(m_data[0] - rgb.m_data[0]) <= tolerance &&
-                std::fabs(m_data[1] - rgb.m_data[1]) <= tolerance &&
-                std::fabs(m_data[2] - rgb.m_data[2]) <= tolerance);
+        return (std::fabs(data_[0] - rgb.data_[0]) <= tolerance &&
+                std::fabs(data_[1] - rgb.data_[1]) <= tolerance &&
+                std::fabs(data_[2] - rgb.data_[2]) <= tolerance);
     }
 
 
     void RGB::set24bit(uint32_t value) noexcept {
-        m_data[0] = static_cast<float>((value >> 16) & 0xFF) / 255.0f;
-        m_data[1] = static_cast<float>((value >> 8) & 0xFF) / 255.0f;
-        m_data[2] = static_cast<float>(value & 0xFF) / 255.0f;
+        data_[0] = static_cast<float>((value >> 16) & 0xFF) / 255.0f;
+        data_[1] = static_cast<float>((value >> 8) & 0xFF) / 255.0f;
+        data_[2] = static_cast<float>(value & 0xFF) / 255.0f;
     }
 
 
     void RGB::setUInt8(uint8_t r, uint8_t g, uint8_t b) noexcept {
-        m_data[0] = static_cast<float>(r) / 255.0f;
-        m_data[1] = static_cast<float>(g) / 255.0f;
-        m_data[2] = static_cast<float>(b) / 255.0f;
+        data_[0] = static_cast<float>(r) / 255.0f;
+        data_[1] = static_cast<float>(g) / 255.0f;
+        data_[2] = static_cast<float>(b) / 255.0f;
     }
 
 
     void RGB::setValues(const float* values) noexcept {
         if (values) {
-            m_data[0] = values[0];
-            m_data[1] = values[1];
-            m_data[2] = values[2];
+            data_[0] = values[0];
+            data_[1] = values[1];
+            data_[2] = values[2];
         }
     }
 
 
     void RGB::setValues(const float* values, float scale) noexcept {
         if (values) {
-            m_data[0] = values[0] * scale;
-            m_data[1] = values[1] * scale;
-            m_data[2] = values[2] * scale;
+            data_[0] = values[0] * scale;
+            data_[1] = values[1] * scale;
+            data_[2] = values[2] * scale;
         }
     }
 
@@ -504,16 +504,16 @@ namespace Grain {
     void RGB::setIntRGB(int32_t r, int32_t g, int32_t b, int32_t max) noexcept {
         if (max != 0) {
             float f = 1.0f / static_cast<float>(max);
-            m_data[0] = f * static_cast<float>(r);
-            m_data[1] = f * static_cast<float>(g);
-            m_data[2] = f * static_cast<float>(b);
+            data_[0] = f * static_cast<float>(r);
+            data_[1] = f * static_cast<float>(g);
+            data_[2] = f * static_cast<float>(b);
         }
     }
 
 
     void RGB::setHSV(float h, float s, float v) noexcept {
         float hsv[3] = { h, s, v };
-        Color::hsv_to_rgb(hsv, m_data);
+        Color::hsv_to_rgb(hsv, data_);
     }
 
 
@@ -532,12 +532,12 @@ namespace Grain {
 
 
     void RGB::setYUV601(const YUV& yuv) noexcept {
-        Color::yuv601_to_rgb(yuv.dataPtr(), m_data);
+        Color::yuv601_to_rgb(yuv.dataPtr(), data_);
     }
 
 
     void RGB::setYUV709(const YUV& yuv) noexcept {
-        Color::yuv709_to_rgb(yuv.dataPtr(), m_data);
+        Color::yuv709_to_rgb(yuv.dataPtr(), data_);
     }
 
 
@@ -545,9 +545,9 @@ namespace Grain {
         float r =  3.2406f * xyz.data_[0] - 1.5372f * xyz.data_[1] - 0.4986f * xyz.data_[2];
         float g = -0.9689f * xyz.data_[0] + 1.8758f * xyz.data_[1] + 0.0415f * xyz.data_[2];
         float b =  0.0557f * xyz.data_[0] - 0.2040f * xyz.data_[1] + 1.0570f * xyz.data_[2];
-        m_data[0] = std::clamp<float>(Color::linear_to_gamma(r), 0.0f, 1.0f);
-        m_data[1] = std::clamp<float>(Color::linear_to_gamma(g), 0.0f, 1.0f);
-        m_data[2] = std::clamp<float>(Color::linear_to_gamma(b), 0.0f, 1.0f);
+        data_[0] = std::clamp<float>(Color::linear_to_gamma(r), 0.0f, 1.0f);
+        data_[1] = std::clamp<float>(Color::linear_to_gamma(g), 0.0f, 1.0f);
+        data_[2] = std::clamp<float>(Color::linear_to_gamma(b), 0.0f, 1.0f);
     }
 
 
@@ -564,7 +564,7 @@ namespace Grain {
 
 
     void RGB::setOKLab(const OKLab& oklab) noexcept {
-        Color::oklab_to_rgb(oklab.m_data, m_data);
+        Color::oklab_to_rgb(oklab.m_data, data_);
     }
 
 
@@ -585,9 +585,9 @@ namespace Grain {
         float r_scale = 1.5f;
         float g_scale = 1.15f;
         value = std::clamp<float>(value, 0.0f, 1.0f);
-        m_data[2] = value * max + (1 - value) * min;
-        m_data[0] = m_data[2] * r_scale;
-        m_data[1] = m_data[2] * g_scale;
+        data_[2] = value * max + (1 - value) * min;
+        data_[0] = data_[2] * r_scale;
+        data_[1] = data_[2] * g_scale;
     }
 
 
@@ -632,25 +632,25 @@ namespace Grain {
 
         if (n == 1) {
             // Grey
-            m_data[0] = m_data[1] = m_data[2] = values[0];
+            data_[0] = data_[1] = data_[2] = values[0];
         }
         else if (n == 3) {
             // RGB
-            m_data[0] = values[0];
-            m_data[1] = values[1];
-            m_data[2] = values[2];
+            data_[0] = values[0];
+            data_[1] = values[1];
+            data_[2] = values[2];
         }
         else if (n == 4) {
             // RGB, scaled
-            m_data[0] = values[0];
-            m_data[1] = values[1];
-            m_data[2] = values[2];
+            data_[0] = values[0];
+            data_[1] = values[1];
+            data_[2] = values[2];
             float max = values[3];
             if (max > std::numeric_limits<float>::epsilon()) {
                 float scale = 1.0f / max;
-                m_data[0] *= scale;
-                m_data[1] *= scale;
-                m_data[2] *= scale;
+                data_[0] *= scale;
+                data_[1] *= scale;
+                data_[2] *= scale;
             }
         }
 
@@ -669,31 +669,31 @@ namespace Grain {
         hsv[0] = static_cast<float>(Geometry::normalizeAngle(angle + 45)) / 360.0f;
         hsv[1] = std::pow(std::clamp<float>(distance, 0.0f, 1.0f), 1.6f);
         hsv[2] = 1.0f;
-        Color::hsv_to_rgb(hsv, m_data);
+        Color::hsv_to_rgb(hsv, data_);
     }
 
 
     void RGB::random() noexcept {
-        m_data[0] = Random::next();
-        m_data[1] = Random::next();
-        m_data[2] = Random::next();
+        data_[0] = Random::next();
+        data_[1] = Random::next();
+        data_[2] = Random::next();
     }
 
 
     void RGB::random(float min, float max) noexcept {
-        m_data[0] = Random::next(min, max);
-        m_data[1] = Random::next(min, max);
-        m_data[2] = Random::next(min, max);
+        data_[0] = Random::next(min, max);
+        data_[1] = Random::next(min, max);
+        data_[2] = Random::next(min, max);
     }
 
 
     void RGB::randomGrey() noexcept {
-        m_data[0] = m_data[1] = m_data[2] = Random::next();
+        data_[0] = data_[1] = data_[2] = Random::next();
     }
 
 
     void RGB::randomGrey(float min, float max) noexcept {
-        m_data[0] = m_data[1] = m_data[2] = Random::next(min, max);
+        data_[0] = data_[1] = data_[2] = Random::next(min, max);
     }
 
 
@@ -704,12 +704,12 @@ namespace Grain {
 
 
     void RGB::normalize() noexcept {
-        float max = Type::maxOf3(m_data[0], m_data[1], m_data[2]);
+        float max = Type::maxOf3(data_[0], data_[1], data_[2]);
         if (max > std::numeric_limits<float>::min()) {
             float f = 1.0f / max;
-            m_data[0] *= f;
-            m_data[1] *= f;
-            m_data[2] *= f;
+            data_[0] *= f;
+            data_[1] *= f;
+            data_[2] *= f;
         }
     }
 
@@ -720,16 +720,16 @@ namespace Grain {
 
 
     void RGB::clamp(float max) noexcept {
-        if (m_data[0] > max) m_data[0] = max;
-        if (m_data[1] > max) m_data[1] = max;
-        if (m_data[2] > max) m_data[2] = max;
+        if (data_[0] > max) data_[0] = max;
+        if (data_[1] > max) data_[1] = max;
+        if (data_[2] > max) data_[2] = max;
     }
 
 
     void RGB::clamp(float min, float max) noexcept {
-        if (m_data[0] < min) m_data[0] = min; else if (m_data[0] > max) m_data[0] = max;
-        if (m_data[1] < min) m_data[1] = min; else if (m_data[1] > max) m_data[1] = max;
-        if (m_data[2] < min) m_data[2] = min; else if (m_data[2] > max) m_data[2] = max;
+        if (data_[0] < min) data_[0] = min; else if (data_[0] > max) data_[0] = max;
+        if (data_[1] < min) data_[1] = min; else if (data_[1] > max) data_[1] = max;
+        if (data_[2] < min) data_[2] = min; else if (data_[2] > max) data_[2] = max;
     }
 
 
@@ -740,23 +740,23 @@ namespace Grain {
 
 
     void RGB::clampMin(const RGB& min) noexcept {
-        if (m_data[0] < min.m_data[0]) m_data[0] = min.m_data[0];
-        if (m_data[1] < min.m_data[1]) m_data[1] = min.m_data[1];
-        if (m_data[2] < min.m_data[2]) m_data[2] = min.m_data[2];
+        if (data_[0] < min.data_[0]) data_[0] = min.data_[0];
+        if (data_[1] < min.data_[1]) data_[1] = min.data_[1];
+        if (data_[2] < min.data_[2]) data_[2] = min.data_[2];
     }
 
 
     void RGB::clampMax(const RGB& max) noexcept {
-        if (m_data[0] > max.m_data[0]) m_data[0] = max.m_data[0];
-        if (m_data[1] > max.m_data[1]) m_data[1] = max.m_data[1];
-        if (m_data[2] > max.m_data[2]) m_data[2] = max.m_data[2];
+        if (data_[0] > max.data_[0]) data_[0] = max.data_[0];
+        if (data_[1] > max.data_[1]) data_[1] = max.data_[1];
+        if (data_[2] > max.data_[2]) data_[2] = max.data_[2];
     }
 
 
     void RGB::invert() noexcept {
-        m_data[0] = 1.0f - m_data[0];
-        m_data[1] = 1.0f - m_data[1];
-        m_data[2] = 1.0f - m_data[2];
+        data_[0] = 1.0f - data_[0];
+        data_[1] = 1.0f - data_[1];
+        data_[2] = 1.0f - data_[2];
     }
 
 
@@ -768,9 +768,9 @@ namespace Grain {
 
 
     void RGB::scale(float scale) noexcept {
-        m_data[0] *= scale;
-        m_data[1] *= scale;
-        m_data[2] *= scale;
+        data_[0] *= scale;
+        data_[1] *= scale;
+        data_[2] *= scale;
     }
 
 
@@ -789,88 +789,88 @@ namespace Grain {
 
 
     void RGB::applyCDL(const CDL_RGB& cdl_rgb) noexcept {
-        m_data[0] = (std::pow(m_data[0], cdl_rgb.gamma_rgb_.m_data[0]) - cdl_rgb.shift1_rgb_.m_data[0]) * cdl_rgb.gain_rgb_.m_data[0] + cdl_rgb.shift2_rgb_.m_data[0];
-        m_data[1] = (std::pow(m_data[1], cdl_rgb.gamma_rgb_.m_data[1]) - cdl_rgb.shift1_rgb_.m_data[1]) * cdl_rgb.gain_rgb_.m_data[1] + cdl_rgb.shift2_rgb_.m_data[1];
-        m_data[2] = (std::pow(m_data[2], cdl_rgb.gamma_rgb_.m_data[2]) - cdl_rgb.shift1_rgb_.m_data[2]) * cdl_rgb.gain_rgb_.m_data[2] + cdl_rgb.shift2_rgb_.m_data[2];
+        data_[0] = (std::pow(data_[0], cdl_rgb.gamma_rgb_.data_[0]) - cdl_rgb.shift1_rgb_.data_[0]) * cdl_rgb.gain_rgb_.data_[0] + cdl_rgb.shift2_rgb_.data_[0];
+        data_[1] = (std::pow(data_[1], cdl_rgb.gamma_rgb_.data_[1]) - cdl_rgb.shift1_rgb_.data_[1]) * cdl_rgb.gain_rgb_.data_[1] + cdl_rgb.shift2_rgb_.data_[1];
+        data_[2] = (std::pow(data_[2], cdl_rgb.gamma_rgb_.data_[2]) - cdl_rgb.shift1_rgb_.data_[2]) * cdl_rgb.gain_rgb_.data_[2] + cdl_rgb.shift2_rgb_.data_[2];
     }
 
 
     void RGB::applyRGBLUT(const LUT1& red_lut, const LUT1& green_lut, const LUT1& blue_lut) noexcept {
-        m_data[0] = red_lut.lookup(m_data[0]);
-        m_data[1] = green_lut.lookup(m_data[1]);
-        m_data[2] = blue_lut.lookup(m_data[2]);
+        data_[0] = red_lut.lookup(data_[0]);
+        data_[1] = green_lut.lookup(data_[1]);
+        data_[2] = blue_lut.lookup(data_[2]);
     }
 
 
     void RGB::applyPow(float e) noexcept {
-        if (m_data[0] >= std::numeric_limits<float>::epsilon()) {
-            m_data[0] = std::pow(m_data[0], e);
+        if (data_[0] >= std::numeric_limits<float>::epsilon()) {
+            data_[0] = std::pow(data_[0], e);
         }
-        if (m_data[1] >= std::numeric_limits<float>::epsilon()) {
-            m_data[1] = std::pow(m_data[1], e);
+        if (data_[1] >= std::numeric_limits<float>::epsilon()) {
+            data_[1] = std::pow(data_[1], e);
         }
-        if (m_data[2] >= std::numeric_limits<float>::epsilon()) {
-            m_data[2] = std::pow(m_data[2], e);
+        if (data_[2] >= std::numeric_limits<float>::epsilon()) {
+            data_[2] = std::pow(data_[2], e);
         }
     }
 
 
     void RGB::linearTosRGB() noexcept {
-        m_data[0] = Color::linear_to_gamma(m_data[0]);
-        m_data[1] = Color::linear_to_gamma(m_data[1]);
-        m_data[2] = Color::linear_to_gamma(m_data[2]);
+        data_[0] = Color::linear_to_gamma(data_[0]);
+        data_[1] = Color::linear_to_gamma(data_[1]);
+        data_[2] = Color::linear_to_gamma(data_[2]);
     }
 
 
     void RGB::sRGBToLinear() noexcept {
-        m_data[0] = Color::linear_to_gamma(m_data[0]);
-        m_data[1] = Color::linear_to_gamma(m_data[1]);
-        m_data[2] = Color::linear_to_gamma(m_data[2]);
+        data_[0] = Color::linear_to_gamma(data_[0]);
+        data_[1] = Color::linear_to_gamma(data_[1]);
+        data_[2] = Color::linear_to_gamma(data_[2]);
     }
 
 
     void RGB::sonySLog2ToLinear() noexcept {
-        m_data[0] = Color::sony_SLog2_to_linear(m_data[0]);
-        m_data[1] = Color::sony_SLog2_to_linear(m_data[1]);
-        m_data[2] = Color::sony_SLog2_to_linear(m_data[2]);
+        data_[0] = Color::sony_SLog2_to_linear(data_[0]);
+        data_[1] = Color::sony_SLog2_to_linear(data_[1]);
+        data_[2] = Color::sony_SLog2_to_linear(data_[2]);
     }
 
 
     void RGB::sonySLog3ToLinear() noexcept {
-        m_data[0] = Color::sony_SLog3_to_Linear(m_data[0]);
-        m_data[1] = Color::sony_SLog3_to_Linear(m_data[1]);
-        m_data[2] = Color::sony_SLog3_to_Linear(m_data[2]);
+        data_[0] = Color::sony_SLog3_to_Linear(data_[0]);
+        data_[1] = Color::sony_SLog3_to_Linear(data_[1]);
+        data_[2] = Color::sony_SLog3_to_Linear(data_[2]);
     }
 
 
     void RGB::sonyLinearToSLog2() noexcept {
-        m_data[0] = Color::sony_Linear_to_SLog2(m_data[0]);
-        m_data[1] = Color::sony_Linear_to_SLog2(m_data[1]);
-        m_data[2] = Color::sony_Linear_to_SLog2(m_data[2]);
+        data_[0] = Color::sony_Linear_to_SLog2(data_[0]);
+        data_[1] = Color::sony_Linear_to_SLog2(data_[1]);
+        data_[2] = Color::sony_Linear_to_SLog2(data_[2]);
     }
 
 
     void RGB::sonyLinearToSLog3() noexcept {
-        m_data[0] = Color::sony_Linear_to_SLog3(m_data[0]);
-        m_data[1] = Color::sony_Linear_to_SLog3(m_data[1]);
-        m_data[2] = Color::sony_Linear_to_SLog3(m_data[2]);
+        data_[0] = Color::sony_Linear_to_SLog3(data_[0]);
+        data_[1] = Color::sony_Linear_to_SLog3(data_[1]);
+        data_[2] = Color::sony_Linear_to_SLog3(data_[2]);
     }
 
 
     void RGB::transform(const Mat3f& matrix) noexcept {
-        matrix.transform3(m_data, m_data);
+        matrix.transform3(data_, data_);
     }
 
 
     void RGB::transform(const Mat3f& matrix, RGB& out_rgb) const noexcept {
-        matrix.transform3(m_data, out_rgb.m_data);
+        matrix.transform3(data_, out_rgb.data_);
     }
 
 
     void RGB::transform(const Mat3f& matrix, CIEXYZ& out_xyz) const noexcept {
         RGB srgb = *this;
         srgb.sRGBToLinear();
-        matrix.transform3(m_data, out_xyz.mutDataPtr());
+        matrix.transform3(data_, out_xyz.mutDataPtr());
     }
 
 
@@ -885,9 +885,9 @@ namespace Grain {
         if (t < 0.0f) t = 0.0f;
         else if (t > 1.0f) t = 1.0f;
         float t_inv = 1.0f - t;
-        m_data[0] = m_data[0] * t_inv + other.m_data[0] * t;
-        m_data[1] = m_data[1] * t_inv + other.m_data[1] * t;
-        m_data[2] = m_data[2] * t_inv + other.m_data[2] * t;
+        data_[0] = data_[0] * t_inv + other.data_[0] * t;
+        data_[1] = data_[1] * t_inv + other.data_[1] * t;
+        data_[2] = data_[2] * t_inv + other.data_[2] * t;
     }
 
 
@@ -895,9 +895,9 @@ namespace Grain {
         if (t < 0.0f) t = 0.0f;
         else if (t > 1.0f) t = 1.0f;
         float t_inv = 1.0f - t;
-        m_data[0] = a.m_data[0] * t_inv + b.m_data[0] * t;
-        m_data[1] = a.m_data[1] * t_inv + b.m_data[1] * t;
-        m_data[2] = a.m_data[2] * t_inv + b.m_data[2] * t;
+        data_[0] = a.data_[0] * t_inv + b.data_[0] * t;
+        data_[1] = a.data_[1] * t_inv + b.data_[1] * t;
+        data_[2] = a.data_[2] * t_inv + b.data_[2] * t;
     }
 
 
@@ -912,9 +912,9 @@ namespace Grain {
         if (t < 0.0f) t = 0.0f;
         else if (t > 1.0f) t = 1.0f;
         float t_inv = 1.0f - t;
-        m_data[0] = m_data[0] * t_inv + t;
-        m_data[1] = m_data[1] * t_inv + t;
-        m_data[2] = m_data[2] * t_inv + t;
+        data_[0] = data_[0] * t_inv + t;
+        data_[1] = data_[1] * t_inv + t;
+        data_[2] = data_[2] * t_inv + t;
     }
 
 
@@ -922,31 +922,31 @@ namespace Grain {
         if (t < 0.0f) t = 0.0f;
         else if (t > 1.0f) t = 1.0f;
         float t_inv = 1.0f - t;
-        m_data[0] *= t_inv;
-        m_data[1] *= t_inv;
-        m_data[2] *= t_inv;
+        data_[0] *= t_inv;
+        data_[1] *= t_inv;
+        data_[2] *= t_inv;
     }
 
 
     void RGB::mixbox(const RGB& color1, const RGB& color2, float t) noexcept {
         mixbox_latent l1, l2, lmix;
-        auto c1 = color1.m_data;
-        auto c2 = color2.m_data;
+        auto c1 = color1.data_;
+        auto c2 = color2.data_;
         mixbox_float_rgb_to_latent(c1[0], c1[1], c1[2], l1);
         mixbox_float_rgb_to_latent(c2[0], c2[1], c2[2], l2);
         float t_inv = (1.0f - t);
         for (int i = 0; i < MIXBOX_LATENT_SIZE; i++) {
             lmix[i] = t_inv * l1[i] + t * l2[i];
         }
-        mixbox_latent_to_float_rgb(lmix, &m_data[0], &m_data[1], &m_data[2]);
+        mixbox_latent_to_float_rgb(lmix, &data_[0], &data_[1], &data_[2]);
     }
 
 
     void RGB::mixbox3(const RGB& color1, const RGB& color2, const RGB& color3, float f1, float f2, float f3) noexcept {
         mixbox_latent l1, l2, l3, lmix;
-        auto c1 = color1.m_data;
-        auto c2 = color2.m_data;
-        auto c3 = color3.m_data;
+        auto c1 = color1.data_;
+        auto c2 = color2.data_;
+        auto c3 = color3.data_;
         mixbox_float_rgb_to_latent(c1[0], c1[1], c1[2], l1);
         mixbox_float_rgb_to_latent(c2[0], c2[1], c2[2], l2);
         mixbox_float_rgb_to_latent(c3[0], c3[1], c3[2], l3);
@@ -955,7 +955,7 @@ namespace Grain {
             lmix[i] = f1 * l1[i] + f2 * l2[i] + f3 * l3[i];
         }
 
-        mixbox_latent_to_float_rgb(lmix, &m_data[0], &m_data[1], &m_data[2]);
+        mixbox_latent_to_float_rgb(lmix, &data_[0], &data_[1], &data_[2]);
     }
 
 
@@ -979,58 +979,58 @@ namespace Grain {
 
 
     void RGB::combineNormal(RGB& a, const RGB& b) noexcept {
-        a.m_data[0] = b.m_data[0];
-        a.m_data[1] = b.m_data[1];
-        a.m_data[2] = b.m_data[2];
+        a.data_[0] = b.data_[0];
+        a.data_[1] = b.data_[1];
+        a.data_[2] = b.data_[2];
     }
 
 
     void RGB::combineAdd(RGB& a, const RGB& b) noexcept {
-        a.m_data[0] += b.m_data[0];
-        a.m_data[1] += b.m_data[1];
-        a.m_data[2] += b.m_data[2];
+        a.data_[0] += b.data_[0];
+        a.data_[1] += b.data_[1];
+        a.data_[2] += b.data_[2];
     }
 
 
     void RGB::combineSubtract(RGB& a, const RGB& b) noexcept {
-        a.m_data[0] -= b.m_data[0];
-        a.m_data[1] -= b.m_data[1];
-        a.m_data[2] -= b.m_data[2];
+        a.data_[0] -= b.data_[0];
+        a.data_[1] -= b.data_[1];
+        a.data_[2] -= b.data_[2];
     }
 
 
     void RGB::combineMultiply(RGB& a, const RGB& b) noexcept {
-        a.m_data[0] *= b.m_data[0];
-        a.m_data[1] *= b.m_data[1];
-        a.m_data[2] *= b.m_data[2];
+        a.data_[0] *= b.data_[0];
+        a.data_[1] *= b.data_[1];
+        a.data_[2] *= b.data_[2];
     }
 
 
     void RGB::combineScreen(RGB& a, const RGB& b) noexcept {
-        a.m_data[0] = Color::combineScreen(a.m_data[0], b.m_data[0]);
-        a.m_data[1] = Color::combineScreen(a.m_data[1], b.m_data[1]);
-        a.m_data[2] = Color::combineScreen(a.m_data[2], b.m_data[2]);
+        a.data_[0] = Color::combineScreen(a.data_[0], b.data_[0]);
+        a.data_[1] = Color::combineScreen(a.data_[1], b.data_[1]);
+        a.data_[2] = Color::combineScreen(a.data_[2], b.data_[2]);
     }
 
 
     void RGB::combineOverlay(RGB& a, const RGB& b) noexcept {
-        a.m_data[0] = Color::combineOverlay(a.m_data[0], b.m_data[0]);
-        a.m_data[1] = Color::combineOverlay(a.m_data[1], b.m_data[1]);
-        a.m_data[2] = Color::combineOverlay(a.m_data[2], b.m_data[2]);
+        a.data_[0] = Color::combineOverlay(a.data_[0], b.data_[0]);
+        a.data_[1] = Color::combineOverlay(a.data_[1], b.data_[1]);
+        a.data_[2] = Color::combineOverlay(a.data_[2], b.data_[2]);
     }
 
 
     void RGB::combineSoftLight(RGB& a, const RGB& b) noexcept {
-        a.m_data[0] = Color::combineSoftLight(a.m_data[0], b.m_data[0]);
-        a.m_data[1] = Color::combineSoftLight(a.m_data[1], b.m_data[1]);
-        a.m_data[2] = Color::combineSoftLight(a.m_data[2], b.m_data[2]);
+        a.data_[0] = Color::combineSoftLight(a.data_[0], b.data_[0]);
+        a.data_[1] = Color::combineSoftLight(a.data_[1], b.data_[1]);
+        a.data_[2] = Color::combineSoftLight(a.data_[2], b.data_[2]);
     }
 
 
     void RGB::combineHardLight(RGB& a, const RGB& b) noexcept {
-        a.m_data[0] = Color::combineHardLight(a.m_data[0], b.m_data[0]);
-        a.m_data[1] = Color::combineHardLight(a.m_data[1], b.m_data[1]);
-        a.m_data[2] = Color::combineHardLight(a.m_data[2], b.m_data[2]);
+        a.data_[0] = Color::combineHardLight(a.data_[0], b.data_[0]);
+        a.data_[1] = Color::combineHardLight(a.data_[1], b.data_[1]);
+        a.data_[2] = Color::combineHardLight(a.data_[2], b.data_[2]);
     }
 
 
@@ -1061,36 +1061,36 @@ namespace Grain {
 
     void RGB::readFromMem(const float* ptr) noexcept {
         if (ptr) {
-            m_data[0] = ptr[0];
-            m_data[1] = ptr[1];
-            m_data[2] = ptr[2];
+            data_[0] = ptr[0];
+            data_[1] = ptr[1];
+            data_[2] = ptr[2];
         }
     }
 
 
     void RGB::writeToMem(float*ptr) const noexcept {
         if (ptr) {
-            ptr[0] = m_data[0];
-            ptr[1] = m_data[1];
-            ptr[2] = m_data[2];
+            ptr[0] = data_[0];
+            ptr[1] = data_[1];
+            ptr[2] = data_[2];
         }
     }
 
 
     void RGB::writeToMemUInt8(uint8_t* ptr) const noexcept {
         if (ptr) {
-            ptr[0] = Type::floatToUInt8(m_data[0]);
-            ptr[1] = Type::floatToUInt8(m_data[1]);
-            ptr[2] = Type::floatToUInt8(m_data[2]);
+            ptr[0] = Type::floatToUInt8(data_[0]);
+            ptr[1] = Type::floatToUInt8(data_[1]);
+            ptr[2] = Type::floatToUInt8(data_[2]);
         }
     }
 
 
     void RGB::writeToMemUInt16(uint16_t* ptr) const noexcept {
         if (ptr) {
-            ptr[0] = Type::floatToUInt16(m_data[0]);
-            ptr[1] = Type::floatToUInt16(m_data[1]);
-            ptr[2] = Type::floatToUInt16(m_data[2]);
+            ptr[0] = Type::floatToUInt16(data_[0]);
+            ptr[1] = Type::floatToUInt16(data_[1]);
+            ptr[2] = Type::floatToUInt16(data_[2]);
         }
     }
 
@@ -1119,7 +1119,7 @@ namespace Grain {
 #if defined(__APPLE__) && defined(__MACH__)
 
     CGColorRef RGB::createCGColor(float alpha) const noexcept {
-        return CGColorCreateGenericRGB(m_data[0], m_data[1], m_data[2], alpha);
+        return CGColorCreateGenericRGB(data_[0], data_[1], data_[2], alpha);
     }
 
 #endif

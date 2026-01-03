@@ -225,30 +225,34 @@ namespace Grain {
                        : (std::pow(2.0, -20.0 * t + 10.0) * std::sin((20.0 * t - 11.125) * ((2.0 * std::numbers::pi) / 4.5))) * 0.5 + 1.0;
         }
 
-        [[nodiscard]] static double easeInBounce(double t) { return 1 - easeOutBounce(1.0 - t); }
-        [[nodiscard]] static double easeOutBounce(double t) {
-            static const double n1 = 7.5625;
-            static const double d1 = 2.75;
+        [[nodiscard]] static double easeInBounce(double t) noexcept {
+            return 1.0 - easeOutBounce(1.0 - t);
+        }
+
+        [[nodiscard]] static double easeOutBounce(double t) noexcept {
+            constexpr double n1 = 7.5625;
+            constexpr double d1 = 2.75;
+
             if (t < 1.0 / d1) {
                 return n1 * t * t;
             }
             else if (t < 2.0 / d1) {
-                t -= 1.5;
-                return n1 * (t / d1) * t + 0.75;
+                t -= 1.5 / d1;
+                return n1 * t * t + 0.75;
             }
             else if (t < 2.5 / d1) {
-                t -= 2.25;
-                return n1 * (t / d1) * t + 0.9375;
+                t -= 2.25 / d1;
+                return n1 * t * t + 0.9375;
             }
             else {
-                t -= 2.625;
-                return n1 * (t / d1) * t + 0.984375;
+                t -= 2.625 / d1;
+                return n1 * t * t + 0.984375;
             }
         }
-        [[nodiscard]] static double easeInOutBounce(double t) {
-            return t < 0.5
-                   ? (1.0 - easeOutBounce(1.0 - 2.0 * t)) * 0.5
-                   : (1.0 + easeOutBounce(2.0 * t - 1.0)) * 0.5;
+        [[nodiscard]] static double easeInOutBounce(double t) noexcept {
+            return (t < 0.5)
+                ? (1.0 - easeOutBounce(1.0 - 2.0 * t)) * 0.5
+                : (1.0 + easeOutBounce(2.0 * t - 1.0)) * 0.5;
         }
 
 
@@ -354,6 +358,24 @@ namespace Grain {
         [[nodiscard]] static float smootherstepf(float a, float b, float t) noexcept {
             t = t * t * t * (t * (6.0f * t - 15.0f) + 10.0f);
             return a + t * (b - a);
+        }
+
+        [[nodiscard]] static double wrap(double v) noexcept {
+            return v - std::floor(v);
+        }
+
+        [[nodiscard]] double wrap(double v, double min, double max) {
+            double range = max - min;
+            return min + std::fmod(std::fmod(v - min, range) + range, range);
+        }
+
+        [[nodiscard]] static double pingpong(double value) {
+            constexpr double period = 2.0;
+            double x = std::fmod(value, period);
+            if (x < 0.0) {
+                x += period;
+            }
+            return 1.0 - std::abs(x - 1.0);
         }
 
         static void buildPowLookUpTable(float power, int32_t resolution, float* out_lut) noexcept {

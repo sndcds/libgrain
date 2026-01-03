@@ -125,7 +125,7 @@ public:
     static Viewport* add(View* view, const Rectd& rect);
 
 	void updateBeforeDrawing(const Rectd& dirty_rect) noexcept override;
-	void draw(const Rectd& dirty_rect) noexcept override;
+	void draw(GraphicContext* gc, const Rectd& dirty_rect) noexcept override;
 
 	void updateAtMouseDown(const Event& event) noexcept override;
 	void handleMouseDown(const Event& event) noexcept override;

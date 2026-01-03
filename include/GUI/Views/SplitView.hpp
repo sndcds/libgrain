@@ -79,7 +79,7 @@ namespace Grain {
         static SplitView* add(View* view, int32_t tag = 0) { return add(view, Rectd(), tag); }
         static SplitView* add(View* view, const Rectd& rect, int32_t tag = 0);
 
-        void draw(const Rectd& dirty_rect) noexcept override;
+        void draw(GraphicContext* gc, const Rectd& dirty_rect) noexcept override;
 
         [[nodiscard]] bool hasDescendant(const Component* component) noexcept override;
 

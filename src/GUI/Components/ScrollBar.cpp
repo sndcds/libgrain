@@ -65,9 +65,7 @@ namespace Grain {
         }
     }
 
-    void ScrollBar::draw(const Rectd& dirty_rect) noexcept {
-        auto gc = graphicContextPtr();
-
+    void ScrollBar::draw(GraphicContext* gc, const Rectd& dirty_rect) noexcept {
         auto style = guiStyle();
         if (!style) {
             drawDummy(gc);

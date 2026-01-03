@@ -157,13 +157,13 @@ namespace Grain {
             setFillColor(grey, grey, grey, alpha);
         }
         virtual void setFillRGB(const RGB& rgb) noexcept {
-            setFillColor(rgb.m_data[0], rgb.m_data[1], rgb.m_data[2], 1.0f);
+            setFillColor(rgb.data_[0], rgb.data_[1], rgb.data_[2], 1.0f);
         }
         virtual void setFillRGBAndAlpha(const RGB& rgb, float alpha) noexcept {
-            setFillColor(rgb.m_data[0], rgb.m_data[1], rgb.m_data[2], alpha);
+            setFillColor(rgb.data_[0], rgb.data_[1], rgb.data_[2], alpha);
         }
         virtual void setFillRGBA(const RGBA& rgba) noexcept {
-            setFillColor(rgba.m_data[0], rgba.m_data[1], rgba.m_data[2], rgba.alpha_);
+            setFillColor(rgba.data_[0], rgba.data_[1], rgba.data_[2], rgba.alpha_);
         }
 
         virtual void setStrokeColor(float r, float g, float b, float alpha) noexcept {}
@@ -174,13 +174,13 @@ namespace Grain {
             setStrokeColor(grey, grey, grey, alpha);
         }
         virtual void setStrokeRGB(const RGB& rgb) noexcept {
-            setStrokeColor(rgb.m_data[0], rgb.m_data[1], rgb.m_data[2], 1.0f);
+            setStrokeColor(rgb.data_[0], rgb.data_[1], rgb.data_[2], 1.0f);
         }
         virtual void setStrokeRGBAndAlpha(const RGB& rgb, float alpha) noexcept {
-            setStrokeColor(rgb.m_data[0], rgb.m_data[1], rgb.m_data[2], alpha);
+            setStrokeColor(rgb.data_[0], rgb.data_[1], rgb.data_[2], alpha);
         }
         virtual void setStrokeRGBA(const RGBA& rgba) noexcept {
-            setStrokeColor(rgba.m_data[0], rgba.m_data[1], rgba.m_data[2], rgba.alpha_);
+            setStrokeColor(rgba.data_[0], rgba.data_[1], rgba.data_[2], rgba.alpha_);
         }
 
         virtual void setStrokeWidth(double width) noexcept {}

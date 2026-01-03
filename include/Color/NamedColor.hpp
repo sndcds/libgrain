@@ -55,7 +55,7 @@ namespace Grain {
         }
 
         static const float* gretagMacbethColorDataPtr(Color::GretagMacbethColor index) noexcept {
-            return NamedColor::g_gretag_macbeth_colors[std::clamp<int32_t>(static_cast<int32_t>(index), 0, kGretagMacbethColorCount - 1)].m_data;
+            return NamedColor::g_gretag_macbeth_colors[std::clamp<int32_t>(static_cast<int32_t>(index), 0, kGretagMacbethColorCount - 1)].data_;
         }
 
         static const NamedColor crayolaColor(Color::CrayolaColor index) noexcept {
@@ -63,7 +63,7 @@ namespace Grain {
         }
 
         static const float* crayolaColorDataPtr(Color::CrayolaColor index) noexcept {
-            return NamedColor::g_crayola_colors[std::clamp<int32_t>(static_cast<int32_t>(index), 0, kCrayolaColorCount - 1)].m_data;
+            return NamedColor::g_crayola_colors[std::clamp<int32_t>(static_cast<int32_t>(index), 0, kCrayolaColorCount - 1)].data_;
         }
     };
 

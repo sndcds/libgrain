@@ -43,7 +43,7 @@ public:
     void geometryChanged() noexcept override; // TODO: Implement!!!!!
     void setSplitViewFlag(bool flag) noexcept { split_view_flag_ = flag; }
 
-    void draw(const Rectd& dirty_rect) noexcept override;
+    void draw(GraphicContext* gc, const Rectd& dirty_rect) noexcept override;
 
 protected:
     Component* first_key_component_ = nullptr;

@@ -40,7 +40,7 @@ namespace Grain {
     void _macosView_setFrame(Component* component, Rectd& rect);
     void _macosView_setFrameOrigin(Component* component, double x, double y);
     void _macosView_setFrameSize(Component* component, double width, double height);
-    void _macosView_updateCGContext(Component* component) noexcept;
+    Grain::AppleCGContext* _macosView_updateCGContext(Component* component) noexcept;
 #endif
 
 
@@ -479,28 +479,8 @@ namespace Grain {
                 return nullptr;
             }
         }
-        component->m_gc_ptr->setComponent(component);
 
-#if defined(__APPLE__) && defined(__MACH__)
-        _macosView_updateCGContext(this);
-#endif
-
-        return component->m_gc_ptr;
-    }
-
-/*
-    GraphicContext* Component::graphicContextPtr() noexcept {
-        auto component = this;
-        while (!component->m_gc_ptr) {
-            if (component->parent_) {
-                component = component->parent_;
-            }
-            else {
-                return nullptr;
-            }
-        }
         component->m_gc_ptr->setComponent(component);
         return component->m_gc_ptr;
     }
-    */
 } // End of namespace Grain

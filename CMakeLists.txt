@@ -1,11 +1,11 @@
-cmake_minimum_required(VERSION 3.15)
-project(libgrain LANGUAGES CXX)
+cmake_minimum_required(VERSION 3.18)
+project(libgrain LANGUAGES CXX OBJCXX)
 
 # Use modern C++
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 
 
 if (APPLE)
@@ -179,13 +179,10 @@ add_library(libgrain STATIC
         src/Signal/SignalFormantFilter.cpp
         src/Signal/SignalIR.cpp
         src/Signal/SignalWave.cpp
-        include/Audio/AudioInterface.hpp
         src/Audio/AudioInterface.cpp
-        include/Data/DataComposer.hpp
         src/Data/DataComposer.cpp
-        src/Graphic/AnimationFrameDriver.cpp
-        include/Graphic/AnimationFrameDriver.hpp
 )
+
 
 # Add the warning flag for GCC/Clang
 # if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
@@ -216,7 +213,6 @@ if (APPLE)
     target_link_libraries(libgrain
             "-framework Cocoa"
             "-framework Foundation"
-            "-framework Cocoa"
             "-framework AudioToolbox"
             "-framework Accelerate"
     )

@@ -24,7 +24,7 @@ namespace Grain {
 
     void HSV::set(const RGB& rgb) noexcept {
 
-        Color::rgb_to_hsv(rgb.m_data, m_data);
+        Color::rgb_to_hsv(rgb.data_, m_data);
     }
 
 

@@ -102,7 +102,7 @@ namespace Grain {
         static const RGB kMixboxBurntSienna;
 
     public:
-        float m_data[3]{};  ///< The RGB color component values
+        float data_[3]{};  ///< The RGB color component values
 
     public:
         RGB() noexcept = default;
@@ -127,7 +127,7 @@ namespace Grain {
         explicit RGB(const String& csv) noexcept;
         explicit RGB(const char* csv) noexcept;
 
-        ~RGB() noexcept = default;
+        virtual ~RGB() noexcept = default;
 
 
         [[nodiscard]] virtual const char* className() const noexcept { return "RGB"; }
@@ -138,22 +138,15 @@ namespace Grain {
         }
 
         friend std::ostream& operator << (std::ostream& os, const RGB& o) {
-            os << o.m_data[0] << ", " << o.m_data[1] << ", " << o.m_data[2];
+            os << o.data_[0] << ", " << o.data_[1] << ", " << o.data_[2];
             return os;
         }
 
         // Operator overloading
         RGB& operator = (uint32_t v) { set24bit(v); return *this; }
-        RGB& operator = (float v) { m_data[0] = m_data[1] = m_data[2] = v; return *this; }
+        RGB& operator = (float v) { data_[0] = data_[1] = data_[2] = v; return *this; }
 
-        RGB& operator = (const RGB& v) {
-            if (this != &v) {
-                m_data[0] = v.m_data[0];
-                m_data[1] = v.m_data[1];
-                m_data[2] = v.m_data[2];
-            }
-            return *this;
-        }
+        RGB& operator = (const RGB&) = default;
         RGB& operator = (const HSV& v);
         RGB& operator = (const HSL& v);
         RGB& operator = (const OKLCh& v);
@@ -162,81 +155,81 @@ namespace Grain {
         RGB& operator = (Color::CrayolaColor v);
 
         bool operator == (const RGB& v) const {
-            return m_data[0] == v.m_data[0] && m_data[1] == v.m_data[1] && m_data[2] == v.m_data[2];
+            return data_[0] == v.data_[0] && data_[1] == v.data_[1] && data_[2] == v.data_[2];
         }
 
         bool operator != (const RGB& v) const {
-            return m_data[0] != v.m_data[0] || m_data[1] != v.m_data[1] || m_data[2] != v.m_data[2];
+            return data_[0] != v.data_[0] || data_[1] != v.data_[1] || data_[2] != v.data_[2];
         }
 
         RGB operator + (const RGB& v) const {
-            return RGB(m_data[0] + v.m_data[0], m_data[1] + v.m_data[1], m_data[2] + v.m_data[2]);
+            return RGB(data_[0] + v.data_[0], data_[1] + v.data_[1], data_[2] + v.data_[2]);
         }
 
-        RGB operator + (float v) const { return RGB(m_data[0] + v, m_data[1] + v, m_data[2] + v); }
+        RGB operator + (float v) const { return RGB(data_[0] + v, data_[1] + v, data_[2] + v); }
 
         RGB operator - (const RGB& v) const {
-            return RGB(m_data[0] - v.m_data[0], m_data[1] - v.m_data[1], m_data[2] - v.m_data[2]);
+            return RGB(data_[0] - v.data_[0], data_[1] - v.data_[1], data_[2] - v.data_[2]);
         }
 
-        RGB operator - (float v) const { return RGB(m_data[0] - v, m_data[1] - v, m_data[2] - v); }
+        RGB operator - (float v) const { return RGB(data_[0] - v, data_[1] - v, data_[2] - v); }
 
         RGB operator * (const RGB& v) const {
-            return RGB(m_data[0] * v.m_data[0], m_data[1] * v.m_data[1], m_data[2] * v.m_data[2]);
+            return RGB(data_[0] * v.data_[0], data_[1] * v.data_[1], data_[2] * v.data_[2]);
         }
 
-        RGB operator * (float v) const { return RGB(m_data[0] * v, m_data[1] * v, m_data[2] * v); }
+        RGB operator * (float v) const { return RGB(data_[0] * v, data_[1] * v, data_[2] * v); }
 
         RGB operator / (const RGB& v) const {
-            return RGB(m_data[0] / v.m_data[0], m_data[1] / v.m_data[1], m_data[2] / v.m_data[2]);
+            return RGB(data_[0] / v.data_[0], data_[1] / v.data_[1], data_[2] / v.data_[2]);
         }
 
-        RGB operator / (float v) const { return RGB(m_data[0] / v, m_data[1] / v, m_data[2] / v); }
+        RGB operator / (float v) const { return RGB(data_[0] / v, data_[1] / v, data_[2] / v); }
 
         RGB& operator += (const RGB& v) {
-            m_data[0] += v.m_data[0]; m_data[1] += v.m_data[1]; m_data[2] += v.m_data[2];
+            data_[0] += v.data_[0]; data_[1] += v.data_[1]; data_[2] += v.data_[2];
             return *this;
         }
 
-        RGB& operator += (float v) { m_data[0] += v; m_data[1] += v; m_data[2] += v; return *this; }
+        RGB& operator += (float v) { data_[0] += v; data_[1] += v; data_[2] += v; return *this; }
 
         RGB& operator -= (const RGB& v) {
-            m_data[0] -= v.m_data[0]; m_data[1] -= v.m_data[1]; m_data[2] -= v.m_data[2];
+            data_[0] -= v.data_[0]; data_[1] -= v.data_[1]; data_[2] -= v.data_[2];
             return *this;
         }
 
-        RGB& operator -= (float v) { m_data[0] -= v; m_data[1] -= v; m_data[2] -= v; return *this; }
+        RGB& operator -= (float v) { data_[0] -= v; data_[1] -= v; data_[2] -= v; return *this; }
 
         RGB& operator *= (const RGB& v) {
-            m_data[0] *= v.m_data[0];
-            m_data[1] *= v.m_data[1];
-            m_data[2] *= v.m_data[2];
+            data_[0] *= v.data_[0];
+            data_[1] *= v.data_[1];
+            data_[2] *= v.data_[2];
             return *this;
         }
 
-        RGB& operator *= (float v) { m_data[0] *= v; m_data[1] *= v; m_data[2] *= v; return *this; }
+        RGB& operator *= (float v) { data_[0] *= v; data_[1] *= v; data_[2] *= v; return *this; }
 
         RGB& operator /= (const RGB& v) {
-            m_data[0] /= v.m_data[0]; m_data[1] /= v.m_data[1]; m_data[2] /= v.m_data[2];
+            data_[0] /= v.data_[0]; data_[1] /= v.data_[1]; data_[2] /= v.data_[2];
             return *this;
         }
 
         // Get
         [[nodiscard]] virtual bool isValid() noexcept {
-            return (m_data[0] >= 0.0f && m_data[1] >= 0.0f && m_data[2] >= 0.0f);
+            return (data_[0] >= 0.0f && data_[1] >= 0.0f && data_[2] >= 0.0f);
         }
         [[nodiscard]] virtual bool isInvalid() noexcept {
-            return (m_data[0] < 0.0f || m_data[1] < 0.0f || m_data[2] < 0.0f);
+            return (data_[0] < 0.0f || data_[1] < 0.0f || data_[2] < 0.0f);
         }
 
-        [[nodiscard]] const float* valuePtr() noexcept { return m_data; }
-        [[nodiscard]] float* mutValuePtr() noexcept { return m_data; }
-        [[nodiscard]] float red() const noexcept { return m_data[0]; }
-        [[nodiscard]] float green() const noexcept { return m_data[1]; }
-        [[nodiscard]] float blue() const noexcept { return m_data[2]; }
-        [[nodiscard]] uint8_t redUInt8() const noexcept { return Type::floatToUInt8(m_data[0]); }
-        [[nodiscard]] uint8_t greenUInt8() const noexcept { return Type::floatToUInt8(m_data[1]); }
-        [[nodiscard]] uint8_t blueUInt8() const noexcept { return Type::floatToUInt8(m_data[2]); }
+        [[nodiscard]] const float* valuePtr() noexcept { return data_; }
+        [[nodiscard]] float* mutValuePtr() noexcept { return data_; }
+        [[nodiscard]] float red() const noexcept { return data_[0]; }
+        [[nodiscard]] float green() const noexcept { return data_[1]; }
+        [[nodiscard]] float blue() const noexcept { return data_[2]; }
+        [[nodiscard]] uint8_t redUInt8() const noexcept { return Type::floatToUInt8(data_[0]); }
+        [[nodiscard]] uint8_t greenUInt8() const noexcept { return Type::floatToUInt8(data_[1]); }
+        [[nodiscard]] uint8_t blueUInt8() const noexcept { return Type::floatToUInt8(data_[2]); }
         [[nodiscard]] uint32_t rgb24bit() const noexcept;
         virtual void values(float* out_values) const noexcept;
 
@@ -255,20 +248,20 @@ namespace Grain {
         [[nodiscard]] bool isDark() const noexcept;
         [[nodiscard]] bool isSame(const RGB& rgb, float tolerance = 0.0001f) const noexcept;
 
-        [[nodiscard]] RGB inverted() const noexcept { return RGB(1.0f - m_data[0], 1.0f - m_data[1], 1.0f - m_data[2]); }
+        [[nodiscard]] RGB inverted() const noexcept { return RGB(1.0f - data_[0], 1.0f - data_[1], 1.0f - data_[2]); }
 
         // Set
-        virtual void setInvalid() noexcept { m_data[0] = m_data[1] = m_data[2] = -1; }
+        virtual void setInvalid() noexcept { data_[0] = data_[1] = data_[2] = -1; }
 
-        virtual void black() noexcept { m_data[0] = m_data[1] = m_data[2] = 0.0f; }
-        virtual void white() noexcept { m_data[0] = m_data[1] = m_data[2] = 1.0f; }
+        virtual void black() noexcept { data_[0] = data_[1] = data_[2] = 0.0f; }
+        virtual void white() noexcept { data_[0] = data_[1] = data_[2] = 1.0f; }
 
-        void set(float r, float g, float b) noexcept { m_data[0] = r; m_data[1] = g; m_data[2] = b; }
-        virtual void setGrey(float value) noexcept { m_data[0] = m_data[1] = m_data[2] = value; }
-        void setRed(float r) noexcept { m_data[0] = r; }
-        void setGreen(float g) noexcept { m_data[1] = g; }
-        void setBlue(float b) noexcept { m_data[2] = b; }
-        void setValue(float value) noexcept { m_data[0] = m_data[1] = m_data[2] = value; };
+        void set(float r, float g, float b) noexcept { data_[0] = r; data_[1] = g; data_[2] = b; }
+        virtual void setGrey(float value) noexcept { data_[0] = data_[1] = data_[2] = value; }
+        void setRed(float r) noexcept { data_[0] = r; }
+        void setGreen(float g) noexcept { data_[1] = g; }
+        void setBlue(float b) noexcept { data_[2] = b; }
+        void setValue(float value) noexcept { data_[0] = data_[1] = data_[2] = value; };
         void set24bit(uint32_t value) noexcept;
         void setUInt8(uint8_t r, uint8_t g, uint8_t b) noexcept;
         virtual void setValues(const float* values) noexcept;
@@ -287,6 +280,12 @@ namespace Grain {
         void setOKLCh(float l, float c, float h) noexcept;
         void setSkinColor(Color::SkinType skin_type, float value) noexcept;
         void setKelvin(float temperature) noexcept;
+
+        void setLerp(const RGB& a, const RGB& b, double t) noexcept {
+            data_[0] = a.data_[0] + t * (b.data_[0] - a.data_[0]);
+            data_[1] = a.data_[1] + t * (b.data_[1] - a.data_[1]);
+            data_[2] = a.data_[2] + t * (b.data_[2] - a.data_[2]);
+        }
 
         virtual int32_t setByCSV(const char* csv) noexcept;
 
@@ -315,9 +314,9 @@ namespace Grain {
         void applyCDL(const CDL& cdl) noexcept;
         void applyCDL(const CDL_RGB& cdl_rgb) noexcept;
         void applyRGBLUT(const LUT1& red_lut, const LUT1& green_lut, const LUT1& blue_lut) noexcept;
-        void swapRedGreen() noexcept { float temp = m_data[0]; m_data[0] = m_data[1]; m_data[1] = temp; }
-        void swapRedBlue() noexcept { float temp = m_data[0]; m_data[0] = m_data[2]; m_data[2] = temp; }
-        void swapGreenBlue() noexcept { float temp = m_data[1]; m_data[1] = m_data[2]; m_data[2] = temp; }
+        void swapRedGreen() noexcept { float temp = data_[0]; data_[0] = data_[1]; data_[1] = temp; }
+        void swapRedBlue() noexcept { float temp = data_[0]; data_[0] = data_[2]; data_[2] = temp; }
+        void swapGreenBlue() noexcept { float temp = data_[1]; data_[1] = data_[2]; data_[2] = temp; }
         void swap(RGB& color) noexcept { RGB temp = *this; *this = color; color = temp; }
 
         // Gamma etc.
@@ -367,7 +366,7 @@ namespace Grain {
         void writeToMemUInt16(uint16_t* ptr) const noexcept;
 
         // User interface
-        [[nodiscard]] bool isValidUiColor() const noexcept { return m_data[0] >= 0; }
+        [[nodiscard]] bool isValidUiColor() const noexcept { return data_[0] >= 0; }
         [[nodiscard]] RGB uiTextColor(bool enabled) const noexcept;
         static RGB statusColor(bool selected, bool highlighted, const RGB& bg_color, const RGB& fg_color) noexcept;
 

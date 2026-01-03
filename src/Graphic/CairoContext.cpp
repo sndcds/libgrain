@@ -46,9 +46,9 @@ namespace Grain {
     void CairoContext::_cairoSetFillColor() noexcept {
         cairo_set_source_rgba(
                 m_cairo_cr,
-                m_fill_color.m_data[0],
-                m_fill_color.m_data[1],
-                m_fill_color.m_data[2],
+                m_fill_color.data_[0],
+                m_fill_color.data_[1],
+                m_fill_color.data_[2],
                 m_fill_color.alpha_);
     }
 
@@ -56,9 +56,9 @@ namespace Grain {
     void CairoContext::_cairoSetStrokeColor() noexcept {
         cairo_set_source_rgba(
                 m_cairo_cr,
-                m_stroke_color.m_data[0],
-                m_stroke_color.m_data[1],
-                m_stroke_color.m_data[2],
+                m_stroke_color.data_[0],
+                m_stroke_color.data_[1],
+                m_stroke_color.data_[2],
                 m_stroke_color.alpha_);
     }
 

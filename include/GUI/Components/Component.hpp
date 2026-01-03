@@ -289,7 +289,9 @@ namespace Grain {
         [[nodiscard]] bool hasText() const noexcept { return text_ ? text_->length() > 0 : false; }
         void setText(const char* text_str) noexcept;
         void setText(const String& text) noexcept;
-        [[nodiscard]] virtual int32_t textLength() const noexcept { return text_ ? text_->length() : 0; }
+        [[nodiscard]] virtual int32_t textLength() const noexcept {
+            return text_ ? static_cast<int32_t>(text_->length()) : 0;
+        }
 
         //
         [[nodiscard]] virtual bool hasDescendant(const Component* component) noexcept { return false; }
@@ -380,7 +382,6 @@ namespace Grain {
         virtual bool setValueInt(int32_t value) noexcept { return setValue(Fix(value)); }
         virtual bool setValueDouble(double value) noexcept { return setValue(Fix(value)); }
 
-
         // Event
         virtual void handleEvent(const Event& event) noexcept;
         [[nodiscard]] bool hasHandleEventFunction() const noexcept { return handle_event_func_ != nullptr; }
@@ -389,7 +390,7 @@ namespace Grain {
         void _interpretKeyEvents(const Event& event) noexcept;
 
         // Drawing
-        virtual void draw(const Rectd& dirty_rect) noexcept {}
+        virtual void draw(GraphicContext* gc, const Rectd& dirty_rect) noexcept {}
         virtual void updateBeforeDrawing(const Rectd& dirty_rect) noexcept {}
 
         // Custom draw function
@@ -458,6 +459,7 @@ namespace Grain {
         [[nodiscard]] View* parentView() const noexcept { return reinterpret_cast<View*>(parent_); }
 
         virtual GraphicContext* graphicContextPtr() noexcept;
+        GraphicContext* gc() noexcept;
     };
 
 }

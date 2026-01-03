@@ -38,7 +38,7 @@ namespace Grain {
         void setScrollPosition(double scroll_position);
         void setScrollPosition(double offset, double max_offset);
 
-        void draw(const Rectd& dirty_rect) noexcept override;
+        void draw(GraphicContext* gc, const Rectd& dirty_rect) noexcept override;
         void handleMouseDown(const Event& event) noexcept override;
         void handleMouseDrag(const Event& event) noexcept override;
         void handleMouseUp(const Event& event) noexcept override;

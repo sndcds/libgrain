@@ -17,9 +17,9 @@ namespace Grain {
 
     CIEXYZ::CIEXYZ(const RGB& rgb) noexcept {
 
-        float r = Color::gamma_to_linear(rgb.m_data[0]);
-        float g = Color::gamma_to_linear(rgb.m_data[1]);
-        float b = Color::gamma_to_linear(rgb.m_data[2]);
+        float r = Color::gamma_to_linear(rgb.data_[0]);
+        float g = Color::gamma_to_linear(rgb.data_[1]);
+        float b = Color::gamma_to_linear(rgb.data_[2]);
         data_[0] = 0.4124f * r + 0.3576f * g + 0.1805f * b;
         data_[1] = 0.2126f * r + 0.7152f * g + 0.0722f * b;
         data_[2] = 0.0193f * r + 0.1192f * g + 0.9505f * b;

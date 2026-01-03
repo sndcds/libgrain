@@ -142,9 +142,9 @@ namespace Grain {
         for (int32_t i = 1; i < m_resolution - 1; i++) {
             RGB temp1 = *c1;
 
-            c0->m_data[0] = (temp0.m_data[0] + c0->m_data[0] + c1->m_data[0]) / 3;
-            c0->m_data[1] = (temp0.m_data[1] + c0->m_data[1] + c1->m_data[1]) / 3;
-            c0->m_data[2] = (temp0.m_data[2] + c0->m_data[2] + c1->m_data[2]) / 3;
+            c0->data_[0] = (temp0.data_[0] + c0->data_[0] + c1->data_[0]) / 3;
+            c0->data_[1] = (temp0.data_[1] + c0->data_[1] + c1->data_[1]) / 3;
+            c0->data_[2] = (temp0.data_[2] + c0->data_[2] + c1->data_[2]) / 3;
 
             temp0 = temp1;
             c0++; c1++;
@@ -154,7 +154,7 @@ namespace Grain {
 
     void RGBLUT1::lookup(float pos, RGB& out_color) const noexcept {
 
-        lookup(pos, out_color.m_data);
+        lookup(pos, out_color.data_);
     }
 
 
@@ -179,8 +179,8 @@ namespace Grain {
         float t = pos*  m_resolution - index;
         float f2 = std::clamp<float>(t, 0.0f, 1.0f);
         float f1 = 1.0f - f2;
-        float* c1 = m_samples[index].m_data;
-        float* c2 = m_samples[index + 1].m_data;
+        float* c1 = m_samples[index].data_;
+        float* c2 = m_samples[index + 1].data_;
         out_color[0] = c1[0] * f1 + c2[0] * f2;
         out_color[1] = c1[1] * f1 + c2[1] * f2;
         out_color[2] = c1[2] * f1 + c2[2] * f2;

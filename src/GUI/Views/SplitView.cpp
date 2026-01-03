@@ -32,9 +32,7 @@ namespace Grain {
     }
 
 
-    void SplitView::draw(const Rectd& dirty_rect) noexcept {
-        auto gc = graphicContextPtr();
-        if (!gc) { return; }
+    void SplitView::draw(GraphicContext* gc, const Rectd& dirty_rect) noexcept {
 
         if (m_must_init) {
             initLayout();

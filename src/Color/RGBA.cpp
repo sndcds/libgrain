@@ -44,9 +44,9 @@ namespace Grain {
 
     void RGBA::setValues(const float* comp) noexcept {
         if (comp) {
-            m_data[0] = comp[0];
-            m_data[1] = comp[1];
-            m_data[2] = comp[2];
+            data_[0] = comp[0];
+            data_[1] = comp[1];
+            data_[2] = comp[2];
             alpha_ = comp[3];
         }
     }
@@ -54,9 +54,9 @@ namespace Grain {
 
     void RGBA::setValues(const float* comp, float scale) noexcept {
         if (comp) {
-            m_data[0] = comp[0] * scale;
-            m_data[1] = comp[1] * scale;
-            m_data[2] = comp[2] * scale;
+            data_[0] = comp[0] * scale;
+            data_[1] = comp[1] * scale;
+            data_[2] = comp[2] * scale;
             alpha_ = comp[3] * scale;
         }
     }
@@ -94,40 +94,40 @@ namespace Grain {
 
         if (n == 1) {
             // Grey
-            m_data[0] = m_data[1] = m_data[2] = values[0];
+            data_[0] = data_[1] = data_[2] = values[0];
             alpha_ = 1.0f;
         }
         else if (n == 2) {
             // Grey with alpha
-            m_data[0] = m_data[1] = m_data[2] = values[0];
+            data_[0] = data_[1] = data_[2] = values[0];
             alpha_ = values[1];
         }
         else if (n == 3) {
             // RGB
-            m_data[0] = values[0];
-            m_data[1] = values[1];
-            m_data[2] = values[2];
+            data_[0] = values[0];
+            data_[1] = values[1];
+            data_[2] = values[2];
             alpha_ = 1.0f;
         }
         else if (n == 4) {
             // RGBA
-            m_data[0] = values[0];
-            m_data[1] = values[1];
-            m_data[2] = values[2];
+            data_[0] = values[0];
+            data_[1] = values[1];
+            data_[2] = values[2];
             alpha_ = values[3];
         }
         else if (n == 5) {
             // RGBA, scaled
-            m_data[0] = values[0];
-            m_data[1] = values[1];
-            m_data[2] = values[2];
+            data_[0] = values[0];
+            data_[1] = values[1];
+            data_[2] = values[2];
             alpha_ = values[3];
             float max = values[4];
             if (max > std::numeric_limits<float>::epsilon()) {
                 float scale = 1.0f / max;
-                m_data[0] *= scale;
-                m_data[1] *= scale;
-                m_data[2] *= scale;
+                data_[0] *= scale;
+                data_[1] *= scale;
+                data_[2] *= scale;
                 alpha_ *= scale;
             }
         }
@@ -148,18 +148,18 @@ namespace Grain {
 
     uint32_t RGBA::rgba32bit() const noexcept {
         return
-            (static_cast<uint32_t>(Type::floatToUInt8(m_data[0])) << 24) +
-            (static_cast<uint32_t>(Type::floatToUInt8(m_data[1])) << 16) +
-            (static_cast<uint32_t>(Type::floatToUInt8(m_data[2])) << 8) +
+            (static_cast<uint32_t>(Type::floatToUInt8(data_[0])) << 24) +
+            (static_cast<uint32_t>(Type::floatToUInt8(data_[1])) << 16) +
+            (static_cast<uint32_t>(Type::floatToUInt8(data_[2])) << 8) +
             static_cast<uint32_t>(Type::floatToUInt8(alpha_));
     }
 
 
     void RGBA::values(float* out_values) const noexcept {
         if (out_values) {
-            out_values[0] = m_data[0];
-            out_values[1] = m_data[1];
-            out_values[2] = m_data[2];
+            out_values[0] = data_[0];
+            out_values[1] = data_[1];
+            out_values[2] = data_[2];
             out_values[3] = alpha_;
         }
     }
@@ -167,9 +167,9 @@ namespace Grain {
 
     bool RGBA::isSame(const RGBA &rgba, float tolerance) const noexcept {
 
-        return (std::fabs(m_data[0] - rgba.m_data[0]) <= tolerance &&
-                std::fabs(m_data[1] - rgba.m_data[1]) <= tolerance &&
-                std::fabs(m_data[2] - rgba.m_data[2]) <= tolerance &&
+        return (std::fabs(data_[0] - rgba.data_[0]) <= tolerance &&
+                std::fabs(data_[1] - rgba.data_[1]) <= tolerance &&
+                std::fabs(data_[2] - rgba.data_[2]) <= tolerance &&
                 std::fabs(alpha_ - rgba.alpha_) <= tolerance);
     }
 
@@ -177,9 +177,9 @@ namespace Grain {
     void RGBA::setBlend(const RGBA &other, float t) noexcept {
         float f2 = std::clamp<float>(t, 0.0f, 1.0f);
         float f1 = 1.0f - f2;
-        m_data[0] = m_data[0] * f1 + other.m_data[0] * f2;
-        m_data[1] = m_data[1] * f1 + other.m_data[1] * f2;
-        m_data[2] = m_data[2] * f1 + other.m_data[2] * f2;
+        data_[0] = data_[0] * f1 + other.data_[0] * f2;
+        data_[1] = data_[1] * f1 + other.data_[1] * f2;
+        data_[2] = data_[2] * f1 + other.data_[2] * f2;
         alpha_ = alpha_ * f1 + other.alpha_ * f2;
     }
 
@@ -187,9 +187,9 @@ namespace Grain {
     void RGBA::setBlend(const RGBA &a, const RGBA &b, float t) noexcept {
         float f2 = std::clamp<float>(t, 0.0f, 1.0f);
         float f1 = 1.0f - f2;
-        m_data[0] = a.m_data[0] * f1 + b.m_data[0] * f2;
-        m_data[1] = a.m_data[1] * f1 + b.m_data[1] * f2;
-        m_data[2] = a.m_data[2] * f1 + b.m_data[2] * f2;
+        data_[0] = a.data_[0] * f1 + b.data_[0] * f2;
+        data_[1] = a.data_[1] * f1 + b.data_[1] * f2;
+        data_[2] = a.data_[2] * f1 + b.data_[2] * f2;
         alpha_ = a.alpha_ * f1 + b.alpha_ * f2;
     }
 
@@ -197,24 +197,24 @@ namespace Grain {
     void RGBA::mixbox(const RGBA &color1, const RGBA &color2, float t) noexcept {
 
         mixbox_latent l1, l2, lmix;
-        auto c1 = color1.m_data;
-        auto c2 = color2.m_data;
+        auto c1 = color1.data_;
+        auto c2 = color2.data_;
         mixbox_float_rgb_to_latent(c1[0], c1[1], c1[2], l1);
         mixbox_float_rgb_to_latent(c2[0], c2[1], c2[2], l2);
         float ti = (1.0f - t);
         for (int i = 0; i < MIXBOX_LATENT_SIZE; i++) {
             lmix[i] = ti * l1[i] + t * l2[i];
         }
-        mixbox_latent_to_float_rgb(lmix, &m_data[0], &m_data[1], &m_data[2]);
+        mixbox_latent_to_float_rgb(lmix, &data_[0], &data_[1], &data_[2]);
         alpha_ = color1.alpha_ * (1.0 - t) + color2.alpha_ * t;
     }
 
 
     void RGBA::scale(float scale) noexcept {
 
-        m_data[0] *= scale;
-        m_data[1] *= scale;
-        m_data[2] *= scale;
+        data_[0] *= scale;
+        data_[1] *= scale;
+        data_[2] *= scale;
         alpha_ *= scale;
     }
 

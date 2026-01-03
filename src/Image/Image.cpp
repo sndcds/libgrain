@@ -473,9 +473,9 @@ namespace Grain {
             _m_curr_ptr = ptrAt(x, y);
             if (_m_curr_ptr) {
                 read();
-                _m_value_ptr_float[0] = _m_value_ptr_float[0] * alpha_inv + color.m_data[0] * alpha;
-                _m_value_ptr_float[1] = _m_value_ptr_float[1] * alpha_inv + color.m_data[1] * alpha;
-                _m_value_ptr_float[2] = _m_value_ptr_float[2] * alpha_inv + color.m_data[2] * alpha;
+                _m_value_ptr_float[0] = _m_value_ptr_float[0] * alpha_inv + color.data_[0] * alpha;
+                _m_value_ptr_float[1] = _m_value_ptr_float[1] * alpha_inv + color.data_[1] * alpha;
+                _m_value_ptr_float[2] = _m_value_ptr_float[2] * alpha_inv + color.data_[2] * alpha;
                 write();
             }
 

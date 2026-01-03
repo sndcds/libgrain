@@ -36,7 +36,7 @@ namespace Grain {
 
         [[nodiscard]] int32_t selectedRadioValue() const noexcept;
 
-        void draw(const Rectd &dirty_rect) noexcept override;
+        void draw(GraphicContext* gc, const Rectd &dirty_rect) noexcept override;
     };
 
 

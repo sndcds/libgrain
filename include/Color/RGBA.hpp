@@ -54,15 +54,15 @@ namespace Grain {
 
         RGBA(int32_t r, int32_t g, int32_t b, int32_t a, int32_t max) noexcept {
             float f = 1.0f / static_cast<float>(max);
-            m_data[0] = f * static_cast<float>(r);
-            m_data[1] = f * static_cast<float>(g);
-            m_data[2] = f * static_cast<float>(b);
+            data_[0] = f * static_cast<float>(r);
+            data_[1] = f * static_cast<float>(g);
+            data_[2] = f * static_cast<float>(b);
             alpha_ = f * static_cast<float>(a);
         }
         explicit RGBA(const String& csv) noexcept;
         explicit RGBA(const char* csv) noexcept;
 
-        ~RGBA() noexcept = default;
+        ~RGBA() noexcept override = default;
 
 
         [[nodiscard]] const char* className() const noexcept override { return "RGBA"; }
@@ -73,26 +73,18 @@ namespace Grain {
         }
 
         friend std::ostream& operator << (std::ostream& os, const RGBA& o) {
-            os << o.m_data[0] << ", " << o.m_data[1] << ", " << o.m_data[2] << ", " << o.alpha_;
+            os << o.data_[0] << ", " << o.data_[1] << ", " << o.data_[2] << ", " << o.alpha_;
             return os;
         }
 
-
-        // Operator overloading, hides RGB::operator = (that is ok and can be ignored)
-        RGBA& operator = (const RGB& v) {
-            m_data[0] = v.m_data[0];
-            m_data[1] = v.m_data[1];
-            m_data[2] = v.m_data[2];
-            return *this;
-        }
-
+        RGBA& operator = (const RGBA&) = default;
 
         bool operator == (const RGBA& v) const {
-            return m_data[0] == v.m_data[0] && m_data[1] == v.m_data[1] && m_data[2] == v.m_data[2]  && alpha_ == v.alpha_;
+            return data_[0] == v.data_[0] && data_[1] == v.data_[1] && data_[2] == v.data_[2]  && alpha_ == v.alpha_;
         }
 
         bool operator != (const RGBA& v) const {
-            return m_data[0] != v.m_data[0] || m_data[1] != v.m_data[1] || m_data[2] != v.m_data[2] || alpha_ != v.alpha_;
+            return data_[0] != v.data_[0] || data_[1] != v.data_[1] || data_[2] != v.data_[2] || alpha_ != v.alpha_;
         }
 
         [[nodiscard]] float alpha() const noexcept { return alpha_; }
@@ -101,23 +93,30 @@ namespace Grain {
 
         [[nodiscard]] bool isSame(const RGBA& rgba, float tolerance = 0.0001f) const noexcept;
 
-        void black() noexcept override { m_data[0] = m_data[1] = m_data[2] = 0.0f; alpha_ = 1.0f; }
-        void white() noexcept override { m_data[0] = m_data[1] = m_data[2] = 1.0f; alpha_ = 1.0f;  }
+        void black() noexcept override { data_[0] = data_[1] = data_[2] = 0.0f; alpha_ = 1.0f; }
+        void white() noexcept override { data_[0] = data_[1] = data_[2] = 1.0f; alpha_ = 1.0f;  }
 
-        void setGrey(float value) noexcept override { m_data[0] = m_data[1] = m_data[2] = value; alpha_ = 1.0f; }
+        void setGrey(float value) noexcept override { data_[0] = data_[1] = data_[2] = value; alpha_ = 1.0f; }
         void setRGB(const RGB& color) {
-            m_data[0] = color.m_data[0]; m_data[1] = color.m_data[1]; m_data[2] = color.m_data[2]; alpha_ = 1.0f;
+            data_[0] = color.data_[0]; data_[1] = color.data_[1]; data_[2] = color.data_[2]; alpha_ = 1.0f;
         }
         void setRGBA(const RGB& color, float alpha) {
-            m_data[0] = color.m_data[0]; m_data[1] = color.m_data[1]; m_data[2] = color.m_data[2]; alpha_ = alpha;
+            data_[0] = color.data_[0]; data_[1] = color.data_[1]; data_[2] = color.data_[2]; alpha_ = alpha;
         }
-        void setRGB(float r, float g, float b) { m_data[0] = r; m_data[1] = g; m_data[2] = b; alpha_ = 1.0f; }
-        void setRGBA(float r, float g, float b, float alpha) { m_data[0] = r; m_data[1] = g; m_data[2] = b; alpha_ = alpha; }
+        void setRGB(float r, float g, float b) { data_[0] = r; data_[1] = g; data_[2] = b; alpha_ = 1.0f; }
+        void setRGBA(float r, float g, float b, float alpha) { data_[0] = r; data_[1] = g; data_[2] = b; alpha_ = alpha; }
+
+        void setLerp(const RGBA& a, const RGBA& b, double t) noexcept {
+            data_[0] = a.data_[0] + t * (b.data_[0] - a.data_[0]);
+            data_[1] = a.data_[1] + t * (b.data_[1] - a.data_[1]);
+            data_[2] = a.data_[2] + t * (b.data_[2] - a.data_[2]);
+            alpha_ = a.alpha_ + t * (b.alpha_ - a.alpha_);
+        }
 
         void set32bit(uint32_t value) noexcept {
-            m_data[0] = static_cast<float>((value & 0xFF000000) >> 24) / 255;
-            m_data[1] = static_cast<float>((value & 0xFF0000) >> 16) / 255;
-            m_data[2] = static_cast<float>((value & 0xFF00) >> 8) / 255;
+            data_[0] = static_cast<float>((value & 0xFF000000) >> 24) / 255;
+            data_[1] = static_cast<float>((value & 0xFF0000) >> 16) / 255;
+            data_[2] = static_cast<float>((value & 0xFF00) >> 8) / 255;
             alpha_ = static_cast<float>(value & 0xFF) / 255;
         }
 

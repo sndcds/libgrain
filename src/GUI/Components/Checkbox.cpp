@@ -74,9 +74,7 @@ namespace Grain {
     }
 
 
-    void Checkbox::draw(const Rectd& dirty_rect) noexcept {
-        auto gc = graphicContextPtr();
-
+    void Checkbox::draw(GraphicContext* gc, const Rectd& dirty_rect) noexcept {
         auto style= guiStyle();
         if (!style) {
             drawDummy(gc);

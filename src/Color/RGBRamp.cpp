@@ -104,9 +104,9 @@ namespace Grain {
         if (out_values) {
             RGB rgb;
             lookup(t, rgb);
-            out_values[0] = rgb.m_data[0];
-            out_values[1] = rgb.m_data[1];
-            out_values[2] = rgb.m_data[2];
+            out_values[0] = rgb.data_[0];
+            out_values[1] = rgb.data_[1];
+            out_values[2] = rgb.data_[2];
         }
     }
 
@@ -139,9 +139,9 @@ namespace Grain {
         if (out_values) {
             RGB rgb;
             lookupRing(t, rgb);
-            out_values[0] = rgb.m_data[0];
-            out_values[1] = rgb.m_data[1];
-            out_values[2] = rgb.m_data[2];
+            out_values[0] = rgb.data_[0];
+            out_values[1] = rgb.data_[1];
+            out_values[2] = rgb.data_[2];
         }
     }
 

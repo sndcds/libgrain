@@ -144,10 +144,7 @@ void View::geometryChanged() noexcept {
 }
 
 
-void View::draw(const Rectd& dirty_rect) noexcept {
-    auto gc = graphicContextPtr();
-    if (!gc) { return; }
-
+void View::draw(GraphicContext* gc, const Rectd& dirty_rect) noexcept {
     auto style = App::guiStyleAtIndex(style_index_);
     if (style) {
         Rectd bounds_rect = boundsRect();

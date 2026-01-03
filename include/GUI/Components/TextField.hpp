@@ -66,7 +66,7 @@ namespace Grain {
         static TextField* add(View* view, const Rectd& rect, Component* receiver, ComponentAction action, int32_t tag, void* action_ref);
 
 
-        void draw(const Rectd& dirty_rect) noexcept override;
+        void draw(GraphicContext* gc, const Rectd& dirty_rect) noexcept override;
         void drawCursor(GraphicContext* gc, float x) const noexcept;
 
         virtual float beamWidth() const noexcept { return beam_width_; }

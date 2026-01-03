@@ -242,9 +242,9 @@ namespace Grain {
                 }
             }
             else if (n == 3) {
-                out_rgb.m_data[0] = luaL_checknumber(l, arg_offs);
-                out_rgb.m_data[1] = luaL_checknumber(l, arg_offs + 1);
-                out_rgb.m_data[2] = luaL_checknumber(l, arg_offs + 2);
+                out_rgb.data_[0] = luaL_checknumber(l, arg_offs);
+                out_rgb.data_[1] = luaL_checknumber(l, arg_offs + 1);
+                out_rgb.data_[2] = luaL_checknumber(l, arg_offs + 2);
                 return true;
             }
             else if (n == 4) {

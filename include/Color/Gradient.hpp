@@ -134,7 +134,7 @@ public:
 
     bool setColor(int32_t part, const RGB& color) noexcept {
         if (part >= 0 && part <= 1 && color != m_colors[part]) {
-            m_colors[part] = color;
+            m_colors[part] = RGBA(color, 1);
             return true;
         }
         return false;

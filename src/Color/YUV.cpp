@@ -44,13 +44,13 @@ namespace Grain {
 
     void YUV::setRGB601(const RGB& rgb) noexcept {
 
-        Color::rgb_to_yuv601(rgb.m_data, m_data);
+        Color::rgb_to_yuv601(rgb.data_, m_data);
     }
 
 
     void YUV::setRGB709(const RGB& rgb) noexcept  {
 
-        Color::rgb_to_yuv709(rgb.m_data, m_data);
+        Color::rgb_to_yuv709(rgb.data_, m_data);
     }
 
 

@@ -22,7 +22,7 @@ namespace Grain {
 
 
     void HSL::set(const RGB& rgb) noexcept {
-        Color::rgb_to_hsl(rgb.m_data, m_data);
+        Color::rgb_to_hsl(rgb.data_, m_data);
     }
 
 

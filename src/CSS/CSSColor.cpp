@@ -250,30 +250,30 @@ namespace Grain {
             }
             switch (index) {
                 case 3:
-                    m_rgba.m_data[0] = static_cast<float>((hex_digits[0] << 4) + hex_digits[0]) / 255.0f;
-                    m_rgba.m_data[1] = static_cast<float>((hex_digits[1] << 4) + hex_digits[1]) / 255.0f;
-                    m_rgba.m_data[2] = static_cast<float>((hex_digits[2] << 4) + hex_digits[2]) / 255.0f;
+                    m_rgba.data_[0] = static_cast<float>((hex_digits[0] << 4) + hex_digits[0]) / 255.0f;
+                    m_rgba.data_[1] = static_cast<float>((hex_digits[1] << 4) + hex_digits[1]) / 255.0f;
+                    m_rgba.data_[2] = static_cast<float>((hex_digits[2] << 4) + hex_digits[2]) / 255.0f;
                     m_rgba.alpha_ = 1.0f;
                     valid_ = true;
                     break;
                 case 4:
-                    m_rgba.m_data[0] = static_cast<float>((hex_digits[0] << 4) + hex_digits[0]) / 255.0f;
-                    m_rgba.m_data[1] = static_cast<float>((hex_digits[1] << 4) + hex_digits[1]) / 255.0f;
-                    m_rgba.m_data[2] = static_cast<float>((hex_digits[2] << 4) + hex_digits[2]) / 255.0f;
+                    m_rgba.data_[0] = static_cast<float>((hex_digits[0] << 4) + hex_digits[0]) / 255.0f;
+                    m_rgba.data_[1] = static_cast<float>((hex_digits[1] << 4) + hex_digits[1]) / 255.0f;
+                    m_rgba.data_[2] = static_cast<float>((hex_digits[2] << 4) + hex_digits[2]) / 255.0f;
                     m_rgba.alpha_ = static_cast<float>((hex_digits[3] << 4) + hex_digits[3]) / 255.0f;
                     valid_ = true;
                     break;
                 case 6:
-                    m_rgba.m_data[0] = static_cast<float>((hex_digits[0] << 4) + hex_digits[1]) / 255.0f;
-                    m_rgba.m_data[1] = static_cast<float>((hex_digits[2] << 4) + hex_digits[3]) / 255.0f;
-                    m_rgba.m_data[2] = static_cast<float>((hex_digits[4] << 4) + hex_digits[5]) / 255.0f;
+                    m_rgba.data_[0] = static_cast<float>((hex_digits[0] << 4) + hex_digits[1]) / 255.0f;
+                    m_rgba.data_[1] = static_cast<float>((hex_digits[2] << 4) + hex_digits[3]) / 255.0f;
+                    m_rgba.data_[2] = static_cast<float>((hex_digits[4] << 4) + hex_digits[5]) / 255.0f;
                     m_rgba.alpha_ = 1.0f;
                     valid_ = true;
                     break;
                 case 8:
-                    m_rgba.m_data[0] = static_cast<float>((hex_digits[0] << 4) + hex_digits[1]) / 255.0f;
-                    m_rgba.m_data[1] = static_cast<float>((hex_digits[2] << 4) + hex_digits[3]) / 255.0f;
-                    m_rgba.m_data[2] = static_cast<float>((hex_digits[4] << 4) + hex_digits[5]) / 255.0f;
+                    m_rgba.data_[0] = static_cast<float>((hex_digits[0] << 4) + hex_digits[1]) / 255.0f;
+                    m_rgba.data_[1] = static_cast<float>((hex_digits[2] << 4) + hex_digits[3]) / 255.0f;
+                    m_rgba.data_[2] = static_cast<float>((hex_digits[4] << 4) + hex_digits[5]) / 255.0f;
                     m_rgba.alpha_ = static_cast<float>((hex_digits[6] << 4) + hex_digits[7]) / 255.0f;
                     valid_ = true;
                     break;

@@ -451,7 +451,7 @@ namespace Grain {
 
     void Gradient::addStop(float pos, const RGB& rgb) noexcept {
 
-        addStop(pos, RGBA(rgb.m_data[0], rgb.m_data[1], rgb.m_data[2], 1.0f));
+        addStop(pos, RGBA(rgb.data_[0], rgb.data_[1], rgb.data_[2], 1.0f));
     }
 
 

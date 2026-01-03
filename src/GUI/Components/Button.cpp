@@ -44,9 +44,7 @@ namespace Grain {
         needsDisplay();
     }
 
-    void Button::draw(const Rectd& dirty_rect) noexcept {
-        auto gc = graphicContextPtr();
-
+    void Button::draw(GraphicContext* gc, const Rectd& dirty_rect) noexcept {
         auto style = guiStyle();
         if (!style) {
             drawDummy(gc);

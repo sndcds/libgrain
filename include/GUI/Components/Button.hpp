@@ -40,7 +40,7 @@ namespace Grain {
         void setRadioGroup(int32_t radio_group) noexcept override { radio_group_ = radio_group; }
         void setRadioValue(int32_t radio_value) noexcept override { radio_value_ = radio_value; }
 
-        void draw(const Rectd& dirty_rect) noexcept override;
+        void draw(GraphicContext* gc, const Rectd& dirty_rect) noexcept override;
 
         void handleMouseDown(const Event& event) noexcept override;
         void handleMouseDrag(const Event& event) noexcept override;
