@@ -196,7 +196,6 @@ namespace Grain {
                 rgb.setKelvin(Math::remap(0, resolution - 1, Color::kKelvinMin, Color::kKelvinMax, i));
                 lut->setColorAtIndex(i, rgb);
             }
-            std::cout << (long)lut << std::endl;
             g_kelvin_lut = lut;
             return g_kelvin_lut;
         }

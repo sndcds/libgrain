@@ -190,7 +190,6 @@ namespace Grain {
 
 
     bool Component::gotoPreviousKeyComponent() noexcept {
-        std::cout << (long) previous_key_component_ << std::endl;
         return gotoComponent(previous_key_component_);
     }
 
@@ -206,7 +205,7 @@ namespace Grain {
 
 
     void Component::updateRepresentations(const Component* excluded_component) noexcept {
-        /* !!!!!
+        /* TODO:
         if (m_textfield && m_textfield != excluded_component) {
             m_textfield->setValue(value());
         }
@@ -277,7 +276,6 @@ namespace Grain {
         margin_.right_ = right;
         margin_.bottom_ = bottom;
         margin_.left_ = left;
-
         parentGeometryChanged();
     }
 
@@ -471,7 +469,7 @@ namespace Grain {
 
     GraphicContext* Component::graphicContextPtr() noexcept {
         auto component = this;
-        while (!component->m_gc_ptr) {
+        while (!component->gc_ptr_) {
             if (component->parent_) {
                 component = component->parent_;
             }
@@ -480,7 +478,7 @@ namespace Grain {
             }
         }
 
-        component->m_gc_ptr->setComponent(component);
-        return component->m_gc_ptr;
+        component->gc_ptr_->setComponent(component);
+        return component->gc_ptr_;
     }
 } // End of namespace Grain

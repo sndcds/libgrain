@@ -8,19 +8,20 @@
 //
 
 #include "GUI/Components/ValueComponent.hpp"
+#include "GUI/Event.hpp"
 #include "Color/Gradient.hpp"
 
 
 namespace Grain {
 
     ValueComponent::ValueComponent(const Rectd& rect, int32_t tag) noexcept : Component(rect, tag) {
-        m_value = 0;
-        m_min = 0;
-        m_max = 100;
+        value_ = 0;
+        min_ = 0;
+        max_ = 100;
         offs_ = 0;
-        m_default = 0;
-        m_step = 1;
-        m_big_step = 10;
+        default_ = 0;
+        step_ = 1;
+        big_step_ = 10;
     }
 
 
@@ -38,13 +39,13 @@ namespace Grain {
         default_value.clamp(min, max);
         offset.clamp(min, max);
 
-        m_value = default_value;
-        m_min = min;
-        m_max = max;
+        value_ = default_value;
+        min_ = min;
+        max_ = max;
         offs_ = offset;
-        m_default = default_value;
-        m_step = step;
-        m_big_step = big_step;
+        default_ = default_value;
+        step_ = step;
+        big_step_ = big_step;
 
         /* !!!!!
         if (m_textfield) {
@@ -70,7 +71,7 @@ namespace Grain {
 
 
     void ValueComponent::setFractionalDigits(int32_t fractional_digits) noexcept {
-        m_fractional_digits = std::clamp<int32_t>(fractional_digits, 0, Fix::kDecPrecision);
+        fractional_digits_ = std::clamp<int32_t>(fractional_digits, 0, Fix::kDecPrecision);
     }
 
     /* !!!!!
@@ -94,7 +95,7 @@ namespace Grain {
 
     void ValueComponent::setByComponent(Component* component) noexcept {
         if (component) {
-            if (m_value.set(component->value(), m_min, m_max, m_fractional_digits)) {
+            if (value_.set(component->value(), min_, max_, fractional_digits_)) {
                 updateRepresentations(component);
                 needsDisplay();
             }
@@ -102,4 +103,27 @@ namespace Grain {
         }
     }
 
-}  // End of namespace Grain
+
+    void ValueComponent::handleKeyDown(const Event& event) noexcept {
+        if (event.keyCharCount() == 1) {
+            switch (event.keyChar()) {
+                case KeyCode::FunctionDownArrow:
+                case KeyCode::FunctionLeftArrow:
+                    if (event.noModifiersPressed()) { decValue(); }
+                    else if (event.isShiftPressedOnly()) { decValueBig(); }
+                    break;
+                case KeyCode::FunctionUpArrow:
+                case KeyCode::FunctionRightArrow:
+                    if (event.noModifiersPressed()) { incValue(); }
+                    else if (event.isShiftPressedOnly()) { incValueBig(); }
+                    break;
+                case KeyCode::CarriageReturn:
+                    if (event.isAltPressedOnly()) { setValue(default_); }
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+} // End of namespace Grain

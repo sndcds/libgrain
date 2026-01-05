@@ -42,6 +42,7 @@ namespace Grain {
 
         void draw(GraphicContext* gc, const Rectd& dirty_rect) noexcept override;
 
+        void handleKeyDown(const Event& event) noexcept override;
         void handleMouseDown(const Event& event) noexcept override;
         void handleMouseDrag(const Event& event) noexcept override;
         void handleMouseUp(const Event& event) noexcept override;

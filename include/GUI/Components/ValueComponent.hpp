@@ -18,81 +18,88 @@
 
 namespace Grain {
 
+    class ColorWell;
+
     class ValueComponent : public Component {
 
     public:
-        ValueComponent(const Rectd& rect) noexcept : ValueComponent(rect, 0) {}
+        explicit ValueComponent(const Rectd& rect) noexcept : ValueComponent(rect, 0) {}
         ValueComponent(const Rectd& rect, int32_t tag) noexcept;
-        virtual ~ValueComponent() noexcept;
+        ~ValueComponent() noexcept override;
 
         [[nodiscard]] const char* className() const noexcept override { return "ValueComponent"; }
 
 
-        [[nodiscard]] Fix value() const noexcept override { return m_value; }
+        [[nodiscard]] Fix value() const noexcept override { return value_; }
 
         bool setValue(const Fix& value) noexcept override {
-            if (m_value.set(value, m_min, m_max, m_fractional_digits)) {
+            if (value_.set(value, min_, max_, fractional_digits_)) {
                 updateRepresentations(nullptr);
                 needsDisplay();
                 return true;
             }
             return false;
         }
+        virtual void incValue() noexcept { setValue(value_ + step_); }
+        virtual void decValue() noexcept { setValue(value_ - step_); }
+        virtual void incValueBig() noexcept { setValue(value_ + big_step_); }
+        virtual void decValueBig() noexcept { setValue(value_ - big_step_); }
+
 
         virtual void setRange(Fix min, Fix max) noexcept {
-            m_min = min;
-            m_max = max;
+            min_ = min;
+            max_ = max;
         }
 
         virtual void setRange(int32_t min, int32_t max) noexcept {
-            m_min = Fix(min);
-            m_max = Fix(max);
+            min_ = Fix(min);
+            max_ = Fix(max);
         }
 
 
-        void setDisplayPrecision(int32_t value) noexcept { m_display_precision = value; needsDisplay(); }
+        void setDisplayPrecision(int32_t value) noexcept { display_precisio_n = value; needsDisplay(); }
 
 
-        [[nodiscard]] int32_t valueAsInt32() const noexcept override { return m_value.asInt32(); }
-        [[nodiscard]]  double valueAsDouble() const noexcept override { return m_value.asDouble(); }
+        [[nodiscard]] int32_t valueAsInt32() const noexcept override { return value_.asInt32(); }
+        [[nodiscard]]  double valueAsDouble() const noexcept override { return value_.asDouble(); }
 
 
-        [[nodiscard]] Fix minValue() const noexcept { return m_min; }
-        [[nodiscard]] Fix maxValue() const noexcept { return m_max; }
+        [[nodiscard]] Fix minValue() const noexcept { return min_; }
+        [[nodiscard]] Fix maxValue() const noexcept { return max_; }
         [[nodiscard]] Fix offsetValue() const noexcept { return offs_; }
-        [[nodiscard]] Fix defaultValue() const noexcept { return m_default; }
-        [[nodiscard]] Fix valueStep() const noexcept { return m_step; }
-        [[nodiscard]] Fix valueBigStep() const noexcept { return m_big_step; }
-        [[nodiscard]] int32_t fractionalDigits() const noexcept { return m_fractional_digits; }
-        [[nodiscard]] int32_t displayPrecision() const noexcept { return m_display_precision; }
+        [[nodiscard]] Fix defaultValue() const noexcept { return default_; }
+        [[nodiscard]] Fix valueStep() const noexcept { return step_; }
+        [[nodiscard]] Fix valueBigStep() const noexcept { return big_step_; }
+        [[nodiscard]] int32_t fractionalDigits() const noexcept { return fractional_digits_; }
+        [[nodiscard]] int32_t displayPrecision() const noexcept { return display_precisio_n; }
 
-        [[nodiscard]] Fix rememberedValue() const noexcept { return m_remembered_value; }
+        [[nodiscard]] Fix rememberedValue() const noexcept { return remembered_value_; }
 
         [[nodiscard]] double normalizedValue() const noexcept {
-            double value = m_value.asDouble();
-            double min = m_min.asDouble();
-            double max = m_max.asDouble();
+            double value = value_.asDouble();
+            double min = min_.asDouble();
+            double max = max_.asDouble();
             return ((max - min) == 0.0) ? 0.0 : (value - min) / (max - min);
         }
 
         [[nodiscard]] double normalizedOffsetValue() const noexcept {
             double offset = offs_.asDouble();
-            double min = m_min.asDouble();
-            double max = m_max.asDouble();
+            double min = min_.asDouble();
+            double max = max_.asDouble();
             return ((max - min) == 0.0) ? 0.0 : (offset - min) / (max - min);
         }
 
-        [[nodiscard]] bool shouldDisplayValue() const noexcept { return m_displays_value; }
-        [[nodiscard]] bool isIndicatorVisible() const noexcept { return m_indicator_visibility; }
-        [[nodiscard]] float trackSize() const noexcept { return m_track_size; }
-        [[nodiscard]] float handleSize() const noexcept { return m_handle_size; }
+        [[nodiscard]] bool shouldDisplayValue() const noexcept { return displays_value_; }
+        [[nodiscard]] bool isIndicatorVisible() const noexcept { return indicator_visibility_; }
+        [[nodiscard]] float trackSize() const noexcept { return track_size_; }
+        [[nodiscard]] float handleSize() const noexcept { return handle_size_; }
 
 
-        void setTrackSize(float track_size) noexcept { m_track_size = track_size; needsDisplay(); }
-        void setHandleSize(float handle_size) noexcept { m_handle_size = handle_size; needsDisplay(); }
+        void setTrackSize(float track_size) noexcept { track_size_ = track_size; needsDisplay(); }
+        void setHandleSize(float handle_size) noexcept { handle_size_ = handle_size; needsDisplay(); }
         void enableValueDisplay() noexcept { setDisplaysValue(true); }
         void disableValueDisplay() noexcept { setDisplaysValue(false); }
-        void setDisplaysValue(bool value) noexcept { m_displays_value = value; needsDisplay(); }
+        void setDisplaysValue(bool value) noexcept { displays_value_ = value; needsDisplay(); }
 
         void setup(Fix min, Fix max, Fix offset, Fix default_value, Fix step, Fix big_step) noexcept;
         void setupInt(int32_t min, int32_t max, int32_t offset, int32_t def, int32_t step, int32_t big_step) noexcept;
@@ -102,34 +109,42 @@ namespace Grain {
         // void setTextField(TextField* textfield) noexcept override; !!!!!
         void setByComponent(Component* component) noexcept override;
 
-        void setIndicatorVisibility(bool indicator_visibility) noexcept { m_indicator_visibility = indicator_visibility; needsDisplay(); }
+        void setIndicatorVisibility(bool indicator_visibility) noexcept { indicator_visibility_ = indicator_visibility; needsDisplay(); }
         void hideIndicator() noexcept { setIndicatorVisibility(false); }
         void showIndicator() noexcept { setIndicatorVisibility(true); }
 
-        void removeGradient() noexcept;
+        virtual void setColor(const RGB &color) noexcept {}
+        [[nodiscard]] virtual RGB color() const noexcept { return RGB::kBlack; }
+        virtual void setColorWell(ColorWell* color_well) noexcept {}
 
+
+        virtual void removeGradient() noexcept {}
+
+        void handleKeyDown(const Event& event) noexcept override;
 
         void handleMouseDown(const Event& event) noexcept override {
-            m_remembered_value = m_value;
+            remembered_value_ = value_;
         }
 
     protected:
-        Fix m_value;
-        Fix m_min;
-        Fix m_max;
+        Fix value_;
+        Fix min_;
+        Fix max_;
         Fix offs_;
-        Fix m_default;
-        Fix m_step;
-        Fix m_big_step;
+        Fix default_;
+        Fix step_;
+        Fix big_step_;
+        Fix remembered_value_;
 
-        int32_t m_fractional_digits = 2;
-        int32_t m_display_precision = 2;
-        bool m_displays_value = false;
-        bool m_indicator_visibility = true;
-        float m_track_size = 4.0;
-        float m_handle_size = 8.0;
+        int32_t fractional_digits_ = 2;
+        int32_t display_precisio_n = 2;
+        bool displays_value_ = false;
+        bool indicator_visibility_ = true;
+        float track_size_ = 4.0;
+        float handle_size_ = 10.0;
 
-        Fix m_remembered_value;
+        ColorWell* color_well_{};
+        Gradient* gradient_{};
     };
 
 

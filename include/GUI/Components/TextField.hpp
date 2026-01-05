@@ -23,43 +23,43 @@ namespace Grain {
     class TextField : public Component {
 
     protected:
-        Fix m_value = 0;
-        Fix m_min = -1000000;
-        Fix m_max = 1000000;
-        Fix m_step = 1;
-        Fix m_big_step = 10;
+        Fix value_ = 0;
+        Fix min_ = -1000000;
+        Fix max_ = 1000000;
+        Fix step_ = 1;
+        Fix big_step_ = 10;
 
-        bool m_step_flip_mode = false;
-        bool m_pass_word_mode = false;
-        void* m_var_ptr = nullptr;
+        bool step_flip_mode_ = false;
+        bool pass_word_mode_ = false;
+        void* var_ptr_ = nullptr;
 
-        int32_t m_fractional_digits = 2;
-        bool m_value_changed = false;
+        int32_t fractional_digits_ = 2;
+        bool value_changed_ = false;
 
         float beam_width_ = 2.0f;
 
-        int32_t m_cursor_index = 0;
-        int32_t m_selection_begin = -1, m_selection_end = -1;
-        int32_t m_selection_drag_start = -1;
+        int32_t cursor_index_ = 0;
+        int32_t selection_begin_ = -1, selection_end_ = -1;
+        int32_t selection_drag_start_ = -1;
 
-        float m_text_x_offset = 0;
-        float m_text_min_x_offset = 0;
-        float m_text_max_x_offset = 0;
-        Rectd m_content_rect;
-        bool m_cursor_must_be_visible = true;
+        float text_x_offset_ = 0;
+        float text_min_x_offset_ = 0;
+        float text_max_x_offset_ = 0;
+        Rectd content_rect_;
+        bool cursor_must_be_visible_ = true;
 
-        char* m_info_text = nullptr;
-        bool m_show_loupe = false;    // TODO: For search fields
-        bool m_show_loupe_if_empty = false;
+        char* info_text_ = nullptr;
+        bool show_loupe_ = false;    // TODO: For search fields
+        bool show_loupe_if_empty_ = false;
 
-        Alignment m_text_alignment = Alignment::Left;
-        float m_padding[4];
+        Alignment text_alignment_ = Alignment::Left;
+        float padding_[4]{};
 
     public:
-        TextField(const Rectd& rect) noexcept;
-        virtual ~TextField() noexcept;
+        explicit TextField(const Rectd& rect) noexcept;
+        ~TextField() noexcept override;
 
-        const char* className() const noexcept override { return "TextField"; }
+        [[nodiscard]] const char* className() const noexcept override { return "TextField"; }
 
 
         static TextField* add(View* view, const Rectd& rect, const char* text = nullptr, int32_t tag = 0);
@@ -69,17 +69,17 @@ namespace Grain {
         void draw(GraphicContext* gc, const Rectd& dirty_rect) noexcept override;
         void drawCursor(GraphicContext* gc, float x) const noexcept;
 
-        virtual float beamWidth() const noexcept { return beam_width_; }
+        [[nodiscard]] virtual float beamWidth() const noexcept{ return beam_width_; }
 
-        virtual int32_t cursorIndex() const noexcept { return m_cursor_index; }
-        virtual int32_t clampedCursorIndex() const noexcept { return std::clamp<int32_t>(m_cursor_index, 0, textLength()); }
-        virtual int32_t selectionBegin() const noexcept { return m_selection_begin; }
-        virtual int32_t selectionEnd() const noexcept { return m_selection_end; }
-        virtual int32_t selectionLength() const noexcept { return hasSelection() ? m_selection_end - m_selection_begin + 1 : 0; }
-        virtual int32_t selectionDragStart() const noexcept{ return m_selection_drag_start; }
+        [[nodiscard]] virtual int32_t cursorIndex() const noexcept { return cursor_index_; }
+        [[nodiscard]] virtual int32_t clampedCursorIndex() const noexcept { return std::clamp<int32_t>(cursor_index_, 0, textLength()); }
+        [[nodiscard]] virtual int32_t selectionBegin() const noexcept { return selection_begin_; }
+        [[nodiscard]] virtual int32_t selectionEnd() const noexcept { return selection_end_; }
+        [[nodiscard]] virtual int32_t selectionLength() const noexcept { return hasSelection() ? selection_end_ - selection_begin_ + 1 : 0; }
+        [[nodiscard]] virtual int32_t selectionDragStart() const noexcept{ return selection_drag_start_; }
 
-        virtual bool stepFlipMode() const noexcept { return m_step_flip_mode; }
-        virtual bool isPasswordMode() const noexcept { return m_pass_word_mode; }
+        [[nodiscard]] virtual bool stepFlipMode() const noexcept { return step_flip_mode_; }
+        [[nodiscard]] virtual bool isPasswordMode() const noexcept { return pass_word_mode_; }
 
 
         bool setEnabled(bool enabled) noexcept override;
@@ -88,10 +88,10 @@ namespace Grain {
 
         virtual void setBeamWidth(float beam_width) noexcept { beam_width_ = beam_width; needsDisplay(); }
 
-        virtual void setCursorIndex(int32_t cursor_index) noexcept { m_cursor_index = cursor_index; needsDisplay(); }
-        virtual void setSelectionBegin(int32_t selection_begin) noexcept { m_selection_begin = selection_begin; needsDisplay(); ; }
-        virtual void setSelectionEnd(int32_t selection_end) noexcept { m_selection_end = selection_end; needsDisplay(); }
-        virtual void setSelectionDragStart(int32_t selection_drag_start) noexcept { m_selection_drag_start = selection_drag_start; }
+        virtual void setCursorIndex(int32_t cursor_index) noexcept { cursor_index_ = cursor_index; needsDisplay(); }
+        virtual void setSelectionBegin(int32_t selection_begin) noexcept { selection_begin_ = selection_begin; needsDisplay(); ; }
+        virtual void setSelectionEnd(int32_t selection_end) noexcept { selection_end_ = selection_end; needsDisplay(); }
+        virtual void setSelectionDragStart(int32_t selection_drag_start) noexcept { selection_drag_start_ = selection_drag_start; }
 
         virtual bool setSelection(int32_t begin, int32_t end) noexcept;
         virtual bool setCursor(int32_t cursor_index) noexcept { return setCursor(cursor_index, false); }
@@ -101,7 +101,7 @@ namespace Grain {
         virtual bool selectAll() noexcept { return setSelection(0, textLength()); }
         virtual bool selectWordAtCursor() noexcept;
         virtual bool removeSelection() noexcept;
-        virtual bool hasSelection() const noexcept { return m_selection_begin >= 0 && m_selection_end > m_selection_begin; }
+        [[nodiscard]] virtual bool hasSelection() const noexcept { return selection_begin_ >= 0 && selection_end_ > selection_begin_; }
 
         virtual bool removeCharAheadOfCursor() noexcept;
         virtual bool removeSelectedText() noexcept;
@@ -118,17 +118,17 @@ namespace Grain {
 
 
         void setFractionalDigits(int32_t fractional_digits) noexcept {
-            m_fractional_digits = std::clamp<int32_t>(fractional_digits, 0, Fix::kDecPrecision);
+            fractional_digits_ = std::clamp<int32_t>(fractional_digits, 0, Fix::kDecPrecision);
         }
 
-        Fix value() const noexcept override { return m_value; }
-        int32_t valueAsInt32() const noexcept override { return m_value.asInt32(); }
-        double valueAsDouble() const noexcept override { return m_value.asDouble(); }
+        Fix value() const noexcept override { return value_; }
+        int32_t valueAsInt32() const noexcept override { return value_.asInt32(); }
+        double valueAsDouble() const noexcept override { return value_.asDouble(); }
 
         bool setValue(const Fix& value) noexcept override {
-            bool result = m_value.set(value, m_min, m_max, m_fractional_digits);
+            bool result = value_.set(value, min_, max_, fractional_digits_);
             char buffer[100];
-            m_value.toStr(buffer, 100, Fix::kDecPrecision);
+            value_.toStr(buffer, 100, Fix::kDecPrecision);
             setText(buffer);
             needsDisplay();
             return result;
@@ -140,43 +140,43 @@ namespace Grain {
 
         void setValueRange(const Fix& min, const Fix& max) noexcept override {
             setNumberMode(true);
-            m_min = min;
-            m_max = max;
+            min_ = min;
+            max_ = max;
         }
 
         virtual void setValueRangeInt32(int32_t min, int32_t max) noexcept {
             setNumberMode(true);
-            m_min.setInt32(min);
-            m_max.setInt32(max);
+            min_.setInt32(min);
+            max_.setInt32(max);
         }
 
         virtual void setValueRangeReal64(double min, double max) noexcept {
             setNumberMode(true);
-            m_min.setDouble(min);
-            m_max.setDouble(max);
+            min_.setDouble(min);
+            max_.setDouble(max);
         }
 
         virtual void setStep(Fix step, Fix big_step) noexcept {
             setNumberMode(true);
-            m_step = step;
-            m_big_step = big_step;
+            step_ = step;
+            big_step_ = big_step;
         }
 
         virtual void setStepReal64(double step, double big_step) noexcept {
             setNumberMode(true);
-            m_step.setDouble(step);
-            m_big_step.setDouble(big_step);
+            step_.setDouble(step);
+            big_step_.setDouble(big_step);
         }
 
-        void setStepFlipMode(bool step_flip_mode) noexcept { m_step_flip_mode = step_flip_mode; }
-        void setPasswordMode(bool password_mode) noexcept { m_pass_word_mode = password_mode; needsDisplay(); }
+        void setStepFlipMode(bool step_flip_mode) noexcept { step_flip_mode_ = step_flip_mode; }
+        void setPasswordMode(bool password_mode) noexcept { pass_word_mode_ = password_mode; needsDisplay(); }
         void enablePasswordMode() noexcept { setPasswordMode(true); }
         void disablePasswordMode() noexcept { setPasswordMode(false); }
 
 
         void setInfoText(const char* text) noexcept {
-            std::free(m_info_text);
-            m_info_text = text ? strdup(text) : nullptr;
+            std::free(info_text_);
+            info_text_ = text ? strdup(text) : nullptr;
             needsDisplay();
         }
 

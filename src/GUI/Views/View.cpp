@@ -47,7 +47,7 @@ View::~View() noexcept {
 void View::_init(const Rectd& rect) noexcept {
     type_ = Component::ComponentType::View;
     can_have_children_ = true;
-    m_gc_ptr = App::createGUIGraphicContext();
+    gc_ptr_ = App::createGUIGraphicContext();
     // TODO: Check nullptr
 }
 
@@ -76,9 +76,11 @@ Component* View::addComponent(Component* component, AddFlags flags) noexcept {
 
             curr_key_component_ = component;
 
+            /*
             if (split_view_flag_) {
                 component->setEdgeAligned();
             }
+            */
         }
 
 #if defined(__APPLE__) && defined(__MACH__)

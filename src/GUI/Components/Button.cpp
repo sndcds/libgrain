@@ -21,6 +21,7 @@ namespace Grain {
 
     Button::Button(const Rectd& rect, const char* text, int32_t tag) noexcept : Component(rect, tag) {
         type_ = ComponentType::Button;
+        can_get_focus_ = true;
         radio_group_ = 0;
         radio_value_ = 0;
         draws_as_button_ = true;
@@ -78,6 +79,39 @@ namespace Grain {
         if (isHighlighted()) {
             gc->setFillColor(1, 0, 0, 1);
             gc->fillFrame(boundsRect(), 2);
+        }
+
+        if (isKeyComponent()) {
+            gc->setFillColor(1, 0, 0, 1);
+            gc->fillFrame(boundsRect(), 2);
+        }
+    }
+
+    void Button::handleKeyDown(const Event& event) noexcept {
+        if (event.keyCharCount() == 1 && event.noModifiersPressed()) {
+            switch (event.keyChar()) {
+                case KeyCode::Space:
+                case KeyCode::Enter:
+                case KeyCode::CarriageReturn: {
+                    if (radio_group_ > 0) {
+                        if (!is_selected_) {
+                            select();
+                            fireAction(Component::ActionType::None, nullptr);
+                        }
+                    }
+                    else {
+                        if (isToggleMode()) {
+                            toggleSelection();
+                        }
+                        if (isDelayed()) {
+                            fireAction(Component::ActionType::None, nullptr);
+                        }
+                    }
+                  break;
+                }
+                default:
+                    break;
+            }
         }
     }
 

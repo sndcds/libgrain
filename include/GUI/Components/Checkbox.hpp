@@ -20,12 +20,11 @@ namespace Grain {
     class Checkbox : public Button {
 
     protected:
-        float m_check_size;
-
+        float check_size_ = 12.0;
 
     public:
         Checkbox(const Rectd& rect, const char* text, int32_t tag = 0) noexcept;
-        virtual ~Checkbox() noexcept {}
+        ~Checkbox() noexcept override = default;
 
         [[nodiscard]] const char* className() const noexcept override { return "Checkbox"; }
 

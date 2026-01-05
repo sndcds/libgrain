@@ -24,12 +24,10 @@ namespace Grain {
         return std::abs(v) > 1e-12;
     }
 
-
     Exception::Exception(ErrorCode code, const char* message)
             : m_code(code) {
         m_message = message;
     }
-
 
     void Exception::throwStandard(ErrorCode code) {
         if (code != ErrorCode::None) {
@@ -37,18 +35,15 @@ namespace Grain {
         }
     }
 
-
     void Exception::throwSpecific(int32_t code, const char *message) {
         throw Exception(static_cast<ErrorCode>(code + static_cast<int32_t>(ErrorCode::Specific)), message);
     }
-
 
     void Exception::throwMessage(ErrorCode code, const char* message) {
         if (code != ErrorCode::None) {
             throw Exception(code, message);
         }
     }
-
 
     void Exception::throwFormattedMessage(ErrorCode code, const char* format, ...) {
         if (code != ErrorCode::None) {
@@ -61,7 +56,6 @@ namespace Grain {
         }
     }
 
-
     void Exception::throwSpecificFormattedMessage(uint32_t code, const char* format, ...) {
         if (code >= 0) {
             va_list args;
@@ -73,18 +67,15 @@ namespace Grain {
         }
     }
 
-
     void Exception::log(Log& l) const {
         l << "Grain Exception " << static_cast<int32_t>(m_code);
         l << ": " << m_message;
         l << l.endl;
     }
 
-
     ErrorCode Exception::code() const noexcept {
         return m_code;
     }
-
 
     const char* Exception::message() const noexcept {
         return m_message.c_str();

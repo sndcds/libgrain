@@ -38,6 +38,7 @@ namespace Grain {
     enum KeyCode {
         Enter = 0x0003,                 // NSEnterCharacter
         Backspace = 0x0008,             // NSBackspaceCharacter
+        Space = 0x0020,                 // NSSpaceCharacter
         Tab = 0x0009,                   // NSTabCharacter
         NewLine = 0x000a,               // NSNewlineCharacter
         FormFeed = 0x000c,              // NSFormFeedCharacter
@@ -196,7 +197,7 @@ namespace Grain {
 
     public:
         Event() noexcept = default;
-        ~Event() noexcept;
+        virtual ~Event() noexcept;
 
         [[nodiscard]] virtual const char* className() const noexcept { return "Event"; }
 
@@ -216,8 +217,8 @@ namespace Grain {
         [[nodiscard]] bool shouldBeIgnored() const noexcept { return m_ignore; }
         [[nodiscard]] bool shouldBeHandled() const noexcept { return !m_ignore; }
 
-        EventType type() const noexcept { return m_event_type; }
-        const char* typeName() const noexcept {
+        [[nodiscard]] EventType type() const noexcept { return m_event_type; }
+        [[nodiscard]] const char* typeName() const noexcept {
             static const char* _names[] = {
                     "Undefined",
                     "MouseDown",
@@ -280,7 +281,7 @@ namespace Grain {
 
         [[nodiscard]] double mouseDragDeltaX() const noexcept { return m_mouse_pos.x_ - Event::g_mouse_down_pos.x_; }
         [[nodiscard]] double mouseDragDeltaY() const noexcept { return m_mouse_pos.y_ - Event::g_mouse_down_pos.y_; }
-        [[nodiscard]] Vec2d mouseDragDelta() const noexcept { return Vec2d(mouseDragDeltaX(), mouseDragDeltaY()); }
+        [[nodiscard]] Vec2d mouseDragDelta() const noexcept { return { mouseDragDeltaX(), mouseDragDeltaY() }; }
         [[nodiscard]] double mouseDragDistance() const noexcept { return m_mouse_pos.distance(Event::g_mouse_down_pos); }
         [[nodiscard]] DragDirection dragDirection() const noexcept;
 
@@ -310,13 +311,15 @@ namespace Grain {
         [[nodiscard]] bool isShiftPressedOnly() const noexcept { return (m_key_mask & KeyMask_ModifierKeys) == KeyMask_Shift; }
         [[nodiscard]] bool isCommandPressedOnly() const noexcept { return (m_key_mask & KeyMask_ModifierKeys) == KeyMask_Command; }
 
+        [[nodiscard]] bool noModifiersPressed() const noexcept { return !(m_key_mask & KeyMask_ModifierKeys); }
+
         void setMousePos(const Vec2d& pos) noexcept { m_mouse_pos = pos; }
         void setKeyMask(uint32_t key_mask) noexcept { m_key_mask = key_mask; }
 
         void mousePressedFinished() const noexcept { Event::g_mouse_pressed = false; }
         void rightMousePressedFinished() const noexcept { Event::g_right_mouse_pressed = false; }
 
-        [[nodiscard]] double distanceFromMouse(Vec2d pos) const noexcept { return m_mouse_pos.distance(pos); }
+        [[nodiscard]] double distanceFromMouse(const Vec2d& pos) const noexcept { return m_mouse_pos.distance(pos); }
     };
 
 

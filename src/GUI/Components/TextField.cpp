@@ -25,7 +25,7 @@ namespace Grain {
     TextField::TextField(const Rectd& rect) noexcept : Component(rect, 0) {
         type_ = ComponentType::TextField;
         can_get_focus_ = true;
-        m_text_alignment = Alignment::Left;
+        text_alignment_ = Alignment::Left;
         is_editable_ = true;
         is_number_mode_ = false;
 
@@ -35,7 +35,7 @@ namespace Grain {
 
 
     TextField::~TextField() noexcept {
-        std::free(m_info_text);
+        std::free(info_text_);
     }
 
 
@@ -88,7 +88,7 @@ namespace Grain {
 
         _checkSelectionAndCursor();
 
-        m_content_rect = contentRect();
+        content_rect_ = contentRect();
         double padding_left = style->paddingLeft();
         // double padding_top = style->paddingTop();
         double padding_right = style->paddingRight();
@@ -119,7 +119,7 @@ namespace Grain {
 
         if (text_length > 0) {
             gc->setTextMatrix(1, 0, 0, -1, 0, 0);
-            float content_width = m_content_rect.width();
+            float content_width = content_rect_.width();
             // RGBA fg_selected_color = style->textSelectionColor();
 
             CGColorRef cg_text_color1 = text_color.createCGColor();
@@ -136,7 +136,7 @@ namespace Grain {
             }
 
             if (focused && selectionLength() > 1) {
-                CFRange range = CFRangeMake(m_selection_begin, selectionLength() - 1);
+                CFRange range = CFRangeMake(selection_begin_, selectionLength() - 1);
 
                 if (range.length > 0) {
                     CFAttributedStringSetAttribute(cf_attr_str, range, kCTForegroundColorAttributeName, cg_text_color2);
@@ -150,25 +150,25 @@ namespace Grain {
             CGFloat ascent, descent, leading;
             double text_width = CTLineGetTypographicBounds(line, &ascent, &descent, &leading);
 
-            m_text_min_x_offset = content_width - text_width;
-            if (m_text_alignment != Alignment::Right) {
-                if (m_text_min_x_offset > 0) {
-                    m_text_min_x_offset = 0;
+            text_min_x_offset_ = content_width - text_width;
+            if (text_alignment_ != Alignment::Right) {
+                if (text_min_x_offset_ > 0) {
+                    text_min_x_offset_ = 0;
                 }
-                m_text_max_x_offset = 0;
+                text_max_x_offset_ = 0;
             }
             else {
-                m_text_max_x_offset = std::clamp<double>(content_width - text_width, 0, content_width);
+                text_max_x_offset_ = std::clamp<double>(content_width - text_width, 0, content_width);
             }
 
-            double text_x = m_content_rect.x_ + m_text_x_offset;
+            double text_x = content_rect_.x_ + text_x_offset_;
             double text_y = centerY() + (ascent - descent) / 2;
 
             // Cursor
-            double cursor_offset = m_cursor_index < 1 ? 0.0 : CTLineGetOffsetForStringIndex(line, m_cursor_index, NULL);
+            double cursor_offset = cursor_index_ < 1 ? 0.0 : CTLineGetOffsetForStringIndex(line, cursor_index_, NULL);
             double cursor_x = text_x + cursor_offset;
 
-            if (m_cursor_must_be_visible) {
+            if (cursor_must_be_visible_) {
                 double new_cursor_x = cursor_x;
                 if (cursor_x < padding_left) {
                     new_cursor_x = padding_left;
@@ -178,7 +178,7 @@ namespace Grain {
                 }
 
                 if (new_cursor_x != cursor_x) {
-                    m_text_x_offset += (new_cursor_x - cursor_x);
+                    text_x_offset_ += (new_cursor_x - cursor_x);
                     text_x += (new_cursor_x - cursor_x);
                     cursor_x = new_cursor_x;
                 }
@@ -186,22 +186,22 @@ namespace Grain {
 
 
             // Read just horizontal position of text and cursor
-            m_text_x_offset = std::clamp<float>(m_text_x_offset, m_text_min_x_offset, m_text_max_x_offset);
-            text_x = m_content_rect.x_ + m_text_x_offset;
+            text_x_offset_ = std::clamp<float>(text_x_offset_, text_min_x_offset_, text_max_x_offset_);
+            text_x = content_rect_.x_ + text_x_offset_;
             cursor_x = text_x + cursor_offset;
 
             // Draw selection background
-            if (m_selection_begin >= 0 && m_selection_end > m_selection_begin) {
-                double x1 = text_x + CTLineGetOffsetForStringIndex(line, m_selection_begin, NULL);
-                double x2 = text_x + CTLineGetOffsetForStringIndex(line, m_selection_end, NULL);
-                if (x1 < m_content_rect.x_) {
-                    x1 = m_content_rect.x_;
+            if (selection_begin_ >= 0 && selection_end_ > selection_begin_) {
+                double x1 = text_x + CTLineGetOffsetForStringIndex(line, selection_begin_, NULL);
+                double x2 = text_x + CTLineGetOffsetForStringIndex(line, selection_end_, NULL);
+                if (x1 < content_rect_.x_) {
+                    x1 = content_rect_.x_;
                 }
-                if (x2 > m_content_rect.x2()) {
-                    x2 = m_content_rect.x2();
+                if (x2 > content_rect_.x2()) {
+                    x2 = content_rect_.x2();
                 }
 
-                Rectd rect = m_content_rect;
+                Rectd rect = content_rect_;
                 rect.x_ = x1;
                 rect.width_ = x2 - x1;
 
@@ -220,7 +220,7 @@ namespace Grain {
 
             // Draw text
             CGContextSaveGState(cg_context);
-            CGContextClipToRect(cg_context, m_content_rect.cgRect());
+            CGContextClipToRect(cg_context, content_rect_.cgRect());
 
             CGContextSetTextPosition(cg_context, text_x, text_y);
             CTLineDraw(line, cg_context);
@@ -236,21 +236,20 @@ namespace Grain {
         else {
             // Draw the cursor
             if (is_enabled_ && focused) {
-                float x = m_text_alignment == Alignment::Right ? width() - padding_right : padding_left;
+                float x = text_alignment_ == Alignment::Right ? width() - padding_right : padding_left;
                 drawCursor(gc, x);
             }
         }
 
-        if (text_length < 1 && m_info_text) {
-            Alignment alignment = m_text_alignment == Alignment::Right ? Alignment::Right : Alignment::Left;
+        if (text_length < 1 && info_text_) {
+            Alignment alignment = text_alignment_ == Alignment::Right ? Alignment::Right : Alignment::Left;
             float alpha = is_enabled_ ? 0.5f : disabled_alpha;
-            gc->drawTextInRect(m_info_text, contentRect(), alignment, style->font(), style->textInfoColor(), alpha);
+            gc->drawTextInRect(info_text_, contentRect(), alignment, style->font(), style->textInfoColor(), alpha);
         }
 
         if (focused) {
             gc->setFillColor(1, 0, 0, 1);
             gc->fillFrame(boundsRect(), 2);
-
         }
     }
 #else
@@ -279,7 +278,7 @@ namespace Grain {
         bool result = Component::setEnabled(enabled);
 
         if (result && !enabled) {
-            m_cursor_index = 0;
+            cursor_index_ = 0;
             needsDisplay();
         }
 
@@ -291,8 +290,8 @@ namespace Grain {
         if (mode != is_number_mode_) {
             is_number_mode_ = mode;
             if (is_number_mode_) {
-                m_value = 0;
-                m_text_alignment = Alignment::Right;
+                value_ = 0;
+                text_alignment_ = Alignment::Right;
                 needsDisplay();
             }
         }
@@ -300,7 +299,7 @@ namespace Grain {
 
 
     void TextField::stepNumber(bool use_big_step, bool negative) noexcept {
-        Fix step = use_big_step ? m_big_step : m_step;
+        Fix step = use_big_step ? big_step_ : step_;
 
         if (negative) {
             step =- step;
@@ -309,23 +308,23 @@ namespace Grain {
         bool value_changed = false;
 
         char buffer[100];
-        m_value.toStr(buffer, 100, Fix::kDecPrecision);
+        value_.toStr(buffer, 100, Fix::kDecPrecision);
 
-        Fix new_value = m_value;
+        Fix new_value = value_;
         new_value += step;
 
         step.toStr(buffer, 100, Fix::kDecPrecision);
 
-        if (m_step_flip_mode) {
-            new_value.flip(m_min, m_max);
+        if (step_flip_mode_) {
+            new_value.flip(min_, max_);
         }
         else {
-            new_value.clamp(m_min, m_max);
+            new_value.clamp(min_, max_);
         }
 
         new_value.toStr(buffer, 100, Fix::kDecPrecision);
 
-        value_changed = new_value != m_value;
+        value_changed = new_value != value_;
         setValue(new_value);
         setCursorToEnd();
 
@@ -347,14 +346,14 @@ namespace Grain {
         begin = std::clamp<int32_t>(begin, 0, max);
         end = std::clamp<int32_t>(end, 0, max);
 
-        if (begin != m_selection_begin || end != m_selection_end) {
-            m_selection_begin = begin;
-            m_selection_end = end;
+        if (begin != selection_begin_ || end != selection_end_) {
+            selection_begin_ = begin;
+            selection_end_ = end;
             changed = true;
         }
 
-        if (m_cursor_index != end) {
-            m_cursor_index = end;
+        if (cursor_index_ != end) {
+            cursor_index_ = end;
             changed = true;
         }
 
@@ -369,15 +368,15 @@ namespace Grain {
 
     bool TextField::setCursor(int32_t cursor_index, bool selection_mode) noexcept {
         if (selection_mode) {
-            setSelection(m_selection_drag_start, cursor_index);
+            setSelection(selection_drag_start_, cursor_index);
         }
         else {
             removeSelection();
         }
 
         cursor_index = std::clamp<int32_t>(cursor_index, 0, textLength());
-        if (cursor_index != m_cursor_index) {
-            m_cursor_index = cursor_index;
+        if (cursor_index != cursor_index_) {
+            cursor_index_ = cursor_index;
             needsDisplay();
             return true;
         }
@@ -387,12 +386,12 @@ namespace Grain {
 
 
     bool TextField::moveCursor(int32_t offset, bool shift_pressed) noexcept {
-        int32_t new_cursor_index = std::clamp<int32_t>(m_cursor_index + offset, 0, textLength());
+        int32_t new_cursor_index = std::clamp<int32_t>(cursor_index_ + offset, 0, textLength());
 
-        if (new_cursor_index != m_cursor_index) {
+        if (new_cursor_index != cursor_index_) {
             if (shift_pressed) {
-                if (m_selection_drag_start < 0) {
-                    m_selection_drag_start = m_cursor_index;
+                if (selection_drag_start_ < 0) {
+                    selection_drag_start_ = cursor_index_;
                 }
             }
             setCursor(new_cursor_index, shift_pressed);
@@ -414,7 +413,7 @@ namespace Grain {
             int32_t end = n;
             char c;
 
-            for (int32_t i = m_cursor_index - 1; i >= 0; i--) {
+            for (int32_t i = cursor_index_ - 1; i >= 0; i--) {
                 if (text_->isAsciiAtIndex(i, c)) {
                     if (c == ' ' || c == '\t') {
                         begin = i + 1;
@@ -423,7 +422,7 @@ namespace Grain {
                 }
             }
 
-            for (int32_t i = m_cursor_index; i < n; i++) {
+            for (int32_t i = cursor_index_; i < n; i++) {
                 if (text_->isAsciiAtIndex(i, c)) {
                     if (c == ' ' || c == '\t') {
                         end = i;
@@ -432,10 +431,10 @@ namespace Grain {
                 }
             }
 
-            if (begin != m_selection_begin || end != m_selection_end) {
-                m_selection_begin = begin;
-                m_selection_end = end;
-                m_cursor_index = end;
+            if (begin != selection_begin_ || end != selection_end_) {
+                selection_begin_ = begin;
+                selection_end_ = end;
+                cursor_index_ = end;
                 needsDisplay();
                 return true;
             }
@@ -446,10 +445,10 @@ namespace Grain {
 
 
     bool TextField::removeSelection() noexcept {
-        if (m_selection_begin >= 0) {
-            m_selection_begin = -1;
-            m_selection_end = -1;
-            m_selection_drag_start = -1;
+        if (selection_begin_ >= 0) {
+            selection_begin_ = -1;
+            selection_end_ = -1;
+            selection_drag_start_ = -1;
             needsDisplay();
             return true;
         }
@@ -460,9 +459,9 @@ namespace Grain {
 
 
     bool TextField::removeCharAheadOfCursor() noexcept {
-        if (text_ && is_editable_ && m_cursor_index > 0) {
-            text_->remove(m_cursor_index - 1, 1);
-            m_cursor_index--;
+        if (text_ && is_editable_ && cursor_index_ > 0) {
+            text_->remove(cursor_index_ - 1, 1);
+            cursor_index_--;
 
             needsDisplay();
             textChangedAction();
@@ -477,10 +476,10 @@ namespace Grain {
 
     bool TextField::removeSelectedText() noexcept {
         if (text_ && is_editable_ && hasSelection()) {
-            text_->remove(m_selection_begin, m_selection_end - m_selection_begin);
-            setCursor(m_selection_begin);
-            m_selection_begin = -1;
-            m_selection_drag_start = -1;
+            text_->remove(selection_begin_, selection_end_ - selection_begin_);
+            setCursor(selection_begin_);
+            selection_begin_ = -1;
+            selection_drag_start_ = -1;
 
             needsDisplay();
             textChangedAction();
@@ -498,9 +497,9 @@ namespace Grain {
             removeSelectedText();
 
             int32_t lengthBeforeInsert = textLength();
-            text_->insertAtCharacterIndex(text, m_cursor_index);
+            text_->insertAtCharacterIndex(text, cursor_index_);
             int32_t lengthAfterInsert = textLength();
-            m_cursor_index += (lengthAfterInsert - lengthBeforeInsert);
+            cursor_index_ += (lengthAfterInsert - lengthBeforeInsert);
 
             needsDisplay();
             textChangedAction();
@@ -513,9 +512,9 @@ namespace Grain {
 
         if (is_number_mode_ && text_) {
             Fix new_value(text_->utf8());
-            new_value.setPrecision(m_fractional_digits);
-            value_changed = new_value != m_value;
-            m_value.set(new_value, m_min, m_max, m_fractional_digits);
+            new_value.setPrecision(fractional_digits_);
+            value_changed = new_value != value_;
+            value_.set(new_value, min_, max_, fractional_digits_);
 
             if (value_changed) {
                 transmit();
@@ -530,7 +529,7 @@ namespace Grain {
 
 
     void TextField::handleMouseDown(const Event& event) noexcept {
-        m_cursor_must_be_visible = true;
+        cursor_must_be_visible_ = true;
 
         if (event.isMouseDoubleClicked()) {
             selectWordAtCursor();
@@ -540,34 +539,34 @@ namespace Grain {
 
             if (event.isShiftPressedOnly()) {
                 if (hasSelection()) {
-                    if (new_cursor_index < m_selection_begin) {
-                        m_selection_drag_start = m_selection_end;
+                    if (new_cursor_index < selection_begin_) {
+                        selection_drag_start_ = selection_end_;
                     }
-                    else if (new_cursor_index > m_selection_end) {
-                        m_selection_drag_start = m_selection_begin;
+                    else if (new_cursor_index > selection_end_) {
+                        selection_drag_start_ = selection_begin_;
                     }
-                    else if (std::abs(new_cursor_index - m_selection_begin) < std::abs(new_cursor_index - m_selection_end)) {
-                        m_selection_drag_start = m_selection_end;
+                    else if (std::abs(new_cursor_index - selection_begin_) < std::abs(new_cursor_index - selection_end_)) {
+                        selection_drag_start_ = selection_end_;
                     }
                     else {
-                        m_selection_drag_start = m_selection_begin;
+                        selection_drag_start_ = selection_begin_;
                     }
                 }
                 else {
-                    m_selection_drag_start = m_cursor_index;
+                    selection_drag_start_ = cursor_index_;
                 }
             }
             else {
-                m_selection_drag_start = new_cursor_index;
+                selection_drag_start_ = new_cursor_index;
             }
 
-            setCursor(new_cursor_index, m_selection_drag_start);
+            setCursor(new_cursor_index, selection_drag_start_);
         }
     }
 
 
     void TextField::handleMouseDrag(const Event& event) noexcept {
-        m_cursor_must_be_visible = true;
+        cursor_must_be_visible_ = true;
         int32_t new_cursor_index = cursorIndexAtPos(event.mousePos());
 
         setCursor(new_cursor_index, true);
@@ -575,7 +574,7 @@ namespace Grain {
 
 
     void TextField::handleMouseUp(const Event& event) noexcept {
-        m_cursor_must_be_visible = true;
+        cursor_must_be_visible_ = true;
 
         if (isDelayed()) {
             fireAction(ActionType::None, nullptr);
@@ -590,20 +589,19 @@ namespace Grain {
 
 
     void TextField::handleScrollWheel(const Event& event) noexcept {
-        m_cursor_must_be_visible = false;
-        m_text_x_offset += event.deltaX() * App::scrollWheelSpeed();
+        cursor_must_be_visible_ = false;
+        text_x_offset_ += event.deltaX() * App::scrollWheelSpeed();
 
         needsDisplay();
     }
 
 
     void TextField::handleKeyDown(const Event& event) noexcept {
-        m_cursor_must_be_visible = true;
+        cursor_must_be_visible_ = true;
         int32_t new_cursor_index = -1;
         uint32_t key_char = event.keyChar();
 
         if (event.keyCharCount() == 1) {
-
             if (event.isCommandPressedOnly()) {
                 switch (key_char) {
                     case 'a':
@@ -711,8 +709,8 @@ namespace Grain {
 
     void TextField::resignFirstResponder() noexcept {
         updateEdit();
-        m_cursor_index = 0;
-        m_selection_begin = m_selection_end = -1;
+        cursor_index_ = 0;
+        selection_begin_ = selection_end_ = -1;
 
         needsDisplay();
     }
@@ -728,7 +726,7 @@ namespace Grain {
         if (hasText() && style) {
             _checkSelectionAndCursor();
 
-            Rectd content_rect = m_content_rect;
+            Rectd content_rect = content_rect_;
 
             CFStringRef cf_str = CFStringCreateWithCString(NULL, text_->utf8(), kCFStringEncodingUTF8);
             CFMutableAttributedStringRef cf_attr_str = CFAttributedStringCreateMutable(kCFAllocatorDefault, 0);
@@ -740,7 +738,7 @@ namespace Grain {
             }
 
             CTLineRef line = CTLineCreateWithAttributedString(cf_attr_str);
-            double text_x = content_rect.x_ + m_text_x_offset;
+            double text_x = content_rect.x_ + text_x_offset_;
 
             double min_delta = std::numeric_limits<float>::max();
             for (int32_t i = 0; i <= textLength(); i++) {
@@ -769,11 +767,11 @@ namespace Grain {
 
 
     void TextField::_checkSelectionAndCursor() noexcept {
-        m_selection_begin = std::clamp<int32_t>(m_selection_begin, 0, textLength());
-        m_selection_end = std::clamp<int32_t>(m_selection_end, m_selection_begin, textLength());
+        selection_begin_ = std::clamp<int32_t>(selection_begin_, 0, textLength());
+        selection_end_ = std::clamp<int32_t>(selection_end_, selection_begin_, textLength());
 
         if (selectionLength() > 0) {
-            m_cursor_index = std::clamp<int32_t>(m_cursor_index, m_selection_begin, m_selection_end);
+            cursor_index_ = std::clamp<int32_t>(cursor_index_, selection_begin_, selection_end_);
         }
     }
 
@@ -782,7 +780,7 @@ namespace Grain {
         int32_t result = 0;
 
         if (text_ && hasSelection()) {
-            text_->copyToPasteboard(m_selection_begin, m_selection_end - m_selection_begin);
+            text_->copyToPasteboard(selection_begin_, selection_end_ - selection_begin_);
             result = selectionLength();
         }
 
@@ -795,13 +793,13 @@ namespace Grain {
 
         if (text_) {
             if (hasSelection()) {
-                m_cursor_index = m_selection_begin;
-                text_->remove(m_selection_begin, m_selection_end - m_selection_begin);
+                cursor_index_ = selection_begin_;
+                text_->remove(selection_begin_, selection_end_ - selection_begin_);
                 removeSelection();
             }
 
-            result = static_cast<int32_t>(text_->pasteFromPasteboard(m_cursor_index));
-            m_cursor_index += result;
+            result = static_cast<int32_t>(text_->pasteFromPasteboard(cursor_index_));
+            cursor_index_ += result;
 
             needsDisplay();
             textChangedAction();

@@ -21,7 +21,6 @@ namespace Grain {
     Checkbox::Checkbox(const Rectd& rect, const char* text, int32_t tag) noexcept : Button(rect, text, tag) {
         type_ = ComponentType::CheckBox;
         is_toggle_mode_ = true;
-        m_check_size = 12;
         radio_group_ = 0;
         radio_value_ = 0;
         draws_as_button_ = false;
@@ -37,9 +36,8 @@ namespace Grain {
             View* parent_view = (View*)parent_;
 
             for (auto component : parent_view->components()) {
-
                 if (component->componentType() == ComponentType::CheckBox) {
-                    Checkbox* check_box = (Checkbox*)component;
+                    auto check_box = (Checkbox*)component;
 
                     if (check_box->radioGroup() == radio_group_ && check_box->isSelected()) {
                         return check_box->radioValue();
@@ -93,11 +91,12 @@ namespace Grain {
 
         // RGB view_color = component->uiViewColor();
         RGBA background_color = style->backgroundColor();
-        RGBA boder_color = style->backgroundColor();
+        RGBA border_color = style->backgroundColor();
         // RGB mark_color = component->Component::uiColor(UIColor::BgSelected);
         // RGB status_color = RGB::statusColor(selected, highlighted, bg_color, mark_color);
 
         if (!enabled) {
+            // TODO:
             // disableColorMixed(status_color, bg_color, view_color);
             // disableColor(bg_color, view_color);
         }
@@ -141,7 +140,12 @@ namespace Grain {
                 gc->fillRect(status_rect);
             }
         }
+
+        if (isKeyComponent()) {
+            gc->setFillColor(1, 0, 0, 0.5);
+            gc->fillFrame(boundsRect(), 1);
+        }
     }
 
 
-} // End of namespace Grain.
+} // End of namespace Grain

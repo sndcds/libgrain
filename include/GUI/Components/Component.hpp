@@ -12,14 +12,11 @@
 #ifndef GrainComponent_hpp
 #define GrainComponent_hpp
 
-#include "Grain.hpp"
 #include "Type/Object.hpp"
 #include "2d/Rect.hpp"
 #include "2d/Dimension.hpp"
 #include "2d/Border.hpp"
 #include "GUI/GUIStyle.hpp"
-
-#include <dispatch/dispatch.h>
 
 #if defined(__APPLE__) && defined(__MACH__)
 #include <CoreFoundation/CoreFoundation.h>
@@ -87,7 +84,7 @@ namespace Grain {
         };
 
         enum AddFlags {
-            kNone,
+            kNone = 0x0,
             kWantsLayer = 0x1
         };
 
@@ -106,7 +103,7 @@ namespace Grain {
         void* ns_view_ = nullptr;   ///< The related NSView on macOS
 #endif
 
-        GraphicContext* m_gc_ptr = nullptr;
+        GraphicContext* gc_ptr_ = nullptr;
 
         // Flags
         bool view_is_flipped_ = true;
@@ -130,13 +127,14 @@ namespace Grain {
         bool draws_as_button_ = false;
         bool shows_debug_info_ = false;
 
-        Component* parent_ = nullptr;         ///< Target view that this component renders into
-        Rectd rect_ = Rectd(100.0, 100.0);    ///< Position and size of component in view
+        Component* parent_ = nullptr;       ///< Target view that this component renders into
+        Rectd rect_ = Rectd(100.0, 100.0);  ///< Position and size of component in view
         Alignment edge_alignment_ = Alignment::No;
         Borderf margin_{};
 
         // Style
         int32_t style_index_ = 0;   ///<
+        int32_t controller_padding_ = 6;    ///< Inner padding fpr components like sliders, knobs ...
 
         // Text
         String* text_ = nullptr;    ///< Optional text
@@ -457,6 +455,7 @@ namespace Grain {
         static Component* addComponentToView(Component* component, View* view, AddFlags flags = AddFlags::kNone) noexcept;
         void _setParent(Component* parent) noexcept { parent_ = parent; }
         [[nodiscard]] View* parentView() const noexcept { return reinterpret_cast<View*>(parent_); }
+
 
         virtual GraphicContext* graphicContextPtr() noexcept;
         GraphicContext* gc() noexcept;

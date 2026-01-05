@@ -40,113 +40,115 @@ namespace Grain {
     public:
         GUIStyle();
 
-        [[nodiscard]] float opacity() const { return m_opacity; }
+        [[nodiscard]] float opacity() const { return opacity_; }
         [[nodiscard]] float disabledAlpha() const { return 0.5f; }
 
-        [[nodiscard]] const RGBA& viewColor() const { return m_view_color; }
+        [[nodiscard]] const RGBA& viewColor() const { return view_color_; }
 
         [[nodiscard]] const RGBA& backgroundColor(State state = kNormal) const {
-            return m_background_color[_sanitizedState(state)];
+            return bg_color_[_sanitizedState(state)];
         }
         [[nodiscard]] const RGBA& foregroundColor(State state = kNormal) const {
-            return m_foreground_color[_sanitizedState(state)];
+            return fg_color_[_sanitizedState(state)];
         }
         [[nodiscard]] const RGBA& borderColor(State state = kNormal) const {
-            return m_border_color[_sanitizedState(state)];
+            return border_color_[_sanitizedState(state)];
         }
 
-        [[nodiscard]] const RGBA& labelColor() const { return m_label_color; }
+        [[nodiscard]] const RGBA& labelColor() const { return label_color_; }
 
         [[nodiscard]] float padding(int32_t edge_index) const {
             if (edge_index < 0 || edge_index > 3) {
                 edge_index = 0;
             }
-            return m_padding[edge_index];
+            return padding_[edge_index];
         }
-        [[nodiscard]] float paddingTop() const { return m_padding[0]; }
-        [[nodiscard]] float paddingRight() const { return m_padding[1]; }
-        [[nodiscard]] float paddingBottom() const { return m_padding[2]; }
-        [[nodiscard]] float paddingLeft() const { return m_padding[3]; }
-        [[nodiscard]] CornerRadiusMode cornerRadiusMode() const { return _m_corner_radius_mode; }
+        [[nodiscard]] float paddingTop() const { return padding_[0]; }
+        [[nodiscard]] float paddingRight() const { return padding_[1]; }
+        [[nodiscard]] float paddingBottom() const { return padding_[2]; }
+        [[nodiscard]] float paddingLeft() const { return padding_[3]; }
+        [[nodiscard]] CornerRadiusMode cornerRadiusMode() const { return corner_radius_mode_; }
         [[nodiscard]] float cornerRadius(int32_t corner_index) const {
-            return corner_index >= 0 && corner_index < 4 ? m_corner_radius[corner_index] : 0.0f;
+            return corner_index >= 0 && corner_index < 4 ? corner_radius_[corner_index] : 0.0f;
         }
-        [[nodiscard]] float checkboxRadius() const { return m_checkbox_radius; }
-        [[nodiscard]] float checkboxSize() const { return m_checkbox_size; }
-        [[nodiscard]] Alignment textAlignment() const { return m_text_alignment; }
-        [[nodiscard]] float textYOffset() const { return m_text_y_offset; }
-        [[nodiscard]] Font* font() const { return m_font; }
+        [[nodiscard]] float checkboxRadius() const { return checkbox_radius_; }
+        [[nodiscard]] float checkboxSize() const { return checkbox_size_; }
+        [[nodiscard]] Alignment textAlignment() const { return text_alignment_; }
+        [[nodiscard]] float textYOffset() const { return text_y_offset_; }
+        [[nodiscard]] Font* font() const { return font_; }
 
-        [[nodiscard]] RGBA textColor() const noexcept { return m_text_color; }
-        [[nodiscard]] RGBA textBackgroundColor() const noexcept { return m_text_background_color; }
-        [[nodiscard]] RGBA textSelectionColor() const noexcept { return m_text_selection_color; }
-        [[nodiscard]] RGBA textSelectionBackgroundColor() const noexcept { return m_text_selection_background_color; }
-        [[nodiscard]] RGBA textInfoColor() const noexcept { return m_text_info_color; }
-        [[nodiscard]] RGBA textCursorColor() const noexcept { return m_text_cursor_color; }
-        [[nodiscard]] RGBA scrollBarHandleColor() const { return m_scrollbar_handle_color; }
+        [[nodiscard]] RGBA textColor() const noexcept { return text_color_; }
+        [[nodiscard]] RGBA textBackgroundColor() const noexcept { return text_bg_color_; }
+        [[nodiscard]] RGBA textSelectionColor() const noexcept { return text_selection_color_; }
+        [[nodiscard]] RGBA textSelectionBackgroundColor() const noexcept { return text_selection_bg_color_; }
+        [[nodiscard]] RGBA textInfoColor() const noexcept { return text_info_color_; }
+        [[nodiscard]] RGBA textCursorColor() const noexcept { return text_cursor_color_; }
+        [[nodiscard]] RGBA scrollBarHandleColor() const { return scrollbar_handle_color_; }
+        [[nodiscard]] RGBA controllerTrackColor() const { return controller_track_color_; }
+        [[nodiscard]] RGBA controllerHandleColor() const { return controller_handle_color_; }
 
-        [[nodiscard]] float labelGap() const { return m_label_gap; }
+        [[nodiscard]] float labelGap() const { return label_gap_; }
         [[nodiscard]] float scrollBarPadding() const { return 3.0f; }
 
 
-        void setViewColor(const RGBA& color) { m_view_color = color; }
-        void setBackgroundColor(State state, const RGBA& color) { m_background_color[_sanitizedState(state)] = color; }
-        void setForegroundColor(State state, const RGBA& color) { m_foreground_color[_sanitizedState(state)] = color; }
-        void setBorderColor(State state, const RGBA& color) { m_border_color[_sanitizedState(state)] = color; }
-        void setLabelColor(const RGBA& color) { m_label_color = color; }
+        void setViewColor(const RGBA& color) { view_color_ = color; }
+        void setBackgroundColor(State state, const RGBA& color) { bg_color_[_sanitizedState(state)] = color; }
+        void setForegroundColor(State state, const RGBA& color) { fg_color_[_sanitizedState(state)] = color; }
+        void setBorderColor(State state, const RGBA& color) { border_color_[_sanitizedState(state)] = color; }
+        void setLabelColor(const RGBA& color) { label_color_ = color; }
 
         void setPadding(float padding) {
-            m_padding[0] = m_padding[1] = m_padding[2] = m_padding[3] = padding;
+            padding_[0] = padding_[1] = padding_[2] = padding_[3] = padding;
         }
 
         void setPadding(float horizontal, float vertical) {
-            m_padding[0] = m_padding[2] = vertical;
-            m_padding[1] = m_padding[3] = horizontal;
+            padding_[0] = padding_[2] = vertical;
+            padding_[1] = padding_[3] = horizontal;
         }
 
         void setPadding(float top, float right, float bottom, float left) {
-            m_padding[0] = left;
-            m_padding[1] = top;
-            m_padding[2] = right;
-            m_padding[3] = bottom;
+            padding_[0] = left;
+            padding_[1] = top;
+            padding_[2] = right;
+            padding_[3] = bottom;
         }
 
         void setCornerRadius(float r) {
-            m_corner_radius[0] = m_corner_radius[1] = m_corner_radius[2] = m_corner_radius[3] = r;
+            corner_radius_[0] = corner_radius_[1] = corner_radius_[2] = corner_radius_[3] = r;
         }
 
         void setCornerRadius(float top_right, float bottom_right, float bottom_left, float top_left) {
-            m_corner_radius[0] = top_right;
-            m_corner_radius[1] = bottom_right;
-            m_corner_radius[2] = bottom_left;
-            m_corner_radius[3] = top_left;
+            corner_radius_[0] = top_right;
+            corner_radius_[1] = bottom_right;
+            corner_radius_[2] = bottom_left;
+            corner_radius_[3] = top_left;
             if (top_left < 0.0f && top_right <= 0.0f && bottom_right <= 0.0f && bottom_left <= 0.0f) {
-                _m_corner_radius_mode = CornerRadiusMode::No;
+                corner_radius_mode_ = CornerRadiusMode::No;
             }
             else if (top_left == top_right && top_left == bottom_right && top_left == bottom_left) {
-                _m_corner_radius_mode = CornerRadiusMode::Same;
+                corner_radius_mode_ = CornerRadiusMode::Same;
             }
             else {
-                _m_corner_radius_mode = CornerRadiusMode::Different;
+                corner_radius_mode_ = CornerRadiusMode::Different;
             }
         }
 
-        void setCheckboxSize(float size) { m_checkbox_size = size; }
-        void setCheckboxRadius(float r) { m_checkbox_radius = r; }
+        void setCheckboxSize(float size) { checkbox_size_ = size; }
+        void setCheckboxRadius(float r) { checkbox_radius_ = r; }
 
 
-        void setTextAlignment(Alignment alignment) noexcept { m_text_alignment = alignment; }
-        void textYOffset(float text_y_offset) noexcept { m_text_y_offset = text_y_offset; }
-        void setFont(Font* font) noexcept { m_font = font; }
-        void setTextColor(const RGBA& color) noexcept { m_text_color = color; }
-        void setTextBackgroundColor(const RGBA& color) noexcept { m_text_background_color = color; }
-        void setTextSelectionColor(const RGBA& color) noexcept { m_text_selection_color = color; }
-        void setTextSelectionBackgroundColor(const RGBA& color) noexcept { m_text_selection_background_color = color; }
-        void setTextInfoColor(const RGBA& color) noexcept { m_text_info_color = color; }
-        void setTextCursorColor(const RGBA& color) noexcept { m_text_cursor_color = color; }
+        void setTextAlignment(Alignment alignment) noexcept { text_alignment_ = alignment; }
+        void textYOffset(float text_y_offset) noexcept { text_y_offset_ = text_y_offset; }
+        void setFont(Font* font) noexcept { font_ = font; }
+        void setTextColor(const RGBA& color) noexcept { text_color_ = color; }
+        void setTextBackgroundColor(const RGBA& color) noexcept { text_bg_color_ = color; }
+        void setTextSelectionColor(const RGBA& color) noexcept { text_selection_color_ = color; }
+        void setTextSelectionBackgroundColor(const RGBA& color) noexcept { text_selection_bg_color_ = color; }
+        void setTextInfoColor(const RGBA& color) noexcept { text_info_color_ = color; }
+        void setTextCursorColor(const RGBA& color) noexcept { text_cursor_color_ = color; }
 
 
-        void setLabelGap(float label_gap) { m_label_gap = label_gap; }
+        void setLabelGap(float label_gap) { label_gap_ = label_gap; }
 
 
         [[nodiscard]] static inline int32_t _sanitizedState(State state) {
@@ -154,37 +156,40 @@ namespace Grain {
         }
 
     protected:
-        float m_opacity = 1.0f;
+        float opacity_ = 1.0f;
 
-        RGBA m_view_color{};
+        RGBA view_color_{};
 
-        RGBA m_background_color[kStateCount]{};
-        RGBA m_foreground_color[kStateCount]{};
+        RGBA bg_color_[kStateCount]{};
+        RGBA fg_color_[kStateCount]{};
 
-        RGBA m_border_color[kStateCount]{};
-        float m_border_width[kStateCount] = { 1.0f, 1.0f, 1.0f };
+        RGBA border_color_[kStateCount]{};
+        float border_width_[kStateCount] = { 1.0f, 1.0f, 1.0f };
 
-        float m_corner_radius[4] = { 5.0f, 5.0f, 5.0f, 5.0f };
-        CornerRadiusMode _m_corner_radius_mode = CornerRadiusMode::No; ///< Not to be set by user
+        float corner_radius_[4] = { 5.0f, 5.0f, 5.0f, 5.0f };
+        CornerRadiusMode corner_radius_mode_ = CornerRadiusMode::No; ///< Not to be set by user
 
-        float m_padding[4] = { 4.0f, 12.0f, 4.0f, 12.0f };
+        float padding_[4] = { 4.0f, 12.0f, 4.0f, 12.0f };
 
-        Alignment m_text_alignment = Alignment::Center; ///< Text alignment inside the component
-        float m_text_y_offset = 0.0f;                   ///< Vertical text offset
-        Font* m_font = nullptr;                         ///< Fallback font
-        RGBA m_text_color = { 1, 0, 0, 1 };
-        RGBA m_text_background_color = { 1, 0.6f, 0, 1 };
-        RGBA m_text_selection_color = { 0.6f, 1, 0, 1 };
-        RGBA m_text_selection_background_color = { 0, 1, 0.6f, 1 };
-        RGBA m_text_cursor_color = { 0.6f, 0, 1, 1 };
-        RGBA m_scrollbar_handle_color = { 0.6, 0.6, 0.6, 1 };
-        RGBA m_text_info_color;
+        Alignment text_alignment_ = Alignment::Center; ///< Text alignment inside the component
+        float text_y_offset_ = 0.0f;                   ///< Vertical text offset
+        Font* font_ = nullptr;                         ///< Fallback font
+        RGBA text_color_ = { 1, 0, 0, 1 };
+        RGBA text_bg_color_ = { 1, 0.6f, 0, 1 };
+        RGBA text_selection_color_ = { 0.6f, 1, 0, 1 };
+        RGBA text_selection_bg_color_ = { 0, 1, 0.6f, 1 };
+        RGBA text_cursor_color_ = { 0.6f, 0, 1, 1 };
+        RGBA scrollbar_handle_color_ = { 0.6, 0.6, 0.6, 1 };
+        RGBA text_info_color_;
 
-        RGBA m_label_color{};
-        float m_label_gap = 12.0f; ///< Gap between element and label
+        RGBA controller_track_color_ = { 0.6, 0.6, 0.6, 1 };
+        RGBA controller_handle_color_ = { 0.3, 0.3, 0.3, 1 };
 
-        float m_checkbox_radius = 3.0f;
-        float m_checkbox_size = 18.0f;
+        RGBA label_color_{};
+        float label_gap_ = 12.0f; ///< Gap between element and label
+
+        float checkbox_radius_ = 3.0f;
+        float checkbox_size_ = 18.0f;
     };
 
     class GUIStyleSet {
@@ -197,16 +202,16 @@ namespace Grain {
             if (!style) {
                 return -1;
             }
-            m_style_list.push(style);
-            return m_style_list.lastIndex();
+            style_list_.push(style);
+            return style_list_.lastIndex();
         }
 
         [[nodiscard]] GUIStyle* styleAtIndex(int32_t index) {
-            return m_style_list.elementAtIndex(index);
+            return style_list_.elementAtIndex(index);
         }
 
     protected:
-        ObjectList<GUIStyle*>m_style_list;
+        ObjectList<GUIStyle*>style_list_;
     };
 
 

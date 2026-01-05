@@ -124,7 +124,9 @@ add_library(libgrain STATIC
         src/GUI/Components/ScrollBar.cpp
         src/GUI/Components/Button.cpp
         src/GUI/Components/Checkbox.cpp
+        src/GUI/Components/Toggle.cpp
         src/GUI/Components/TextField.cpp
+        src/GUI/Components/Slider.cpp
         src/GUI/Views/View.cpp
         src/GUI/Views/Viewport.cpp
         src/GUI/Views/ScrollView.cpp
@@ -157,6 +159,22 @@ add_library(libgrain STATIC
         src/String/CSVString.cpp
         src/String/CSVData.cpp
 
+        src/SVG/SVG.cpp
+        src/SVG/SVGElement.cpp
+        src/SVG/SVGDefsElement.cpp
+        src/SVG/SVGRectElement.cpp
+        src/SVG/SVGCircleElement.cpp
+        src/SVG/SVGEllipseElement.cpp
+        src/SVG/SVGLineElement.cpp
+        src/SVG/SVGPolygonElement.cpp
+        src/SVG/SVGPathElement.cpp
+        src/SVG/SVGGradient.cpp
+        src/SVG/SVGGroupElement.cpp
+        src/SVG/SVGPaintElement.cpp
+        src/SVG/SVGPaintServer.cpp
+        src/SVG/SVGPaintStyle.cpp
+        src/SVG/SVGRootElement.cpp
+
         src/Time/Timestamp.cpp
         src/Time/DateTime.cpp
 
@@ -185,6 +203,8 @@ add_library(libgrain STATIC
         src/Signal/SignalWave.cpp
         src/Audio/AudioInterface.cpp
         src/Data/DataComposer.cpp
+
+        src/extern/tinyxml2.cpp
 )
 
 
@@ -195,12 +215,12 @@ add_library(libgrain STATIC
 
 
 target_compile_options(libgrain PRIVATE
-#    -Wall
-#    -Wextra
-#    -Wvla
-#    -Werror
-#    -Wmultichar
-#    -Wno-error=unused-parameter  # exclude this warning from being an error
+        #    -Wall
+        #    -Wextra
+        #    -Wvla
+        #    -Werror
+        #    -Wmultichar
+        #    -Wno-error=unused-parameter  # exclude this warning from being an error
 )
 
 
