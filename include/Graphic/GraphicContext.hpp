@@ -368,7 +368,7 @@ namespace Grain {
         virtual void drawIconInRoundRect(const Icon* icon, const Rectd& rect, double radius1, double radius2, double radius3, double radius4, const RGB& bg_color, const RGB& icon_color, const RGB& border_color, double border_width, float bg_alpha, float border_alpha, float icon_alpha) noexcept;
 
         virtual Rectd textRect(const String& string, const Font* font) noexcept;
-        virtual Rectd textRect(const char* text, const Font* font) noexcept { return Rectd(); }
+        virtual Rectd textRect(const char* text, const Font* font) noexcept { return Rectd{}; }
 
         virtual void drawText(const String& string, const Vec2d& pos, const Font* font, const RGB& color, float alpha = 1.0f) noexcept;
         virtual void drawText(const char* text, const Vec2d& pos, const Font* font, const RGB& color, float alpha = 1.0f) noexcept {}
@@ -417,7 +417,20 @@ namespace Grain {
 
         //
 
-        void drawHorizontalKeyboard(int32_t low_pitch, int32_t high_pitch, int32_t marked_pitch, double begin_freq, double end_freq, double min_x, double max_x, double y0, double y1, const RGB& light_color, const RGB& dark_color, const RGB& bg_color, const RGB& mark_color, float alpha) noexcept;
+        void drawHorizontalKeyboard(
+            int32_t low_pitch, int32_t high_pitch, int32_t marked_pitch,
+            float begin_freq, float end_freq,
+            double min_x, double max_x, double y0, double y1,
+            const RGBA& light_color, const RGBA& dark_color,
+            const RGBA& bg_color, const RGBA& mark_color) noexcept;
+
+        void drawCircleSlider(
+            float offset, float value,
+            const Vec2d& center, float radius,
+            float track_size, float indicator_size,
+            float start_angle, float angle_span,
+            const RGBA& track_color, const RGBA& indicator_color,
+            const RGBA& handle_color, bool enabled) noexcept;
 
         static BlendMode blendModeByName(const char* blend_mode_name) noexcept {
             static const char* cg_blend_mode_names[] = {

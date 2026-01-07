@@ -34,16 +34,13 @@ namespace Grain {
      *          logarithmic scale. Returns -1.0 if input frequencies are
      *          invalid.
      */
-    float Freq::freqToPos(float freq, float low_freq, float high_freq, float low_pos, float high_pos) noexcept {
-
+    double Freq::freqToPos(double freq, double low_freq, double high_freq, double low_pos, double high_pos) noexcept {
         if (low_freq >= high_freq || low_freq <= 0.0) {
             return 0.0;
         }
-        else {
-            const float f_max = std::log(high_freq / low_freq) / static_cast<float>(std::numbers::ln2);
-            float f = (std::log(freq / low_freq) / static_cast<float>(std::numbers::ln2)) / f_max;
-            return low_pos + f * (high_pos - low_pos);
-        }
+        const double f_max = std::log(high_freq / low_freq) / static_cast<float>(std::numbers::ln2);
+        double f = (std::log(freq / low_freq) / static_cast<double>(std::numbers::ln2)) / f_max;
+        return low_pos + f * (high_pos - low_pos);
     }
 
 
@@ -62,10 +59,9 @@ namespace Grain {
      *  @param high_pos The position corresponding to high_freq.
      *  @return The frequency (Hz) corresponding to the given position.
      */
-    float Freq::posToFreq(float pos, float low_freq, float high_freq, float low_pos, float high_pos) noexcept {
-
-        const float f_max = std::log(high_freq / low_freq) / static_cast<float>(std::numbers::ln2);
-        return std::exp((((pos - low_pos) / (high_pos - low_pos)) * f_max) * static_cast<float>(std::numbers::ln2)) * low_freq;
+    double Freq::posToFreq(double pos, double low_freq, double high_freq, double low_pos, double high_pos) noexcept {
+        const double f_max = std::log(high_freq / low_freq) / static_cast<double>(std::numbers::ln2);
+        return std::exp((((pos - low_pos) / (high_pos - low_pos)) * f_max) * static_cast<double>(std::numbers::ln2)) * low_freq;
     }
 
 

@@ -503,7 +503,11 @@ void Viewport::drawBezierValueCurve(
 	double top_freq = (1024.0 - 1.0) * root_freq;
 
 	if (bezier_value_curve_draw_settings.shows_keyboard_) {
-        gc.drawHorizontalKeyboard(21, 108, 60, root_freq, top_freq, xToView(0), xToView(1), 0, bounds_rect.height_, light_key_color, dark_key_color, bg_color, editor_color1, keyboard_alpha);
+		/* Todo: !!!!
+        gc.drawHorizontalKeyboard(
+        	21, 108, 60, root_freq, top_freq, xToView(0), xToView(1), 0, bounds_rect.height_,
+			light_key_color, dark_key_color, bg_color, editor_color1);
+		*/
 	}
 
 	if (normal_scale_flag) {

@@ -1,10 +1,10 @@
 //
-// SVGPaintStyle.hpp
+//  SVGPaintStyle.hpp
 //
-// Created by Roald Christesen on 03.12.2024
-// Copyright (C) 2025 Roald Christesen. All rights reserved.
+//  Created by Roald Christesen on 03.12.2024
+//  Copyright (C) 2025 Roald Christesen. All rights reserved.
 //
-// This file is part of GrainLib, see <https://grain.one>
+//  This file is part of GrainLib, see <https://grain.one>
 //
 
 #ifndef GrainSVGPaintStyle_hpp
@@ -23,19 +23,15 @@
 
 namespace Grain {
 
-
     class GraphicContext;
     class SVGElement;
 
-
     typedef struct {
-        const char* m_key;
-        int64_t m_value;
+        const char* key_;
+        int64_t value_;
     } SVGNumericAttrKeyValue;
 
-
     class SVGAttr {
-
     public:
         enum AttrType {
             Undefined = -1,
@@ -65,26 +61,24 @@ namespace Grain {
             kFlags_Default = kFlag_CanInitial | kFlag_CanUnset | kFlag_CanInherit | kFlag_CanBeNone
         };
 
+    public:
+        AttrType attr_type_ = AttrType::Undefined;
+
+        bool has_value_ = false;       ///< Indicates that the attribute is set with a value.
+        bool must_update_ = true;      ///< Indicates that the attribute must be updated.
+        bool is_none_ = false;         ///< Indicates that the attribute is set to `none`.
+        bool can_initial_ = false;
+        bool can_unset_ = false;
+        bool can_inherit_ = false;
+        bool can_be_none_ = false;
+
+        SetCommand set_command_ = SetCommand::DoNothing;
+        String initial_value_;
 
     public:
-        AttrType m_attr_type = AttrType::Undefined;
-
-        bool m_has_value = false;       ///< Indicates that the attribute is set with a value.
-        bool m_must_update = true;      ///< Indicates that the attribute must be updated.
-        bool m_is_none = false;         ///< Indicates that the attribute is set to `none`.
-
-        bool m_can_initial = false;
-        bool m_can_unset = false;
-        bool m_can_inherit = false;
-        bool m_can_be_none = false;
-
-        SetCommand m_set_command = SetCommand::DoNothing;
-        String m_initial_value;
-
-    public:
-        AttrType type() const noexcept { return m_attr_type; }
-        bool isNumericType() const noexcept { return m_attr_type == AttrType::Numeric; }
-        bool isColorType() const noexcept { return m_attr_type == AttrType::Color; }
+        AttrType type() const noexcept { return attr_type_; }
+        bool isNumericType() const noexcept { return attr_type_ == AttrType::Numeric; }
+        bool isColorType() const noexcept { return attr_type_ == AttrType::Color; }
 
         friend std::ostream& operator << (std::ostream& os, const SVGAttr* o) {
             o == nullptr ? os << "SVGAttr nullptr" : os << *o;
@@ -99,21 +93,21 @@ namespace Grain {
         void log(std::ostream& os, int32_t indent = 0, const char* label = nullptr) const {
             Log l(os);
             l.header(label);
-            l << "m_has_value: " << m_has_value << l.endl;
-            l << "m_must_update: " << m_must_update << l.endl;
-            l << "m_can_initial: " << m_can_initial << l.endl;
-            l << "m_can_unset: " << m_can_unset << l.endl;
-            l << "m_can_inherit: " << m_can_inherit << l.endl;
-            l << "m_can_be_none: " << m_can_be_none << l.endl;
+            l << "m_has_value: " << has_value_ << l.endl;
+            l << "m_must_update: " << must_update_ << l.endl;
+            l << "m_can_initial: " << can_initial_ << l.endl;
+            l << "m_can_unset: " << can_unset_ << l.endl;
+            l << "m_can_inherit: " << can_inherit_ << l.endl;
+            l << "m_can_be_none: " << can_be_none_ << l.endl;
         }
 
-        bool hasValue() const noexcept { return m_has_value; }
-        bool isNone() const noexcept { return m_is_none; }
-        bool mustUpdate() const noexcept { return m_must_update; }
-        bool canInitial() const noexcept { return m_can_initial; }
-        bool canUnset() const noexcept { return m_can_unset; }
-        bool canInherit() const noexcept { return m_can_inherit; }
-        bool canBeNone() const noexcept { return m_can_be_none; }
+        bool hasValue() const noexcept { return has_value_; }
+        bool isNone() const noexcept { return is_none_; }
+        bool mustUpdate() const noexcept { return must_update_; }
+        bool canInitial() const noexcept { return can_initial_; }
+        bool canUnset() const noexcept { return can_unset_; }
+        bool canInherit() const noexcept { return can_inherit_; }
+        bool canBeNone() const noexcept { return can_be_none_; }
 
         void initWithFlags(uint32_t attr_flags) noexcept;
 
@@ -123,14 +117,14 @@ namespace Grain {
 
     class SVGNumericAttr : public SVGAttr {
     public:
-        CSSValue m_css_value;
-        Fix m_min = 0;
-        Fix m_max = 999999999;
-        const SVGNumericAttrKeyValue* m_key_value_table = nullptr;
+        CSSValue css_value_;
+        Fix min_ = 0;
+        Fix max_ = 999999999;
+        const SVGNumericAttrKeyValue* key_value_table_ = nullptr;
 
     public:
         SVGNumericAttr() {
-            m_attr_type = AttrType::Numeric;
+            attr_type_ = AttrType::Numeric;
         }
 
         friend std::ostream& operator << (std::ostream& os, const SVGNumericAttr* o) {
@@ -144,45 +138,44 @@ namespace Grain {
         }
 
         void log(std::ostream& os, int32_t indent = 0, const char* label = nullptr) const {
-
             Log l(os);
             l.header(label);
 
             SVGAttr::log(os, indent, nullptr);
 
-            l << "m_css_value: " << m_css_value.value() << " " << m_css_value.unitName() << l.endl;
-            l << "m_min: " << m_min << ", m_max: " << m_max << l.endl;
-            if (m_key_value_table != nullptr) {
+            l << "m_css_value: " << css_value_.value() << " " << css_value_.unitName() << l.endl;
+            l << "m_min: " << min_ << ", m_max: " << max_ << l.endl;
+            if (key_value_table_ != nullptr) {
                 l << "key value table:" << l.endl;
                 l++;
                 int32_t index = 0;
-                while (m_key_value_table[index].m_key[0] != '\0') {
-                    l << index << ": " << m_key_value_table[index].m_key << ", " << m_key_value_table[index].m_value << l.endl;
+                while (key_value_table_[index].key_[0] != '\0') {
+                    l << index << ": " << key_value_table_[index].key_ << ", " << key_value_table_[index].value_ << l.endl;
                     index++;
                 }
             }
         }
 
-        void setKeyValueTable(const SVGNumericAttrKeyValue* table) noexcept { m_key_value_table = table; }
+        void setKeyValueTable(const SVGNumericAttrKeyValue* table) noexcept { key_value_table_ = table; }
 
-        void setMin(int32_t min) noexcept { m_min = min; }
-        void setMax(int32_t max) noexcept { m_max = max; }
-        void setMinMax(int32_t min, int32_t max) noexcept { m_min = min; m_max = max; }
-        void setMin(double min) noexcept { m_min = min; }
-        void setMax(double max) noexcept { m_max = max; }
-        void setMinMax(double min, double max) noexcept { m_min = min; m_max = max; }
+        void setMin(int32_t min) noexcept { min_ = min; }
+        void setMax(int32_t max) noexcept { max_ = max; }
+        void setMinMax(int32_t min, int32_t max) noexcept { min_ = min; max_ = max; }
+        void setMin(double min) noexcept { min_ = min; }
+        void setMax(double max) noexcept { max_ = max; }
+        void setMinMax(double min, double max) noexcept { min_ = min; max_ = max; }
 
         bool setValue(const char* str, const CSSValue& initial_value) noexcept;
-        void setDouble(int64_t value, CSSUnit unit)  noexcept { m_css_value.setDouble(value, unit); }
+        void setDouble(int64_t value, CSSUnit unit)  noexcept { css_value_.setDouble(value, unit); }
         void setDoubleAbsolute(int64_t value)  noexcept { setDouble(value, CSSUnit::Absolute); }
-        void setInt32(int32_t value, CSSUnit unit) noexcept { m_css_value.setInt32(value, unit); }
+        void setInt32(int32_t value, CSSUnit unit) noexcept { css_value_.setInt32(value, unit); }
         void setInt32Absolute(int32_t value)  noexcept { setInt32(value, CSSUnit::Absolute); }
-        const CSSValue& value() const noexcept { return m_css_value; }
+        const CSSValue& value() const noexcept { return css_value_; }
 
-        const double valueAsDouble() const noexcept { return m_css_value.valueAsDouble(); }
-        const int32_t valueAsInt32() const noexcept { return m_css_value.valueAsInt32(); }
+        const double valueAsDouble() const noexcept { return css_value_.valueAsDouble(); }
+        const int32_t valueAsInt32() const noexcept { return css_value_.valueAsInt32(); }
 
-        void undef() noexcept { m_css_value.undef(); }
+        void undef() noexcept { css_value_.undef(); }
     };
 
 
@@ -194,15 +187,15 @@ namespace Grain {
         };
 
     public:
-        RGBA m_color = { 0.0f, 0.0f, 0.0f, 1.0f };
-        bool m_use_current_color = false;
-        DrawMode m_draw_mode = DrawMode::Color;
-        SVGPaintServer* m_paint_server = nullptr;
-        String m_raw;
+        RGBA color_ = { 0.0f, 0.0f, 0.0f, 1.0f };
+        bool use_current_color_ = false;
+        DrawMode draw_mode_ = DrawMode::Color;
+        SVGPaintServer* paint_server_ = nullptr;
+        String raw_;
 
     public:
         SVGColorAttr() {
-            m_attr_type = AttrType::Color;
+            attr_type_ = AttrType::Color;
         }
 
         friend std::ostream& operator << (std::ostream& os, const SVGColorAttr* o) {
@@ -219,32 +212,31 @@ namespace Grain {
             Log l(os);
             l.header(label);
             SVGAttr::log(os, indent, nullptr);
-            l << "m_color: " << m_color << l.endl;
-            l << "m_use_current_color: " << m_use_current_color << l.endl;
-            l << "m_set_command: " << (int32_t)m_set_command << l.endl;
-            l << "m_raw: " << m_raw << l.endl;
+            l << "m_color: " << color_ << l.endl;
+            l << "m_use_current_color: " << use_current_color_ << l.endl;
+            l << "m_set_command: " << (int32_t)set_command_ << l.endl;
+            l << "m_raw: " << raw_ << l.endl;
         }
 
         bool setColor(const char* str, const RGBA& initial_color) noexcept;
         void setColor(const RGBA& color) noexcept {
-            m_color = color;
-            m_has_value = true;
+            color_ = color;
+            has_value_ = true;
         }
-        const RGBA& color() const noexcept { return m_color; }
+        const RGBA& color() const noexcept { return color_; }
     };
 
 
     class SVGTransform {
-
     public:
         enum {
             kValuesCapacity = 6
         };
 
     public:
-        SVGTransformType m_transform_type;
-        CSSValue m_values[kValuesCapacity];
-        int32_t m_value_count;
+        SVGTransformType transform_type_;
+        CSSValue values_[kValuesCapacity];
+        int32_t value_count_;
 
     public:
         void transformGC(GraphicContext& gc) const noexcept;
@@ -252,7 +244,6 @@ namespace Grain {
 
 
     class SVGPaintStyle : protected Object {
-
         friend class SVGElement;
         friend class SVGPaintElement;
         friend class SVGRectElement;
@@ -285,54 +276,42 @@ namespace Grain {
         };
 
     protected:
+        SVGElement* svg_element_ptr_ = nullptr;
+        SVGNumericAttr attr_opacity_;
+        SVGColorAttr attr_color_;
+        SVGColorAttr attr_fill_;
+        SVGNumericAttr attr_fill_rule_;
+        SVGNumericAttr attr_fill_opacity_;
+        SVGColorAttr attr_stroke_;
+        SVGNumericAttr attr_stroke_width_;
+        SVGNumericAttr attr_stroke_linecap_;
+        SVGNumericAttr attr_stroke_linejoin_;
+        SVGNumericAttr attr_stroke_miterlimit_;
+        SVGNumericAttr attr_stroke_opacity_;
 
-        SVGElement* m_svg_element_ptr = nullptr;
-
-        SVGNumericAttr m_attr_opacity;
-
-        SVGColorAttr m_attr_color;
-
-        SVGColorAttr m_attr_fill;
-        SVGNumericAttr m_attr_fill_rule;
-        SVGNumericAttr m_attr_fill_opacity;
-
-        SVGColorAttr m_attr_stroke;
-        SVGNumericAttr m_attr_stroke_width;
-        SVGNumericAttr m_attr_stroke_linecap;
-        SVGNumericAttr m_attr_stroke_linejoin;
-        SVGNumericAttr m_attr_stroke_miterlimit;
-        SVGNumericAttr m_attr_stroke_opacity;
-
-
-        // Transform.
-
-        SVGTransform m_transform_stack[kTransformStackCapacity];
-        int32_t m_transform_count = 0;
-
+        // Transform
+        SVGTransform transform_stack_[kTransformStackCapacity]{};
+        int32_t transform_count_ = 0;
 
         //
+        bool does_fill_ = false;               ///< Indicates if style draws fills
+        bool has_fill_opacity_ = false;        ///< Indicates if style has fill-opacity
+        bool does_stroke_ = false;             ///< Indicates if style draws stroke
+        bool has_stroke_linecap_ = false;      ///< Indicates if style has stroke-linecap
+        bool has_stroke_linejoin_ = false;     ///< Indicates if style has stroke-linejoin
+        bool has_stroke_miterlimit_ = false;   ///< Indicates if style has stroke-miterlimit
+        bool has_stroke_opacity_ = false;      ///< Indicates if style has stroke-opacity
 
-        bool m_does_fill = false;               ///< Indicates if style draws fills.
-        bool m_has_fill_opacity = false;        ///< Indicates if style has fill-opacity.
-        bool m_does_stroke = false;             ///< Indicates if style draws stroke.
-        bool m_has_stroke_linecap = false;      ///< Indicates if style has stroke-linecap.
-        bool m_has_stroke_linejoin = false;     ///< Indicates if style has stroke-linejoin.
-        bool m_has_stroke_miterlimit = false;   ///< Indicates if style has stroke-miterlimit.
-        bool m_has_stroke_opacity = false;      ///< Indicates if style has stroke-opacity.
+        int32_t css_error_count_ = 0;          ///< Number of errors in CSS parsing
+        int32_t css_warning_count_ = 0;        ///< Number of warnings in CSS parsing
+        int32_t fatal_error_count_ = 0;        ///< Number of fatal errors, should never happen
 
+        String stroke_dasharray_;              // Don't inherit, default: none
+        String stroke_dashoffset_;             // Don't inherit, default: 0
 
-        int32_t _m_css_error_count = 0;         ///< Number of errors in CSS parsing.
-        int32_t _m_css_warning_count = 0;       ///< Number of warnings in CSS parsing.
-        int32_t _m_fatal_error_count = 0;       ///< Number of fatal errors, should never happen.
-
-
-        String m_stroke_dasharray;              // Don't inherit, default: none
-        String m_stroke_dashoffset;             // Don't inherit, default: 0
-
-
-        static const SVGNumericAttrKeyValue _g_fill_rule_table[];
-        static const SVGNumericAttrKeyValue _g_stroke_linecap_table[];
-        static const SVGNumericAttrKeyValue _g_stroke_linejoin_table[];
+        static const SVGNumericAttrKeyValue g_fill_rule_table_[];
+        static const SVGNumericAttrKeyValue g_stroke_linecap_table_[];
+        static const SVGNumericAttrKeyValue g_stroke_linejoin_table_[];
 
     public:
         SVGPaintStyle() {
@@ -359,38 +338,38 @@ namespace Grain {
 
         SVGAttr* attrByID(AttrID attr_id) noexcept {
             switch (attr_id) {
-                case AttrID::Color: return &m_attr_color;
-                case AttrID::Fill: return &m_attr_fill;
-                case AttrID::FillRule: return &m_attr_fill_rule;
-                case AttrID::FillOpacity: return &m_attr_fill_opacity;
-                case AttrID::Stroke: return &m_attr_stroke;
-                case AttrID::StrokeWidth: return &m_attr_stroke_width;
-                case AttrID::StrokeLinecap: return &m_attr_stroke_linecap;
-                case AttrID::StrokeLinejoin: return &m_attr_stroke_linejoin;
-                case AttrID::StrokeMiterlimit: return &m_attr_stroke_miterlimit;
-                case AttrID::StrokeOpacity: return &m_attr_stroke_opacity;
+                case AttrID::Color: return &attr_color_;
+                case AttrID::Fill: return &attr_fill_;
+                case AttrID::FillRule: return &attr_fill_rule_;
+                case AttrID::FillOpacity: return &attr_fill_opacity_;
+                case AttrID::Stroke: return &attr_stroke_;
+                case AttrID::StrokeWidth: return &attr_stroke_width_;
+                case AttrID::StrokeLinecap: return &attr_stroke_linecap_;
+                case AttrID::StrokeLinejoin: return &attr_stroke_linejoin_;
+                case AttrID::StrokeMiterlimit: return &attr_stroke_miterlimit_;
+                case AttrID::StrokeOpacity: return &attr_stroke_opacity_;
             }
             return nullptr;
         }
 
         SVGNumericAttr* numericAttrByID(AttrID attr_id) noexcept {
             switch (attr_id) {
-                case AttrID::FillRule: return &m_attr_fill_rule;
-                case AttrID::FillOpacity: return &m_attr_fill_opacity;
-                case AttrID::StrokeWidth: return &m_attr_stroke_width;
-                case AttrID::StrokeLinecap: return &m_attr_stroke_linecap;
-                case AttrID::StrokeLinejoin: return &m_attr_stroke_linejoin;
-                case AttrID::StrokeMiterlimit: return &m_attr_stroke_miterlimit;
-                case AttrID::StrokeOpacity: return &m_attr_stroke_opacity;
+                case AttrID::FillRule: return &attr_fill_rule_;
+                case AttrID::FillOpacity: return &attr_fill_opacity_;
+                case AttrID::StrokeWidth: return &attr_stroke_width_;
+                case AttrID::StrokeLinecap: return &attr_stroke_linecap_;
+                case AttrID::StrokeLinejoin: return &attr_stroke_linejoin_;
+                case AttrID::StrokeMiterlimit: return &attr_stroke_miterlimit_;
+                case AttrID::StrokeOpacity: return &attr_stroke_opacity_;
                 default: return nullptr;
             }
         }
 
         SVGColorAttr* colorAttrByID(AttrID attr_id) noexcept {
             switch (attr_id) {
-                case AttrID::Color: return &m_attr_color;
-                case AttrID::Fill: return &m_attr_fill;
-                case AttrID::Stroke: return &m_attr_stroke;
+                case AttrID::Color: return &attr_color_;
+                case AttrID::Fill: return &attr_fill_;
+                case AttrID::Stroke: return &attr_stroke_;
                 default: return nullptr;
             }
         }
@@ -408,8 +387,8 @@ namespace Grain {
             updateNumericAttrWithID(AttrID::StrokeMiterlimit);
             updateNumericAttrWithID(AttrID::StrokeOpacity);
 
-            m_does_fill = m_attr_fill.hasValue() && !m_attr_fill.isNone();
-            m_does_stroke = m_attr_stroke.hasValue() && !m_attr_stroke.isNone() && m_attr_stroke_width.valueAsDouble() > FLT_EPSILON;
+            does_fill_ = attr_fill_.hasValue() && !attr_fill_.isNone();
+            does_stroke_ = attr_stroke_.hasValue() && !attr_stroke_.isNone() && attr_stroke_width_.valueAsDouble() > FLT_EPSILON;
         }
 
         void updateNumericAttrWithID(AttrID attr_id) noexcept {
@@ -420,12 +399,12 @@ namespace Grain {
             updateColorAttr(attr_id, nullptr);
         }
 
-        bool doesFill() const noexcept { return m_does_fill; }
-        bool doesStroke() const noexcept { return m_does_stroke; }
+        bool doesFill() const noexcept { return does_fill_; }
+        bool doesStroke() const noexcept { return does_stroke_; }
 
-        const RGBA& color() const noexcept { return m_attr_color.m_color; }
-        const RGBA& fillColor() const noexcept { return m_attr_fill.m_color; }
-        const RGBA& strokeColor() const noexcept { return m_attr_stroke.m_color; }
+        const RGBA& color() const noexcept { return attr_color_.color_; }
+        const RGBA& fillColor() const noexcept { return attr_fill_.color_; }
+        const RGBA& strokeColor() const noexcept { return attr_stroke_.color_; }
 
         void setGCSettings(GraphicContext& gc) const noexcept;
 

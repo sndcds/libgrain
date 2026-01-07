@@ -225,7 +225,7 @@ namespace Grain {
      *  @see HSV
      */
     RGB::RGB(const HSV& hsv) noexcept {
-        Color::hsv_to_rgb(hsv.m_data, data_);
+        Color::hsv_to_rgb(hsv.data_, data_);
     }
 
 
@@ -331,7 +331,7 @@ namespace Grain {
 
 
     RGB& RGB::operator = (const HSV& v) {
-        Color::hsv_to_rgb(v.m_data, data_);
+        Color::hsv_to_rgb(v.data_, data_);
         return *this;
     }
 
@@ -762,7 +762,7 @@ namespace Grain {
 
     void RGB::rotateHue(float angle) noexcept {
         HSV hsv(*this);
-        hsv.setHue(hsv.m_data[0] + angle / 360);
+        hsv.setHue(hsv.data_[0] + angle / 360);
         *this = hsv;
     }
 
@@ -776,7 +776,7 @@ namespace Grain {
 
     void RGB::scaleValue(float scale) noexcept {
         HSV hsv(*this);
-        hsv.m_data[2] *= scale;
+        hsv.data_[2] *= scale;
         *this = hsv;
     }
 
@@ -1037,7 +1037,7 @@ namespace Grain {
     void RGB::combineHue(RGB& a, const RGB& b) noexcept {
         HSV hvs_a(a);
         HSV hsv_b(b);
-        hvs_a.m_data[0] = hsv_b.m_data[0];
+        hvs_a.data_[0] = hsv_b.data_[0];
         a = hvs_a;
     }
 
@@ -1045,8 +1045,8 @@ namespace Grain {
     void RGB::combineColor(RGB& a, const RGB& b) noexcept {
         HSV hvs_a(a);
         HSV hsv_b(b);
-        hvs_a.m_data[0] = hsv_b.m_data[0];
-        hvs_a.m_data[1] = hsv_b.m_data[1];
+        hvs_a.data_[0] = hsv_b.data_[0];
+        hvs_a.data_[1] = hsv_b.data_[1];
         a = hvs_a;
     }
 
@@ -1054,7 +1054,7 @@ namespace Grain {
     void RGB::combineLuminosity(RGB& a, const RGB& b) noexcept {
         HSV hvs_a(a);
         HSV hsv_b(b);
-        hvs_a.m_data[2] = hsv_b.m_data[2];
+        hvs_a.data_[2] = hsv_b.data_[2];
         a = hvs_a;
     }
 

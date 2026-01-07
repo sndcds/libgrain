@@ -1,14 +1,13 @@
 //
-// SVGRootElement.cpp
+//  SVGRootElement.cpp
 //
-// Created by Roald Christesen on 03.01.2025
-// Copyright (C) 2025 Roald Christesen. All rights reserved.
+//  Created by Roald Christesen on 03.01.2025
+//  Copyright (C) 2025 Roald Christesen. All rights reserved.
 //
-// This file is part of GrainLib, see <https://grain.one>
+//  This file is part of GrainLib, see <https://grain.one>
 //
 
 #include "SVG/SVGRootElement.hpp"
-#include "SVG/SVG.hpp"
 #include "Core/Log.hpp"
 
 
@@ -17,18 +16,18 @@ namespace Grain {
     void SVGRootElement::log(std::ostream& os, int32_t indent, const char* label) const {
         Log l(os);
         l.header(label);
-        l << "m_id: " << m_id << Log::endl;
-        l << "m_class: " << m_class << Log::endl;
-        l << "m_style: " << m_style << Log::endl;
-        l << "m_language: " << m_language << Log::endl;
-        l << "m_xlink: " << m_xlink << Log::endl;
-        l << "m_clip_path: " << m_clip_path << Log::endl;
-        l << "m_mask: " << m_mask << Log::endl;
-        l << "m_xmlns: " << m_xmlns << Log::endl;
-        l << "m_preserve_aspect_ratio: " << m_preserve_aspect_ratio << Log::endl;
-        l << "m_valid: " << m_valid << Log::endl;
-        l << "m_x: " << m_x << ", m_y: " << m_y << ", m_width: " << m_width << ", m_height: " << m_height << Log::endl;
-        l << "m_viewport_x: " << m_viewport_x << ", m_viewport_y: " << m_viewport_y << ", m_viewport_width: " << m_viewport_width << ", m_viewport_height: " << m_viewport_height << Log::endl;
+        l << "m_id: " << id_ << Log::endl;
+        l << "m_class: " << class_ << Log::endl;
+        l << "m_style: " << style_ << Log::endl;
+        l << "m_language: " << language_ << Log::endl;
+        l << "m_xlink: " << xlink_ << Log::endl;
+        l << "m_clip_path: " << clip_path_ << Log::endl;
+        l << "m_mask: " << mask_ << Log::endl;
+        l << "m_xmlns: " << xmlns_ << Log::endl;
+        l << "m_preserve_aspect_ratio: " << preserve_aspect_ratio_ << Log::endl;
+        l << "m_valid: " << valid_ << Log::endl;
+        l << "x_: " << x_ << ", y_: " << y_ << ", width_: " << width_ << ", height_: " << height_ << Log::endl;
+        l << "viewport_x_: " << viewport_x_ << ", viewport_y_: " << viewport_y_ << ", viewport_width_: " << viewport_width_ << ", viewport_height_: " << viewport_height_ << Log::endl;
     }
 
 
@@ -41,21 +40,21 @@ namespace Grain {
 
 
     void SVGRootElement::setByXMLElement(tinyxml2::XMLElement* xml_element) noexcept {
-        m_id = xml_element->Attribute("id");
-        m_class = xml_element->Attribute("class");
-        m_style = xml_element->Attribute("style");
-        m_version = xml_element->Attribute("version");
-        m_language = xml_element->Attribute("language");
-        m_xlink = xml_element->Attribute("xlink");
-        m_clip_path = xml_element->Attribute("clip_path");
-        m_mask = xml_element->Attribute("mask");
-        m_xmlns = xml_element->Attribute("xmlns");
-        m_preserve_aspect_ratio = xml_element->Attribute("preserveAspectRatio");
+        id_ = xml_element->Attribute("id");
+        class_ = xml_element->Attribute("class");
+        style_ = xml_element->Attribute("style");
+        version_ = xml_element->Attribute("version");
+        language_ = xml_element->Attribute("language");
+        xlink_ = xml_element->Attribute("xlink");
+        clip_path_ = xml_element->Attribute("clip_path");
+        mask_ = xml_element->Attribute("mask");
+        xmlns_ = xml_element->Attribute("xmlns");
+        preserve_aspect_ratio_ = xml_element->Attribute("preserveAspectRatio");
 
-        CSS::extractCSSValueFromStr(xml_element->Attribute("x"), m_x, nullptr);
-        CSS::extractCSSValueFromStr(xml_element->Attribute("y"), m_y, nullptr);
-        CSS::extractCSSValueFromStr(xml_element->Attribute("width"), m_width, nullptr);
-        CSS::extractCSSValueFromStr(xml_element->Attribute("height"), m_height, nullptr);
+        CSS::extractCSSValueFromStr(xml_element->Attribute("x"), x_, nullptr);
+        CSS::extractCSSValueFromStr(xml_element->Attribute("y"), y_, nullptr);
+        CSS::extractCSSValueFromStr(xml_element->Attribute("width"), width_, nullptr);
+        CSS::extractCSSValueFromStr(xml_element->Attribute("height"), height_, nullptr);
 
         setViewBox(xml_element->Attribute("viewBox"));
     }
@@ -72,25 +71,26 @@ namespace Grain {
 
             int32_t value_n = CSS::extractValuesFromStr(str, buffer, 256, '\0', 4, values);
             if (value_n == 0) {
-                m_viewport_x.setDouble(0, CSSUnit::Absolute);
-                m_viewport_y.setDouble(0, CSSUnit::Absolute);
-                m_viewport_width = m_width;
-                m_viewport_height = m_height;
+                viewport_x_.setDouble(0, CSSUnit::Absolute);
+                viewport_y_.setDouble(0, CSSUnit::Absolute);
+                viewport_width_ = width_;
+                viewport_height_ = height_;
                 return;
             }
 
             if (value_n == 4) {
-                m_viewport_x.setDouble(values[0], CSSUnit::Absolute);
-                m_viewport_y.setDouble(values[1], CSSUnit::Absolute);
-                m_viewport_width.setDouble(values[2], CSSUnit::Absolute);
-                m_viewport_height.setDouble(values[3], CSSUnit::Absolute);
+                viewport_x_.setDouble(values[0], CSSUnit::Absolute);
+                viewport_y_.setDouble(values[1], CSSUnit::Absolute);
+                viewport_width_.setDouble(values[2], CSSUnit::Absolute);
+                viewport_height_.setDouble(values[3], CSSUnit::Absolute);
                 return;
             }
         }
         catch (const Exception& e) {
-            // TODO:
+            // TTodo:
         }
 
+        std::cout << "viewport: " << viewport_x_ << ", " << viewport_y_ << ", " << viewport_width_ << ", " << viewport_height_ << std::endl;
     }
 } // End of namespace
 

@@ -32,8 +32,8 @@ namespace Grain {
         };
 
     public:
-        static float freqToPos(float freq, float low_freq, float high_freq, float low_pos, float high_pos) noexcept;
-        static float posToFreq(float pos, float low_freq, float high_freq, float low_pos, float high_pos) noexcept;
+        static double freqToPos(double freq, double low_freq, double high_freq, double low_pos, double high_pos) noexcept;
+        static double posToFreq(double pos, double low_freq, double high_freq, double low_pos, double high_pos) noexcept;
     };
 
 

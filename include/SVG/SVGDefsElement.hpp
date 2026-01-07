@@ -1,10 +1,10 @@
 //
-// SVGDefsElement.hpp
+//  SVGDefsElement.hpp
 //
-// Created by Roald Christesen on 03.01.2025
-// Copyright (C) 2025 Roald Christesen. All rights reserved.
+//  Created by Roald Christesen on 03.01.2025
+//  Copyright (C) 2025 Roald Christesen. All rights reserved.
 //
-// This file is part of GrainLib, see <https://grain.one>
+//  This file is part of GrainLib, see <https://grain.one>
 //
 
 #ifndef GrainSVGDefsElement_hpp
@@ -18,7 +18,7 @@ namespace Grain {
     class SVGDefsElement : public SVGElement {
     public:
         SVGDefsElement(SVGElement* parent) : SVGElement(parent) {
-            m_type = ElementType::Defs;
+            type_ = ElementType::Defs;
         }
 
         ~SVGDefsElement() override {}

@@ -147,9 +147,7 @@ namespace Grain {
         void setTextInfoColor(const RGBA& color) noexcept { text_info_color_ = color; }
         void setTextCursorColor(const RGBA& color) noexcept { text_cursor_color_ = color; }
 
-
         void setLabelGap(float label_gap) { label_gap_ = label_gap; }
-
 
         [[nodiscard]] static inline int32_t _sanitizedState(State state) {
             return static_cast<int32_t>(state);

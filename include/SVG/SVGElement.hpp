@@ -1,10 +1,10 @@
 //
-// SVGElement.hpp
+//  SVGElement.hpp
 //
-// Created by Roald Christesen on 27.12.2024
-// Copyright (C) 2025 Roald Christesen. All rights reserved.
+//  Created by Roald Christesen on 27.12.2024
+//  Copyright (C) 2025 Roald Christesen. All rights reserved.
 //
-// This file is part of GrainLib, see <https://grain.one>
+//  This file is part of GrainLib, see <https://grain.one>
 //
 
 #ifndef GrainSVGElement_hpp
@@ -41,20 +41,20 @@ namespace Grain {
         };
 
     protected:
-        ElementType m_type = ElementType::Null;
+        ElementType type_ = ElementType::Null;
 
-        String m_id;
-        String m_class;
-        String m_style;
-        String m_language;
-        String m_xlink;
-        String m_clip_path;
-        String m_mask;
-        String m_xmlns;
-        String m_preserve_aspect_ratio;
+        String id_;
+        String class_;
+        String style_;
+        String language_;
+        String xlink_;
+        String clip_path_;
+        String mask_;
+        String xmlns_;
+        String preserve_aspect_ratio_;
 
-        bool m_valid = false;
-        SVGElement* m_parent = nullptr;
+        bool valid_ = false;
+        SVGElement* parent_ = nullptr;
 
     public:
         SVGElement(SVGElement* parent);
@@ -77,19 +77,19 @@ namespace Grain {
         virtual void setByXMLElement(tinyxml2::XMLElement* xml_element) noexcept {}
 
 
-        ElementType type() const noexcept { return m_type; }
-        const char* typeName() const noexcept { return SVGElement::typeName(m_type); }
-        bool isGroup() const noexcept { return m_type == ElementType::Group; }
-        bool isValid() const noexcept { return m_valid; }
+        ElementType type() const noexcept { return type_; }
+        const char* typeName() const noexcept { return SVGElement::typeName(type_); }
+        bool isGroup() const noexcept { return type_ == ElementType::Group; }
+        bool isValid() const noexcept { return valid_; }
 
-        const SVGElement* parent() const noexcept { return m_parent; }
-        SVGElement* mutableParent() const noexcept { return m_parent; }
+        const SVGElement* parent() const noexcept { return parent_; }
+        SVGElement* mutableParent() const noexcept { return parent_; }
 
 
         /**
          *  @brief Check all parameters.
          */
-        virtual void validate() noexcept { m_valid = false; }
+        virtual void validate() noexcept { valid_ = false; }
 
         virtual bool canDraw() { return false; }
 

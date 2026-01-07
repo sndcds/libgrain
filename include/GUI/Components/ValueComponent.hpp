@@ -113,8 +113,6 @@ namespace Grain {
         void hideIndicator() noexcept { setIndicatorVisibility(false); }
         void showIndicator() noexcept { setIndicatorVisibility(true); }
 
-        virtual void setColor(const RGB &color) noexcept {}
-        [[nodiscard]] virtual RGB color() const noexcept { return RGB::kBlack; }
         virtual void setColorWell(ColorWell* color_well) noexcept {}
 
 

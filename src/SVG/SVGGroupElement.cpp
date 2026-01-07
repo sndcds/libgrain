@@ -1,10 +1,10 @@
 //
-// SVGGroupElement.cpp
+//  SVGGroupElement.cpp
 //
-// Created by Roald Christesen on 27.12.2024
-// Copyright (C) 2025 Roald Christesen. All rights reserved.
+//  Created by Roald Christesen on 27.12.2024
+//  Copyright (C) 2025 Roald Christesen. All rights reserved.
 //
-// This file is part of GrainLib, see <https://grain.one>
+//  This file is part of GrainLib, see <https://grain.one>
 //
 
 #include "SVG/SVGGroupElement.hpp"
@@ -22,20 +22,16 @@ namespace Grain {
 
     // TODO: try/catch/err
     void SVGGroupElement::parse(SVG* svg, tinyxml2::XMLElement* xml_element) {
-        std::cout << ".. 1\n";
         svg->incGroupIterationDepth();
 
         for (auto* xml_child = xml_element->FirstChildElement(); xml_child != nullptr; xml_child = xml_child->NextSiblingElement()) {
-            std::cout << ".. 2\n";
             const char* tag_name = xml_child->Name();
 
-            // std::cout << "SVGGroupElement::parse(), tag_name: " << tag_name << ", iteration depth: " << svg->groupIterationDepth() << std::endl;
-
+            std::cout << "SVGGroupElement::parse(), tag_name: " << tag_name << ", iteration depth: " << svg->groupIterationDepth() << std::endl;
             // Check for specific SVG elements
 
-            bool can_parse = false;
-
             SVGElement* element = nullptr;
+            bool can_parse = false;
 
             if (SVG::isTag(tag_name, "g")) {
                 auto group_element = new(std::nothrow) SVGGroupElement(this);
@@ -100,37 +96,30 @@ namespace Grain {
                 // TODO: What should happen with unknown child types?
             }
 
-            std::cout << ".. 3\n";
             if (element) {
                 addElement(element);
 
-                std::cout << ".. 4 1\n";
                 element->setByXMLElement(xml_child);
-                std::cout << ".. 4 2\n";
                 element->setPaintStyleByXMLElement(xml_child);
 
-                std::cout << ".. 5\n";
                 auto paint_style = element->mutablePaintStyle();
-                if (paint_style != nullptr) {
+                if (paint_style) {
                     paint_style->updateAllAttr();
                 }
 
-                std::cout << ".. 6\n";
-                if (can_parse == true) {
+                if (can_parse) {
                     element->parse(svg, xml_child);
                 }
             }
         }
 
-        std::cout << ".. 7\n";
         svg->decGroupIterationDepth();
-        std::cout << ".. 8\n";
     }
 
 
     // TODO: Transformation ... Mat3d m_tranformation;
     void SVGGroupElement::draw(SVG* svg, GraphicContext& gc) noexcept {
-        for (auto element : m_elements) {
+        for (auto element : elements_) {
             if (canDraw()) {
                 auto paint_element = (SVGPaintElement*)element;
                 gc.save();

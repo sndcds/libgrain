@@ -242,12 +242,7 @@ namespace Grain {
             return code != ErrorCode::None;
         }
 
-        // TODO: Check, is this needed anymore?
-        static void throwSpecific(int32_t custom_code) {
-            throw static_cast<ErrorCode>(custom_code + 1000000);
-        }
-
-        static ErrorCode specific(int32_t custom_code) {
+        static inline ErrorCode specific(int32_t custom_code) {
             return static_cast<ErrorCode>(custom_code + 1000000);
         }
     };
@@ -281,7 +276,7 @@ namespace Grain {
     public:
         DeferredException() noexcept = default;
 
-        explicit DeferredException(std::exception_ptr ptr) noexcept : m_ptr(ptr) {}
+        explicit DeferredException(std::exception_ptr& ptr) noexcept : m_ptr(ptr) {}
 
         // Capture current exception
         void capture() noexcept {
@@ -352,6 +347,7 @@ namespace Grain {
             else {
                 // For unsupported types -> compile error
                 static_assert(std::is_arithmetic_v<T>, "canSafelyDivideBy only supports arithmetic types");
+                return false;
             }
         }
 

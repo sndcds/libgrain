@@ -29,10 +29,12 @@ namespace Grain {
     class RGBA;
     class Component;
     class View;
+    class Label;
     class TextField;
+    class Text;
     class Event;
     class Font;
-    class Text;
+    class ColorWell;
     class GraphicContext;
 
 
@@ -149,8 +151,7 @@ namespace Grain {
 
         // Connected components
         TextField* textfield_{};
-        // Label* label_{}; GUI!!!
-        // ColorWell* color_well_{}; GUI!!!
+        Label* label_{};
         Component* receiver_component_{};
         Component* previous_key_component_{};
         Component* next_key_component_{};
@@ -220,6 +221,11 @@ namespace Grain {
         [[nodiscard]] double centerX() const noexcept { return rect_.width_ * 0.5; }
         [[nodiscard]] double centerY() const noexcept { return rect_.height_ * 0.5; }
 
+        [[nodiscard]] bool isTextField() const noexcept { return type_ == ComponentType::TextField; }
+        [[nodiscard]] bool isKnob() const noexcept { return type_ == ComponentType::Knob; }
+        [[nodiscard]] bool isSlider() const noexcept { return type_ == ComponentType::Slider; }
+        [[nodiscard]] bool isColorWell() const noexcept { return type_ == ComponentType::ColorWell; }
+        [[nodiscard]] bool isColorWheel() const noexcept { return type_ == ComponentType::ColorWheel; }
 
         // Flags
         [[nodiscard]] bool isEnabled() const noexcept { return is_enabled_; }
@@ -276,12 +282,14 @@ namespace Grain {
         [[nodiscard]] Rectd boundsRect() const noexcept { return Rectd(rect_.width_, rect_.height_); }
         [[nodiscard]] Rectd contentRect() const noexcept;
 
+        virtual void setColor(const RGB& color) noexcept {}
+        [[nodiscard]] virtual RGB color() const noexcept;
+
 
         // Style
         [[nodiscard]] bool isOpaque() const noexcept { return true; }
         void setStyleIndex(int32_t index) { style_index_ = index; }
         [[nodiscard]] GUIStyle* guiStyle() const noexcept;
-
 
         // Text
         [[nodiscard]] bool hasText() const noexcept { return text_ ? text_->length() > 0 : false; }

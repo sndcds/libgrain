@@ -1,10 +1,10 @@
 //
-// SVGDefsElement.cpp
+//  SVGDefsElement.cpp
 //
-// Created by Roald Christesen on 03.01.2025
-// Copyright (C) 2025 Roald Christesen. All rights reserved.
+//  Created by Roald Christesen on 03.01.2025
+//  Copyright (C) 2025 Roald Christesen. All rights reserved.
 //
-// This file is part of GrainLib, see <https://grain.one>
+//  This file is part of GrainLib, see <https://grain.one>
 //
 
 #include "SVG/SVGDefsElement.hpp"
@@ -14,7 +14,7 @@
 
 namespace Grain {
 
-    // Todo: try/catch/err
+    // TODO: try/catch/err
     void SVGDefsElement::parse(SVG* svg, tinyxml2::XMLElement* xml_element) {
         svg->incGroupIterationDepth();
 
@@ -25,7 +25,7 @@ namespace Grain {
             const char* tag_name = xml_child->Name();
 
             // std::cout << "SVGGroupElement::parse(), tag_name: " << tag_name << ", iteration depth: " << svg->groupIterationDepth() << std::endl;
-            // Todo: Check for specific SVG elements.
+            // TODO: Check for specific SVG elements.
 
             if (SVG::isTag(tag_name, "linearGradient")) {
                 auto gradient = svg->addGradient(SVGGradientType::Linear);

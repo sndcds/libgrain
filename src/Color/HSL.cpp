@@ -27,7 +27,7 @@ namespace Grain {
 
 
     void HSL::set(const HSV& hsv) noexcept {
-        Color::hsv_to_hsl(hsv.m_data, m_data);
+        Color::hsv_to_hsl(hsv.data_, m_data);
     }
 
 

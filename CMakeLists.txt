@@ -103,6 +103,7 @@ add_library(libgrain STATIC
         src/DSP/DSP.cpp
         src/DSP/FFT.cpp
         src/DSP/Freq.cpp
+        src/DSP/EnvelopeFollower.cpp
 
         src/File/File.cpp
         src/File/TiffFile.cpp
@@ -127,6 +128,8 @@ add_library(libgrain STATIC
         src/GUI/Components/Toggle.cpp
         src/GUI/Components/TextField.cpp
         src/GUI/Components/Slider.cpp
+        src/GUI/Components/ColorWell.cpp
+        src/GUI/Components/ColorWheel.cpp
         src/GUI/Views/View.cpp
         src/GUI/Views/Viewport.cpp
         src/GUI/Views/ScrollView.cpp
@@ -153,6 +156,8 @@ add_library(libgrain STATIC
         src/Math/Vec3Fix.cpp
 
         src/Midi/Midi.cpp
+
+        src/Movie/MovieWriter.cpp
 
         src/String/String.cpp
         src/String/StringList.cpp

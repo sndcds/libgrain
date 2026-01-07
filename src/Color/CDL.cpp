@@ -31,14 +31,14 @@ namespace Grain {
 
         // Gamma
         HSV gamma_inv;
-        gamma_inv.m_data[0] = gamma_hsv_.m_data[0] + 0.5f;
-        if (gamma_inv.m_data[0] > 1.0f) {
-            gamma_inv.m_data[0] -= 1.0f;
+        gamma_inv.data_[0] = gamma_hsv_.data_[0] + 0.5f;
+        if (gamma_inv.data_[0] > 1.0f) {
+            gamma_inv.data_[0] -= 1.0f;
         }
 
-        gamma_inv.m_data[1] = gamma_hsv_.m_data[1];
-        gamma_inv.m_data[2] = 1.0f - gamma_hsv_.m_data[2];
-        gamma_inv.m_data[2] = std::clamp<float>(gamma_inv.m_data[2], 0.0001f, 1.0f);
+        gamma_inv.data_[1] = gamma_hsv_.data_[1];
+        gamma_inv.data_[2] = 1.0f - gamma_hsv_.data_[2];
+        gamma_inv.data_[2] = std::clamp<float>(gamma_inv.data_[2], 0.0001f, 1.0f);
 
         out_cdl_rgb.gamma_rgb_ = RGB(gamma_inv);
 

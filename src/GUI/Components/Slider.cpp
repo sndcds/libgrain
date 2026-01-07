@@ -62,22 +62,17 @@ RGB Slider::color() const noexcept {
             color.setKelvin(valueAsDouble());
             return color;
         }
-
         case SliderType::Hue: {
             RGB color;
             color.setHSV(valueAsDouble(), 1, 1);
             return color;
         }
-
         case SliderType::RGBRed:
             return RGB(0.9f, 0.1f, 0.1f);
-
         case SliderType::RGBGreen:
             return RGB(0.1f, 0.9f, 0.1f);
-
         case SliderType::RGBBlue:
             return RGB(0.1f, 0.1f, 0.9f);
-
         case SliderType::Normal:
         default:
             return custom_color_;

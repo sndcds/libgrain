@@ -102,6 +102,10 @@ public:
         }
     }
 
+    void setSVGTransform(T a, T b, T c, T d, T e, T f) noexcept {
+        set(a, c, e, b, d, f, T(0), T(0), T(1));
+    }
+
     void clear() noexcept {
         T* d = mutDataPtr();
         for (int i = 0; i < 9; i++) {

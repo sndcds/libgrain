@@ -1,10 +1,10 @@
 //
-// SVGGroupElement.hpp
+//  SVGGroupElement.hpp
 //
-// Created by Roald Christesen on 27.12.2024
-// Copyright (C) 2025 Roald Christesen. All rights reserved.
+//  Created by Roald Christesen on 27.12.2024
+//  Copyright (C) 2025 Roald Christesen. All rights reserved.
 //
-// This file is part of GrainLib, see <https://grain.one>
+//  This file is part of GrainLib, see <https://grain.one>
 //
 
 #ifndef GrainSVGGroupElement_hpp
@@ -22,17 +22,17 @@ namespace Grain {
 
     class SVGGroupElement : public SVGPaintElement {
     protected:
-        ObjectList<SVGElement*>m_elements;
-        Mat3d m_tranformation;
+        ObjectList<SVGElement*>elements_;
+        Mat3d tranformation_;
 
     public:
         SVGGroupElement(SVGElement* parent) : SVGPaintElement(parent) {
-            m_type = ElementType::Group;
+            type_ = ElementType::Group;
         }
 
         ~SVGGroupElement() {
             std::cout << "~SVGGroupElement()\n";
-            m_elements.clear();
+            elements_.clear();
         }
 
         void parse(SVG* svg, tinyxml2::XMLElement* xml_element) override;
@@ -40,12 +40,12 @@ namespace Grain {
         void addElement(SVGElement* element) {
             if (element != nullptr) {
                 element->validate();
-                m_elements.push(element);
+                elements_.push(element);
             }
         }
 
         void validate() noexcept override {
-            m_valid = true;
+            valid_ = true;
         }
 
         void draw(SVG* svg, GraphicContext& gc) noexcept override;

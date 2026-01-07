@@ -483,7 +483,6 @@ namespace Grain {
         void scaleSample(int32_t channel, int64_t index, float scale_factor) noexcept;
 
 
-
         void setRingBufferSample(int32_t channel, int64_t index, float value) noexcept;
         void addRingBufferSample(int32_t channel, int64_t index, float value) noexcept;
 

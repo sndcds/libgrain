@@ -12,48 +12,45 @@
 #include "SVG/SVGGradient.hpp"
 #include "Image/Image.hpp"
 #include "Graphic/GraphicContext.hpp"
-#include "2d/GraphicPathPoint.hpp"
-#include "Bezier/Bezier.hpp"
-#include "Time/Timestamp.hpp"
 #include "Core/Log.hpp"
 
 
 namespace Grain {
 
     SVG::SVG(const String& file_path) noexcept {
-        m_file_path = file_path;
+        file_path_ = file_path;
     }
 
     SVG::~SVG() noexcept {
         // TODO: Check all objects etc.
-        delete m_svg_root;
-        delete m_xml_doc;
+        delete svg_root_;
+        delete xml_doc_;
     }
 
     void SVG::log(std::ostream& os, int32_t indent, const char* label) const {
         Log l(os);
         l.header(label);
-        l << "m_file_path: " << m_file_path << Log::endl;
-        if (m_xml_error_id != kXMLErr_None) {
-            l << "m_xml_error_id: " << m_xml_error_id << Log::endl;
-            l++;
-            l << "m_xml_error_line: " << m_xml_error_line << Log::endl;
-            l << "m_xml_error_message: " << m_xml_error_message << Log::endl;
-            l--;
+        l << "m_file_path: " << file_path_ << Log::endl;
+        if (xml_error_id_ != kXMLErr_None) {
+            l << "m_xml_error_id: " << xml_error_id_ << Log::endl;
+            ++l;
+            l << "m_xml_error_line: " << xml_error_line_ << Log::endl;
+            l << "m_xml_error_message: " << xml_error_message_ << Log::endl;
+            --l;
         }
     }
 
     SVGGradient* SVG::addGradient(SVGGradientType type, int32_t capacity) noexcept {
         auto gradient = new(std::nothrow) SVGGradient(type, capacity);
         if (gradient) {
-            m_paint_servers.push((SVGPaintServer*)gradient);
+            paint_servers_.push((SVGPaintServer*)gradient);
         }
         return gradient;
     }
 
     SVGPaintServer* SVG::paintServerByID(const String& id) const noexcept {
-        for (auto& paint_server : m_paint_servers) {
-            if (paint_server->m_id.compareAscii(id, 0, 1) == 0) {
+        for (auto& paint_server : paint_servers_) {
+            if (paint_server->id_.compareAscii(id, 0, 1) == 0) {
                 return paint_server;
             }
         }
@@ -61,9 +58,9 @@ namespace Grain {
     }
 
     void SVG::clearError() noexcept {
-       m_xml_error_id = kXMLErr_None;
-        m_xml_error_message.clear();
-        m_xml_error_line = -1;
+       xml_error_id_ = kXMLErr_None;
+        xml_error_message_.clear();
+        xml_error_line_ = -1;
     }
 
 
@@ -83,34 +80,40 @@ namespace Grain {
             clearError();
 
             // XML document
-            m_xml_doc = new(std::nothrow) tinyxml2::XMLDocument();
-            if (!m_xml_doc) { Exception::throwSpecific(kErrXMLDocError); }
+            xml_doc_ = new(std::nothrow) tinyxml2::XMLDocument();
+            if (!xml_doc_) {
+                Exception::throwSpecific(kErrXMLDocError);
+            }
 
             // Load the SVG file
-            if (m_xml_doc->LoadFile(m_file_path.utf8()) != tinyxml2::XML_SUCCESS) {
+            if (xml_doc_->LoadFile(file_path_.utf8()) != tinyxml2::XML_SUCCESS) {
                 // Get detailed error information
-                m_xml_error_id = m_xml_doc->ErrorID();
-                m_xml_error_message = m_xml_doc->ErrorStr();
-                m_xml_error_line = m_xml_doc->ErrorLineNum();
+                xml_error_id_ = xml_doc_->ErrorID();
+                xml_error_message_ = xml_doc_->ErrorStr();
+                xml_error_line_ = xml_doc_->ErrorLineNum();
                 Exception::throwSpecific(kErrXMLDocLoadFileError);
             }
 
             // The root group, which ist the files <svg> element
-            m_svg_root = new(std::nothrow) SVGRootElement(nullptr);
-            if (!m_svg_root) { Exception::throwStandard(ErrorCode::MemCantAllocate); }
+            svg_root_ = new(std::nothrow) SVGRootElement(nullptr);
+            if (!svg_root_) {
+                Exception::throwStandard(ErrorCode::MemCantAllocate);
+            }
 
             // Get the root <svg> element
-            auto* xml_element = m_xml_doc->FirstChildElement("svg");
-            if (!xml_element) { Exception::throwSpecific(kErrSVGTagNotFound); }
+            auto* xml_element = xml_doc_->FirstChildElement("svg");
+            if (!xml_element) {
+                Exception::throwSpecific(kErrSVGTagNotFound);
+            }
 
-            m_svg_root->parse(this, xml_element);
+            svg_root_->parse(this, xml_element);
         }
         catch (const Exception& e) {
             std::cout << "SVG::parse() err: " << e.codeAsInt() << std::endl;
             result = e.code();
         }
 
-        if (m_svg_root != nullptr) {
+        if (svg_root_ != nullptr) {
             // TODO:
         }
 
@@ -118,11 +121,11 @@ namespace Grain {
     }
 
     void SVG::draw(GraphicContext& gc) noexcept {
-        if (m_svg_root) {
+        if (svg_root_) {
             // gc.translate(700, 700);
             // gc.scale(10);
             gc.save();
-            m_svg_root->draw(this, gc);
+            svg_root_->draw(this, gc);
             gc.restore();
         }
     }
@@ -195,9 +198,9 @@ namespace Grain {
                 Exception::throwStandard(ErrorCode::BadArgs);
             }
 
-            m_buffer_pos = 0;
-            m_read_ptr = str;
-            m_run = true;
+            buffer_pos_ = 0;
+            read_ptr_ = str;
+            run_ = true;
         }
         catch (const Exception& e) {
             result = e.code();
@@ -207,27 +210,27 @@ namespace Grain {
     }
 
     int32_t SVGValuesParser::next(double& out_next) noexcept {
-        if (m_run == false) {
+        if (!run_) {
             return kNextResult_NoMoreData;
         }
 
         while (true) {
-            auto c = *m_read_ptr++;
+            auto c = *read_ptr_++;
 
             if ((c >= '0' && c <= '9') || c == '-' | c == '.') {
-                m_buffer[m_buffer_pos] = c;
-                m_buffer_pos++;
+                buffer_[buffer_pos_] = c;
+                buffer_pos_++;
             }
             else if (c == ' ' || c == ',' || c == '\0') {
-                if (m_buffer_pos > 0) {
-                    m_buffer[m_buffer_pos] = '\0';
-                    out_next = String::parseDoubleWithDotOrComma(m_buffer);
-                    m_buffer_pos = 0;
-                    m_buffer[0] = '\0';
-                    m_value_count++;
+                if (buffer_pos_ > 0) {
+                    buffer_[buffer_pos_] = '\0';
+                    out_next = String::parseDoubleWithDotOrComma(buffer_);
+                    buffer_pos_ = 0;
+                    buffer_[0] = '\0';
+                    value_count_++;
 
                     if (c == '\0') {
-                        m_run = false;
+                        run_ = false;
                     }
                     return kNextResult_Continue;
                 }
@@ -246,14 +249,14 @@ namespace Grain {
                 Exception::throwStandard(ErrorCode::BadArgs);
             }
 
-            m_read_ptr = str;
-            m_function_name_ptr = str;
-            m_function_name_length = 0;
-            m_function_count = 0;
-            m_data_length = 0;
-            m_data_ptr = nullptr;
-            m_err_n = 0;
-            m_run = true;
+            read_ptr_ = str;
+            function_name_ptr_ = str;
+            function_name_length_ = 0;
+            function_count_ = 0;
+            data_length_ = 0;
+            data_ptr_ = nullptr;
+            err_n_ = 0;
+            run_ = true;
         }
         catch (const Exception& e) {
             result = e.code();
@@ -263,56 +266,56 @@ namespace Grain {
     }
 
     int32_t SVGFunctionValuesParser::nextFunction() noexcept {
-        m_function_data[0] = '\0';
-        m_data_length = 0;
+        function_data_[0] = '\0';
+        data_length_ = 0;
 
-        if (m_run == false) {
+        if (!run_) {
             return kNextFunctionResult_NoMoreData;
         }
 
         // Skip spaces
-        while (*m_read_ptr == ' ') {
-            m_read_ptr++;
+        while (*read_ptr_ == ' ') {
+            read_ptr_++;
         }
 
-        m_function_name_ptr = m_read_ptr;
+        function_name_ptr_ = read_ptr_;
 
-        int32_t n = SVG::isValidFunctionName(m_read_ptr);
+        int32_t n = SVG::isValidFunctionName(read_ptr_);
         if (n <= 0) {
-            m_run = false;
-            m_err_n++;
+            run_ = false;
+            err_n_++;
             return kNextFunctionResult_InvalidFunctionName;
         }
 
         if (n > kMaxFunctionNameLength) {
-            m_err_n++;
+            err_n_++;
             return kNextFunctionResult_InvalidFunctionNameLength;
         }
 
-        strncpy(m_function_name, m_function_name_ptr, n);
-        m_function_name[n] = '\0';
-        m_data_ptr = m_function_name_ptr + n + 1;
-        m_function_name_length = n;
+        strncpy(function_name_, function_name_ptr_, n);
+        function_name_[n] = '\0';
+        data_ptr_ = function_name_ptr_ + n + 1;
+        function_name_length_ = n;
 
-        const char* end_ptr = strchr(m_data_ptr, ')');
+        const char* end_ptr = strchr(data_ptr_, ')');
         if (end_ptr == nullptr) {
-            m_err_n++;
+            err_n_++;
             return kNextFunctionResult_EndOfDataBlockMissing;
         }
 
-        m_data_length = (int32_t)(end_ptr - m_data_ptr);
-        if (m_data_length > kMaxFunctionDataLength) {
-            m_err_n++;
+        data_length_ = (int32_t)(end_ptr - data_ptr_);
+        if (data_length_ > kMaxFunctionDataLength) {
+            err_n_++;
             return kNextFunctionResult_InvalidDataLength;
         }
 
-        strncpy(m_function_data, m_data_ptr, m_data_length);
-        m_function_data[m_data_length] = '\0';
+        strncpy(function_data_, data_ptr_, data_length_);
+        function_data_[data_length_] = '\0';
         // Replace comma with spaces for easy splitting the values
-        String::replaceChar(m_function_data, ',', ' ');
+        String::replaceChar(function_data_, ',', ' ');
 
-        m_read_ptr = m_data_ptr + m_data_length + 1;
-        m_function_count++;
+        read_ptr_ = data_ptr_ + data_length_ + 1;
+        function_count_++;
 
         return kNextFunctionResult_Continue;
     }
@@ -328,7 +331,7 @@ namespace Grain {
         while (ptr != nullptr) {
             auto err = CSS::extractCSSValueFromStr(ptr, out_values[index], &ptr);
             if (Error::isError(err)) {
-                m_err_n++;
+                err_n_++;
                 return -2; // Error code
             }
 
@@ -342,47 +345,47 @@ namespace Grain {
     }
 
     bool SVGPathParser::booleanAtIndex(int32_t index) {
-        if ((index < 0) || (index >= m_values.size())) {
+        if ((index < 0) || (index >= values_.size())) {
             Exception::throwSpecific(SVG::kErrValueIndexOutOfRange);
         }
-        return std::fabs(m_values[index]) > FLT_EPSILON;
+        return std::fabs(values_[index]) > FLT_EPSILON;
     }
 
     double SVGPathParser::valueAtIndex(int32_t index) {
-        if ((index < 0) || (index >= m_values.size())) {
+        if ((index < 0) || (index >= values_.size())) {
             Exception::throwSpecific(SVG::kErrValueIndexOutOfRange);
         }
-        return m_values[index];
+        return values_[index];
     }
 
     double SVGPathParser::xAtIndex(int32_t index) {
-        if ((index < 0) || (index >= m_values.size())) {
+        if ((index < 0) || (index >= values_.size())) {
             Exception::throwSpecific(SVG::kErrValueIndexOutOfRange);
         }
-        if (m_relative_state) {
-            return m_values[index] + m_curr_pos.x_;
+        if (relative_state_) {
+            return values_[index] + curr_pos_.x_;
         }
-        return m_values[index];
+        return values_[index];
     }
 
     double SVGPathParser::yAtIndex(int32_t index) {
-        if ((index < 0) || (index >= m_values.size())) {
+        if ((index < 0) || (index >= values_.size())) {
             Exception::throwSpecific(SVG::kErrValueIndexOutOfRange);
         }
-        if (m_relative_state) {
-            return m_values[index] + m_curr_pos.y_;
+        if (relative_state_) {
+            return values_[index] + curr_pos_.y_;
         }
-        return m_values[index];
+        return values_[index];
     }
 
     Vec2d SVGPathParser::posAtValueIndex(int32_t index) {
-        if ((index < 0) || (index >= m_values.size())) {
+        if ((index < 0) || (index >= values_.size())) {
             Exception::throwSpecific(SVG::kErrValueIndexOutOfRange);
         }
 
-        Vec2d pos = { m_values[index], m_values[index + 1] };
-        if (m_relative_state) {
-            pos += m_curr_pos;
+        Vec2d pos = { values_[index], values_[index + 1] };
+        if (relative_state_) {
+            pos += curr_pos_;
         }
 
         return pos;
@@ -396,11 +399,11 @@ namespace Grain {
                 Exception::throwStandard(ErrorCode::NullData);
             }
 
-            if (!m_compound_path) {
+            if (!compound_path_) {
                 Exception::throwSpecific(SVG::kErrCompoundPathIsNull);
             }
 
-            m_data = str;
+            data_ = str;
             const char* p = str;
 
             while (*p != '\0') {   // Loop until char is EOS
@@ -436,7 +439,7 @@ namespace Grain {
                     case 'b':
                     case 'Z':   // closepath
                     case 'z':
-                        m_next_command = c;
+                        next_command_ = c;
                         break;
 
                     case '-':
@@ -452,10 +455,10 @@ namespace Grain {
                     case '8':
                     case '9':
                     case '.':
-                        m_value_state = true;
-                        m_value_str[m_value_str_index++] = c;
-                        m_value_str[m_value_str_index] = 0;
-                        if (m_value_str_index >= kMaxValueStrLength - 1) {
+                        value_state_ = true;
+                        value_str_[value_str_index_++] = c;
+                        value_str_[value_str_index_] = 0;
+                        if (value_str_index_ >= kMaxValueStrLength - 1) {
                             Exception::throwSpecific(kErrValueOverflow);
                         }
                         break;
@@ -464,11 +467,11 @@ namespace Grain {
                         break;
                 }
 
-                if (m_next_command != 0) {
+                if (next_command_ != 0) {
                     _addValue();
-                    m_relative_state = islower(m_next_command);
-                    m_curr_command = tolower(m_next_command);
-                    m_next_command = 0;
+                    relative_state_ = islower(next_command_);
+                    curr_command_ = tolower(next_command_);
+                    next_command_ = 0;
                 }
 
                 p++;
@@ -488,22 +491,22 @@ namespace Grain {
     }
 
     void SVGPathParser::_addValue() {
-        if (m_value_state) {
-            m_values.push(String::parseDoubleWithDotOrComma(m_value_str));
-            auto n = (int32_t)m_values.size();
+        if (value_state_) {
+            values_.push(String::parseDoubleWithDotOrComma(value_str_));
+            auto n = (int32_t)values_.size();
 
-            // std::cout << "_addValue command: " << m_curr_command << ", n: " << n << std::endl;
+            // std::cout << "_addValue command: " << curr_command_ << ", n: " << n << std::endl;
 
-            switch (m_curr_command) {
+            switch (curr_command_) {
                 case 'm':
                 case 'l':
                     if (n > 2) {
                         Exception::throwSpecific(SVG::kErrValueMismatch);
                     }
                     if (n == 2) {
-                        _addSegment(m_curr_command);
-                        m_curr_command = 'l';   // Repeated commands to 'm' are always 'l'.
-                        m_values.clear();
+                        _addSegment(curr_command_);
+                        curr_command_ = 'l';   // Repeated commands to 'm' are always 'l'.
+                        values_.clear();
                     }
                     break;
 
@@ -513,8 +516,8 @@ namespace Grain {
                         Exception::throwSpecific(SVG::kErrValueMismatch);
                     }
                     if (n == 1) {
-                        _addSegment(m_curr_command);
-                        m_values.clear();
+                        _addSegment(curr_command_);
+                        values_.clear();
                     }
                     break;
 
@@ -523,8 +526,8 @@ namespace Grain {
                         Exception::throwSpecific(SVG::kErrValueMismatch);
                     }
                     if (n == 4) {
-                        _addSegment(m_curr_command);
-                        m_values.clear();
+                        _addSegment(curr_command_);
+                        values_.clear();
                     }
                     break;
 
@@ -533,8 +536,8 @@ namespace Grain {
                         Exception::throwSpecific(SVG::kErrValueMismatch);
                     }
                     if (n == 6) {
-                        _addSegment(m_curr_command);
-                        m_values.clear();
+                        _addSegment(curr_command_);
+                        values_.clear();
                     }
                     break;
 
@@ -543,8 +546,8 @@ namespace Grain {
                         Exception::throwSpecific(SVG::kErrValueMismatch);
                     }
                     if (n == 4) {
-                        _addSegment(m_curr_command);
-                        m_values.clear();
+                        _addSegment(curr_command_);
+                        values_.clear();
                     }
                     break;
 
@@ -553,8 +556,8 @@ namespace Grain {
                         Exception::throwSpecific(SVG::kErrValueMismatch);
                     }
                     if (n == 2) {
-                        _addSegment(m_curr_command);
-                        m_values.clear();
+                        _addSegment(curr_command_);
+                        values_.clear();
                     }
                     break;
 
@@ -563,21 +566,21 @@ namespace Grain {
                         Exception::throwSpecific(SVG::kErrValueMismatch);
                     }
                     if (n == 7) {
-                        _addSegment(m_curr_command);
-                        m_values.clear();
+                        _addSegment(curr_command_);
+                        values_.clear();
                     }
                     break;
 
                 default:
-                    _m_unhandled_command_count++;
-                    // std::cout << "SVGPathParser::_addValue() unhandled command: " << m_curr_command << std::endl;
+                    unhandled_command_count_++;
+                    // std::cout << "SVGPathParser::_addValue() unhandled command: " << curr_command_ << std::endl;
                     break;
             }
 
             // Prepare for parsing of next value
-            m_value_str[0] = 0;
-            m_value_str_index = 0;
-            m_value_state = false;
+            value_str_[0] = 0;
+            value_str_index_ = 0;
+            value_state_ = false;
         }
     }
 
@@ -585,45 +588,45 @@ namespace Grain {
      *  @brief Add a segment to the current path.
      */
     void SVGPathParser::_addSegment(const char command) {
-        auto n = (int32_t)m_values.size();
+        auto n = (int32_t)values_.size();
 
         switch (command) {
             case 'm':
-                m_compound_path->addEmptyPath();
-                m_current_path = m_compound_path->lastPathPtr();
+                compound_path_->addEmptyPath();
+                current_path_ = compound_path_->lastPathPtr();
             case 'l':
                 {
-                    if (!m_current_path) {
+                    if (!current_path_) {
                         Exception::throwSpecific(SVG::kErrCurrentPathIsNull);
                     }
                     if (n != 2) {
                         Exception::throwSpecific(SVG::kErrValueMismatch);
                     }
-                    m_curr_pos = posAtValueIndex(0);
-                    m_current_path->addPoint(m_curr_pos);
+                    curr_pos_ = posAtValueIndex(0);
+                    current_path_->addPoint(curr_pos_);
                 }
                 break;
 
             case 'h':
-                if (!m_current_path) {
+                if (!current_path_) {
                     Exception::throwSpecific(SVG::kErrCurrentPathIsNull);
                 }
                 if (n != 1) {
                     Exception::throwSpecific(SVG::kErrValueMismatch);
                 }
-                m_curr_pos.x_ = xAtIndex(0);
-                m_current_path->addPoint(m_curr_pos);
+                curr_pos_.x_ = xAtIndex(0);
+                current_path_->addPoint(curr_pos_);
                 break;
 
             case 'v':
-                if (!m_current_path) {
+                if (!current_path_) {
                     Exception::throwSpecific(SVG::kErrCurrentPathIsNull);
                 }
                 if (n != 1) {
                     Exception::throwSpecific(SVG::kErrValueMismatch);
                 }
-                m_curr_pos.y_ = yAtIndex(0);
-                m_current_path->addPoint(m_curr_pos);
+                curr_pos_.y_ = yAtIndex(0);
+                current_path_->addPoint(curr_pos_);
                 break;
 
             case 'q':
@@ -632,7 +635,7 @@ namespace Grain {
                  *  x1, y1: Control point for the curve.
                  *  x, y: Endpoint of the curve.
                  */
-                if (!m_current_path) {
+                if (!current_path_) {
                     Exception::throwSpecific(SVG::kErrCurrentPathIsNull);
                 }
                 if (n != 4) {
@@ -641,8 +644,8 @@ namespace Grain {
                 {
                     Vec2d c_pos = posAtValueIndex(0);
                     Vec2d end_pos = posAtValueIndex(2);
-                    m_current_path->addQuadraticBezier(c_pos, end_pos);
-                    m_curr_pos = end_pos;
+                    current_path_->addQuadraticBezier(c_pos, end_pos);
+                    curr_pos_ = end_pos;
                 }
                 break;
 
@@ -653,7 +656,7 @@ namespace Grain {
                  *  x2, y2: Second control point.
                  *  x, y: Endpoint of the curve.
                  */
-                if (!m_current_path) {
+                if (!current_path_) {
                     Exception::throwSpecific(SVG::kErrCurrentPathIsNull);
                 }
                 if (n != 6) {
@@ -663,8 +666,8 @@ namespace Grain {
                     Vec2d c1_pos = posAtValueIndex(0);
                     Vec2d c2_pos = posAtValueIndex(2);
                     Vec2d end_pos = posAtValueIndex(4);
-                    m_current_path->addBezier(c1_pos, c2_pos, end_pos);
-                    m_curr_pos = end_pos;
+                    current_path_->addBezier(c1_pos, c2_pos, end_pos);
+                    curr_pos_ = end_pos;
                 }
                 break;
 
@@ -674,7 +677,7 @@ namespace Grain {
                  *  x2, y2: Second control point.
                  *  x, y: Endpoint of the curve.
                  */
-                if (!m_current_path) {
+                if (!current_path_) {
                     Exception::throwSpecific(SVG::kErrCurrentPathIsNull);
                 }
                 if (n != 4) {
@@ -683,8 +686,8 @@ namespace Grain {
                 {
                     Vec2d c2_pos = posAtValueIndex(0);
                     Vec2d end_pos = posAtValueIndex(2);
-                    m_current_path->addSmoothBezier(c2_pos, end_pos);
-                    m_curr_pos = end_pos;
+                    current_path_->addSmoothBezier(c2_pos, end_pos);
+                    curr_pos_ = end_pos;
                 }
                 break;
 
@@ -693,7 +696,7 @@ namespace Grain {
                  *  Smooth Cubic Bézier Curve.
                  *  x, y: Endpoint of the curve.
                  */
-                if (!m_current_path) {
+                if (!current_path_) {
                     Exception::throwSpecific(SVG::kErrCurrentPathIsNull);
                 }
                 if (n != 2) {
@@ -701,14 +704,14 @@ namespace Grain {
                 }
                 {
                     Vec2d end_pos = posAtValueIndex(0);
-                    m_current_path->addSmoothQuadraticBezier(end_pos);
-                    m_curr_pos = end_pos;
+                    current_path_->addSmoothQuadraticBezier(end_pos);
+                    curr_pos_ = end_pos;
                 }
                 break;
 
             case 'a':
                 {
-                    if (!m_current_path) {
+                    if (!current_path_) {
                         Exception::throwSpecific(SVG::kErrCurrentPathIsNull);
                     }
                     if (n != 7) {
@@ -719,20 +722,20 @@ namespace Grain {
                     bool large_arc_flag = booleanAtIndex(3);
                     bool sweep_flag = booleanAtIndex(4);
                     Vec2d end_pos = posAtValueIndex(5);
-                    m_current_path->addArcAsBezier(radii, x_axis_rotation, large_arc_flag, sweep_flag, end_pos, 5);
-                    m_curr_pos = end_pos;
+                    current_path_->addArcAsBezier(radii, x_axis_rotation, large_arc_flag, sweep_flag, end_pos, 5);
+                    curr_pos_ = end_pos;
                 }
                 break;
 
             case 'z':
-                if (!m_current_path) {
+                if (!current_path_) {
                     Exception::throwSpecific(SVG::kErrCurrentPathIsNull);
                 }
-                m_current_path->close();
+                current_path_->close();
                 break;
 
             default:
-                // std::cout << "SVGPathParser::_addSegment() unhandled command: " << m_curr_command << std::endl;
+                // std::cout << "SVGPathParser::_addSegment() unhandled command: " << curr_command_ << std::endl;
                 break;
         }
     }

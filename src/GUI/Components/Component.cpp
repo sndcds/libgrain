@@ -16,16 +16,12 @@
 #include "App/App.hpp"
 #include "String/String.hpp"
 #include "Color/Gradient.hpp"
+#include "Color/RGBA.hpp"
 #include "Graphic/GraphicContext.hpp"
-#include "Graphic/AppleCGContext.hpp"
-#include "Graphic/Font.hpp"
 
 
 namespace Grain {
-    void Component::fireActionAndDisplay(ActionType action_type, const Component* excluded_component) noexcept {
-        fireAction(action_type, excluded_component);
-        needsDisplay();
-    }
+
 #if defined(__APPLE__) && defined(__MACH__)
     void _macosView_initForUI(Component* component, const Grain::Rectd& rect);
     void _macosView_releaseView(Component* component);
@@ -67,6 +63,11 @@ namespace Grain {
             rect.inset(style->paddingTop(), style->paddingRight(), style->paddingBottom(), style->paddingLeft());
         }
         return rect;
+    }
+
+
+    RGB Component::color() const noexcept {
+        return RGB{};
     }
 
 
@@ -201,6 +202,12 @@ namespace Grain {
         if (action_) {
             action_(this);
         }
+    }
+
+
+    void Component::fireActionAndDisplay(ActionType action_type, const Component* excluded_component) noexcept {
+        fireAction(action_type, excluded_component);
+        needsDisplay();
     }
 
 

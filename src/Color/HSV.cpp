@@ -24,13 +24,13 @@ namespace Grain {
 
     void HSV::set(const RGB& rgb) noexcept {
 
-        Color::rgb_to_hsv(rgb.data_, m_data);
+        Color::rgb_to_hsv(rgb.data_, data_);
     }
 
 
     void HSV::set(const HSL& hsl) noexcept {
 
-        Color::hsl_to_hsv(hsl.m_data, m_data);
+        Color::hsl_to_hsv(hsl.m_data, data_);
     }
 
 
@@ -65,7 +65,7 @@ namespace Grain {
 
         if (csv) {
             CSVLineParser csv_line_parser(csv);
-            csv_line_parser.values(3, m_data);
+            csv_line_parser.values(3, data_);
         }
         else {
             set(0, 0, 0);

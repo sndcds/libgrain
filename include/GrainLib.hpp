@@ -87,6 +87,7 @@
 #include "DSP/LevelCurve.hpp"
 #include "DSP/WeightedSamples.hpp"
 #include "DSP/RingBuffer.hpp"
+#include "DSP/EnvelopeFollower.hpp"
 
 #include "File/File.hpp"
 #include "File/TiffFile.hpp"
@@ -120,6 +121,8 @@
 #include "GUI/Components/Toggle.hpp"
 #include "GUI/Components/TextField.hpp"
 #include "GUI/Components/Slider.hpp"
+#include "GUI/Components/ColorWell.hpp"
+#include "GUI/Components/ColorWheel.hpp"
 #include "GUI/Views/View.hpp"
 #include "GUI/Views/Viewport.hpp"
 #include "GUI/Views/ScrollView.hpp"
@@ -139,6 +142,8 @@
 #include "Math/Vec3Fix.hpp"
 
 #include "Midi/Midi.hpp"
+
+#include "Movie/MovieWriter.hpp"
 
 #include "Scripting/Lua.hpp"
 #include "Scripting/Toml.hpp"

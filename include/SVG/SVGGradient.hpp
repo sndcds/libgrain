@@ -1,10 +1,10 @@
 //
-// SVGGradient.hpp
+//  SVGGradient.hpp
 //
-// Created by Roald Christesen on 11.01.2025
-// Copyright (C) 2025 Roald Christesen. All rights reserved.
+//  Created by Roald Christesen on 11.01.2025
+//  Copyright (C) 2025 Roald Christesen. All rights reserved.
 //
-// This file is part of GrainLib, see <https://grain.one>
+//  This file is part of GrainLib, see <https://grain.one>
 //
 
 #ifndef GrainSVGGradient_hpp
@@ -24,8 +24,8 @@ namespace Grain {
         friend class SVGGradient;
 
     protected:
-        CSSValue m_offset;
-        RGBA m_color;
+        CSSValue offset_;
+        RGBA color_;
 
     public:
         SVGGradientColorStop() {
@@ -50,7 +50,6 @@ namespace Grain {
     class SVGGradient : public SVGPaintServer {
 
     public:
-
         enum {
             kValueX1 = 0,
             kValueY1,
@@ -67,18 +66,18 @@ namespace Grain {
         };
 
     protected:
-        SVGGradientType m_gradient_type = SVGGradientType::Linear;  ///< Type of the gradient (Linear or Radial)
-        SVGGradientInterpolationMode m_color_interpolation_mode = SVGGradientInterpolationMode::sRGB;  ///< Color interpolation mode
-        SVGGradientUnits m_units = SVGGradientUnits::ObjectBoundingBox;
+        SVGGradientType gradient_type_ = SVGGradientType::Linear;  ///< Type of the gradient (Linear or Radial)
+        SVGGradientInterpolationMode color_interpolation_mode_ = SVGGradientInterpolationMode::sRGB;  ///< Color interpolation mode
+        SVGGradientUnits units_ = SVGGradientUnits::ObjectBoundingBox;
 
-        ObjectList<SVGGradientColorStop*>m_color_stops;     ///< Gradient color stops
-        double m_transform{};                               ///< Gradient transformation matrix TODO: !!!!
+        ObjectList<SVGGradientColorStop*>color_stops_;     ///< Gradient color stops
+        double transform_{};                               ///< Gradient transformation matrix TODO: !!!!
 
-        CSSValue m_values[kValueCount];
+        CSSValue values_[kValueCount];
 
         // TODO: Optional Attributes, href (or xlink:href in older SVGs): References another <linearGradient> to inherit properties.
 
-        Gradient m_grain_gradient;
+        Gradient grain_gradient_;
 
     public:
         SVGGradient(SVGGradientType type, int32_t capacity = 16) noexcept;
@@ -100,7 +99,7 @@ namespace Grain {
         void log(std::ostream& os, int32_t indent = 0, const char* label = nullptr) const;
 
 
-        Gradient* gradientPtr() noexcept { return &m_grain_gradient; }
+        Gradient* gradientPtr() noexcept { return &grain_gradient_; }
 
         void setColorInterpolation(SVGGradientInterpolationMode mode) noexcept;
         void setTransform(const char* transform) noexcept;

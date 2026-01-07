@@ -1,10 +1,10 @@
 //
-// SVGPaintStyle.cpp
+//  SVGPaintStyle.cpp
 //
-// Created by Roald Christesen on 03.12.2024
-// Copyright (C) 2025 Roald Christesen. All rights reserved.
+//  Created by Roald Christesen on 03.12.2024
+//  Copyright (C) 2025 Roald Christesen. All rights reserved.
 //
-// This file is part of GrainLib, see <https://grain.one>
+//  This file is part of GrainLib, see <https://grain.one>
 //
 
 #include "SVG/SVGPaintStyle.hpp"
@@ -18,20 +18,20 @@
 
 namespace Grain {
 
-    const SVGNumericAttrKeyValue SVGPaintStyle::_g_fill_rule_table[] = {
+    const SVGNumericAttrKeyValue SVGPaintStyle::g_fill_rule_table_[] = {
         { "nonzero", (int64_t)FillWindingRule::NoneZero },
         { "evenodd", (int64_t)FillWindingRule::EvenOdd },
         { "", -1 }
     };
 
-    const SVGNumericAttrKeyValue SVGPaintStyle::_g_stroke_linecap_table[] = {
+    const SVGNumericAttrKeyValue SVGPaintStyle::g_stroke_linecap_table_[] = {
         { "butt", (int64_t)StrokeCapStyle::Butt },
         { "round", (int64_t)StrokeCapStyle::Round },
         { "square", (int64_t)StrokeCapStyle::Square },
         { "", -1 }
     };
 
-    const SVGNumericAttrKeyValue SVGPaintStyle::_g_stroke_linejoin_table[] = {
+    const SVGNumericAttrKeyValue SVGPaintStyle::g_stroke_linejoin_table_[] = {
         { "miter", (int64_t)StrokeJoinStyle::Miter },
         { "round", (int64_t)StrokeJoinStyle::Round },
         { "bevel", (int64_t)StrokeJoinStyle::Bevel },
@@ -40,18 +40,18 @@ namespace Grain {
 
 
     void SVGAttr::initWithFlags(uint32_t attr_flags) noexcept {
-        m_can_initial = (attr_flags & kFlag_CanInitial) != 0;
-        m_can_unset = (attr_flags & kFlag_CanUnset) != 0;
-        m_can_inherit = (attr_flags & kFlag_CanInherit) != 0;
-        m_can_be_none = (attr_flags & kFlag_CanBeNone) != 0;
+        can_initial_ = (attr_flags & kFlag_CanInitial) != 0;
+        can_unset_ = (attr_flags & kFlag_CanUnset) != 0;
+        can_inherit_ = (attr_flags & kFlag_CanInherit) != 0;
+        can_be_none_ = (attr_flags & kFlag_CanBeNone) != 0;
     };
 
 
     void SVGAttr::set(const char* str) noexcept {
-        m_has_value = false;
-        m_must_update = true;
-        m_is_none = false;
-        m_set_command = SetCommand::DoNothing;
+        has_value_ = false;
+        must_update_ = true;
+        is_none_ = false;
+        set_command_ = SetCommand::DoNothing;
 
         if (str == nullptr) {
             return;
@@ -59,28 +59,28 @@ namespace Grain {
 
         if (canBeNone() && (strcasecmp(str, "none") == 0 || strcasecmp(str, "transparent") == 0)) {
             if (canInherit()) {
-                m_set_command = SetCommand::SetByInheritance;
+                set_command_ = SetCommand::SetByInheritance;
             }
-            m_has_value = true;
-            m_is_none = true;
+            has_value_ = true;
+            is_none_ = true;
         }
 
         if (canInherit() && strcasecmp(str, "inherit") == 0) {
-            m_set_command = SetCommand::SetByInheritance;
+            set_command_ = SetCommand::SetByInheritance;
         }
 
         if (canInitial() && strcasecmp(str, "initial") == 0) {
-            m_set_command = SetCommand::SetByInitialValue;
+            set_command_ = SetCommand::SetByInitialValue;
         }
 
         if (canUnset() && strcasecmp(str, "unset") == 0) {
             if (canInherit()) {
                 // Equivalent to inherit.
-                m_set_command = SetCommand::SetByInheritance;
+                set_command_ = SetCommand::SetByInheritance;
             }
             else {
                 // Equivalent to initial.
-                m_set_command = SetCommand::SetByInitialValue;
+                set_command_ = SetCommand::SetByInitialValue;
             }
         }
     }
@@ -101,45 +101,45 @@ namespace Grain {
      *  @return `true` if the color was successfully set, `false` if the input string was invalid.
      */
     bool SVGColorAttr::setColor(const char* str, const RGBA& initial_color) noexcept {
-        m_use_current_color = false;
+        use_current_color_ = false;
 
         str = String::firstNonWhiteSpaceCharPtr(str);
 
         SVGAttr::set(str);
 
-        if (m_set_command == SetCommand::SetByInitialValue) {
-            m_color = initial_color;
-            m_has_value = true;
+        if (set_command_ == SetCommand::SetByInitialValue) {
+            color_ = initial_color;
+            has_value_ = true;
             return true;
         }
 
-        if (m_set_command == SetCommand::SetByInheritance) {
+        if (set_command_ == SetCommand::SetByInheritance) {
             // Will be handled later.
             return true;
         }
 
         if (strcasecmp(str, "currentColor") == 0) {
-            m_set_command = SetCommand::SetToCurrentColor;
-            m_has_value = true;
+            set_command_ = SetCommand::SetToCurrentColor;
+            has_value_ = true;
             return true;
         }
 
         if (strncasecmp(str, "url(", 4) == 0) {
-            int64_t n = m_raw.setByFramedContent(str, '(', ')');
+            int64_t n = raw_.setByFramedContent(str, '(', ')');
             if (n >= 0) {
-                m_draw_mode = DrawMode::Gradient;
-                m_set_command = SetCommand::SetToURL;
-                m_has_value = true;
+                draw_mode_ = DrawMode::Gradient;
+                set_command_ = SetCommand::SetToURL;
+                has_value_ = true;
                 return true;
             }
         }
 
-        auto err = CSSColor::parseColorToRGBA(str, m_color);
+        auto err = CSSColor::parseColorToRGBA(str, color_);
         if (Error::isError(err)) {
             return false;
         }
         else {
-            m_has_value = true;
+            has_value_ = true;
             return true;
         }
     }
@@ -150,37 +150,37 @@ namespace Grain {
 
         SVGAttr::set(str);
 
-        if (m_set_command == SetCommand::SetByInitialValue) {
-            m_css_value = initial_value;
-            m_has_value = true;
+        if (set_command_ == SetCommand::SetByInitialValue) {
+            css_value_ = initial_value;
+            has_value_ = true;
             return true;
         }
 
-        if (m_set_command == SetCommand::SetByInheritance) {
+        if (set_command_ == SetCommand::SetByInheritance) {
             // Will be handled later.
             return true;
         }
 
         // Key/Value table.
 
-        if (m_key_value_table != nullptr) {
+        if (key_value_table_ != nullptr) {
             int32_t index = 0;
-            while (m_key_value_table[index].m_key[0] != '\0') {
-                if (strcasecmp(str, m_key_value_table[index].m_key) == 0) {
-                    m_has_value = true;
-                    m_css_value.setInt32Absolute((int32_t)m_key_value_table[index].m_value);
+            while (key_value_table_[index].key_[0] != '\0') {
+                if (strcasecmp(str, key_value_table_[index].key_) == 0) {
+                    has_value_ = true;
+                    css_value_.setInt32Absolute((int32_t)key_value_table_[index].value_);
                     return true;
                 }
                 index++;
             }
         }
 
-        auto err = CSS::extractCSSValueFromStr(str, m_css_value, nullptr);
+        auto err = CSS::extractCSSValueFromStr(str, css_value_, nullptr);
         if (Error::isError(err)) {
             return false;
         }
         else {
-            m_has_value = true;
+            has_value_ = true;
             return true;
         }
     }
@@ -192,31 +192,31 @@ namespace Grain {
     void SVGPaintStyle::updateNumericAttr(AttrID attr_id, SVGNumericAttr* out_attr) noexcept {
         auto attr = numericAttrByID(attr_id);
         if (attr == nullptr) {
-            _m_fatal_error_count++;
+            fatal_error_count_++;
             return;
         }
 
         if (attr->mustUpdate()) {
             if (attr->hasValue() == false && attr->canInherit() == true) {
-                auto parent = m_svg_element_ptr->parent();
+                auto parent = svg_element_ptr_->parent();
                 if (parent != nullptr) {
                     auto parent_paint_style = (SVGPaintStyle*)parent->paintStyle();
                     if (parent_paint_style != nullptr) {
                         parent_paint_style->updateNumericAttr(attr_id, attr);
                     }
                     else {
-                        _m_fatal_error_count++;
+                        fatal_error_count_++;
                     }
                 }
             }
 
-            attr->m_must_update = false;
+            attr->must_update_ = false;
         }
 
         if (out_attr != nullptr) {
-            out_attr->m_css_value = attr->m_css_value;
-            out_attr->m_has_value = attr->m_has_value;
-            out_attr->m_is_none = attr->m_is_none;
+            out_attr->css_value_ = attr->css_value_;
+            out_attr->has_value_ = attr->has_value_;
+            out_attr->is_none_ = attr->is_none_;
         }
     }
 
@@ -227,82 +227,82 @@ namespace Grain {
     void SVGPaintStyle::updateColorAttr(AttrID attr_id, SVGColorAttr* out_attr) noexcept {
         auto attr = colorAttrByID(attr_id);
         if (attr == nullptr) {
-            _m_fatal_error_count++;
+            fatal_error_count_++;
             return;
         }
 
         if (attr->mustUpdate() == true) {
 
             if (attr->hasValue() == false && attr->canInherit() == true) {
-                auto parent = m_svg_element_ptr->parent();
+                auto parent = svg_element_ptr_->parent();
                 if (parent != nullptr) {
                     auto parent_paint_style = (SVGPaintStyle*)parent->paintStyle();
                     if (parent_paint_style != nullptr) {
                         parent_paint_style->updateColorAttr(attr_id, attr);
                     }
                     else {
-                        _m_fatal_error_count++;
+                        fatal_error_count_++;
                     }
                 }
             }
 
 
-            attr->m_must_update = false;
+            attr->must_update_ = false;
         }
 
         if (out_attr != nullptr) {
-            out_attr->m_color = attr->m_color;
-            out_attr->m_use_current_color = attr->m_use_current_color;
-            out_attr->m_has_value = attr->m_has_value;
-            out_attr->m_is_none = attr->m_is_none;
+            out_attr->color_ = attr->color_;
+            out_attr->use_current_color_ = attr->use_current_color_;
+            out_attr->has_value_ = attr->has_value_;
+            out_attr->is_none_ = attr->is_none_;
         }
     }
 
 
     void SVGPaintStyle::setGCSettings(GraphicContext& gc) const noexcept {
-        if (m_transform_count > 0) {
-            for (int32_t i = 0; i < m_transform_count; i++) {
-                m_transform_stack[i].transformGC(gc);
+        if (transform_count_ > 0) {
+            for (int32_t i = 0; i < transform_count_; i++) {
+                transform_stack_[i].transformGC(gc);
             }
         }
 
-        if (m_attr_opacity.hasValue()) {
-            gc.setAlpha(m_attr_opacity.valueAsDouble());
+        if (attr_opacity_.hasValue()) {
+            gc.setAlpha(attr_opacity_.valueAsDouble());
         }
 
-        if (m_attr_fill.hasValue()) {
+        if (attr_fill_.hasValue()) {
 
-            if (m_attr_fill.m_use_current_color) {
-                gc.setFillRGB(m_attr_color.m_color);
-            }
-            else {
-                gc.setFillRGB(m_attr_fill.m_color);
-            }
-        }
-
-        if (m_attr_stroke.hasValue()) {
-            if (m_attr_stroke.m_use_current_color) {
-                gc.setStrokeRGB(m_attr_color.m_color);
+            if (attr_fill_.use_current_color_) {
+                gc.setFillRGB(attr_color_.color_);
             }
             else {
-                gc.setStrokeRGB(m_attr_stroke.m_color);
+                gc.setFillRGB(attr_fill_.color_);
             }
         }
 
-        if (m_attr_stroke_width.hasValue()) {
-            gc.setStrokeWidth(m_attr_stroke_width.m_css_value.valueAsDouble());  // TODO: Handle unit.
+        if (attr_stroke_.hasValue()) {
+            if (attr_stroke_.use_current_color_) {
+                gc.setStrokeRGB(attr_color_.color_);
+            }
+            else {
+                gc.setStrokeRGB(attr_stroke_.color_);
+            }
         }
 
-        if (m_attr_stroke_linecap.hasValue()) {
-            gc.setStrokeCapStyle((StrokeCapStyle)m_attr_stroke_linecap.m_css_value.valueAsInt32());
+        if (attr_stroke_width_.hasValue()) {
+            gc.setStrokeWidth(attr_stroke_width_.css_value_.valueAsDouble());  // TODO: Handle unit.
         }
 
-        if (m_attr_stroke_linejoin.hasValue()) {
-            gc.setStrokeJoinStyle((StrokeJoinStyle)m_attr_stroke_linejoin.m_css_value.valueAsInt32());
+        if (attr_stroke_linecap_.hasValue()) {
+            gc.setStrokeCapStyle((StrokeCapStyle)attr_stroke_linecap_.css_value_.valueAsInt32());
         }
 
-        if (m_attr_stroke_miterlimit.hasValue()) {
-            gc.setStrokeMiterLimit(m_attr_stroke_miterlimit.m_css_value.valueAsDouble());
+        if (attr_stroke_linejoin_.hasValue()) {
+            gc.setStrokeJoinStyle((StrokeJoinStyle)attr_stroke_linejoin_.css_value_.valueAsInt32());
+        }
+
+        if (attr_stroke_miterlimit_.hasValue()) {
+            gc.setStrokeMiterLimit(attr_stroke_miterlimit_.css_value_.valueAsDouble());
         }
     }
 
@@ -311,61 +311,54 @@ namespace Grain {
      *  @brief Set all paint style properties with values from `xml_element`.
      */
     void SVGPaintStyle::setByXMLElement(tinyxml2::XMLElement* xml_element) noexcept {
-        std::cout << ".. a\n";
         if (xml_element != nullptr) {
-            CSSValue default_css_value; // Is undefined by default.
             RGBA default_color = { 0.0f, 0.0f, 0.0f, 1.0f };
 
-        std::cout << ".. b\n";
-            // Iterate over all attributes of the element.
-
+            // Iterate over all attributes of the element
             const tinyxml2::XMLAttribute* attribute = xml_element->FirstAttribute();
-        std::cout << ".. c\n";
             while (attribute != nullptr) {
+                CSSValue default_css_value; // Is undefined by default
                 auto name = attribute->Name();
                 auto value = attribute->Value();
-                std::cout << ".. d\n";
-                std::cout << "name: " << name << ", value: " << value << std::endl;
 
                 bool set_result = false;
 
                 if (strcasecmp(name, "opacity") == 0) {
-                    set_result = m_attr_opacity.setValue(value, default_css_value);
+                    set_result = attr_opacity_.setValue(value, default_css_value);
                 }
                 else if (strcasecmp(name, "color") == 0) {
-                    set_result = m_attr_color.setColor(value, default_color);
+                    set_result = attr_color_.setColor(value, default_color);
                 }
                 else if (strcasecmp(name, "fill") == 0) {
-                    set_result = m_attr_fill.setColor(value, default_color);
+                    set_result = attr_fill_.setColor(value, default_color);
                 }
                 else if (strcasecmp(name, "fill-rule") == 0) {
-                    set_result = m_attr_fill_rule.setValue(xml_element->Attribute("fill-rule"), default_css_value);
+                    set_result = attr_fill_rule_.setValue(xml_element->Attribute("fill-rule"), default_css_value);
                 }
                 else if (strcasecmp(name, "fill-opacity") == 0) {
-                    set_result = m_attr_fill_opacity.setValue(xml_element->Attribute("fill-rule"), default_css_value);
+                    set_result = attr_fill_opacity_.setValue(xml_element->Attribute("fill-rule"), default_css_value);
                 }
                 else if (strcasecmp(name, "stroke") == 0) {
-                    set_result = m_attr_stroke.setColor(value, default_color);
+                    set_result = attr_stroke_.setColor(value, default_color);
                 }
                 else if (strcasecmp(name, "stroke-width") == 0) {
-                    set_result = m_attr_stroke_width.setValue(value, default_css_value);
+                    set_result = attr_stroke_width_.setValue(value, default_css_value);
                 }
                 else if (strcasecmp(name, "stroke-linecap") == 0) {
-                    set_result = m_attr_stroke_linecap.setValue(value, default_css_value);
+                    set_result = attr_stroke_linecap_.setValue(value, default_css_value);
                 }
                 else if (strcasecmp(name, "stroke-linejoin") == 0) {
-                    set_result = m_attr_stroke_linecap.setValue(value, default_css_value);
+                    set_result = attr_stroke_linecap_.setValue(value, default_css_value);
                 }
                 else if (strcasecmp(name, "stroke-miterlimit") == 0) {
-                    set_result = m_attr_stroke_miterlimit.setValue(value, default_css_value);
+                    set_result = attr_stroke_miterlimit_.setValue(value, default_css_value);
                 }
                 else if (strcasecmp(name, "stroke-opacity") == 0) {
-                    set_result = m_attr_stroke_opacity.setValue(value, default_css_value);
+                    set_result = attr_stroke_opacity_.setValue(value, default_css_value);
                 }
                 else if (strcasecmp(name, "transform") == 0) {
                     parseTransform(value);
                 }
-                std::cout << ".. e\n";
 
                 if (set_result != true) {
                     // TODO: Warning or Error Message!!!!!
@@ -378,62 +371,59 @@ namespace Grain {
             m_stroke_dasharray = SVG::_validStr(e->Attribute("stroke-dasharray"));
             m_stroke_dashoffset = SVG::_validStr(e->Attribute("stroke-dashoffset"));
              */
-        std::cout << ".. f\n";
         }
-        std::cout << ".. g\n";
-
     }
 
 
     void SVGPaintStyle::setDefault() noexcept {
-        m_attr_opacity.initWithFlags(SVGAttr::kFlags_Default);
-        m_attr_opacity.setDoubleAbsolute(1.0);
-        m_attr_opacity.setMinMax(0, 1);
+        attr_opacity_.initWithFlags(SVGAttr::kFlags_Default);
+        attr_opacity_.setDoubleAbsolute(1.0);
+        attr_opacity_.setMinMax(0, 1);
 
         // Color
-        m_attr_color.initWithFlags(SVGAttr::kFlags_Default);
-        m_attr_color.setColor(RGBA(0.0f, 0.0f, 0.0f, 1.0f));
+        attr_color_.initWithFlags(SVGAttr::kFlags_Default);
+        attr_color_.setColor(RGBA(0.0f, 0.0f, 0.0f, 1.0f));
 
         // Fill
-        m_attr_fill.initWithFlags(SVGAttr::kFlags_Default);
-        m_attr_fill.setColor(RGBA(0.0f, 0.0f, 0.0f, 1.0f));
+        attr_fill_.initWithFlags(SVGAttr::kFlags_Default);
+        attr_fill_.setColor(RGBA(0.0f, 0.0f, 0.0f, 1.0f));
 
-        m_attr_fill_rule.setKeyValueTable(_g_fill_rule_table);
-        m_attr_fill_rule.initWithFlags(SVGAttr::kFlags_Default);
-        m_attr_fill_rule.setInt32Absolute((int32_t)FillWindingRule::NoneZero);
+        attr_fill_rule_.setKeyValueTable(g_fill_rule_table_);
+        attr_fill_rule_.initWithFlags(SVGAttr::kFlags_Default);
+        attr_fill_rule_.setInt32Absolute((int32_t)FillWindingRule::NoneZero);
 
-        m_attr_fill_opacity.initWithFlags(SVGAttr::kFlags_Default);
-        m_attr_fill_opacity.setDoubleAbsolute(1.0);
-        m_attr_fill_opacity.setMinMax(0, 1);
+        attr_fill_opacity_.initWithFlags(SVGAttr::kFlags_Default);
+        attr_fill_opacity_.setDoubleAbsolute(1.0);
+        attr_fill_opacity_.setMinMax(0, 1);
 
         // Stroke
-        m_attr_stroke.initWithFlags(SVGAttr::kFlags_Default);
+        attr_stroke_.initWithFlags(SVGAttr::kFlags_Default);
 
-        m_attr_stroke_width.initWithFlags(SVGAttr::kFlags_Default);
+        attr_stroke_width_.initWithFlags(SVGAttr::kFlags_Default);
 
-        m_attr_stroke_linecap.setKeyValueTable(_g_stroke_linecap_table);
-        m_attr_stroke_linecap.initWithFlags(SVGAttr::kFlags_Default);
-        m_attr_stroke_linecap.setInt32Absolute((int32_t)StrokeCapStyle::Butt);
+        attr_stroke_linecap_.setKeyValueTable(g_stroke_linecap_table_);
+        attr_stroke_linecap_.initWithFlags(SVGAttr::kFlags_Default);
+        attr_stroke_linecap_.setInt32Absolute((int32_t)StrokeCapStyle::Butt);
 
-        m_attr_stroke_linejoin.setKeyValueTable(_g_stroke_linejoin_table);
-        m_attr_stroke_linejoin.initWithFlags(SVGAttr::kFlags_Default);
-        m_attr_stroke_linejoin.setInt32Absolute((int32_t)StrokeJoinStyle::Miter);
+        attr_stroke_linejoin_.setKeyValueTable(g_stroke_linejoin_table_);
+        attr_stroke_linejoin_.initWithFlags(SVGAttr::kFlags_Default);
+        attr_stroke_linejoin_.setInt32Absolute((int32_t)StrokeJoinStyle::Miter);
 
-        m_attr_stroke_miterlimit.initWithFlags(SVGAttr::kFlags_Default);
-        m_attr_stroke_miterlimit.setMinMax(1, 10);
+        attr_stroke_miterlimit_.initWithFlags(SVGAttr::kFlags_Default);
+        attr_stroke_miterlimit_.setMinMax(1, 10);
 
-        m_attr_stroke_opacity.initWithFlags(SVGAttr::kFlags_Default);
-        m_attr_stroke_opacity.setDoubleAbsolute(1.0);
-        m_attr_stroke_opacity.setMinMax(0, 1);
+        attr_stroke_opacity_.initWithFlags(SVGAttr::kFlags_Default);
+        attr_stroke_opacity_.setDoubleAbsolute(1.0);
+        attr_stroke_opacity_.setMinMax(0, 1);
 
-        m_has_fill_opacity = false;
-        m_has_stroke_linecap = false;
-        m_has_stroke_linejoin = false;
-        m_has_stroke_miterlimit = false;
-        m_has_stroke_opacity = false;
+        has_fill_opacity_ = false;
+        has_stroke_linecap_ = false;
+        has_stroke_linejoin_ = false;
+        has_stroke_miterlimit_ = false;
+        has_stroke_opacity_ = false;
 
-        m_does_fill = false;
-        m_does_stroke = false;
+        does_fill_ = false;
+        does_stroke_ = false;
 
         // TODO: stroke-dasharray none
         // TODO: stroke-dashoffset 0
@@ -441,92 +431,109 @@ namespace Grain {
 
 
     ErrorCode SVGPaintStyle::parseTransform(const char* str) noexcept {
-
-std::cout << "..... 1\n";
         auto result = ErrorCode::None;
 
         try {
-std::cout << "..... 2\n";
             if (!str) { Exception::throwStandard(ErrorCode::BadArgs); }
 
             // Parse all functions
             SVGFunctionValuesParser parser(str);
-            std::cout << "..... 3\n";
 
             while (true) {
-std::cout << "..... 4, m_transform_count: " << m_transform_count << std::endl;
-                if(m_transform_count >= kTransformStackCapacity) {
+                if(transform_count_ >= kTransformStackCapacity) {
                     Exception::throwSpecific(kErr_TransformStackOverflow);
                 }
-                std::cout << "..... 5\n";
 
                 auto status = parser.nextFunction();
-                std::cout << "..... 5 1, status: " << status << std::endl;
                 if (status < 0) {
-                std::cout << "..... 5 2\n";
                     break;
-                    // Todo: Exception::throwSpecific(kErr_ParseTransform_InvalidFunctionName);
+                    // TODO: Exception::throwSpecific(kErr_ParseTransform_InvalidFunctionName);
                 }
 
-std::cout << "..... 6\n";
-                auto transform = &m_transform_stack[m_transform_count];
+                auto transform = &transform_stack_[transform_count_];
 
-                int32_t value_count = parser.extractCSSValues(SVGTransform::kValuesCapacity, transform->m_values);
+                int32_t value_count = parser.extractCSSValues(SVGTransform::kValuesCapacity, transform->values_);
                 if (value_count < 0) {
                     Exception::throwSpecific(kErr_ParseTransform_ValuesParsingFailed);
                 }
-                std::cout << "..... 7\n";
 
-                transform->m_value_count = value_count;
+                transform->value_count_ = value_count;
 
                 auto function_name = parser.functionName();
-                if (strcasecmp(function_name, "matrix") == 0) { transform->m_transform_type = SVGTransformType::Matrix; }
-                else if (strcasecmp(function_name, "translate") == 0) { transform->m_transform_type = SVGTransformType::Translate; }
-                else if (strcasecmp(function_name, "scale") == 0) { transform->m_transform_type = SVGTransformType::Scale; }
-                else if (strcasecmp(function_name, "rotate") == 0) { transform->m_transform_type = SVGTransformType::Rotate; }
-                else if (strcasecmp(function_name, "skewX") == 0) { transform->m_transform_type = SVGTransformType::SkewX; }
-                else if (strcasecmp(function_name, "skewY") == 0) { transform->m_transform_type = SVGTransformType::SkewY; }
-                else if (strcasecmp(function_name, "perspective") == 0) { transform->m_transform_type = SVGTransformType::Perspective; }
+                if (strcasecmp(function_name, "matrix") == 0) { transform->transform_type_ = SVGTransformType::Matrix; }
+                else if (strcasecmp(function_name, "translate") == 0) { transform->transform_type_ = SVGTransformType::Translate; }
+                else if (strcasecmp(function_name, "scale") == 0) { transform->transform_type_ = SVGTransformType::Scale; }
+                else if (strcasecmp(function_name, "rotate") == 0) { transform->transform_type_ = SVGTransformType::Rotate; }
+                else if (strcasecmp(function_name, "skewX") == 0) { transform->transform_type_ = SVGTransformType::SkewX; }
+                else if (strcasecmp(function_name, "skewY") == 0) { transform->transform_type_ = SVGTransformType::SkewY; }
+                else if (strcasecmp(function_name, "perspective") == 0) { transform->transform_type_ = SVGTransformType::Perspective; }
                 else {
-                    _m_css_error_count++;
+                    css_error_count_++;
                 }
 
-std::cout << "..... 8: _m_css_error_count: " << _m_css_error_count << ", transform->m_transform_type: " << (int)transform->m_transform_type << std::endl;
-                m_transform_count++;
+                transform_count_++;
             }
         }
         catch (const Exception& e) {
             result = e.code();
         }
 
-std::cout << "..... 9\n";
         return result;
     }
 
 
     void SVGTransform::transformGC(GraphicContext& gc) const noexcept {
-        switch (m_transform_type) {
-            case SVGTransformType::Matrix:
-                break;
-            case SVGTransformType::Translate:
-                break;
-            case SVGTransformType::Scale:
-                break;
-            case SVGTransformType::Rotate:
-                if (m_value_count == 1) {
-                    gc.rotate(m_values[0].valueAsDouble());
-                }
-                else if (m_value_count == 3) {
-                    gc.rotate(m_values[0].valueAsDouble());
-                    gc.translate(m_values[1].valueAsDouble(), m_values[2].valueAsDouble());
+        switch (transform_type_) {
+            case SVGTransformType::Matrix: {
+                if (value_count_ == 6) {
+                    Mat3d m;
+                    m.setSVGTransform(
+                        values_[0].valueAsDouble(), values_[1].valueAsDouble(), values_[2].valueAsDouble(),
+                        values_[3].valueAsDouble(), values_[4].valueAsDouble(), values_[5].valueAsDouble());
+                    gc.affineTransform(m);
                 }
                 break;
-            case SVGTransformType::SkewX:
+            }
+            case SVGTransformType::Translate: {
+                if (value_count_ == 1) {
+                    gc.translateX(values_[0].valueAsDouble());
+                }
+                else if (value_count_ == 2) {
+                    gc.translate(values_[0].valueAsDouble(), values_[1].valueAsDouble());
+                }
                 break;
-            case SVGTransformType::SkewY:
+            }
+            case SVGTransformType::Scale: {
+                if (value_count_ == 1) {
+                    gc.scale(values_[0].valueAsDouble());
+                }
+                else if (value_count_ == 2) {
+                    gc.scale(values_[0].valueAsDouble(), values_[1].valueAsDouble());
+                }
                 break;
-            case SVGTransformType::Perspective:
+            }
+            case SVGTransformType::Rotate: {
+                if (value_count_ == 1) {
+                    gc.rotate(values_[0].valueAsDouble());
+                }
+                else if (value_count_ == 3) {
+                    Vec2d pivot = { values_[1].valueAsDouble(), values_[2].valueAsDouble() };
+                    gc.rotateAroundPivot(pivot, values_[0].valueAsDouble());
+                }
                 break;
+            }
+            case SVGTransformType::SkewX: {
+                // TODO: Implement!
+                break;
+            }
+            case SVGTransformType::SkewY: {
+                // TODO: Implement!
+                break;
+            }
+            case SVGTransformType::Perspective: {
+                // TODO: Implement!
+                break;
+            }
         }
     }
 
@@ -534,15 +541,15 @@ std::cout << "..... 9\n";
     void SVGPaintStyle::log(std::ostream& os, int32_t indent, const char* label) const {
         Log l(os);
         l.header(label);
-        l << "m_attr_opacity: " << m_attr_opacity << Log::endl;
-        l << "m_attr_color: " << m_attr_color << Log::endl;
-        l << "m_attr_fill: " << m_attr_fill << Log::endl;
-        l << "m_attr_fill_rule: " << m_attr_fill_rule << Log::endl;
-        l << "m_attr_fill_opacity: " << m_attr_fill_opacity << Log::endl;
-        l << "m_attr_stroke: " << m_attr_stroke << Log::endl;
-        l << "m_attr_stroke_width: " << m_attr_stroke_width << Log::endl;
-        l << "m_attr_stroke_linecap: " << m_attr_stroke_linecap << Log::endl;
-        l << "m_attr_stroke_linejoin: " << m_attr_stroke_linejoin << Log::endl;
+        l << "attr_opacity_: " << attr_opacity_ << Log::endl;
+        l << "attr_color_: " << attr_color_ << Log::endl;
+        l << "attr_fill_: " << attr_fill_ << Log::endl;
+        l << "attr_fill_rule_: " << attr_fill_rule_ << Log::endl;
+        l << "attr_fill_opacity_: " << attr_fill_opacity_ << Log::endl;
+        l << "attr_stroke_: " << attr_stroke_ << Log::endl;
+        l << "attr_stroke_width_: " << attr_stroke_width_ << Log::endl;
+        l << "attr_stroke_linecap_: " << attr_stroke_linecap_ << Log::endl;
+        l << "attr_stroke_linejoin_: " << attr_stroke_linejoin_ << Log::endl;
     }
 
 } // End of namespace

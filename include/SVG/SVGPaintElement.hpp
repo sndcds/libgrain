@@ -1,10 +1,10 @@
 //
-// SVGPaintElement.hpp
+//  SVGPaintElement.hpp
 //
-// Created by Roald Christesen on 12.01.2025
-// Copyright (C) 2025 Roald Christesen. All rights reserved.
+//  Created by Roald Christesen on 12.01.2025
+//  Copyright (C) 2025 Roald Christesen. All rights reserved.
 //
-// This file is part of GrainLib, see <https://grain.one>
+//  This file is part of GrainLib, see <https://grain.one>
 //
 
 #ifndef GrainSVGPaintElement_hpp
@@ -20,13 +20,13 @@ namespace Grain {
 
     class SVGPaintElement : public SVGElement {
     protected:
-        SVGPaintStyle m_paint_style;
-        Rectd m_bounds;
+        SVGPaintStyle paint_style_;
+        Rectd bounds_;
 
     public:
         SVGPaintElement(SVGElement* parent) : SVGElement(parent) {
-            m_paint_style.setDefault();
-            m_paint_style.m_svg_element_ptr = this;
+            paint_style_.setDefault();
+            paint_style_.svg_element_ptr_ = this;
         }
 
         ~SVGPaintElement() {
@@ -34,18 +34,18 @@ namespace Grain {
 
         bool canDraw() override { return true; }
 
-        const SVGPaintStyle* paintStyle() const noexcept override { return &m_paint_style; }
-        SVGPaintStyle* mutablePaintStyle() noexcept override { return &m_paint_style; }
+        const SVGPaintStyle* paintStyle() const noexcept override { return &paint_style_; }
+        SVGPaintStyle* mutablePaintStyle() noexcept override { return &paint_style_; }
 
         virtual void setCGStyle(GraphicContext& gc) const noexcept override {
-            m_paint_style.setGCSettings(gc);
+            paint_style_.setGCSettings(gc);
         }
 
-        bool doesFill() const noexcept { return m_valid == true && m_paint_style.doesFill(); }
-        bool doesStroke() const noexcept { return m_valid == true && m_paint_style.doesStroke(); }
+        bool doesFill() const noexcept { return valid_ == true && paint_style_.doesFill(); }
+        bool doesStroke() const noexcept { return valid_ == true && paint_style_.doesStroke(); }
 
         void setPaintStyleByXMLElement(tinyxml2::XMLElement* xml_element) noexcept override {
-            m_paint_style.setByXMLElement(xml_element);
+            paint_style_.setByXMLElement(xml_element);
         }
     };
 

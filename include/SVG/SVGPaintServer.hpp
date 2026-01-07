@@ -1,10 +1,10 @@
 //
-// SVGPaintServer.hpp
+//  SVGPaintServer.hpp
 //
-// Created by Roald Christesen on 11.01.2025
-// Copyright (C) 2025 Roald Christesen. All rights reserved.
+//  Created by Roald Christesen on 11.01.2025
+//  Copyright (C) 2025 Roald Christesen. All rights reserved.
 //
-// This file is part of GrainLib, see <https://grain.one>
+//  This file is part of GrainLib, see <https://grain.one>
 //
 
 #ifndef GrainSVGPaintServer_hpp
@@ -29,11 +29,11 @@ namespace Grain {
         };
 
     protected:
-        PaintServerType m_server_type = PaintServerType::Underfined;
-        String m_id;
-        String m_class;
-        String m_style;
-        String m_href;
+        PaintServerType server_type_ = PaintServerType::Underfined;
+        String id_;
+        String class_;
+        String style_;
+        String href_;
 
     public:
         SVGPaintServer() noexcept = default;

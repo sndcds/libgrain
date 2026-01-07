@@ -249,8 +249,8 @@ namespace Grain {
             // Smooth the gradient
             rgb.setKelvin(k0 + (k1 - k0) / static_cast<float>(resolution - 1) * static_cast<float>(i));
             hsv.set(rgb);
-            hsv.m_data[1] *= s;
-            hsv.m_data[2] *= v;
+            hsv.data_[1] *= s;
+            hsv.data_[2] *= v;
             rgb = hsv;
 
             addStop(static_cast<float>(i) / static_cast<float>(resolution - 1), rgb);

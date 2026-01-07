@@ -11,7 +11,12 @@
 #include "GUI/Event.hpp"
 #include "2d/Rect.hpp"
 #include "String/StringList.hpp"
+#include "String/StringList.hpp"
 #include "Graphic/AppleCGContext.hpp"
+#include "Color/RGB.hpp"
+
+
+// TODO: Implement dragging functionality if needed.
 
 
 namespace Grain {
@@ -348,6 +353,8 @@ if (i > 10) {
                     case NSBackTabCharacter:
                         m_component->gotoPreviousKeyComponent();
                         return;
+                    default:
+                      break;
                 }
             }
         }
@@ -417,19 +424,17 @@ if (i > 10) {
 
 
 - (BOOL)performDragOperation:(id <NSDraggingInfo>)sender {
+    std::cout << "performDragOperation" << std::endl;
     if ([sender draggingSource] != self) {
-
         // NSDragOperation source_drag_mask = [sender draggingSourceOperationMask];    TODO: ?
         NSPasteboard *pasteboard = [sender draggingPasteboard];
 
         if ([[pasteboard types] containsObject:NSPasteboardTypeFileURL]) {
-
-            NSArray<Class> *classes = @[[NSURL class]];
-            NSDictionary *options = @{};
-            NSArray<NSURL*> *urls = [pasteboard readObjectsForClasses:classes options:options];
+            NSArray<Class>* classes = @[[NSURL class]];
+            NSDictionary* options = @{};
+            NSArray<NSURL*>* urls = [pasteboard readObjectsForClasses:classes options:options];
             auto n = static_cast<int32_t>([urls count]);
             if (n > 0) {
-
                 Grain::StringList result_file_paths(n);
                 for (int32_t i = 0; i < n; i++) {
                     result_file_paths.pushString([[[urls objectAtIndex:i] path] UTF8String]);

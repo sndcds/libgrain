@@ -40,9 +40,9 @@ namespace Grain {
     public:
         HSV() noexcept {}
         HSV(float h, float s, float v) noexcept {
-            m_data[0] = h - static_cast<int32_t>(h);
-            m_data[1] = s;
-            m_data[2] = v;
+            data_[0] = h - static_cast<int32_t>(h);
+            data_[1] = s;
+            data_[2] = v;
         }
         HSV(const RGB& rgb) noexcept { set(rgb); }
         HSV(const YUV& yuv, Color::Space yuv_color_space) noexcept { set(yuv, yuv_color_space); }
@@ -68,51 +68,51 @@ namespace Grain {
         }
 
         friend std::ostream& operator << (std::ostream& os,const  HSV& o) {
-            return os << o.m_data[0] << ", " << o.m_data[1] << ", " << o.m_data[2];
+            return os << o.data_[0] << ", " << o.data_[1] << ", " << o.data_[2];
         }
 
 
         HSV& operator = (const RGB& v);
 
         bool operator == (const HSV& v) const {
-            return m_data[0] == v.m_data[0] && m_data[1] == v.m_data[1] && m_data[2] == v.m_data[2];
+            return data_[0] == v.data_[0] && data_[1] == v.data_[1] && data_[2] == v.data_[2];
         }
 
         bool operator != (const HSV& v) const {
-            return m_data[0] != v.m_data[0] || m_data[1] != v.m_data[1] || m_data[2] != v.m_data[2];
+            return data_[0] != v.data_[0] || data_[1] != v.data_[1] || data_[2] != v.data_[2];
         }
 
 
-        float hue() const noexcept { return m_data[0]; }
-        float saturation() const noexcept { return m_data[1]; }
-        float value() const noexcept { return m_data[2]; }
+        float hue() const noexcept { return data_[0]; }
+        float saturation() const noexcept { return data_[1]; }
+        float value() const noexcept { return data_[2]; }
 
-        float* mutDataPtr() noexcept { return m_data; }
-        const float* dataPtr() const noexcept { return m_data; }
+        float* mutDataPtr() noexcept { return data_; }
+        const float* dataPtr() const noexcept { return data_; }
 
         bool isSame(const HSV& hsv) const noexcept {
-            return (std::fabs(m_data[0] - hsv.m_data[0]) < std::numeric_limits<float>::min() &&
-                    std::fabs(m_data[1] - hsv.m_data[1]) < std::numeric_limits<float>::min() &&
-                    std::fabs(m_data[2] - hsv.m_data[2]) < std::numeric_limits<float>::min());
+            return (std::fabs(data_[0] - hsv.data_[0]) < std::numeric_limits<float>::min() &&
+                    std::fabs(data_[1] - hsv.data_[1]) < std::numeric_limits<float>::min() &&
+                    std::fabs(data_[2] - hsv.data_[2]) < std::numeric_limits<float>::min());
         }
 
 
         void set(float h, float s, float v) noexcept {
-            m_data[0] = h - static_cast<int32_t>(h);
-            m_data[1] = s;
-            m_data[2] = v; }
+            data_[0] = h - static_cast<int32_t>(h);
+            data_[1] = s;
+            data_[2] = v; }
 
         void set(const float* comp) noexcept {
             if (comp != nullptr) {
-                m_data[0] = comp[0];
-                m_data[1] = comp[1];
-                m_data[2] = comp[2];
+                data_[0] = comp[0];
+                data_[1] = comp[1];
+                data_[2] = comp[2];
             }
         }
 
-        void setHue(float h) noexcept { m_data[0] = h - std::floor(h); }
-        void setSaturation(float s) noexcept { m_data[1] = s; }
-        void setValue(float v) noexcept { m_data[2] = v; }
+        void setHue(float h) noexcept { data_[0] = h - std::floor(h); }
+        void setSaturation(float s) noexcept { data_[1] = s; }
+        void setValue(float v) noexcept { data_[2] = v; }
 
         void set(const RGB& rgb) noexcept;
         void set(const HSL& hsl) noexcept;
@@ -126,14 +126,14 @@ namespace Grain {
 
         //
 
-        void addHue(float v) noexcept { setHue(m_data[0] + v); }
-        void mulSaturation(float f) noexcept { m_data[1] *= f; }
-        void mulValue(float f) noexcept { m_data[2] *= f; }
+        void addHue(float v) noexcept { setHue(data_[0] + v); }
+        void mulSaturation(float f) noexcept { data_[1] *= f; }
+        void mulValue(float f) noexcept { data_[2] *= f; }
 
         void rotateHue(float angle) {
-            m_data[0] = fmod(m_data[0] + angle / 360.0f, 1.0);
-            if (m_data[0] < 0.0f) {
-                m_data[0] += 360.0f;
+            data_[0] = fmod(data_[0] + angle / 360.0f, 1.0);
+            if (data_[0] < 0.0f) {
+                data_[0] += 360.0f;
             }
         }
 
@@ -141,14 +141,14 @@ namespace Grain {
             if (t < 0.0f) t = 0.0f; else if (t > 1.0f) t = 1.0f;
             float ti = 1.0f - t;
             HSV result;
-            result.m_data[0] = m_data[0] * ti + hsv.m_data[0] * t;
-            result.m_data[1] = m_data[1] * ti + hsv.m_data[1] * t;
-            result.m_data[2] = m_data[2] * ti + hsv.m_data[2] * t;
+            result.data_[0] = data_[0] * ti + hsv.data_[0] * t;
+            result.data_[1] = data_[1] * ti + hsv.data_[1] * t;
+            result.data_[2] = data_[2] * ti + hsv.data_[2] * t;
             return result;
         }
 
     public:
-        float m_data[3]{};
+        float data_[3]{};
     };
 
 

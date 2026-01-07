@@ -8,8 +8,9 @@
 //
 
 //  See: https://www.w3.org/TR/SVG2/
-//  TODO: Support z-index.
-//  TODO: Transformation class or struct!
+//  Todo: Support z-index.
+//  Todo: Support use tag.
+//  Todo: Transformation class or struct!
 
 #ifndef GrainSVG_hpp
 #define GrainSVG_hpp
@@ -122,11 +123,11 @@ namespace Grain {
         };
 
     protected:
-        int32_t m_value_count = 0;
-        char m_buffer[256];
-        int32_t m_buffer_pos = 0;
-        const char* m_read_ptr = nullptr;
-        bool m_run = false;
+        int32_t value_count_ = 0;
+        char buffer_[256];
+        int32_t buffer_pos_ = 0;
+        const char* read_ptr_ = nullptr;
+        bool run_ = false;
 
 
     public:public:
@@ -137,7 +138,7 @@ namespace Grain {
         ErrorCode setup(const char* str) noexcept;
         int32_t next(double& out_next) noexcept;
 
-        int32_t valueCount() const noexcept { return m_value_count; }
+        int32_t valueCount() const noexcept { return value_count_; }
     };
 
 
@@ -159,18 +160,17 @@ namespace Grain {
         };
 
     protected:
-        int32_t m_function_count = 0;
-        bool m_run = false;
-        char m_function_name[kMaxFunctionNameLength + 1];
-        char m_function_data[kMaxFunctionDataLength + 1];
+        int32_t function_count_ = 0;
+        bool run_ = false;
+        char function_name_[kMaxFunctionNameLength + 1];
+        char function_data_[kMaxFunctionDataLength + 1];
 
-        const char* m_read_ptr = nullptr;
-        const char* m_function_name_ptr = nullptr;
-        int32_t m_function_name_length = 0;
-        const char* m_data_ptr = nullptr;
-        int32_t m_data_length = 0;
-        int32_t m_err_n = 0;
-
+        const char* read_ptr_ = nullptr;
+        const char* function_name_ptr_ = nullptr;
+        int32_t function_name_length_ = 0;
+        const char* data_ptr_ = nullptr;
+        int32_t data_length_ = 0;
+        int32_t err_n_ = 0;
 
     public:public:
         SVGFunctionValuesParser() = default;
@@ -179,9 +179,9 @@ namespace Grain {
 
         ErrorCode setup(const char* str) noexcept;
         int32_t nextFunction() noexcept;
-        const char* functionName() noexcept { return m_function_name; }
-        const char* functionData() noexcept { return m_function_data; }
-        int32_t functionCount() const noexcept { return m_function_count; }
+        const char* functionName() noexcept { return function_name_; }
+        const char* functionData() noexcept { return function_data_; }
+        int32_t functionCount() const noexcept { return function_count_; }
         int32_t extractCSSValues(int32_t max, CSSValue* out_values) noexcept;
     };
 
@@ -222,38 +222,38 @@ namespace Grain {
         };
 
     protected:
-        SVG* m_svg = nullptr;           ///< Pointer to the SVG object hosting the parser
-        const char* m_data = nullptr;   ///< Pointer to path data
-        char m_curr_command;            ///< Current path command. Used in parsing path data
-        char m_next_command;            ///< The next path command. Used in parsing path data
-        bool m_relative_state;          ///< Flag signaling, if the current path command is reative or absolute
-        bool m_value_state;             ///< Flag signaling, if parser is collecting a value
-        char m_value_str[kMaxValueStrLength]{};
-        int m_value_str_index;
-        List<double>m_values;
+        SVG* svg_ = nullptr;           ///< Pointer to the SVG object hosting the parser
+        const char* data_ = nullptr;   ///< Pointer to path data
+        char curr_command_;            ///< Current path command. Used in parsing path data
+        char next_command_;            ///< The next path command. Used in parsing path data
+        bool relative_state_;          ///< Flag signaling, if the current path command is reative or absolute
+        bool value_state_;             ///< Flag signaling, if parser is collecting a value
+        char value_str_[kMaxValueStrLength]{};
+        int value_str_index_;
+        List<double>values_;
 
-        GraphicCompoundPath* m_compound_path = nullptr;
-        GraphicPath* m_current_path = nullptr;
+        GraphicCompoundPath* compound_path_ = nullptr;
+        GraphicPath* current_path_ = nullptr;
 
-        Vec2d m_curr_pos = { 0.0, 0.0 };
-        int32_t _m_unhandled_command_count = 0;
+        Vec2d curr_pos_ = { 0.0, 0.0 };
+        int32_t unhandled_command_count_ = 0;
 
     public:
         explicit SVGPathParser(SVG* svg, GraphicCompoundPath* out_compound_path) {
-            m_svg = svg;
-            m_curr_command = 0;
-            m_next_command = 0;
-            m_relative_state = false;
-            m_value_state = false;
-            m_value_str_index = 0;
-            m_compound_path = out_compound_path;
+            svg_ = svg;
+            curr_command_ = 0;
+            next_command_ = 0;
+            relative_state_ = false;
+            value_state_ = false;
+            value_str_index_ = 0;
+            compound_path_ = out_compound_path;
         }
 
         ~SVGPathParser() {
         }
 
         void setValuesCapacity() {
-            m_values.reserve(64);
+            values_.reserve(64);
         }
 
         bool booleanAtIndex(int32_t index);
@@ -331,18 +331,18 @@ namespace Grain {
         };
 
     protected:
-        String m_file_path;
-        tinyxml2::XMLDocument* m_xml_doc = nullptr;
+        String file_path_;
+        tinyxml2::XMLDocument* xml_doc_ = nullptr;
 
-        SVGRootElement* m_svg_root = nullptr;   ///< The SVG root group
-        int32_t m_group_iteration_depth = 0;
+        SVGRootElement* svg_root_ = nullptr;   ///< The SVG root group
+        int32_t group_iteration_depth_ = 0;
 
-        ObjectList<SVGPaintServer*> m_paint_servers;  ///< List of paint servers
+        ObjectList<SVGPaintServer*> paint_servers_;  ///< List of paint servers
 
         // Error handling
-        int32_t m_xml_error_id{};       ///< An error id
-        String m_xml_error_message;     ///< An error message as text
-        int32_t m_xml_error_line{};     ///< Line number in file, where the error occured
+        int32_t xml_error_id_{};       ///< An error id
+        String xml_error_message_;     ///< An error message as text
+        int32_t xml_error_line_{};     ///< Line number in file, where the error occured
 
     public:
         SVG(const String& file_path) noexcept;
@@ -371,9 +371,9 @@ namespace Grain {
         void clearError() noexcept;
         ErrorCode parse() noexcept;
 
-        int32_t groupIterationDepth() const noexcept { return m_group_iteration_depth; }
-        void incGroupIterationDepth() noexcept { m_group_iteration_depth++; }
-        void decGroupIterationDepth() noexcept { m_group_iteration_depth--; }
+        int32_t groupIterationDepth() const noexcept { return group_iteration_depth_; }
+        void incGroupIterationDepth() noexcept { group_iteration_depth_++; }
+        void decGroupIterationDepth() noexcept { group_iteration_depth_--; }
 
         void draw(GraphicContext& gc) noexcept;
 

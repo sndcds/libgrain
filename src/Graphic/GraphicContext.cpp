@@ -1123,31 +1123,36 @@ namespace Grain {
         }
     }
 
-    void GraphicContext::drawHorizontalKeyboard(int32_t low_pitch, int32_t high_pitch, int32_t marked_pitch, double begin_freq, double end_freq, double min_x, double max_x, double y0, double y1, const RGB& light_color, const RGB& dark_color, const RGB& bg_color, const RGB& mark_color, float alpha) noexcept {
-        low_pitch = std::clamp<int16_t>(low_pitch, 1, 255);
-        high_pitch = std::clamp<int16_t>(high_pitch, low_pitch, 255);
+    void GraphicContext::drawHorizontalKeyboard(
+        int32_t low_pitch, int32_t high_pitch, int32_t marked_pitch,
+        float begin_freq, float end_freq,
+        double min_x, double max_x, double y0, double y1,
+        const RGBA& light_color, const RGBA& dark_color,
+        const RGBA& bg_color, const RGBA& mark_color) noexcept
+    {
+        low_pitch = std::clamp<int32_t>(low_pitch, 1, 255);
+        high_pitch = std::clamp<int32_t>(high_pitch, low_pitch, 255);
 
         save();
         setFillGrayAndAlpha(0, 0.06f);
         setStrokeGrayAndAlpha(0, 0.06f);
 
         for (int32_t i = low_pitch; i <= high_pitch; i++) {
-
-            double freq = Audio::freqFromPitch(i);
-            double lowFreq = Audio::shiftetFreqByCent(freq, -50.0);
-            double highFreq = Audio::shiftetFreqByCent(freq, 50.0);
+            float freq = Audio::freqFromPitch(static_cast<float>(i));
+            float lowFreq = Audio::shiftetFreqByCent(freq, -50.0);
+            float highFreq = Audio::shiftetFreqByCent(freq, 50.0);
             double x0 = Freq::freqToPos(lowFreq, begin_freq, end_freq, min_x, max_x);
             double x1 = Freq::freqToPos(highFreq, begin_freq, end_freq, min_x, max_x);
             double w = x1 - x0;
 
             if (i == marked_pitch) {
-                setFillRGBAndAlpha(mark_color,  alpha + (1.0f - alpha) / 3);
+                // setFillRGBA(mark_color,  alpha + (1.0f - alpha) / 3); TODO: !!!!
             }
             else if (Audio::pitchIsBlackKey(i)) {
-                setFillRGBAndAlpha(dark_color, alpha);
+                setFillRGBA(dark_color);
             }
             else {
-                setFillRGBAndAlpha(light_color, alpha);
+                setFillRGBA(light_color);
             }
             fillRect(x0, y0, w, y1 - y0);
 
@@ -1156,6 +1161,84 @@ namespace Grain {
         }
 
         restore();
+    }
+
+    void GraphicContext::drawCircleSlider(
+        float offset, float value,
+        const Vec2d& center, float radius,
+        float track_size, float indicator_size,
+        float start_angle, float angle_span,
+        const RGBA& track_color, const RGBA& indicator_color,
+        const RGBA& handle_color, bool enabled) noexcept
+    {
+        double half_track_size = 0.5 * track_size;
+        double half_indicator_size = 0.5 * indicator_size;
+        double track_outer_radius = radius - half_indicator_size + half_track_size;
+        double track_inner_radius = track_outer_radius - track_size;
+        double track_radius = track_inner_radius + half_track_size;
+
+        // Draw track
+        double a1 = start_angle;
+        double a2 = offset > 0 ? start_angle + angle_span * (value > offset ? offset : value) : start_angle;
+        double a3 = start_angle + angle_span * (value > offset ? value : offset);
+        double a4 = start_angle + angle_span;
+
+        setFillRGBA(track_color);
+        if (a2 > a1) {
+            fillRing(center, track_inner_radius, track_outer_radius, a1, a2 - a1);
+        }
+
+        if (a3 < a4) {
+            fillRing(center, track_inner_radius, track_outer_radius, a3, a4 - a3);
+        }
+
+        {
+            Vec2d v(track_radius, 0);
+            v.rotate(start_angle);
+            v += center;
+            fillCircle(v, half_track_size);
+        }
+
+        {
+            Vec2d v(track_radius, 0);
+            v.rotate(start_angle + angle_span);
+            v += center;
+            fillCircle(v, half_track_size);
+        }
+
+
+        // Draw the indicator
+        if (std::fabs(a2 - a3) > FLT_EPSILON || !enabled) {
+            setFillRGBA(indicator_color);
+            fillRing(center, track_inner_radius, track_outer_radius, a2, a3 - a2);
+
+            double a = start_angle + value * angle_span;
+            bool flag = std::fabs(a - a2) > std::fabs(a - a3);
+
+            if (flag || !enabled) {
+                Vec2d v(track_radius, 0);
+                v.rotate(a2);
+                v += center;
+                fillCircle(v, half_track_size);
+            }
+
+            if (!flag || !enabled) {
+                Vec2d v(track_radius, 0);
+                v.rotate(a3);
+                v += center;
+                fillCircle(v, half_track_size);
+            }
+        }
+
+        // Draw the handle
+        if (enabled) {
+            Vec2d v(radius - half_indicator_size, 0);
+            v.rotate(start_angle + value * angle_span);
+            v += center;
+
+            setFillRGBA(handle_color);
+            fillCircle(v, half_indicator_size);
+        }
     }
 
 

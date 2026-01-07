@@ -1,10 +1,10 @@
 //
-// SVGEllipseElement.cpp
+//  SVGEllipseElement.cpp
 //
-// Created by Roald Christesen on 30.12.2024
-// Copyright (C) 2025 Roald Christesen. All rights reserved.
+//  Created by Roald Christesen on 30.12.2024
+//  Copyright (C) 2025 Roald Christesen. All rights reserved.
 //
-// This file is part of GrainLib, see <https://grain.one>
+//  This file is part of GrainLib, see <https://grain.one>
 //
 
 #include "SVG/SVGEllipseElement.hpp"
@@ -14,14 +14,14 @@
 namespace Grain {
 
     void SVGEllipseElement::fill(SVG* svg, GraphicContext& gc) noexcept {
-        if (m_valid) {
-            gc.fillEllipse(m_calc_center, m_calc_rx, m_calc_ry);
+        if (valid_) {
+            gc.fillEllipse(calc_center_, calc_rx_, calc_ry_);
         }
     }
 
     void SVGEllipseElement::stroke(SVG* svg, GraphicContext& gc) noexcept {
-        if (m_valid) {
-            gc.strokeEllipse(m_calc_center, m_calc_rx, m_calc_ry);
+        if (valid_) {
+            gc.strokeEllipse(calc_center_, calc_rx_, calc_ry_);
         }
     }
 
