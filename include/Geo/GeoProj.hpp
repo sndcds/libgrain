@@ -145,11 +145,11 @@ namespace Grain {
             }
         }
 
-        bool transform(const RangeRectd& range_rect, RangeRectd& out_range_rect, Direction direction = Direction::Forward) noexcept;
-        bool transform(RangeRectd& range_rect, Direction direction = Direction::Forward) noexcept;
+        bool transform(const Bounds2d& bounds, Bounds2d& out_bounds, Direction direction = Direction::Forward) noexcept;
+        bool transform(Bounds2d& bounds, Direction direction = Direction::Forward) noexcept;
 
-        bool transform(const RangeRectFix& range_rect, RangeRectFix& out_range_rect, Direction direction = Direction::Forward) noexcept;
-        bool transform(RangeRectFix& range_rect, Direction direction = Direction::Forward) noexcept;
+        bool transform(const Bounds2Fix& bounds, Bounds2Fix& out_bounds, Direction direction = Direction::Forward) noexcept;
+        bool transform(Bounds2Fix& bounds, Direction direction = Direction::Forward) noexcept;
 
         bool transform(Quadrilateral& quadrilateral, Direction direction = Direction::Forward) noexcept;
 
@@ -169,12 +169,12 @@ namespace Grain {
             return isWGS84Lon(lon) && isWGS84Lat(lat);
         }
 
-        static bool isWGS84Bbox(const RangeRectd& bounding_box) {
+        static bool isWGS84Bbox(const Bounds2d& bounding_box) {
             return isWGS84Pos(bounding_box.min_x_, bounding_box.min_y_) &&
                    isWGS84Pos(bounding_box.max_x_, bounding_box.max_y_);
         }
 
-        static double ratioByMercatorBounds(const RangeRectd& bounds) noexcept;
+        static double ratioByMercatorBounds(const Bounds2d& bounds) noexcept;
 
         static bool earthProject4326To3857(const Vec2d& pos, Vec2d& out_pos) noexcept;
         static bool earthProject3857To4326(const Vec2d& pos, Vec2d& out_pos) noexcept;

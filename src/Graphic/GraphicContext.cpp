@@ -25,6 +25,7 @@
 #include "2d/GraphicPathPoint.hpp"
 #include "2d/Line.hpp"
 #include "2d/Circle.hpp"
+#include "2d/Ring.hpp"
 #include "2d/Triangle.hpp"
 #include "Bezier/Bezier.hpp"
 #include "2d/CatmullRomCurve.hpp"
@@ -990,10 +991,20 @@ namespace Grain {
         strokeCircle(center.x_, center.y_, radius);
     }
 
-    void GraphicContext::fillRing(const Vec2d& center, double inner_radius, double outer_radius, double angle, double span) noexcept {
+    void GraphicContext::fillRing(const Ringd& ring, double angle, double span) noexcept {
         beginPath();
-        addRingPath(center, inner_radius, outer_radius, angle, span);
+        addRingPath(ring, angle, span);
         fillPath();
+    }
+
+    void GraphicContext::fillHueRing(const Ringd& ring) noexcept {
+        Image *image = App::hueColorWHeelImage();
+        if (image) {
+            Rectd rect;
+            rect.set(ring.center_, ring.outer_radius_);
+            clipRing(ring);
+            drawImage(image, rect, 1);
+        }
     }
 
     void GraphicContext::drawIconInRoundRect(const Icon* icon, const Rectd& rect, double radius1, double radius2, double radius3, double radius4, const RGB& bg_color, const RGB& icon_color, const RGB& border_color, double border_width, float bg_alpha, float border_alpha, float icon_alpha) noexcept {
@@ -1052,7 +1063,7 @@ namespace Grain {
             fillRect(textRect);
 
             textRect.insetLeft(5);
-            drawTextInRect(text, textRect, Alignment::Left, App::uiFont(), m_debug_fg_color);
+            drawTextInRect(text, textRect, Alignment::Left, App::uiFont(), m_debug_fg_color, 1);
 
             pos.y_ += textRect.height_ + spacing;
         }
@@ -1096,14 +1107,15 @@ namespace Grain {
         clipPath();
     }
 
-    void GraphicContext::clipCircle(double x, double y, double radius) noexcept {
-        addCirclePath(x, y, radius);
-        clipPath();
-    }
-
     void GraphicContext::clipCircle(const Vec2d& center, double radius) noexcept {
         addCirclePath(center, radius);
         clipPath();
+    }
+
+    void GraphicContext::clipRing(const Ringd& ring) noexcept {
+        addCirclePath(ring.center_, ring.outer_radius_);
+        addCirclePath(ring.center_, ring.inner_radius_);
+        clipPathEvenOdd();
     }
 
     void GraphicContext::rotateAroundPivot(const Vec2d& pivot, double angle) noexcept {
@@ -1163,20 +1175,14 @@ namespace Grain {
         restore();
     }
 
-    void GraphicContext::drawCircleSlider(
+    void GraphicContext::drawRingSlider(
+        const Ringd& ring,
+        float indicator_radius,
         float offset, float value,
-        const Vec2d& center, float radius,
-        float track_size, float indicator_size,
         float start_angle, float angle_span,
         const RGBA& track_color, const RGBA& indicator_color,
         const RGBA& handle_color, bool enabled) noexcept
     {
-        double half_track_size = 0.5 * track_size;
-        double half_indicator_size = 0.5 * indicator_size;
-        double track_outer_radius = radius - half_indicator_size + half_track_size;
-        double track_inner_radius = track_outer_radius - track_size;
-        double track_radius = track_inner_radius + half_track_size;
-
         // Draw track
         double a1 = start_angle;
         double a2 = offset > 0 ? start_angle + angle_span * (value > offset ? offset : value) : start_angle;
@@ -1185,13 +1191,13 @@ namespace Grain {
 
         setFillRGBA(track_color);
         if (a2 > a1) {
-            fillRing(center, track_inner_radius, track_outer_radius, a1, a2 - a1);
+            fillRing(ring, a1, a2 - a1);
         }
 
         if (a3 < a4) {
-            fillRing(center, track_inner_radius, track_outer_radius, a3, a4 - a3);
+            fillRing(ring, a3, a4 - a3);
         }
-
+        /* TODO: Refactor
         {
             Vec2d v(track_radius, 0);
             v.rotate(start_angle);
@@ -1210,7 +1216,7 @@ namespace Grain {
         // Draw the indicator
         if (std::fabs(a2 - a3) > FLT_EPSILON || !enabled) {
             setFillRGBA(indicator_color);
-            fillRing(center, track_inner_radius, track_outer_radius, a2, a3 - a2);
+            fillRing(ring, a2, a3 - a2);
 
             double a = start_angle + value * angle_span;
             bool flag = std::fabs(a - a2) > std::fabs(a - a3);
@@ -1239,6 +1245,7 @@ namespace Grain {
             setFillRGBA(handle_color);
             fillCircle(v, half_indicator_size);
         }
+        */
     }
 
 

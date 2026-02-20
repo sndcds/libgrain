@@ -20,13 +20,12 @@
 #include "Math/Mat3.hpp"
 #include "2d/Dimension.hpp"
 #include "Type/Range.hpp"
-#include "2d/RangeRect.hpp"
+#include "2d/Bounds2.hpp"
 #include "String/String.hpp"
 
 
 namespace Grain {
 
-    // Forward declarations
     class RGB;
     class RGBRamp;
     class RGBA;
@@ -34,6 +33,7 @@ namespace Grain {
     class GraphicContext;
     class Gradient;
     class ImageAccess;
+    class Quadrilateral;
 
     class cairo_surface_t;
 
@@ -330,7 +330,8 @@ namespace Grain {
 
         bool copyDataFromImage(Image* image);
 
-        void fillHueWheelRect(float saturation = 1, float value = 0.7f) noexcept;
+        void fillHueWheel(float saturation = 1, float value = 0.7f) noexcept;
+        void fillOKLchWheel(float chroma = 1, float lightness = 0.7f) noexcept;
         void fillAudioLocationRect(const RGBRamp& color_ramp) noexcept;
 
         ErrorCode drawImage(Image* image, const Rectd& rect) noexcept;
@@ -348,21 +349,12 @@ namespace Grain {
         ErrorCode applyMatrix(const Mat3f& matrix) noexcept;
         ErrorCode applyFilter() noexcept;
 
-        ErrorCode convolution(int32_t channel, const Dimensioni& kernel_size, const float* kernel_data, Image& out_image) noexcept;
-        void floodFill(const Vec2i& pos, const RGB& color, Image& out_image) noexcept;
+        ErrorCode convolution(int32_t channel, const Dimensioni& kernel_size, const float* kernel_data, Image* out_image) noexcept;
+        void floodFill(const Vec2i& pos, const RGB& color, Image* out_image) noexcept;
 
 
         [[nodiscard]] Image* extractRegion(const Recti& region) noexcept;
         ErrorCode downscale(Image* dst_image) noexcept;
-
-
-        /* TODO !!!!!!
-        bool copyToNSBitmapImageRep(NSBitmapImageRep* bitmap_rep);
-        bool copyFromNSBitmapImageRep(NSBitmapImageRep* bitmap_rep);
-        NSBitmapImageRep* createNSBitmapImageRep();
-        NSBitmapImageRep* createNSBitmapImageRep1(bool use_alpha);
-        NSBitmapImageRep* createNSBitmapImageRepWithBPS(int16_t bits_per_sample);
-        */
 
 #if defined(__APPLE__) && defined(__MACH__)
         bool macos_buildCGImageRef() noexcept;
@@ -377,7 +369,7 @@ namespace Grain {
         ErrorCode writeWebP(const String& file_path, float quality, bool use_alpha);
         ErrorCode writeTypedTiff(const String& file_path, Image::PixelType pixel_type, bool drop_alpha = false) noexcept;
 
-        ErrorCode writeCVF2File(const String& cvf2_file_path, int32_t srid, const RangeRectFix& bbox, LengthUnit length_unit, int32_t z_decimals, int32_t min_digits, int32_t max_digits) noexcept;
+        ErrorCode writeCVF2File(const String& cvf2_file_path, int32_t srid, const Bounds2Fix& bbox, LengthUnit length_unit, int32_t z_decimals, int32_t min_digits, int32_t max_digits) noexcept;
 
 
         [[nodiscard]] static FileType fileTypeByFormatName(const String& file_format_name) noexcept;
@@ -389,6 +381,8 @@ namespace Grain {
         [[nodiscard]] static Image* createFromFile(const String& file_path, Image::PixelType pixel_type);
         [[nodiscard]] static Image* createFromRawFile(const String& file_path, Image::PixelType pixel_type);
         [[nodiscard]] Image* copyWithNewSettings(Color::Model color_model, PixelType pixel_type) noexcept;
+
+        ErrorCode scanQuadrilateral(Image* src_image, Quadrilateral& quadrilateral) noexcept;
 
 
         [[nodiscard]] static int32_t pixelTypeByteSize(PixelType pixel_type) {
@@ -498,24 +492,24 @@ namespace Grain {
 
         bool isUsable() const { return m_usable; }
 
-        inline int32_t x() const { return x_; }
-        inline float xNrm() const { return static_cast<float>(x_) / width_; }
-        inline int32_t flippedX() const { return width_ - x_ - 1; }
-        inline int32_t y() const { return y_; }
-        inline float yNrm() const { return static_cast<float>(y_) / height_; }
-        inline int32_t flippedY() const { return height_ - y_ - 1; }
-        inline int32_t width() const { return width_; }
-        inline int32_t height() const { return height_; }
-        inline void pos(Vec2i& out_pos) const { out_pos.x_ = x_; out_pos.y_ = y_; }
-        inline void pos(Vec2d& out_pos) const { out_pos.x_ = x_; out_pos.y_ = y_; }
-        inline int32_t regionWidth() const { return m_region_width; }
-        inline int32_t regionHeight() const { return m_region_height; }
+        int32_t x() const { return x_; }
+        float xNrm() const { return static_cast<float>(x_) / width_; }
+        int32_t flippedX() const { return width_ - x_ - 1; }
+        int32_t y() const { return y_; }
+        float yNrm() const { return static_cast<float>(y_) / height_; }
+        int32_t flippedY() const { return height_ - y_ - 1; }
+        int32_t width() const { return width_; }
+        int32_t height() const { return height_; }
+        void pos(Vec2i& out_pos) const { out_pos.x_ = x_; out_pos.y_ = y_; }
+        void pos(Vec2d& out_pos) const { out_pos.x_ = x_; out_pos.y_ = y_; }
+        int32_t regionWidth() const { return m_region_width; }
+        int32_t regionHeight() const { return m_region_height; }
 
         double xFactor() const { return m_region_width > 0 ? static_cast<double>(x_ - m_region_x1) / (m_region_width - 1) : 1; }
         double yFactor() const { return m_region_height > 0 ? static_cast<double>(y_ - m_region_y1) / (m_region_height - 1) : 1; }
 
-        inline bool isOddRow() const { return y() & 0x1; };
-        inline bool isEvenRow() const { return !(y() & 0x1); };
+        bool isOddRow() const { return y() & 0x1; };
+        bool isEvenRow() const { return !(y() & 0x1); };
 
         bool setX(int32_t x) { return setPos(x, y()); }
         bool setY(int32_t y) { return setPos(x(), y); }
@@ -533,16 +527,13 @@ namespace Grain {
 
         uint8_t* ptrAt(int32_t x, int32_t y);
 
-        inline void read() { (this->*_m_transfer_read_func)(); }
+        void read() { (this->*_m_transfer_read_func)(); }
         void readInterpolated(const Vec2d& pos);
-        inline void write() { (this->*_m_transfer_write_func)(); }
+        void write() { (this->*_m_transfer_write_func)(); }
         void clear();
 
         void setRGB(const Vec2i& pos, const RGB& color, float alpha = 1) noexcept;
         void setRGBInterpolated(const Vec2d& pos, const RGB& color, float alpha = 1) noexcept;
-
-        void invert();
-
 
     private:
         void _updatePtr();

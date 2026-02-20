@@ -70,7 +70,7 @@ protected:
     uint32_t width_ = 0;            ///< Field width
     uint32_t height_ = 0;           ///< Field height
     int32_t srid_ = 0;              ///< Spatial Reference System Identifier (SRID)
-    RangeRectFix xy_range_;         ///< Range of XY values in this file
+    Bounds2Fix xy_range_;         ///< Range of XY values in this file
     int32_t undefined_values_count_ = 0;   ///< Number of undefined values in file
     int64_t min_value_ = 0;         ///< Minimum value in value field
     int64_t max_value_ = 0;         ///< Maximum value in value field
@@ -123,7 +123,7 @@ public:
     uint32_t width() const noexcept { return width_; }
     uint32_t height() const noexcept { return height_; }
     uint32_t valueCount() const noexcept { return width_ * height_; }
-    RangeRectFix range() const noexcept { return xy_range_; }
+    Bounds2Fix range() const noexcept { return xy_range_; }
     Fix minX() const noexcept { return xy_range_.min_x_; }
     Fix minY() const noexcept { return xy_range_.min_y_; }
     Fix maxX() const noexcept { return xy_range_.max_x_; }
@@ -146,7 +146,7 @@ public:
 
     int32_t readRow(int32_t y);
 
-    bool hitBbox(const RangeRectd& bbox) const noexcept {
+    bool hitBbox(const Bounds2d& bbox) const noexcept {
         if (xy_range_.min_x_.asDouble() <= bbox.max_x_ &&
             xy_range_.min_y_.asDouble() <= bbox.max_y_ &&
             xy_range_.max_x_.asDouble() >= bbox.min_x_ &&

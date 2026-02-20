@@ -14,7 +14,7 @@
 #include "Type/Type.hpp"
 #include "String/String.hpp"
 #include "Core/Log.hpp"
-#include "2d/RangeRect.hpp"
+#include "2d/Bounds2.hpp"
 #include "Type/Flags.hpp"
 #include "File/File.hpp"
 
@@ -67,7 +67,7 @@ protected:
 
     // Feature data
     int32_t srid_{};                ///< Spatial Reference System Identifier (SRID)
-    RangeRectFix bbox_{};           ///< Bounding box for the region. If used in a geographic context, these coordinates must be in the SRID specified by `srid_`
+    Bounds2Fix bbox_{};           ///< Bounding box for the region. If used in a geographic context, these coordinates must be in the SRID specified by `srid_`
 
     // Value data
     T min_value_{};                 ///< Min value in the grid. Only valid after reading from file or after using updateMinMax
@@ -249,8 +249,8 @@ public:
 
 
     void setGeoInfo(int32_t srid, const Fix& min_x, const Fix& min_y, const Fix& max_x, const Fix& max_y) noexcept;
-    void setGeoInfo(int32_t srid, const RangeRectFix& bbox) noexcept;
-    void setGeoInfo(int32_t srid, const RangeRectd& bbox) noexcept;
+    void setGeoInfo(int32_t srid, const Bounds2Fix& bbox) noexcept;
+    void setGeoInfo(int32_t srid, const Bounds2d& bbox) noexcept;
 
     T valueAtXY(int32_t x, int32_t y) noexcept {
         if (_canAccessXY(x, y)) {

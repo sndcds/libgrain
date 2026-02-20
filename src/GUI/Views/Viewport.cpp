@@ -198,7 +198,7 @@ void Viewport::geometryChanged() noexcept {
 }
 
 
-void Viewport::setRange(const RangeRectd& range) noexcept {
+void Viewport::setRange(const Bounds2d& range) noexcept {
 	range_ = range;
 	fireActionAndDisplay(ActionType::None, nullptr);
 }
@@ -351,7 +351,7 @@ void Viewport::dragZoom(const Event& event) noexcept {
 	}
 	else if (fit_mode_== ContentFitMode::Range) {
 		double zoom_factor = 1.0;
-		RangeRectd old_range = range_;
+		Bounds2d old_range = range_;
 
 		if (keep_proportions_) {
 			double delta_x = event.mouseDragDeltaX();

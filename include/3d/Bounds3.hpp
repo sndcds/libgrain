@@ -26,7 +26,7 @@ class Vec3Fix;
 
 
 template <class T>
-class RangeCube {
+class Bounds3 {
 public:
     T min_x_{};
     T max_x_{};
@@ -36,21 +36,21 @@ public:
     T max_z_{};
 
 public:
-    RangeCube() noexcept = default;
-    RangeCube(T min_x, T max_x, T min_y, T max_y, T min_z, T max_z) noexcept :
+    Bounds3() noexcept = default;
+    Bounds3(T min_x, T max_x, T min_y, T max_y, T min_z, T max_z) noexcept :
         min_x_(min_x), max_x_(max_x),
         min_y_(min_y), max_y_(max_y),
         min_z_(min_z), max_z_(max_z) {
     }
 
-    virtual ~RangeCube() noexcept = default;
+    virtual ~Bounds3() noexcept = default;
 
     [[nodiscard]] virtual const char* className() const noexcept {
         return "RangeCube";
     }
 
 
-    friend std::ostream& operator << (std::ostream& os, const RangeCube& o) {
+    friend std::ostream& operator << (std::ostream& os, const Bounds3& o) {
         if (std::is_same<T, int8_t>::value || std::is_same<T, uint8_t>::value) {
             // Force to print integer values instead of chars.
             os << static_cast<int32_t>(o.min_x_) << ", " << static_cast<int32_t>(o.max_x_) << " | ";
@@ -67,14 +67,14 @@ public:
         return os;
     }
 
-    RangeCube& operator = (const Vec3<T>& v) {
+    Bounds3& operator = (const Vec3<T>& v) {
         min_x_ = max_x_ = v.m_x;
         min_y_ = max_y_ = v.m_y;
         min_z_ = max_z_ = v.m_z;
         return *this;
     }
 
-    RangeCube& operator = (const Cube<T>& r) {
+    Bounds3& operator = (const Cube<T>& r) {
         min_x_ = r.width_ > 0 ? r.m_x : r.m_x + r.width_;
         max_x_ = r.width_ > 0 ? r.m_x + r.width_ : r.m_x;
         min_y_ = r.height_ > 0 ? r.m_y : r.m_y + r.height_;
@@ -84,16 +84,16 @@ public:
         return *this;
     }
 
-    bool operator == (const RangeCube& v) const {
+    bool operator == (const Bounds3& v) const {
         return min_x_ == v.min_x_ && max_x_ == v.max_x_ && min_y_ == v.min_y_ && max_y_ == v.max_y_ && min_z_ == v.min_z_ && max_z_ == v.max_z_;
     }
 
-    bool operator != (const RangeCube& v) const {
+    bool operator != (const Bounds3& v) const {
         return min_x_ != v.min_x_ || max_x_ != v.max_x_ || min_y_ != v.min_y_ || max_y_ != v.max_y_ || min_z_ != v.min_z_ || max_z_ != v.max_z_;
     }
 
-    RangeCube operator + (const RangeCube<T>& r) const {
-        RangeCube result;
+    Bounds3 operator + (const Bounds3<T>& r) const {
+        Bounds3 result;
         result.min_x_ = min_x_ < r.min_x_ ? min_x_ : r.min_x_;
         result.min_y_ = min_y_ < r.min_y_ ? min_y_ : r.min_y_;
         result.min_z_ = min_z_ < r.min_z_ ? min_z_ : r.min_z_;
@@ -103,8 +103,8 @@ public:
         return result;
     }
 
-    RangeCube operator + (const Vec3<T>& v) const {
-        RangeCube result = *this;
+    Bounds3 operator + (const Vec3<T>& v) const {
+        Bounds3 result = *this;
         if (v.m_x < min_x_) { result.min_x_ = v.m_x; }
         if (v.m_x > max_x_) { result.max_x_ = v.m_x; }
         if (v.m_y < min_y_) { result.min_y_ = v.m_y; }
@@ -114,8 +114,8 @@ public:
         return result;
     }
 
-    RangeCube operator + (const Cube<T>& r) const {
-        RangeCube result;
+    Bounds3 operator + (const Cube<T>& r) const {
+        Bounds3 result;
         T r_min_x = r.width_ > 0 ? r.m_x : r.m_x + r.width_;
         T r_max_x = r.width_ > 0 ? r.m_x + r.width_ : r.m_x;
         T r_min_y = r.height_ > 0 ? r.m_y : r.m_y + r.height_;
@@ -131,7 +131,7 @@ public:
         return result;
     }
 
-    RangeCube& operator += (const RangeCube<T>& r) {
+    Bounds3& operator += (const Bounds3<T>& r) {
         min_x_ = min_x_ < r.min_x_ ? min_x_ : r.min_x_;
         min_y_ = min_y_ < r.min_y_ ? min_y_ : r.min_y_;
         min_z_ = min_z_ < r.min_z_ ? min_z_ : r.min_z_;
@@ -141,7 +141,7 @@ public:
         return *this;
     }
 
-    RangeCube& operator += (const Vec3<T>& v) {
+    Bounds3& operator += (const Vec3<T>& v) {
         if (v.m_x < min_x_) { min_x_ = v.m_x; }
         if (v.m_x > max_x_) { max_x_ = v.m_x; }
         if (v.m_y < min_y_) { min_y_ = v.m_y; }
@@ -151,7 +151,7 @@ public:
         return *this;
     }
 
-    RangeCube& operator += (const Cube<T>& r) {
+    Bounds3& operator += (const Cube<T>& r) {
         T r_min_x = r.width_ > 0 ? r.m_x : r.m_x + r.width_;
         T r_max_x = r.width_ > 0 ? r.m_x + r.width_ : r.m_x;
         T r_min_y = r.height_ > 0 ? r.m_y : r.m_y + r.height_;
@@ -261,19 +261,19 @@ public:
         if (cube.z2() > max_z_) max_z_ = cube.z2();
     }
 
-    void add(const RangeCube<T>& r) noexcept {
+    void add(const Bounds3<T>& r) noexcept {
         *this += r;
     }
 
-    void limit(const RangeCube& max_cube) noexcept {
+    void limit(const Bounds3& max_cube) noexcept {
         if (min_x_ < max_cube.min_x_) min_x_ = max_cube.min_x_;
         if (max_x_ > max_cube.max_x_) max_x_ = max_cube.max_x_;
         if (min_y_ < max_cube.min_y_) min_y_ = max_cube.min_y_;
         if (max_y_ > max_cube.max_y_) max_y_ = max_cube.max_y_;
     }
 
-    RangeCube<T> lerp(const RangeCube<T> r, double t) noexcept {
-        RangeCube<T> result;
+    Bounds3<T> lerp(const Bounds3<T> r, double t) noexcept {
+        Bounds3<T> result;
         result.min_x_ = min_x_ + t * (r.min_x_ - min_x_);
         result.min_y_ = min_y_ + t * (r.min_y_ - min_y_);
         result.min_z_ = min_z_ + t * (r.min_z_ - min_z_);
@@ -283,8 +283,8 @@ public:
         return result;
     }
 
-    static RangeCube<T> lerp(const RangeCube<T> a, const RangeCube<T> b, double t) noexcept {
-        RangeCube<T> result;
+    static Bounds3<T> lerp(const Bounds3<T> a, const Bounds3<T> b, double t) noexcept {
+        Bounds3<T> result;
         result.min_x_ = a.min_x_ + t * (b.min_x_ - a.min_x_);
         result.min_y_ = a.min_y_ + t * (b.min_y_ - a.min_y_);
         result.min_z_ = a.min_z_ + t * (b.min_z_ - a.min_z_);
@@ -297,10 +297,10 @@ public:
 
 
 // Standard types
-using RangeCubei = RangeCube<int32_t>;  ///< 32 bit integer
-using RangeCubel = RangeCube<int64_t>;  ///< 64 bit integer
-using RangeCubef = RangeCube<float>;    ///< 32 bit floating point
-using RangeCubed = RangeCube<double>;   ///< 64 bit floating point
+using RangeCubei = Bounds3<int32_t>;  ///< 32 bit integer
+using RangeCubel = Bounds3<int64_t>;  ///< 64 bit integer
+using RangeCubef = Bounds3<float>;    ///< 32 bit floating point
+using RangeCubed = Bounds3<double>;   ///< 64 bit floating point
 
 
 class RangeCubeFix {

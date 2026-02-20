@@ -68,7 +68,7 @@ namespace Grain {
      *
      *  Offsets of this header are the same in all versions of dBASE.
      *
-     *  @warning It is recommend not to access GrDBaseFiel directly.
+     *  @warning It is recommended not to access GrDBaseField directly.
      */
     struct DBaseField {
         char m_name[11];             ///< Byte: 0-10; field name in ASCII
@@ -136,14 +136,14 @@ namespace Grain {
 
     public:
         DBaseFile(const String& file_path);
-        ~DBaseFile() noexcept;
+        ~DBaseFile() noexcept override;
 
         const char* className() const noexcept override { return "DBaseFile"; }
 
 
         void close() override;
 
-        virtual void start(int32_t flags) override;
+        void start(int32_t flags) override;
 
 
         void readAll();
@@ -160,20 +160,14 @@ namespace Grain {
             if (m_header->m_row_count > 0) {
                 return m_header->m_row_count;
             }
-            else {  // TODO: Error message!
-                return -1;
-            }
-            return 0;
+            return -1; // TODO: Error message!
         }
 
         uint32_t columnCount() const noexcept {
             if (m_header->m_header_length > 0) {
                 return ((m_header->m_header_length - sizeof(DBaseHeader) - 1) / sizeof(DBaseField));
             }
-            else {  // TODO: Error message!
-                return -1;
-            }
-            return 0;
+            return -1; // TODO: Error message!
         }
 
 
@@ -257,30 +251,21 @@ namespace Grain {
             if (m_header->m_row_length > 0) {
                 return m_header->m_row_length;
             }
-            else {
-                // TODO: Error message!
-                return -1;
-            }
+            return -1; // TODO: Error message!
         }
 
-        int32_t version() {
-            if (m_header->m_version == 0 ) {
-                // TODO: Error message!
-                return -1;
-            }
-            else {
+        int32_t version() const {
+            if (m_header->m_version != 0 ) {
                 return m_header->m_version;
             }
+            return -1; // TODO: Error message!
         }
 
-        int32_t isMemo() {
-            if (m_header->m_version == 0 ) {
-                // TODO: Error message!
-                return -1;
-            }
-            else {
+        int32_t isMemo() const noexcept {
+            if (m_header->m_version != 0 ) {
                 return (m_header->m_version & 128) == 128 ? 1 : 0;
             }
+            return -1; // TODO: Error message!
         }
 
         int32_t setRowIndex(int32_t row_index) {
@@ -313,7 +298,7 @@ namespace Grain {
             }
 
             setPos(_rowFilePos(row_index));
-            read(m_header->m_row_length, (uint8_t*)out_data);
+            read(m_header->m_row_length, static_cast<uint8_t*>(out_data));
 
             return row_index;
         }
@@ -324,7 +309,7 @@ namespace Grain {
             }
 
             setPos(_rowFilePos(row_index));
-            read(m_header->m_row_length, (uint8_t*)out_data);
+            read(m_header->m_row_length, static_cast<uint8_t*>(out_data));
 
             return row_index;
         }
@@ -335,7 +320,7 @@ namespace Grain {
             }
 
             setPos(_rowFilePos(curr_row_index_));
-            read(m_header->m_row_length, (uint8_t*)out_data);
+            read(m_header->m_row_length, static_cast<uint8_t*>(out_data));
             curr_row_index_++;
 
             return curr_row_index_ - 1;
@@ -362,11 +347,11 @@ namespace Grain {
         }
          */
 
-        int64_t _rowFilePos(int32_t row_index) {
-            return (int64_t)row_index * m_header->m_row_length + m_header->m_header_length;
+        int64_t _rowFilePos(int32_t row_index) const {
+            return static_cast<int64_t>(row_index) * m_header->m_row_length + m_header->m_header_length;
         }
 
-        int64_t _fieldFilePos(int32_t row_index, int32_t column_index) {
+        int64_t _fieldFilePos(int32_t row_index, int32_t column_index) const {
             return _rowFilePos(row_index) + m_columns[column_index].offs_;
         }
     };

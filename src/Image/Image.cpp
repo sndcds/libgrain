@@ -12,8 +12,7 @@
 #include "Color/Gradient.hpp"
 #include "Color/RGB.hpp"
 #include "Color/HSV.hpp"
-#include "Color/RGBLUT1.hpp"
-#include "Color/CIEXYZ.hpp"
+#include "Color/OKColor.hpp"
 #include "Color/RGBRamp.hpp"
 #include "Graphic/GraphicContext.hpp"
 #include "Core/Log.hpp"
@@ -23,7 +22,6 @@
 
 #include <libraw/libraw.h>
 #include <tiffio.h>
-#include <cairo/cairo.h>
 #include <webp/encode.h>
 #include <png.h>
 #include <jpeglib.h>
@@ -1391,7 +1389,6 @@ namespace Grain {
      *  @brief Copy image data, if type of source and destination is similar.
      */
     bool Image::copyDataFromImage(Image* image) {
-
         if (image) {
             if (isUsable() && image->isUsable() && sameSize(image) && sameFormat(image)) {
                 if (memcpy(mutPixelDataPtr(), image->pixelDataPtr(), memSize())) {
@@ -1404,10 +1401,8 @@ namespace Grain {
     }
 
 
-    void Image::fillHueWheelRect(float saturation, float value) noexcept {
-
+    void Image::fillHueWheel(float saturation, float value) noexcept {
         HSV hsv_color(0, saturation, value);
-
         float pixel[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
         ImageAccess ia(this, pixel);
 
@@ -1426,8 +1421,53 @@ namespace Grain {
     }
 
 
-    void Image::fillAudioLocationRect(const RGBRamp& color_ramp) noexcept {
+    void Image::fillOKLchWheel(float chroma, float lightness) noexcept {
+        float pixel[4] = {0,0,0,1};
+        ImageAccess ia(this, pixel);
 
+        const int32_t w = width_;
+        const int32_t h = height_;
+        const double wf = 1.0 / (w - 1);
+        const double hf = 1.0 / (h - 1);
+
+        OKLCh oklch;
+        oklch.setLightness(lightness);
+
+        constexpr float kMaxChroma = 0.4f;
+
+        while (ia.stepY()) {
+            while (ia.stepX()) {
+                // [-0.5,0.5] coordinates
+                const double x = wf * ia.x() - 0.5;
+                const double y = hf * ia.y() - 0.5;
+
+                const double radius = std::sqrt(x * x + y * y);
+                if (radius > 0.5) {
+                    pixel[0] = pixel[1] = pixel[2] = 0.0f;
+                    pixel[3] = 0.0f;
+                    ia.write();
+                    continue;
+                }
+
+                const double angle_deg = std::atan2(y, x) * 180.0 / std::numbers::pi;
+                const auto hue = static_cast<float>(angle_deg < 0 ? angle_deg + 360.0 : angle_deg);
+
+                oklch.setHue(hue / 360.0f);
+                oklch.setChroma(static_cast<float>(radius + radius * chroma * kMaxChroma));
+
+                RGB rgb(oklch);
+                pixel[0] = rgb.red();
+                pixel[1] = rgb.green();
+                pixel[2] = rgb.blue();
+                pixel[3] = 1.0f;
+
+                ia.write();
+            }
+        }
+    }
+
+
+    void Image::fillAudioLocationRect(const RGBRamp& color_ramp) noexcept {
         float pixel[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
         ImageAccess ia(this, pixel);
 
@@ -1482,7 +1522,7 @@ namespace Grain {
             gc.setStrokeWidth(2);
             gc.strokeRect(rect);
 
-            gc.drawImage(image, rect);
+            gc.drawImage(image, rect, 1);
 
             endDraw();
         }
@@ -1627,67 +1667,20 @@ namespace Grain {
 
 
     ErrorCode Image::applyFilter() noexcept {
-
-        /*
-
-     TODO: Implement!!!
-     this->macos_cgImageRef();
-
-     CGImageRef applyFilterToCGImage(CGImageRef inputImage, NSString *filterName, NSDictionary<NSString *, id> *parameters) {
-     @autoreleasepool {
-     // Step 1: Convert CGImageRef to CIImage
-     CIImage *ciImage = [[CIImage alloc] initWithCGImage:inputImage];
-
-     // Step 2: Create and configure the filter
-     CIFilter *filter = [CIFilter filterWithName:filterName];
-     if (!filter) {
-     NSLog(@"Filter %@ not found", filterName);
-     return NULL;
-     }
-     [filter setValue:ciImage forKey:kCIInputImageKey];
-
-     // Apply additional parameters to the filter
-     for (NSString *key in parameters) {
-     [filter setValue:parameters[key] forKey:key];
-     }
-
-     // Get the filtered image
-     CIImage *outputCIImage = filter.outputImage;
-     if (!outputCIImage) {
-     NSLog(@"Failed to apply filter %@ to image", filterName);
-     return NULL;
-     }
-
-     // Step 3: Render the CIImage to a new CGImageRef
-     CIContext *context = [CIContext context];
-     CGImageRef outputCGImage = [context createCGImage:outputCIImage fromRect:outputCIImage.extent];
-
-     return outputCGImage; // Caller is responsible for releasing this CGImageRef
-     }
-     }
-
-     // Example usage
-     CGImageRef originalImage = ...; // Your CGImageRef
-     CGImageRef filteredImage = applyFilterToCGImage(originalImage, @"CISepiaTone", @{kCIInputIntensityKey: @0.8});
-
-     // Don't forget to release the filtered image if not using ARC
-     if (filteredImage) {
-     CGImageRelease(filteredImage);
-     }
-     */
+        // TODO: Implement!
         return ErrorCode::None;
     }
 
 
-    ErrorCode Image::convolution(int32_t channel, const Dimensioni& kernel_size, const float *kernel_data, Image& out_image) noexcept {
+    ErrorCode Image::convolution(int32_t channel, const Dimensioni& kernel_size, const float* kernel_data, Image* out_image) noexcept {
         // TODO: Implement
         return ErrorCode::Unknown;
     }
 
 
-/**
- *  @brief Function that returns true if the given pixel is valid.
- */
+    /**
+     *  @brief Function that returns true if the given pixel is valid.
+     */
     bool isValid(int screen[][8], int m, int n, int x, int y, int prev_c, int new_c) {
         if (x < 0 || x >= m || y < 0 || y >= n || screen[x][y] != prev_c || screen[x][y] == new_c) {
             return false;
@@ -1698,7 +1691,7 @@ namespace Grain {
     }
 
 
-    void Image::floodFill(const Vec2i& pos, const RGB& color, Image& out_image) noexcept {
+    void Image::floodFill(const Vec2i& pos, const RGB& color, Image* out_image) noexcept {
         // TODO: Implement!
     }
 
@@ -2795,7 +2788,7 @@ namespace Grain {
      *
      *  @return An error code or `ErrorCode::None`.
      */
-    ErrorCode Image::writeCVF2File(const String& cvf2_file_path, int32_t srid, const RangeRectFix& bbox, LengthUnit length_unit, int32_t z_decimals, int32_t min_digits, int32_t max_digits) noexcept {
+    ErrorCode Image::writeCVF2File(const String& cvf2_file_path, int32_t srid, const Bounds2Fix& bbox, LengthUnit length_unit, int32_t z_decimals, int32_t min_digits, int32_t max_digits) noexcept {
         /* TODO !!!!!!
         auto result = ErrorCode::None;
 
@@ -4744,41 +4737,23 @@ namespace Grain {
     }
 
 
-/* TODO: !
-    GLenum Image::glGetType() {
-        switch (m_pixel_type) {
-            case Image::PixelType::UInt8: return GL_UNSIGNED_BYTE;
-            case Image::PixelType::UInt16: return GL_UNSIGNED_SHORT;
-            case Image::PixelType::Float: return GL_FLOAT;
-            default: return 0;    // Undefined
+    ErrorCode Image::scanQuadrilateral(Image* src_image, Quadrilateral& quadrilateral) noexcept {
+        float pixel[4];
+        ImageAccess src_ia(src_image, pixel);
+        ImageAccess dst_ia(this, pixel);
+        while (dst_ia.stepY()) {
+            while (dst_ia.stepX()) {
+                double u = (double)dst_ia.x() / (width_ - 1);
+                double v = (double)dst_ia.y() / (height_ - 1);
+                Vec2d src_pos;
+                quadrilateral.project(u, v, src_pos);
+                src_ia.readInterpolated(src_pos);
+                dst_ia.write();
+            }
         }
+
+        return ErrorCode::None;
     }
-*/
-
-
-/* TODO: !
-    GLenum Image::glGetFormat() {
-        switch (getComponentsPerPixel()) {
-            case 1: return GL_RED;
-            case 2: return GL_RG;
-            case 3: return GL_RGB;
-            case 4: return GL_RGBA;
-
-            default:
-                return 0;    // Undefined
-        }
-    }
-*/
-
-
-/* TODO: Metal!
-    bool Image::glTexture(GLenum textureUnitID, bool initMode) {
-        int16_t depth = getPlaneCount();
-        GLenum type = glGetType();
-
-        return GrGL::set2DTexture(textureUnitID, width_, height_, depth, getPixelDataPtr(), type, initMode);
-    }
-*/
 
 
     void Image::_set(Color::Model color_model, int32_t width, int32_t height, PixelType data_type) {

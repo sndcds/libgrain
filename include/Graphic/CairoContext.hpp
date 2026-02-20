@@ -106,7 +106,7 @@ namespace Grain {
         void addRectPath(double x, double y, double width, double height) noexcept override;
         void addEllipsePath(const Rectd& rect) noexcept override;
         void addCirclePath(double x, double y, double radius) noexcept override;
-        void addRingPath(const Vec2d& center, double inner_radius, double outer_radius, double angle, double span) noexcept override;
+        void addRingPath(const Ringd& ring, double angle, double span) noexcept override;
 
         void fillRect(double x, double y, double width, double height) noexcept override;
         void strokeRect(double x, double y, double width, double height) noexcept override;
@@ -133,7 +133,6 @@ namespace Grain {
 
         void clipPath() noexcept override { /* Implement! */ }
         void clipPathEvenOdd() noexcept override { /* Implement! */ }
-        Rectd clipBoundsRect() noexcept override { return Rectd(); /* Implement! */ }
         void resetClip() noexcept override { /* Implement! */ }
 
         void translate(double tx, double ty) noexcept override;

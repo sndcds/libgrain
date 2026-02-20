@@ -88,8 +88,8 @@ namespace Grain {
         DataComposerPropDescription* pd_ = nullptr; ///< Pointer to the property description
         DataComposerPropValue value_{}; ///< The actual value if the property
 
-        [[nodiscard]] inline bool isNull() const noexcept { return value_.is_null; }
-        inline void setNull() noexcept { value_.is_null = true; }
+        [[nodiscard]] bool isNull() const noexcept { return value_.is_null; }
+        void setNull() noexcept { value_.is_null = true; }
     };
 
     typedef void (*DataComposerPayloadSetStrFunc)(DataComposerPayload* pl, const char* str);
@@ -287,7 +287,7 @@ namespace Grain {
 
     public:
         DataComposer() = default;
-        ~DataComposer() = default;
+        ~DataComposer() override = default;
 
         [[nodiscard]] const char* className() const noexcept override { return "DataComposer"; }
 
@@ -324,7 +324,7 @@ namespace Grain {
             if (str != nullptr) {
                 pl->value_.value.str = strdup(str);
                 pl->value_.is_null = false;
-                pl->value_.data_size = (int32_t) strlen(str);
+                pl->value_.data_size = static_cast<int32_t>(strlen(str));
             }
             else {
                 pl->value_.is_null = true;
@@ -504,12 +504,12 @@ namespace Grain {
         }
 
         static void _pl_set_i32_by_str(DataComposerPayload* pl, const char* str) {
-            pl->value_.value.i32 = static_cast<int32_t>(String::asInt32(str));
+            pl->value_.value.i32 = String::asInt32(str);
             pl->value_.is_null = false;
         }
 
         static void _pl_set_i64_by_str(DataComposerPayload* pl, const char* str) {
-            pl->value_.value.i64 = static_cast<int64_t>(String::asInt64(str));
+            pl->value_.value.i64 = String::asInt64(str);
             pl->value_.is_null = false;
         }
 
@@ -527,6 +527,7 @@ namespace Grain {
             _pl_set_str(pl, str);
         }
     };
+
 } // End of namespace Grain
 
 #endif // GrainDataComposer_hpp

@@ -141,8 +141,9 @@ namespace Grain {
         float track_size_ = 4.0;
         float handle_size_ = 10.0;
 
-        ColorWell* color_well_{};
-        Gradient* gradient_{};
+        // Connected components, optional
+        ColorWell* color_well_ = nullptr;
+        Gradient* gradient_ = nullptr;
     };
 
 

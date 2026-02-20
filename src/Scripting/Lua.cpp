@@ -30,27 +30,27 @@ namespace Grain {
     }
 
 
-/**
- *  @brief Initializes the Lua interpreter and registers custom functions.
- *
- *  This method creates and configures a new Lua virtual machine (if it hasn't
- *  already been created), loads the standard Lua libraries, overrides the
- *  default `print()` function with a C++ implementation, and registers several
- *  custom C++ functions under the Lua namespace `"grain"`.
- *
- *  If a user-provided initialization callback (`init_action`) is supplied, it
- *  will be invoked after the Lua environment is fully initialized.
- *
- *  @param init_action A callback function of type `LuaInitAction` to perform
- *                     additional initialization logic. It may be `nullptr`.
- *
- *  @return `ErrorCode::None` if the initialization completed successfully,
- *          or the corresponding `ErrorCode` if an error occurred during
- *          initialization.
- *
- *  @note This function is marked `noexcept` and will catch any `ErrorCode`
- *  exceptions internally.
- */
+    /**
+     *  @brief Initializes the Lua interpreter and registers custom functions.
+     *
+     *  This method creates and configures a new Lua virtual machine (if it hasn't
+     *  already been created), loads the standard Lua libraries, overrides the
+     *  default `print()` function with a C++ implementation, and registers several
+     *  custom C++ functions under the Lua namespace `"grain"`.
+     *
+     *  If a user-provided initialization callback (`init_action`) is supplied, it
+     *  will be invoked after the Lua environment is fully initialized.
+     *
+     *  @param init_action A callback function of type `LuaInitAction` to perform
+     *                     additional initialization logic. It may be `nullptr`.
+     *
+     *  @return `ErrorCode::None` if the initialization completed successfully,
+     *          or the corresponding `ErrorCode` if an error occurred during
+     *          initialization.
+     *
+     *  @note This function is marked `noexcept` and will catch any `ErrorCode`
+     *  exceptions internally.
+     */
     ErrorCode Lua::_init(LuaInitAction init_action) noexcept {
         auto result = ErrorCode::None;
 
@@ -110,21 +110,21 @@ namespace Grain {
     }
 
 
-/**
- *  @brief Executes a Lua script from a specified directory and file name.
- *
- *  Constructs the full file path by combining the given directory path and file
- *  name, then delegates execution to the overloaded `run(const String&)` method.
- *
- *  @param dir_path The path to the directory containing the Lua script.
- *  @param file_name The name of the Lua script file to run.
- *
- *  @return `ErrorCode::None` if the script was executed successfully,
- *          or the corresponding `ErrorCode` if execution failed.
- *
- *  @note This function is marked `noexcept` and catches `ErrorCode` exceptions
- *        internally.
- */
+    /**
+     *  @brief Executes a Lua script from a specified directory and file name.
+     *
+     *  Constructs the full file path by combining the given directory path and file
+     *  name, then delegates execution to the overloaded `run(const String&)` method.
+     *
+     *  @param dir_path The path to the directory containing the Lua script.
+     *  @param file_name The name of the Lua script file to run.
+     *
+     *  @return `ErrorCode::None` if the script was executed successfully,
+     *          or the corresponding `ErrorCode` if execution failed.
+     *
+     *  @note This function is marked `noexcept` and catches `ErrorCode` exceptions
+     *        internally.
+     */
     ErrorCode Lua::run(const String& dir_path, const String& file_name) noexcept {
 
         auto result = ErrorCode::None;
@@ -141,23 +141,23 @@ namespace Grain {
     }
 
 
-/**
- *  @brief Executes a Lua script located at the specified file path.
- *
- *  This function checks whether the file exists and, if so, executes it using
- *  the Lua interpreter (`luaL_dofile`). If the Lua script fails to run,
- *  the error message is captured from the Lua stack and stored in
- *  `last_err_message_`.
- *
- *  @param file_path The full path to the Lua script file to be executed.
- *
- *  @return `ErrorCode::None` if the script was found and executed successfully,
- *          or an appropriate `ErrorCode` such as `ErrorCode::FileNotFound` or
- *          `ErrorCode::LuaCodeError` if execution failed.
- *
- *  @note If a Lua runtime error occurs, the error message is stored in
- *        `last_err_message_` for later inspection.
- */
+    /**
+     *  @brief Executes a Lua script located at the specified file path.
+     *
+     *  This function checks whether the file exists and, if so, executes it using
+     *  the Lua interpreter (`luaL_dofile`). If the Lua script fails to run,
+     *  the error message is captured from the Lua stack and stored in
+     *  `last_err_message_`.
+     *
+     *  @param file_path The full path to the Lua script file to be executed.
+     *
+     *  @return `ErrorCode::None` if the script was found and executed successfully,
+     *          or an appropriate `ErrorCode` such as `ErrorCode::FileNotFound` or
+     *          `ErrorCode::LuaCodeError` if execution failed.
+     *
+     *  @note If a Lua runtime error occurs, the error message is stored in
+     *        `last_err_message_` for later inspection.
+     */
     ErrorCode Lua::run(const String& file_path) noexcept {
 
         auto result = ErrorCode::None;
@@ -208,18 +208,18 @@ namespace Grain {
     }
 
 
-/**
- *  @brief Executes a Lua code string directly in the Lua interpreter.
- *
- *  @param code A null-terminated C-string containing valid Lua code to execute.
- *
- *  @return `ErrorCode::None` if the code was executed without errors,
- *          or `ErrorCode::LuaCodeError` if Lua reported a runtime error.
- *          Other `ErrorCode` values may be returned if thrown and caught.
- *
- *  @note If an error message is present, it is stored in `last_err_message_`
- *        for later retrieval.
- */
+    /**
+     *  @brief Executes a Lua code string directly in the Lua interpreter.
+     *
+     *  @param code A null-terminated C-string containing valid Lua code to execute.
+     *
+     *  @return `ErrorCode::None` if the code was executed without errors,
+     *          or `ErrorCode::LuaCodeError` if Lua reported a runtime error.
+     *          Other `ErrorCode` values may be returned if thrown and caught.
+     *
+     *  @note If an error message is present, it is stored in `last_err_message_`
+     *        for later retrieval.
+     */
     ErrorCode Lua::runCode(const char* code) noexcept {
 
         auto result = ErrorCode::None;
@@ -244,14 +244,14 @@ namespace Grain {
     }
 
 
-/**
- *  @brief Closes the Lua interpreter and releases associated resources.
- *
- *  If the Lua virtual machine (`lua_vm_`) is currently active, this function
- *  closes it using `lua_close()` and sets the internal pointer to `nullptr`.
- *  It is safe to call this function multiple times; it will have no effect if
- *  the Lua VM is already closed.
- */
+    /**
+     *  @brief Closes the Lua interpreter and releases associated resources.
+     *
+     *  If the Lua virtual machine (`lua_vm_`) is currently active, this function
+     *  closes it using `lua_close()` and sets the internal pointer to `nullptr`.
+     *  It is safe to call this function multiple times; it will have no effect if
+     *  the Lua VM is already closed.
+     */
     void Lua::close() noexcept {
 
         if (m_lua_vm != nullptr) {

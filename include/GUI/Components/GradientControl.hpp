@@ -15,7 +15,7 @@
 
 namespace Grain {
 
-    class ColorWheel;
+    class AngleDial;
     class PopUpButton;
     class Slider;
     class TextField;
@@ -60,7 +60,7 @@ namespace Grain {
         Menu* context_menu_ = nullptr;
 
         // Connected GUI elements
-        ColorWheel* color_wheel_ = nullptr;
+        AngleDial* angle_dial_ = nullptr;
         Slider* step_slider_ = nullptr;
         TextField* step_textfield_ = nullptr;
 
@@ -94,7 +94,7 @@ namespace Grain {
         double viewPosToX(const GradientStop* stop) const noexcept;
         double viewXToPos(double x) const noexcept;
 
-        void setColorWheel(ColorWheel* color_wheel) noexcept;
+        void setAngleDial(AngleDial* angle_dial) noexcept;
         void setStepSlider(Slider* slider) noexcept;
         void setStepTextField(TextField* textfield) noexcept;
         void setGradientColor(int32_t index, const RGB& rgb) noexcept;

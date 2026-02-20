@@ -428,12 +428,7 @@ namespace Grain {
     }
 
 
-    void CairoContext::addRingPath(
-            const Vec2d& center,
-            double inner_radius,
-            double outer_radius,
-            double angle_degrees,
-            double span_degrees) noexcept
+    void CairoContext::addRingPath(const Ringd& ring, double angle_degrees, double span_degrees) noexcept
     {
         if (span_degrees <= 0.0) return;
 
@@ -442,10 +437,10 @@ namespace Grain {
         double endAngle = angle + span;
 
         // Outer arc (counter-clockwise by default)
-        cairo_arc(m_cairo_cr, center.x_, center.y_, outer_radius, angle, endAngle);
+        cairo_arc(m_cairo_cr, ring.center_.x_, ring.center_.y_, ring.outer_radius_, angle, endAngle);
 
         // Inner arc in reverse (clockwise)
-        cairo_arc_negative(m_cairo_cr, center.x_, center.y_, inner_radius, endAngle, angle);
+        cairo_arc_negative(m_cairo_cr, ring.center_.x_, ring.center_.y_, ring.inner_radius_, endAngle, angle);
 
         // Close the path to make a proper ring
         cairo_close_path(m_cairo_cr);

@@ -13,6 +13,8 @@
 #include "Image/Image.hpp"
 #include "Core/Log.hpp"
 #include "Graphic/Font.hpp"
+#include "Graphic/macos_image.h"
+
 #include "Color/Gradient.hpp"
 #include "GUI/Components/Component.hpp"
 
@@ -407,19 +409,13 @@ namespace Grain {
     }
 
 
-    void AppleCGContext::addRingPath(
-            const Vec2d& center,
-            double inner_radius,
-            double outer_radius,
-            double angle,
-            double span) noexcept {
-
+    void AppleCGContext::addRingPath(const Ringd& ring, double angle, double span) noexcept {
         if (span > 0.0) {
             angle = Math::degtorad(angle);
             span = Math::degtorad(span);
             double endAngle = angle + span;
-            CGContextAddArc(m_cg_context, center.x_, center.y_, outer_radius, angle, endAngle, false);
-            CGContextAddArc(m_cg_context, center.x_, center.y_, inner_radius, endAngle, angle, true);
+            CGContextAddArc(m_cg_context, ring.center_.x_, ring.center_.y_, ring.outer_radius_, angle, endAngle, false);
+            CGContextAddArc(m_cg_context, ring.center_.x_, ring.center_.y_, ring.inner_radius_, endAngle, angle, true);
             closePath();
         }
     }
@@ -537,126 +533,20 @@ namespace Grain {
 
 
     ErrorCode AppleCGContext::drawQuadrilateralImage(Image* image, const Quadrilateral& quadrilateral) noexcept {
-        /* TODO !!!!!!
-        auto result = ErrorCode::None;
-
-        @autoreleasepool {
-
-        try {
-
-            CGImageRef cg_image = image->macos_cgImageRef();
-            CIImage* ci_image = [CIImage imageWithCGImage:cg_image];
-            if (!ci_image) {
-                throw ErrorCode::Fatal;
-            }
-
-            // Create the perspective transform filter.
-            CIFilter* perspective_filter = [CIFilter filterWithName:@"CIPerspectiveTransform"];
-            if (!perspective_filter) {
-                throw ErrorCode::Fatal;
-            }
-
-            [perspective_filter setValue:ci_image forKey:kCIInputImageKey];
-
-            auto points = quadrilateral.pointsPtr();
-
-            // Define the quadrilateral points for transformation
-            [perspective_filter setValue:[CIVector vectorWithX:points[0].x_ Y:points[0].y_] forKey:@"inputTopLeft"];
-            [perspective_filter setValue:[CIVector vectorWithX:points[1].x_ Y:points[1].y_] forKey:@"inputTopRight"];
-            [perspective_filter setValue:[CIVector vectorWithX:points[2].x_ Y:points[2].y_] forKey:@"inputBottomRight"];
-            [perspective_filter setValue:[CIVector vectorWithX:points[3].x_ Y:points[3].y_] forKey:@"inputBottomLeft"];
-
-            // Get the output CIImage from the filter.
-            CIImage* output_ci_image = [perspective_filter outputImage];
-            if (!output_ci_image) {
-                throw ErrorCode::Fatal;
-            }
-
-            // Create a CIContext for rendering.
-            CIContext* ci_context = [CIContext contextWithCGContext:m_cg_context options:nil];
-
-            CGRect target_rect = output_ci_image.extent;
-
-            // Render the CIImage to the CGContextRef within the target rectangle
-            [ci_context drawImage:output_ci_image inRect:target_rect fromRect:[output_ci_image extent]];
-
-            // Manual memory cleanup.   // TODO: Check what needs do be released!
-            // [ci_image release]; // Not necessary, momory is autoreleased!
-            // [perspective_filter release]; // Not necessary, momory is autoreleased!
-            // [output_ci_image release]; // Not necessary, momory is autoreleased!
-            // [ci_context release]; // Not necessary, momory is autoreleased!
-
-        }
-        catch (ErrorCode err) {
-            result = err;
-        }
-
-        } // End of @autoreleasepool
-
-        */
-        return ErrorCode::None;
+        return drawQuadrilateralImage(image, quadrilateral, 1.0f);
     }
 
 
     ErrorCode AppleCGContext::drawQuadrilateralImage(Image* image, const Quadrilateral& quadrilateral, float alpha) noexcept {
-        /* TODO !!!!!!
-        // TODO: Combine the two methods GraphicContext::drawQuadrilateralImage into one.
-
-        // Get CGImage reference and convert it to CIImage
+        auto p = quadrilateral.pointsPtr();
         CGImageRef cg_image = image->macos_cgImageRef();
-        CIImage* ci_image = [CIImage imageWithCGImage:cg_image];
-        CGImageRelease(cg_image);
-        if (!ci_image) {
-            return ErrorCode::Fatal;
-        }
-
-        // Create the perspective transform filter
-        CIFilter* perspective_filter = [CIFilter filterWithName:@"CIPerspectiveTransform"];
-        if (!perspective_filter) {
-            return ErrorCode::Fatal;
-        }
-        [perspective_filter setValue:ci_image forKey:kCIInputImageKey];
-
-        // Define the quadrilateral points for transformation
-        auto points = quadrilateral.pointsPtr();
-        [perspective_filter setValue:[CIVector vectorWithX:points[0].x_ Y:points[0].y_] forKey:@"inputTopLeft"];
-        [perspective_filter setValue:[CIVector vectorWithX:points[1].x_ Y:points[1].y_] forKey:@"inputTopRight"];
-        [perspective_filter setValue:[CIVector vectorWithX:points[2].x_ Y:points[2].y_] forKey:@"inputBottomRight"];
-        [perspective_filter setValue:[CIVector vectorWithX:points[3].x_ Y:points[3].y_] forKey:@"inputBottomLeft"];
-
-        // Get the output CIImage from the perspective filter
-        CIImage* output_ci_image = [perspective_filter outputImage];
-        if (!output_ci_image) {
-            return ErrorCode::Fatal;
-        }
-
-        // Apply alpha transparency using a color generator and compositing filter
-        CIFilter* alphaFilter = [CIFilter filterWithName:@"CIConstantColorGenerator"];
-        CIColor* transparentColor = [CIColor colorWithRed:1.0 green:1.0 blue:1.0 alpha:alpha];
-        [alphaFilter setValue:transparentColor forKey:kCIInputColorKey];
-
-        CIFilter* compositeFilter = [CIFilter filterWithName:@"CIMultiplyCompositing"];
-        [compositeFilter setValue:alphaFilter.outputImage forKey:kCIInputBackgroundImageKey];
-        [compositeFilter setValue:output_ci_image forKey:kCIInputImageKey];
-
-        CIImage* transparent_image = compositeFilter.outputImage;
-
-        // Create a CIContext for rendering
-        CIContext* ci_context = [CIContext contextWithCGContext:m_cg_context options:nil];
-
-        CGRect target_rect = transparent_image.extent;
-
-        // Render the transparent CIImage to the CGContextRef within the target rectangle
-        [ci_context drawImage:transparent_image inRect:target_rect fromRect:[output_ci_image extent]];
-
-        // Manual memory cleanup.   // TODO: Check what needs do be released!
-        [ci_image release];
-        // [perspective_filter release];
-        // [compositeFilter release];
-        // [output_ci_image release];
-        [ci_context release];
-
-         */
+        CGPoint points[4] = {
+            { p[0].x_, p[0].y_ },
+            { p[1].x_, p[1].y_ },
+            { p[2].x_, p[2].y_ },
+            { p[3].x_, p[3].y_ },
+        };
+        GrainAppleGraphics::drawQuadrilateralImage(m_cg_context, cg_image, alpha, points);
         return ErrorCode::None;
     }
 
@@ -1066,15 +956,22 @@ namespace Grain {
     }
 
 
-    void AppleCGContext:: clipPathEvenOdd() noexcept {
+    void AppleCGContext::clipPathEvenOdd() noexcept {
         CGContextEOClip(m_cg_context);
     }
 
-
-    Rectd AppleCGContext::clipBoundsRect() noexcept {
-        return Rectd(CGContextGetClipBoundingBox(m_cg_context));
+    void AppleCGContext::clipRect(const Rectd& rect) noexcept {
+        // GraphicaddRectPath(rect);
+        // TODO: Implement!
     }
 
+    void AppleCGContext::clipRoundRect(const Rectd& rect, double radius) noexcept {
+        // TODO: Implement!
+    }
+
+    void AppleCGContext::clipEllipse(const Rectd& rect) noexcept {
+        // TODO: Implement!
+    }
 
     void AppleCGContext::resetClip() noexcept {
         CGContextResetClip(m_cg_context);

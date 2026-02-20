@@ -15,7 +15,7 @@
 #include "Grain.hpp"
 #include "File/File.hpp"
 #include "Math/Vec3.hpp"
-#include "3d/RangeCube.hpp"
+#include "3d/Bounds3.hpp"
 #include "Core/Log.hpp"
 
 

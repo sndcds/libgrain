@@ -7,16 +7,16 @@
 //  This file is part of GrainLib, see <https://grain.one>.
 //
 
-#include "2d/RangeRect.hpp"
+#include "2d/Bounds2.hpp"
 
 
 namespace Grain {
 
 // Explicit instantiations for the types you need
-template class RangeRect<int32_t>;
-template class RangeRect<int64_t>;
-template class RangeRect<float>;
-template class RangeRect<double>;
+template class Bounds2<int32_t>;
+template class Bounds2<int64_t>;
+template class Bounds2<float>;
+template class Bounds2<double>;
 
 
 } // End of namespace Grain

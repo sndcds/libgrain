@@ -74,10 +74,10 @@ namespace Grain {
     }
 
 
-    bool GeoProj::transform(const RangeRectd& range_rect, RangeRectd& out_range_rect, Direction direction) noexcept {
+    bool GeoProj::transform(const Bounds2d& bounds, Bounds2d& out_bounds, Direction direction) noexcept {
 
-        Vec2d v1(range_rect.min_x_, range_rect.min_y_);
-        Vec2d v2(range_rect.max_x_, range_rect.max_y_);
+        Vec2d v1(bounds.min_x_, bounds.min_y_);
+        Vec2d v2(bounds.max_x_, bounds.max_y_);
 
         if (!transform(v1, direction)) {
             return false;
@@ -87,19 +87,19 @@ namespace Grain {
             return false;
         }
 
-        out_range_rect.min_x_ = v1.x_;
-        out_range_rect.min_y_ = v1.y_;
-        out_range_rect.max_x_ = v2.x_;
-        out_range_rect.max_y_ = v2.y_;
+        out_bounds.min_x_ = v1.x_;
+        out_bounds.min_y_ = v1.y_;
+        out_bounds.max_x_ = v2.x_;
+        out_bounds.max_y_ = v2.y_;
 
         return true;
     }
 
 
-    bool GeoProj::transform(RangeRectd& range_rect, Direction direction) noexcept {
+    bool GeoProj::transform(Bounds2d& bounds, Direction direction) noexcept {
 
-        Vec2d v1(range_rect.min_x_, range_rect.min_y_);
-        Vec2d v2(range_rect.max_x_, range_rect.max_y_);
+        Vec2d v1(bounds.min_x_, bounds.min_y_);
+        Vec2d v2(bounds.max_x_, bounds.max_y_);
 
         if (!transform(v1, direction)) {
             return false;
@@ -109,18 +109,18 @@ namespace Grain {
             return false;
         }
 
-        range_rect.min_x_ = v1.x_;
-        range_rect.min_y_ = v1.y_;
-        range_rect.max_x_ = v2.x_;
-        range_rect.max_y_ = v2.y_;
+        bounds.min_x_ = v1.x_;
+        bounds.min_y_ = v1.y_;
+        bounds.max_x_ = v2.x_;
+        bounds.max_y_ = v2.y_;
 
         return true;
     }
 
 
-    bool GeoProj::transform(const RangeRectFix& range_rect, RangeRectFix& out_range_rect, Direction direction) noexcept {
-        Vec2d v1(range_rect.min_x_.asDouble(), range_rect.min_y_.asDouble());
-        Vec2d v2(range_rect.max_x_.asDouble(), range_rect.max_y_.asDouble());
+    bool GeoProj::transform(const Bounds2Fix& bounds, Bounds2Fix& out_bounds, Direction direction) noexcept {
+        Vec2d v1(bounds.min_x_.asDouble(), bounds.min_y_.asDouble());
+        Vec2d v2(bounds.max_x_.asDouble(), bounds.max_y_.asDouble());
 
         if (!transform(v1, direction)) {
             return false;
@@ -130,18 +130,18 @@ namespace Grain {
             return false;
         }
 
-        out_range_rect.min_x_ = v1.x_;
-        out_range_rect.min_y_ = v1.y_;
-        out_range_rect.max_x_ = v2.x_;
-        out_range_rect.max_y_ = v2.y_;
+        out_bounds.min_x_ = v1.x_;
+        out_bounds.min_y_ = v1.y_;
+        out_bounds.max_x_ = v2.x_;
+        out_bounds.max_y_ = v2.y_;
 
         return true;
     }
 
 
-    bool GeoProj::transform(RangeRectFix& range_rect, Direction direction) noexcept {
-        Vec2d v1(range_rect.min_x_.asDouble(), range_rect.min_y_.asDouble());
-        Vec2d v2(range_rect.max_x_.asDouble(), range_rect.max_y_.asDouble());
+    bool GeoProj::transform(Bounds2Fix& bounds, Direction direction) noexcept {
+        Vec2d v1(bounds.min_x_.asDouble(), bounds.min_y_.asDouble());
+        Vec2d v2(bounds.max_x_.asDouble(), bounds.max_y_.asDouble());
 
         if (!transform(v1, direction)) {
             return false;
@@ -151,10 +151,10 @@ namespace Grain {
             return false;
         }
 
-        range_rect.min_x_ = v1.x_;
-        range_rect.min_y_ = v1.y_;
-        range_rect.max_x_ = v2.x_;
-        range_rect.max_y_ = v2.y_;
+        bounds.min_x_ = v1.x_;
+        bounds.min_y_ = v1.y_;
+        bounds.max_x_ = v2.x_;
+        bounds.max_y_ = v2.y_;
 
         return true;
     }
@@ -216,7 +216,7 @@ namespace Grain {
      *        Ensure that the bounding box is valid (i.e., `bounds.minX < bounds.maxX` and `bounds.minY < bounds.maxY`).
      *        If the height is zero, an aspect ratio cannot be calculated.
      */
-    double GeoProj::ratioByMercatorBounds(const RangeRectd& bounds) noexcept {
+    double GeoProj::ratioByMercatorBounds(const Bounds2d& bounds) noexcept {
         double width = bounds.width();
         double height = bounds.height();
         return Safe::canSafelyDivideBy(height) ? width / height : -1.0;

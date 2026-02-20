@@ -73,7 +73,7 @@ namespace Grain {
         if (hasText()) {
             Rectd text_rect = boundsRect();
             text_rect.inset(style->padding(0), style->padding(1), style->padding(2), style->padding(3));
-            gc->drawTextInRect(text_->utf8(), text_rect, style->textAlignment(), style->font(), style->foregroundColor());
+            gc->drawTextInRect(text_->utf8(), text_rect, style->textAlignment(), style->font(), style->foregroundColor(), 1);
         }
 
         if (isHighlighted()) {

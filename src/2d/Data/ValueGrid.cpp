@@ -33,7 +33,7 @@ namespace Grain {
 
 
     template <typename T>
-    void ValueGrid<T>::setGeoInfo(int32_t srid, const RangeRectFix& bbox) noexcept {
+    void ValueGrid<T>::setGeoInfo(int32_t srid, const Bounds2Fix& bbox) noexcept {
 
         srid_ = srid;
         bbox_ = bbox;
@@ -42,7 +42,7 @@ namespace Grain {
 
 
     template <typename T>
-    void ValueGrid<T>::setGeoInfo(int32_t srid, const RangeRectd& bbox) noexcept {
+    void ValueGrid<T>::setGeoInfo(int32_t srid, const Bounds2d& bbox) noexcept {
         srid_ = srid;
         bbox_.set(bbox.min_x_, bbox.min_y_, bbox.max_x_, bbox.max_y_);
         setFeature(kFeature_GeoInfo);

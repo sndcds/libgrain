@@ -76,7 +76,7 @@ double PoissonDiscImageDensity::densityAtPos(const Vec2d& pos) {
 
 
 PoissonDiscSampler::PoissonDiscSampler(
-    const RangeRectd range,
+    const Bounds2d range,
     PoissonDiscDensity* density,
     double r_min,
     double r_max,

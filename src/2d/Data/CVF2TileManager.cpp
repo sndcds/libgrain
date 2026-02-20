@@ -195,7 +195,7 @@ namespace Grain {
      * @return ErrorCode::None if the scan completes successfully; an appropriate error code
      *         otherwise, indicating the nature of any failure.
      */
-    ErrorCode CVF2TileManager::scan(const RangeRectd& bbox, int32_t bbox_srid) noexcept {
+    ErrorCode CVF2TileManager::scan(const Bounds2d& bbox, int32_t bbox_srid) noexcept {
 
         provided_bbox_ = bbox;
         provided_bbox_srid_ = bbox_srid;
@@ -837,7 +837,7 @@ namespace Grain {
             String tile_crs;
             raw_file->readToString(16, tile_crs);
 
-            RangeRectFix tile_crs_range;
+            Bounds2Fix tile_crs_range;
             raw_file->readFix(tile_crs_range.min_x_);
             raw_file->readFix(tile_crs_range.min_y_);
             raw_file->readFix(tile_crs_range.max_x_);
@@ -896,7 +896,7 @@ namespace Grain {
      *          during processing (e.g., `ErrorCode::InvalidBounds`,
      *          `ErrorCode::SRIDUnsupported`).
      */
-    ErrorCode CVF2TileManager::collectImage(const RangeRectd& bbox, int32_t bbox_srid, float min_level, float max_level, Image** out_image_ptr, RangeRectd& out_bounds) noexcept {
+    ErrorCode CVF2TileManager::collectImage(const Bounds2d& bbox, int32_t bbox_srid, float min_level, float max_level, Image** out_image_ptr, Bounds2d& out_bounds) noexcept {
 
 
         // TODO: Check! Needed? Drop?
@@ -912,7 +912,7 @@ namespace Grain {
             proj.setSrcSRID(tile_srid_);
             proj.setDstSRID(bbox_srid);
 
-            RangeRectd total_bounds;
+            Bounds2d total_bounds;
             total_bounds.initForMinMaxSearch();
 
             ObjectList<CVF2Tile*> tiles_involved;
@@ -992,7 +992,7 @@ namespace Grain {
      *         where computed values will be stored.
      *  @return `ErrorCode` indicating the success or failure of the rendering process.
      */
-    ErrorCode CVF2TileManager::renderToValueGrid(int32_t srid, const RangeRectd& bbox, int32_t antialias_level, ValueGrid<int64_t>* out_value_grid) noexcept {
+    ErrorCode CVF2TileManager::renderToValueGrid(int32_t srid, const Bounds2d& bbox, int32_t antialias_level, ValueGrid<int64_t>* out_value_grid) noexcept {
 
         auto result = ErrorCode::None;
 
@@ -1025,7 +1025,7 @@ namespace Grain {
             }
 
 
-            RangeRectd bbox_dst;  // Bounding box in the SRID of destination `srid`
+            Bounds2d bbox_dst;  // Bounding box in the SRID of destination `srid`
             proj_wgs84_to_dst.transform(bbox, bbox_dst);
 
             RemapRectd remap_vg_to_tm(out_value_grid->rect(), bbox_dst.rect());
@@ -1151,7 +1151,7 @@ namespace Grain {
      *  @return ErrorCode::None if rendering and saving were successful, or an
      *          appropriate error code indicating the type of failure.
      */
-    ErrorCode CVF2TileManager::renderMetaTiles(const String& dst_path, int32_t zoom, const RangeRectd& bbox, int32_t antialias_level, int64_t start_index, int64_t end_index) noexcept {
+    ErrorCode CVF2TileManager::renderMetaTiles(const String& dst_path, int32_t zoom, const Bounds2d& bbox, int32_t antialias_level, int64_t start_index, int64_t end_index) noexcept {
 
         auto result = ErrorCode::None;
 
@@ -1189,9 +1189,9 @@ namespace Grain {
                 Vec2d bottom_right;
                 Geo::wgs84FromTileIndex(zoom, tile_index, top_left);
                 Geo::wgs84FromTileIndex(zoom, tile_index + Vec2i(mtr.gridSize(), mtr.gridSize()), bottom_right);
-                RangeRectd tile_bbox = { top_left.x_, bottom_right.y_, bottom_right.x_, top_left.y_ };
+                Bounds2d tile_bbox = { top_left.x_, bottom_right.y_, bottom_right.x_, top_left.y_ };
 
-                RangeRectd tile_bbox_crs;
+                Bounds2d tile_bbox_crs;
                 wgs84_to_tile_proj_.transform(tile_bbox, tile_bbox_crs);
 
 
@@ -1248,7 +1248,7 @@ namespace Grain {
      *  @param meta_tile_size The pixel size of meta tiles.
      *  @param bbox The geographic bounding box within which tiles should be rendered.
      */
-    ErrorCode CVF2TileManager::renderDownsampledMetaTiles(const String& base_path, int32_t srid, int32_t src_zoom, int32_t meta_tile_size, const RangeRectd& bbox) noexcept {
+    ErrorCode CVF2TileManager::renderDownsampledMetaTiles(const String& base_path, int32_t srid, int32_t src_zoom, int32_t meta_tile_size, const Bounds2d& bbox) noexcept {
 
         // TODO: Logging!
         // TODO: Multitreading!
@@ -1285,7 +1285,7 @@ namespace Grain {
 
                 Vec2d tile_center_dst[4];
                 String file_path;
-                RangeRectFix tile_bbox;
+                Bounds2Fix tile_bbox;
                 tile_bbox.initForMinMaxSearch();
 
                 for (int32_t i = 0; i < 4; i++) {

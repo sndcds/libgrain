@@ -19,7 +19,7 @@
 #include "Type/List.hpp"
 #include "File/File.hpp"
 #include "2d/Rect.hpp"
-#include "2d/RangeRect.hpp"
+#include "2d/Bounds2.hpp"
 #include "2d/GraphicCompoundPath.hpp"
 #include "Graphic/GraphicContext.hpp"
 #include "Color/RGBA.hpp"
@@ -83,7 +83,7 @@ namespace Grain {
 
         bool _m_closed_path_drawing = false;
 
-        RangeRectd _m_range;
+        Bounds2d _m_range;
         RGBA m_fill_color;
         RGBA m_stroke_color;
         DrawMode m_draw_mode = DrawMode::Undefined;
@@ -248,12 +248,12 @@ namespace Grain {
         bool project(GeoProj& proj) noexcept;
         bool project(GeoProj* proj) noexcept { return proj != nullptr ? project(*proj) : false; }
 
-        RangeRectd range() const noexcept { return _m_range; }
+        Bounds2d range() const noexcept { return _m_range; }
         void clearRange() noexcept { _m_range.set(100000000.0, 100000000.0, -100000000.0, -100000000.0); }
         bool addPointToRange(Vec2d* point) noexcept { return point ? _m_range.add(point) : false; }
         bool addPointToRange(Vec2d& point) noexcept { return addPointToRange(&point); }
 
-        RangeRectd polyBbox(int32_t index) noexcept;
+        Bounds2d polyBbox(int32_t index) noexcept;
 
         void buildPolyCompoundPath(GraphicContext* gc, int32_t index, const RemapRectd& remap_rect, GraphicCompoundPath& out_path) noexcept;
         void buildPolyGCPath(GraphicContext* gc, int32_t index, const RemapRectd& remap_rect) noexcept;
@@ -287,7 +287,7 @@ namespace Grain {
         int32_t m_record_number;
         int32_t m_content_length;
         GeoShape::ShapeType m_shape_type;
-        RangeRectd bbox_;
+        Bounds2d bbox_;
         int32_t m_part_offset = 0;
         int32_t m_part_count = 0;
         int32_t m_point_offset = 0;

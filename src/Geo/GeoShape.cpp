@@ -127,12 +127,12 @@ namespace Grain {
     }
 
 
-    RangeRectd GeoShape::polyBbox(int32_t index) noexcept {
+    Bounds2d GeoShape::polyBbox(int32_t index) noexcept {
         if (auto poly = polyPtrAtIndex(index)) {
             return poly->bbox_;
         }
         else {
-            return RangeRectd(0, 0, 0, 0);
+            return Bounds2d(0, 0, 0, 0);
         }
     }
 

@@ -13,7 +13,7 @@
 #include "Grain.hpp"
 #include "2d/Border.hpp"
 #include "Math/Vec2.hpp"
-#include "2d/RangeRect.hpp"
+#include "2d/Bounds2.hpp"
 #include "GUI/Views/View.hpp"
 #include "Bezier/Bezier.hpp"
 #include "Bezier/BezierValueCurve.hpp"
@@ -75,8 +75,8 @@ protected:
 	ContentFitMode fit_mode_ = ContentFitMode::Range;
 	Vec2d scale_{};
 	Vec2d offs_{};
-	RangeRectd range_{};
-	RangeRectd rem_range_{};
+	Bounds2d range_{};
+	Bounds2d rem_range_{};
 
 	bool keep_proportions_ = true;
 	bool x_scroll_enabled_ = true;
@@ -143,11 +143,11 @@ public:
 	[[nodiscard]] Vec2d scale() const noexcept { return scale_; }
 	[[nodiscard]] double scaleX() const noexcept { return scale_.x(); }
 	[[nodiscard]] double scaleY() const noexcept { return scale_.y(); }
-	[[nodiscard]] RangeRectd range() const noexcept { return range_; }
+	[[nodiscard]] Bounds2d range() const noexcept { return range_; }
 	[[nodiscard]] double rangeWidth() const noexcept { return range_.width(); }
 	[[nodiscard]] double rangeHeight() const noexcept { return range_.height(); }
 
-	void setRange(const RangeRectd& range) noexcept;
+	void setRange(const Bounds2d& range) noexcept;
 	void zoom(double zoom) noexcept;
 	void zoomX(double zoom_x) noexcept;
 	void zoomY(double zoom_y) noexcept;

@@ -38,14 +38,14 @@ namespace Grain {
 
     void SVGPathElement::fill(SVG* svg, GraphicContext& gc) noexcept {
         if (compound_path_) {
-            compound_path_->fill(&gc);
+            compound_path_->fill(gc);
         }
     }
 
 
     void SVGPathElement::stroke(SVG* svg, GraphicContext& gc) noexcept {
         if (compound_path_) {
-            compound_path_->stroke(&gc);
+            compound_path_->stroke(gc);
         }
     }
 

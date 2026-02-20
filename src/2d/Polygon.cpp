@@ -9,7 +9,7 @@
 
 #include "2d/Polygon.hpp"
 #include "Graphic/GraphicContext.hpp"
-#include "2d/RangeRect.hpp"
+#include "2d/Bounds2.hpp"
 
 
 namespace Grain {
@@ -91,14 +91,14 @@ double Polygon::length() noexcept {
 }
 
 
-RangeRectd Polygon::bounds() noexcept {
-    RangeRectd bounds;
+Bounds2d Polygon::bounds() noexcept {
+    Bounds2d bounds;
     this->bounds(bounds);
     return bounds;
 }
 
 
-bool Polygon::bounds(RangeRectd& out_bounds) noexcept {
+bool Polygon::bounds(Bounds2d& out_bounds) noexcept {
     out_bounds.initForMinMaxSearch();
 
     if (pointCount() < 1) {

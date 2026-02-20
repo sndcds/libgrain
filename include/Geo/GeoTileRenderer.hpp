@@ -22,7 +22,7 @@
 #include "Grain.hpp"
 #include "Core/Log.hpp"
 #include "Type/KeyValue.hpp"
-#include "2d/RangeRect.hpp"
+#include "2d/Bounds2.hpp"
 #include "2d/Border.hpp"
 #include "2d/Dimension.hpp"
 #include "String/String.hpp"
@@ -362,7 +362,7 @@ namespace Grain {
         fourcc_t m_tile_order = 'row_';
         int32_t m_min_zoom = -1;            ///< Start zoom level, -1 means undefined
         int32_t m_max_zoom = -1;            ///< End zoom level, -1 means undefined
-        RangeRectd m_bounding_box = { 0.0, 0.0, 0.0, 0.0 };   ///< Bounding box as lon/lat min and max values
+        Bounds2d m_bounding_box = { 0.0, 0.0, 0.0, 0.0 };   ///< Bounding box as lon/lat min and max values
 
         int32_t m_default_src_srid = 4326;          ///< Default source SRID, used by layers without specified SRID
         int32_t m_dst_srid = 0;                     ///< Destination SRID
@@ -392,8 +392,8 @@ namespace Grain {
 
         Vec2d m_render_lonlat_top_left;             ///< Top left corner as long/lat
         Vec2d m_render_lonlat_bottom_right;         ///< Bottom right corner as long/lat
-        RangeRectd m_render_wgs84_bounding_box;     ///< Bounding box in WGS84 coordinates
-        RangeRectd m_render_dst_bounding_box;       ///< Bounding box in destination SRID
+        Bounds2d m_render_wgs84_bounding_box;     ///< Bounding box in WGS84 coordinates
+        Bounds2d m_render_dst_bounding_box;       ///< Bounding box in destination SRID
 
         Vec2d m_render_top_left;                    ///< Top left corner in render coordinates
         Vec2d m_render_bottom_right;                ///< Bottom right corner in render coordinates

@@ -16,7 +16,7 @@
 #include "Type/Object.hpp"
 #include "File/File.hpp"
 #include "Math/Vec2.hpp"
-#include "2d/RangeRect.hpp"
+#include "2d/Bounds2.hpp"
 #include "Core/Log.hpp"
 
 
@@ -169,7 +169,7 @@ namespace Grain {
 
 
     public:
-        GeoMetaTileRange(int32_t zoom, const RangeRectd& bbox);
+        GeoMetaTileRange(int32_t zoom, const Bounds2d& bbox);
 
         const char* className() const noexcept override { return "GeoMetaTileRange"; }
 
@@ -216,7 +216,7 @@ namespace Grain {
 
 
 
-        void setByBbox(int32_t zoom, const RangeRectd& bbox) noexcept;
+        void setByBbox(int32_t zoom, const Bounds2d& bbox) noexcept;
         void setSetupTileSize(int32_t tile_size) noexcept;
         void setTileAction(GeoMetaTileAction action, void* ref) noexcept;
         void iterateAllMetaTiles() noexcept;
@@ -252,7 +252,7 @@ namespace Grain {
         int64_t horizontalMetaTileCount() const noexcept { return m_horizontal_tile_n; }
         int64_t verticalMetaTileCount() const noexcept { return m_vertical_tile_n; }
 
-        void wgs84EnvelopeBbox(RangeRectd& out_bbox) const noexcept;
+        void wgs84EnvelopeBbox(Bounds2d& out_bbox) const noexcept;
     };
 
 

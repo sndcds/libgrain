@@ -18,7 +18,7 @@
 #include "Type/Object.hpp"
 #include "Type/List.hpp"
 #include "Math/Vec2.hpp"
-#include "2d/RangeRect.hpp"
+#include "2d/Bounds2.hpp"
 
 #include <algorithm>
 #include <cmath>

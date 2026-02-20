@@ -34,7 +34,7 @@ namespace Grain {
         hash_.clear();;
         edge_stack_.clear();;
 
-        RangeRect<U> range;
+        Bounds2<U> range;
         range.initForMinMaxSearch();
 
         List<T> ids;

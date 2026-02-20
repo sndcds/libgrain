@@ -10,7 +10,7 @@
 //
 
 #include "2d/GraphicCompoundPath.hpp"
-#include "2d/RangeRect.hpp"
+#include "2d/Bounds2.hpp"
 #include "2d/GraphicPath.hpp"
 #include "2d/GraphicPathPoint.hpp"
 #include "String/String.hpp"
@@ -285,8 +285,8 @@ Rectd GraphicCompoundPath::buildFromWKB(WKBParser& wkb_parser, RemapRectd& remap
     Rectd result_rect;
     result_rect.zero();
 
-    RangeRectd range_rect;
-    range_rect.initForMinMaxSearch();
+    Bounds2d bounds;
+    bounds.initForMinMaxSearch();
 
     try {
         if (wkb_parser.isPolygon() || wkb_parser.isMultiPolygon()) {
@@ -329,7 +329,7 @@ Rectd GraphicCompoundPath::buildFromWKB(WKBParser& wkb_parser, RemapRectd& remap
                         wkb_parser.readVec2(point);
                         remap_rect.mapVec2(point);
                         graphic_path->addPoint(point);
-                        range_rect += point;
+                        bounds += point;
                     }
                     graphic_path->close();
                 }
@@ -374,7 +374,7 @@ Rectd GraphicCompoundPath::buildFromWKB(WKBParser& wkb_parser, RemapRectd& remap
                     wkb_parser.readVec2(point);
                     remap_rect.mapVec2(point);
                     graphic_path->addPoint(point);
-                    range_rect += point;
+                    bounds += point;
                 }
 
                 finish();
@@ -385,7 +385,7 @@ Rectd GraphicCompoundPath::buildFromWKB(WKBParser& wkb_parser, RemapRectd& remap
             // TODO: Message!
         }
 
-        result_rect.set(range_rect.minX(), range_rect.minY(), range_rect.width(), range_rect.height());
+        result_rect.set(bounds.minX(), bounds.minY(), bounds.width(), bounds.height());
     }
     catch (ErrorCode err) {
         std::cout << "Exception in GraphicCompoundPath::buildFromWKB: " << (int32_t)err << std::endl;
@@ -462,44 +462,44 @@ void GraphicCompoundPath::projectToQuadrilateral(const Quadrilateral& quadrilate
 }
 
 
-void GraphicCompoundPath::addAllPaths(GraphicContext* gc) noexcept {
+void GraphicCompoundPath::addAllPaths(GraphicContext& gc) noexcept {
     for (auto& path : paths_) {
-        gc->addPath(path);
+        gc.addPath(path);
     }
 }
 
 
-void GraphicCompoundPath::fill(GraphicContext* gc) noexcept {
+void GraphicCompoundPath::fill(GraphicContext& gc) noexcept {
     addAllPaths(gc);
-    gc->fillPath();
+    gc.fillPath();
 }
 
 
-void GraphicCompoundPath::fillOuter(GraphicContext* gc) noexcept {
+void GraphicCompoundPath::fillOuter(GraphicContext& gc) noexcept {
     // TODO: Check!
     if (paths_.size() > 1) {
-        gc->addPath(paths_.elementAtIndex(0));
-        gc->fillPath();
+        gc.addPath(paths_.elementAtIndex(0));
+        gc.fillPath();
     }
 }
 
 
-void GraphicCompoundPath::fillEvenOdd(GraphicContext* gc) noexcept {
+void GraphicCompoundPath::fillEvenOdd(GraphicContext& gc) noexcept {
     addAllPaths(gc);
-    gc->fillPathEvenOdd();
+    gc.fillPathEvenOdd();
 }
 
 
-void GraphicCompoundPath::stroke(GraphicContext* gc, StrokeStyle* stroke_style) noexcept {
+void GraphicCompoundPath::stroke(GraphicContext& gc, StrokeStyle* stroke_style) noexcept {
     // TODO: Use `stroke_style`!
     addAllPaths(gc);
-    gc->strokePath();
+    gc.strokePath();
 }
 
 
-void GraphicCompoundPath::addClip(GraphicContext* gc) noexcept {
+void GraphicCompoundPath::addClip(GraphicContext& gc) noexcept {
     addAllPaths(gc);
-    gc->clipPath();
+    gc.clipPath();
 }
 
 

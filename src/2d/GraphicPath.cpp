@@ -10,7 +10,7 @@
 #include "2d/GraphicPath.hpp"
 #include "2d/Quadrilateral.hpp"
 #include "2d/GraphicPathPoint.hpp"
-#include "2d/RangeRect.hpp"
+#include "2d/Bounds2.hpp"
 #include "Bezier/Bezier.hpp"
 #include "Graphic/GraphicContext.hpp"
 
@@ -164,23 +164,23 @@ bool GraphicPath::bounds(Rectd& out_bounds) noexcept {
         return false;
     }
 
-    RangeRectd range_rect;
-    range_rect.initForMinMaxSearch();
+    Bounds2d bounds;
+    bounds.initForMinMaxSearch();
 
     int32_t n = segmentCount();
     for (int32_t i = 0; i < n; i++) {
         Bezier bezier;
         if (bezierAtIndex(i, bezier)) {
             if (i == 0) {
-                range_rect = bezier.bounds();
+                bounds = bezier.bounds();
             }
             else {
-                range_rect += bezier.bounds();
+                bounds += bezier.bounds();
             }
         }
     }
 
-    out_bounds = range_rect.rect();
+    out_bounds = bounds.rect();
 
     return true;
 }

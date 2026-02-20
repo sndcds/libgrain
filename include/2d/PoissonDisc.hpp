@@ -13,7 +13,7 @@
 #include "Grain.hpp"
 #include "Math/Vec2.hpp"
 #include "Math/Vec3.hpp"
-#include "2d/RangeRect.hpp"
+#include "2d/Bounds2.hpp"
 
 #include <vector>
 #include <random>
@@ -78,7 +78,7 @@ protected:
     bool first_point_flag_ = true;
 
 public:
-    PoissonDiscSampler(const RangeRectd range, PoissonDiscDensity* density, double r_min, double r_max, int32_t max_tries = 30);
+    PoissonDiscSampler(const Bounds2d range, PoissonDiscDensity* density, double r_min, double r_max, int32_t max_tries = 30);
 
     ~PoissonDiscSampler() {
     }

@@ -43,7 +43,7 @@ add_library(libgrain STATIC
 
         src/Audio/AudioInterface.cpp
 
-        src/2d/RangeRect.cpp
+        src/2d/Bounds2.cpp
         src/2d/PosRect.cpp
         src/2d/Polygon.cpp
         src/2d/Arc.cpp
@@ -61,7 +61,7 @@ add_library(libgrain STATIC
         src/2d/Data/ValueGrid.cpp
 
         src/3d/Cube.cpp
-        src/3d/RangeCube.cpp
+        src/3d/Bounds3.cpp
 
         src/Bezier/Bezier.cpp
         src/Bezier/BezierValueCurve.cpp
@@ -91,6 +91,7 @@ add_library(libgrain STATIC
         src/CSS/CSS.cpp
 
         src/Data/DataComposer.cpp
+        src/Data/JSONWalker.cpp
 
         src/Database/PostgreSQL.cpp
         src/Database/DBaseFile.cpp
@@ -129,7 +130,7 @@ add_library(libgrain STATIC
         src/GUI/Components/TextField.cpp
         src/GUI/Components/Slider.cpp
         src/GUI/Components/ColorWell.cpp
-        src/GUI/Components/ColorWheel.cpp
+        src/GUI/Components/AngleDial.cpp
         src/GUI/Views/View.cpp
         src/GUI/Views/Viewport.cpp
         src/GUI/Views/ScrollView.cpp
@@ -206,8 +207,6 @@ add_library(libgrain STATIC
         src/Signal/SignalFormantFilter.cpp
         src/Signal/SignalIR.cpp
         src/Signal/SignalWave.cpp
-        src/Audio/AudioInterface.cpp
-        src/Data/DataComposer.cpp
 
         src/extern/tinyxml2.cpp
 )
@@ -232,6 +231,7 @@ target_compile_options(libgrain PRIVATE
 if (APPLE)
     target_sources(libgrain PRIVATE
             src/Graphic/AppleCGContext.cpp
+            src/Graphic/macos_image.mm
             src/App/macos_app.mm
             src/GUI/macos_window.mm
             src/GUI/macos_view.mm

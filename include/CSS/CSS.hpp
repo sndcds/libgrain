@@ -39,7 +39,6 @@ namespace Grain {
      *  @note Any changes here must reflect in `CSS::_g_css_units[]`.
      */
     enum class CSSUnit : int32_t {
-
         Undefined = 0,
         Absolute = 1,
 
@@ -272,7 +271,6 @@ namespace Grain {
 
 
     class CSSValidator {
-
         friend class CSS;
 
     protected:

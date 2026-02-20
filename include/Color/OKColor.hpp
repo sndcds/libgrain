@@ -37,15 +37,15 @@ namespace Grain {
         float m_data[3] = { 0.0f, 0.0f, 0.0f };
 
     public:
-        OKLab() noexcept {}
+        OKLab() noexcept = default;
         OKLab(float l, float a, float b) noexcept : m_data { l, a, b } {}
-        OKLab(const OKLCh& oklch) noexcept;
-        OKLab(const RGB& rgb) noexcept;
+        explicit OKLab(const OKLCh& oklch) noexcept;
+        explicit OKLab(const RGB& rgb) noexcept;
 
-        ~OKLab() noexcept {}
+        virtual ~OKLab() noexcept {}
 
 
-        virtual const char* className() const noexcept { return "OKLab"; }
+        [[nodiscard]] virtual const char* className() const noexcept { return "OKLab"; }
 
         friend std::ostream& operator << (std::ostream& os, const OKLab* o) {
             o == nullptr ? os << "OKLab nullptr" : os << *o;
@@ -67,11 +67,11 @@ namespace Grain {
         }
 
         float* mutDataPtr() noexcept { return m_data; }
-        const float* dataPtr() const noexcept { return m_data; }
+        [[nodiscard]] const float* dataPtr() const noexcept { return m_data; }
 
-        float lumina() const noexcept { return m_data[0]; }
-        float a() const noexcept { return m_data[1]; }
-        float b() const noexcept { return m_data[2]; }
+        [[nodiscard]] float lumina() const noexcept { return m_data[0]; }
+        [[nodiscard]] float a() const noexcept { return m_data[1]; }
+        [[nodiscard]] float b() const noexcept { return m_data[2]; }
 
         void Lightness(float l) noexcept { m_data[0] = l; }
         void setA(float c) noexcept { m_data[1] = c; }
@@ -106,15 +106,15 @@ namespace Grain {
         float m_data[3] = { 0.0f, 0.0f, 0.0f };
 
     public:
-        OKLCh() noexcept {}
+        OKLCh() noexcept = default;
         OKLCh(float l, float c, float h) noexcept : m_data { l, c, h } {}
-        OKLCh(const OKLab& oklab) noexcept;
-        OKLCh(const RGB& rgb) noexcept;
+        explicit OKLCh(const OKLab& oklab) noexcept;
+        explicit OKLCh(const RGB& rgb) noexcept;
 
-        ~OKLCh() noexcept {}
+        virtual ~OKLCh() noexcept = default;
 
 
-        virtual const char* className() const noexcept { return "OKLCh"; }
+        [[nodiscard]] virtual const char* className() const noexcept { return "OKLCh"; }
 
         friend std::ostream& operator << (std::ostream& os, const OKLCh* o) {
             o == nullptr ? os << "OKLCh nullptr" : os << *o;
@@ -136,11 +136,11 @@ namespace Grain {
         }
 
         float* mutDataPtr() noexcept { return m_data; }
-        const float* dataPtr() const noexcept { return m_data; }
+        [[nodiscard]] const float* dataPtr() const noexcept { return m_data; }
 
-        float lightness() const noexcept { return m_data[0]; }
-        float chroma() const noexcept { return m_data[1]; }
-        float hue() const noexcept { return m_data[2]; }
+        [[nodiscard]] float lightness() const noexcept { return m_data[0]; }
+        [[nodiscard]] float chroma() const noexcept { return m_data[1]; }
+        [[nodiscard]] float hue() const noexcept { return m_data[2]; }
 
         void setLightness(float l) noexcept { m_data[0] = l; }
         void setChroma(float c) noexcept { m_data[1] = c; }

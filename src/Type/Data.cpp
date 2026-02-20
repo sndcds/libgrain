@@ -77,7 +77,7 @@ namespace Grain {
     }
 
 
-    bool Base64Data::encodeFinalize() {
+    const bool Base64Data::encodeFinalize() {
 
         int32_t n = 0;
         switch (m_byte_index) {

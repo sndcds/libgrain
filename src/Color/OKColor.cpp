@@ -15,26 +15,22 @@
 namespace Grain {
 
     OKLab::OKLab(const OKLCh& oklch) noexcept {
-
         Color::oklch_to_oklab(oklch.m_data, m_data);
     }
 
 
     OKLab::OKLab(const RGB& rgb) noexcept {
-
         Color::rgb_to_oklab(rgb.data_, m_data);
     }
 
 
     OKLCh::OKLCh(const RGB& rgb) noexcept {
-
         OKLab oklab;
         Color::rgb_to_oklab(rgb.data_, oklab.m_data);
         Color::oklab_to_oklch(oklab.m_data, m_data);
     }
 
     OKLCh::OKLCh(const OKLab& oklab) noexcept {
-
         Color::oklab_to_oklch(oklab.m_data, m_data);
     }
 

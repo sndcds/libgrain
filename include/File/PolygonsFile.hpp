@@ -13,7 +13,7 @@
 #define GrainPolygonsFile_hpp
 
 #include "Grain.hpp"
-#include "2d/RangeRect.hpp"
+#include "2d/Bounds2.hpp"
 #include "Type/List.hpp"
 #include "File/File.hpp"
 
@@ -22,7 +22,7 @@ namespace Grain {
 
     struct PolygonsFileEntry {
         int64_t m_file_pos{};           ///< Position of polygon data in file
-        RangeRectd m_bounding_box;      ///< Bounding box for the polygon
+        Bounds2d m_bounding_box;      ///< Bounding box for the polygon
         int32_t m_part_count{};         ///< Number of parts in polygon
         int32_t m_point_count{};        ///< Number of point in polygon
     };
@@ -38,7 +38,7 @@ namespace Grain {
     protected:
         uint32_t m_polygon_count{};                 ///< Number of polygons in file
         List<PolygonsFileEntry> m_polygon_entries;  ///< All file entries
-        RangeRectd m_bounding_box{};                ///< Bound box in WGS84/EPSG:4326 coordinates
+        Bounds2d m_bounding_box{};                ///< Bound box in WGS84/EPSG:4326 coordinates
         int64_t srid_{};                            ///< SRID, Spatial Reference System Identifier
         int64_t m_info_read_time{};                 ///< Time used for reading the file info
 
@@ -62,7 +62,7 @@ namespace Grain {
         }
 
         [[nodiscard]] uint32_t polygonCount() const noexcept { return m_polygon_count; }
-        [[nodiscard]] RangeRectd boundingBox() const noexcept { return m_bounding_box; }
+        [[nodiscard]] Bounds2d boundingBox() const noexcept { return m_bounding_box; }
         [[nodiscard]] int32_t srid() const noexcept { return static_cast<int32_t>(srid_); }
         [[nodiscard]] int64_t infoReadTime() const noexcept { return m_info_read_time; }
 

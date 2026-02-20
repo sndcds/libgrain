@@ -22,7 +22,7 @@
 
 namespace Grain {
 
-class RangeRectFix {
+class Bounds2Fix {
 
 public:
     Fix min_x_{};
@@ -31,53 +31,55 @@ public:
     Fix max_y_{};
 
 public:
-    RangeRectFix() noexcept = default;
-    explicit RangeRectFix(Fix min_x, Fix min_y, Fix max_x, Fix max_y) noexcept :
+    Bounds2Fix() noexcept = default;
+    explicit Bounds2Fix(Fix min_x, Fix min_y, Fix max_x, Fix max_y) noexcept :
         min_x_(min_x), min_y_(min_y), max_x_(max_x), max_y_(max_y) {}
 
-    virtual ~RangeRectFix() noexcept = default;
+    virtual ~Bounds2Fix() noexcept = default;
 
     [[nodiscard]] virtual const char* className() const noexcept {
         return "RangeRectFix";
     }
 
-    friend std::ostream& operator << (std::ostream& os, const RangeRectFix* o) {
+    friend std::ostream& operator << (std::ostream& os, const Bounds2Fix* o) {
         o == nullptr ? os << "RangeRectFix nullptr" : os << *o;
         return os;
     }
 
-    friend std::ostream& operator << (std::ostream& os, const RangeRectFix& o) {
+    friend std::ostream& operator << (std::ostream& os, const Bounds2Fix& o) {
         return os << o.min_x_ << ", " << o.min_y_ << " | " << o.max_x_ << ", " << o.max_y_;
     }
 
-    RangeRectFix& operator = (const Vec2Fix& v) {
+    Bounds2Fix& operator = (const Vec2Fix& v) {
         min_x_ = max_x_ = v.x_;
         min_y_ = max_y_ = v.y_;
         return *this;
     }
 
-    RangeRectFix& operator = (const RectFix& r) {
+    /*
+    Bounds2Fix& operator = (const RectFix& r) {
         min_x_ = r.width_ > 0 ? r.x_ : r.x_ + r.width_;
         min_y_ = r.height_ > 0 ? r.y_ : r.y_ + r.height_;
         max_x_ = r.width_ > 0 ? r.x_ + r.width_ : r.x_;
         max_y_ = r.height_ > 0 ? r.y_ + r.height_ : r.y_;
         return *this;
     }
+    */
 
-    bool operator == (const RangeRectFix& other) const {
+    bool operator == (const Bounds2Fix& other) const {
         return
             min_x_ == other.min_x_ && min_y_ == other.min_y_ &&
             max_x_ == other.max_x_ && max_y_ == other.max_y_;
     }
 
-    bool operator != (const RangeRectFix& other) const {
+    bool operator != (const Bounds2Fix& other) const {
         return
             min_x_ != other.min_x_ || min_y_ != other.min_y_ ||
             max_x_ != other.max_x_ || max_y_ != other.max_y_;
     }
 
-    RangeRectFix operator + (const RangeRectFix& other) const {
-        RangeRectFix result;
+    Bounds2Fix operator + (const Bounds2Fix& other) const {
+        Bounds2Fix result;
         result.min_x_ = min_x_ < other.min_x_ ? min_x_ : other.min_x_;
         result.min_y_ = min_y_ < other.min_y_ ? min_y_ : other.min_y_;
         result.max_x_ = max_x_ > other.max_x_ ? max_x_ : other.max_x_;
@@ -85,8 +87,8 @@ public:
         return result;
     }
 
-    RangeRectFix operator + (const Vec2Fix& v) const {
-        RangeRectFix result = *this;
+    Bounds2Fix operator + (const Vec2Fix& v) const {
+        Bounds2Fix result = *this;
         if (v.x_ < min_x_) { result.min_x_ = v.x_; }
         if (v.y_ < min_y_) { result.min_y_ = v.y_; }
         if (v.x_ > max_x_) { result.max_x_ = v.x_; }
@@ -94,8 +96,8 @@ public:
         return result;
     }
 
-    RangeRectFix operator + (const RectFix& r) const {
-        RangeRectFix result;
+    Bounds2Fix operator + (const RectFix& r) const {
+        Bounds2Fix result;
         Fix r_min_x = r.width_ > 0 ? r.x_ : r.x_ + r.width_;
         Fix r_min_y = r.height_ > 0 ? r.y_ : r.y_ + r.height_;
         Fix r_max_x = r.width_ > 0 ? r.x_ + r.width_ : r.x_;
@@ -107,7 +109,7 @@ public:
         return result;
     }
 
-    RangeRectFix& operator += (const RangeRectFix& other) {
+    Bounds2Fix& operator += (const Bounds2Fix& other) {
         min_x_ = min_x_ < other.min_x_ ? min_x_ : other.min_x_;
         min_y_ = min_y_ < other.min_y_ ? min_y_ : other.min_y_;
         max_x_ = max_x_ > other.max_x_ ? max_x_ : other.max_x_;
@@ -115,7 +117,7 @@ public:
         return *this;
     }
 
-    RangeRectFix& operator += (const Vec2Fix& r) {
+    Bounds2Fix& operator += (const Vec2Fix& r) {
         if (r.x_ < min_x_) { min_x_ = r.x_; }
         if (r.y_ < min_y_) { min_y_ = r.y_; }
         if (r.x_ > max_x_) { max_x_ = r.x_; }
@@ -123,7 +125,7 @@ public:
         return *this;
     }
 
-    RangeRectFix& operator += (const RectFix& r) {
+    Bounds2Fix& operator += (const RectFix& r) {
         Fix r_min_x = r.width_ > 0 ? r.x_ : r.x_ + r.width_;
         Fix r_min_y = r.height_ > 0 ? r.y_ : r.y_ + r.height_;
         Fix r_max_x = r.width_ > 0 ? r.x_ + r.width_ : r.x_;
@@ -213,12 +215,12 @@ public:
         addY(rect.y_); addY(rect.y2());
     }
 
-    void add(const RangeRectFix& r) noexcept {
+    void add(const Bounds2Fix& r) noexcept {
         addX(r.min_x_); addX(r.max_x_);
         addY(r.min_y_); addY(r.max_y_);
     }
 
-    void limit(const RangeRectFix& max_rect) noexcept {
+    void limit(const Bounds2Fix& max_rect) noexcept {
         if (min_x_ < max_rect.min_x_) min_x_ = max_rect.min_x_;
         if (min_y_ < max_rect.min_y_) min_y_ = max_rect.min_y_;
         if (max_x_ > max_rect.max_x_) max_x_ = max_rect.max_x_;
@@ -233,8 +235,8 @@ public:
     void scrollUp() noexcept { scrollY(height() / 2); }
     void scrollDown() noexcept { scrollY(-height() / 2); }
 
-    void lerp(const RangeRectFix& r, const Fix& t) noexcept {
-        RangeRectFix result;
+    void lerp(const Bounds2Fix& r, const Fix& t) noexcept {
+        Bounds2Fix result;
         result.min_x_ = min_x_ + t * (r.min_x_ - min_x_);
         result.min_y_ = min_y_ + t * (r.min_y_ - min_y_);
         result.max_x_ = max_x_ + t * (r.max_x_ - max_x_);
@@ -242,8 +244,8 @@ public:
         *this = result;
     }
 
-    static RangeRectFix lerp(const RangeRectFix& a, const RangeRectFix& b, const Fix& t) noexcept {
-        RangeRectFix result;
+    static Bounds2Fix lerp(const Bounds2Fix& a, const Bounds2Fix& b, const Fix& t) noexcept {
+        Bounds2Fix result;
         result.min_x_ = a.min_x_ + t * (b.min_x_ - a.min_x_);
         result.min_y_ = a.min_y_ + t * (b.min_y_ - a.min_y_);
         result.max_x_ = a.max_x_ + t * (b.max_x_ - a.max_x_);
@@ -262,7 +264,7 @@ public:
 
 
 template <ScalarType T>
-class RangeRect {
+class Bounds2 {
 
 public:
     T min_x_{};
@@ -271,33 +273,33 @@ public:
     T max_y_{};
 
 public:
-    RangeRect() noexcept = default;
-    RangeRect(T min_x, T min_y, T max_x, T max_y) noexcept :
+    Bounds2() noexcept = default;
+    Bounds2(T min_x, T min_y, T max_x, T max_y) noexcept :
         min_x_(min_x), min_y_(min_y), max_x_(max_x), max_y_(max_y) {}
 
-    virtual ~RangeRect() = default;
+    virtual ~Bounds2() = default;
 
     [[nodiscard]] virtual const char* className() const noexcept {
         return "RangeRect";
     }
 
-    friend std::ostream& operator << (std::ostream& os, const RangeRect* o) {
+    friend std::ostream& operator << (std::ostream& os, const Bounds2* o) {
         o == nullptr ? os << "RangeRect nullptr" : os << *o;
         return os;
     }
 
-    friend std::ostream& operator << (std::ostream& os, const RangeRect& o) {
+    friend std::ostream& operator << (std::ostream& os, const Bounds2& o) {
         os << std::fixed << o.min_x_ << ", " << o.min_y_ << ", " << o.max_x_ << ", " << o.max_y_ << std::defaultfloat;
         return os;
     }
 
-    RangeRect& operator = (const Vec2<T>& v) {
+    Bounds2& operator = (const Vec2<T>& v) {
         min_x_ = max_x_ = v.x_;
         min_y_ = max_y_ = v.y_;
         return *this;
     }
 
-    RangeRect& operator = (const Rect<T>& r) {
+    Bounds2& operator = (const Rect<T>& r) {
         min_x_ = r.width_ >= 0 ? r.x_ : r.x_ + r.width_;
         min_y_ = r.height_ >= 0 ? r.y_ : r.y_ + r.height_;
         max_x_ = r.width_ >= 0 ? r.x_ + r.width_ : r.x_;
@@ -305,7 +307,7 @@ public:
         return *this;
     }
 
-    RangeRect& operator = (const RangeRectFix& r) {
+    Bounds2& operator = (const Bounds2Fix& r) {
         if constexpr (std::is_same_v<T, double>) {
             min_x_ = r.min_x_.asDouble();
             max_x_ = r.max_x_.asDouble();
@@ -333,20 +335,20 @@ public:
         return *this;
     }
 
-    bool operator == (const RangeRect& other) const {
+    bool operator == (const Bounds2& other) const {
         return
             min_x_ == other.min_x_ && min_y_ == other.min_y_ &&
             max_x_ == other.max_x_ && max_y_ == other.max_y_;
     }
 
-    bool operator != (const RangeRect& other) const {
+    bool operator != (const Bounds2& other) const {
         return
             min_x_ != other.min_x_ || min_y_ != other.min_y_ ||
             max_x_ != other.max_x_ || max_y_ != other.max_y_;
     }
 
-    RangeRect operator + (const RangeRect& other) const {
-        RangeRect result;
+    Bounds2 operator + (const Bounds2& other) const {
+        Bounds2 result;
         result.min_x_ = min_x_ < other.min_x_ ? min_x_ : other.min_x_;
         result.min_y_ = min_y_ < other.min_y_ ? min_y_ : other.min_y_;
         result.max_x_ = max_x_ > other.max_x_ ? max_x_ : other.max_x_;
@@ -354,8 +356,8 @@ public:
         return result;
     }
 
-    RangeRect operator + (const Vec2<T>& v) const {
-        RangeRect result = *this;
+    Bounds2 operator + (const Vec2<T>& v) const {
+        Bounds2 result = *this;
         if (v.x_ < min_x_) { result.min_x_ = v.x_; }
         if (v.y_ < min_y_) { result.min_y_ = v.y_; }
         if (v.x_ > max_x_) { result.max_x_ = v.x_; }
@@ -363,8 +365,8 @@ public:
         return result;
     }
 
-    RangeRect operator + (const Rect<T>& r) const {
-        RangeRect result;
+    Bounds2 operator + (const Rect<T>& r) const {
+        Bounds2 result;
         T r_min_x = r.width_ > 0 ? r.x_ : r.x_ + r.width_;
         T r_min_y = r.height_ > 0 ? r.y_ : r.y_ + r.height_;
         T r_max_x = r.width_ > 0 ? r.x_ + r.width_ : r.x_;
@@ -376,7 +378,7 @@ public:
         return result;
     }
 
-    RangeRect& operator += (const RangeRect& other) {
+    Bounds2& operator += (const Bounds2& other) {
         min_x_ = min_x_ < other.min_x_ ? min_x_ : other.min_x_;
         min_y_ = min_y_ < other.min_y_ ? min_y_ : other.min_y_;
         max_x_ = max_x_ > other.max_x_ ? max_x_ : other.max_x_;
@@ -384,7 +386,7 @@ public:
         return *this;
     }
 
-    RangeRect& operator += (const Vec2<T>& v) {
+    Bounds2& operator += (const Vec2<T>& v) {
         if (v.x_ < min_x_) { min_x_ = v.x_; }
         if (v.y_ < min_y_) { min_y_ = v.y_; }
         if (v.x_ > max_x_) { max_x_ = v.x_; }
@@ -392,7 +394,7 @@ public:
         return *this;
     }
 
-    RangeRect& operator += (const Rect<T>& r) {
+    Bounds2& operator += (const Rect<T>& r) {
         T r_min_x = r.width_ > 0 ? r.x_ : r.x_ + r.width_;
         T r_min_y = r.height_ > 0 ? r.y_ : r.y_ + r.height_;
         T r_max_x = r.width_ > 0 ? r.x_ + r.width_ : r.x_;
@@ -577,12 +579,12 @@ public:
         if (rect.y2() > max_y_) max_y_ = rect.y2();
     }
 
-    void add(const RangeRect<T>& rect) noexcept {
+    void add(const Bounds2<T>& rect) noexcept {
         *this += rect;
     }
 
 
-    void limit(const RangeRect& max_rect) noexcept {
+    void limit(const Bounds2& max_rect) noexcept {
         if (min_x_ < max_rect.min_x_) min_x_ = max_rect.min_x_;
         if (min_y_ < max_rect.min_y_) min_y_ = max_rect.min_y_;
         if (max_x_ > max_rect.max_x_) max_x_ = max_rect.max_x_;
@@ -626,18 +628,18 @@ public:
      *  @brief Checks if this rectangle overlaps with another rectangle.
      *
      *  This method determines if there is any overlapping area between this
-     *  rectangle and another rectangle specified by `range_rect`.
+     *  rectangle and another rectangle specified by `bounds`.
      *  Overlap is determined based on the x and y coordinates of the two rectangles.
      *
-     *  @param range_rect The rectangle to check for overlap with.
-     *                    It is represented by another instance of RangeRect.
+     *  @param bounds The rectangle to check for overlap with.
+     *                It is represented by another instance of RangeRect.
      *  @return `true` if the rectangles overlap; `false` otherwise.
      */
-    [[nodiscard]] bool overlaps(const RangeRect& range_rect) const noexcept {
-        if (max_x_ < range_rect.min_x_ || range_rect.max_x_ < min_x_) {
+    [[nodiscard]] bool overlaps(const Bounds2& bounds) const noexcept {
+        if (max_x_ < bounds.min_x_ || bounds.max_x_ < min_x_) {
             return false;
         }
-        if (max_y_ < range_rect.min_y_ || range_rect.max_y_ < min_y_) {
+        if (max_y_ < bounds.min_y_ || bounds.max_y_ < min_y_) {
             return false;
         }
         return true;
@@ -750,8 +752,8 @@ public:
         }
     }
 
-    void lerp(const RangeRect<T>& r, double t) noexcept {
-        RangeRect<T> result;
+    void lerp(const Bounds2<T>& r, double t) noexcept {
+        Bounds2<T> result;
         result.min_x_ = min_x_ + t * (r.min_x_ - min_x_);
         result.min_y_ = min_y_ + t * (r.min_y_ - min_y_);
         result.max_x_ = max_x_ + t * (r.max_x_ - max_x_);
@@ -759,8 +761,8 @@ public:
         *this = result;
     }
 
-    static RangeRect<T> lerp(const RangeRect<T>& a, const RangeRect<T>& b, double t) noexcept {
-        RangeRect<T> result;
+    static Bounds2<T> lerp(const Bounds2<T>& a, const Bounds2<T>& b, double t) noexcept {
+        Bounds2<T> result;
         result.min_x_ = a.min_x_ + t * (b.min_x_ - a.min_x_);
         result.min_y_ = a.min_y_ + t * (b.min_y_ - a.min_y_);
         result.max_x_ = a.max_x_ + t * (b.max_x_ - a.max_x_);
@@ -785,10 +787,10 @@ public:
 
 
 // Standard types
-using RangeRecti = RangeRect<int32_t>;  ///< 32 bit integer
-using RangeRectl = RangeRect<int64_t>;  ///< 64 bit integer
-using RangeRectf = RangeRect<float>;    ///< 32 bit floating point
-using RangeRectd = RangeRect<double>;   ///< 64 bit floating point
+using Bounds2i = Bounds2<int32_t>;  ///< 32 bit integer
+using Bounds2l = Bounds2<int64_t>;  ///< 64 bit integer
+using Bounds2f = Bounds2<float>;    ///< 32 bit floating point
+using Bounds2d = Bounds2<double>;   ///< 64 bit floating point
 
 
 } // End of namespace Grain

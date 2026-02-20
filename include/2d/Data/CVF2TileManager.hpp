@@ -15,7 +15,7 @@
 #include "CVF2File.hpp"
 #include "Geo/Geo.hpp"
 #include "Geo/GeoProj.hpp"
-#include "2d/RangeRect.hpp"
+#include "2d/Bounds2.hpp"
 #include "Time/Timestamp.hpp"
 #include "Type/Flags.hpp"
 #include "Image/Image.hpp"
@@ -42,8 +42,8 @@ protected:
     bool valid_ = false;                ///< Flag indicating whether the tile is valid for use
     ErrorCode last_err_code_ = ErrorCode::None;     ///< Last error occurred in tile preparation
 
-    RangeRectFix bbox_;                 ///< Bounding box as Fix values in SRID of tile manager
-    RangeRectd bbox_dbl_;               ///< Bounding box as doubles in SRID of tile manager
+    Bounds2Fix bbox_;                 ///< Bounding box as Fix values in SRID of tile manager
+    Bounds2d bbox_dbl_;               ///< Bounding box as doubles in SRID of tile manager
 
     int32_t x_index_ = 0;               ///< Tile x index in 2d tile array
     int32_t y_index_ = 0;               ///< Tile y index in 2d tile array
@@ -109,7 +109,7 @@ public:
 
     [[nodiscard]] bool isValid() const noexcept { return valid_; }
     [[nodiscard]] Rectd rect() const noexcept { return bbox_dbl_.rect(); }
-    [[nodiscard]] RangeRectd rangeRect() const noexcept { return bbox_dbl_; }
+    [[nodiscard]] Bounds2d rangeRect() const noexcept { return bbox_dbl_; }
 
     [[nodiscard]] bool hasUndefinedValues() const noexcept { return undefined_values_count_ > 0; }
     [[nodiscard]] int32_t undefinedValuesCount() const noexcept { return undefined_values_count_; }
@@ -195,9 +195,9 @@ protected:
     String dir_path_;                       ///< Path to the main directory of the tile manager data structure
 
     // Bounding box
-    RangeRectd provided_bbox_;             ///< Input bounding box defining the area of interest
+    Bounds2d provided_bbox_;             ///< Input bounding box defining the area of interest
     int32_t provided_bbox_srid_ = 0;       ///< Spatial Reference System Identifier (SRID) of the input bounding box
-    RangeRectd bbox_;                       ///< Input bounding box projected to tile manager SRID
+    Bounds2d bbox_;                       ///< Input bounding box projected to tile manager SRID
     bool bbox_used_ = false;               ///< Flag indicating whether the bounding box (bbox_) is in use
     bool bbox_valid_ = false;              ///< Flag indicating whether the bounding box (bbox_) is valid to use
 
@@ -219,8 +219,8 @@ protected:
 
     timestamp_t scan_ts1_{};
     timestamp_t scan_ts2_{};
-    RangeRectFix scan_xy_range_;
-    RangeRectd scan_xy_range_dbl_;
+    Bounds2Fix scan_xy_range_;
+    Bounds2d scan_xy_range_dbl_;
     int64_t scan_total_min_{};
     int64_t scan_total_max_{};
     int64_t scan_total_undefined_values_n_{};
@@ -308,7 +308,7 @@ public:
     [[nodiscard]] bool useTileCache() const noexcept { return cache_tile_flag_; }
 
 
-    ErrorCode scan(const RangeRectd& bbox, int32_t bbox_srid) noexcept;
+    ErrorCode scan(const Bounds2d& bbox, int32_t bbox_srid) noexcept;
     ErrorCode scan() noexcept;
     void _scanFile(const String& dir_path, const String& file_name);
 
@@ -340,13 +340,13 @@ public:
 
     ErrorCode generateRawTiles() noexcept;
 
-    ErrorCode collectImage(const RangeRectd& bbox, int32_t bbox_srid, float min_level, float max_level, Image** out_image_ptr, RangeRectd& out_bounds) noexcept;
-    ErrorCode renderToValueGrid(int32_t srid, const RangeRectd& bbox, int32_t antialias_level, ValueGrid<int64_t>* out_value_grid) noexcept;
+    ErrorCode collectImage(const Bounds2d& bbox, int32_t bbox_srid, float min_level, float max_level, Image** out_image_ptr, Bounds2d& out_bounds) noexcept;
+    ErrorCode renderToValueGrid(int32_t srid, const Bounds2d& bbox, int32_t antialias_level, ValueGrid<int64_t>* out_value_grid) noexcept;
     ErrorCode exportCSV(const String& file_path) noexcept;
 
-    ErrorCode renderMetaTiles(const String& dir_path, int32_t zoom, const RangeRectd& bbox, int32_t antialias_level, int64_t start_index = 0, int64_t end_index = std::numeric_limits<int64_t>::max()) noexcept;
+    ErrorCode renderMetaTiles(const String& dir_path, int32_t zoom, const Bounds2d& bbox, int32_t antialias_level, int64_t start_index = 0, int64_t end_index = std::numeric_limits<int64_t>::max()) noexcept;
 
-    static ErrorCode renderDownsampledMetaTiles(const String& base_path, int32_t srid, int32_t src_zoom, int32_t meta_tile_size, const RangeRectd& bbox) noexcept;
+    static ErrorCode renderDownsampledMetaTiles(const String& base_path, int32_t srid, int32_t src_zoom, int32_t meta_tile_size, const Bounds2d& bbox) noexcept;
 
     static ErrorCode imageFromRawFile(const String& raw_file_path, Image* image) noexcept;
 

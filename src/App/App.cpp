@@ -72,6 +72,11 @@ namespace Grain {
         title_ui_font_ = new (std::nothrow) Font(22);
         mono_font_ = new (std::nothrow) Font("SF Mono", 11); // TODO: Fallback!
 
+        hue_ring_image_ = Image::createRGBFloat(480, 480);
+        if (hue_ring_image_) {
+            hue_ring_image_->fillHueWheel(1, 0.9f);
+        }
+
         g_instance->_initGUIStyle();
     }
 

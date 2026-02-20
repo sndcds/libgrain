@@ -12,6 +12,24 @@ namespace Grain {
             [NSApplication sharedApplication];
             [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
             [NSApp activateIgnoringOtherApps:YES];
+/*
+            NSString *exePath = [[NSBundle mainBundle] executablePath];
+            std::cout << "exePath: " << [exePath UTF8String] << std::endl;
+            // TODO: Set correct path for app icons
+            // NSString *iconPath = [[NSBundle mainBundle] pathForResource:@"Grain" ofType:@"icns"];
+            // NSImage *icon = [[NSImage alloc] initByReferencingFile:iconPath];
+            NSImage *icon = [[NSImage alloc] initByReferencingFile:@"/Users/roaldchristesen/Documents/Developer/Projects/CLionProjects/grain_demo/Grain.icns"];
+            [NSApp setApplicationIconImage:icon];
+*/
+            NSString *exePath = [[NSBundle mainBundle] executablePath];
+            NSString *exeDir  = [exePath stringByDeletingLastPathComponent];
+
+            NSString *iconPath =
+                [exeDir stringByAppendingPathComponent:@"Grain.icns"];
+
+            NSImage *icon = [[NSImage alloc] initWithContentsOfFile:iconPath];
+            [NSApp setApplicationIconImage:icon];
+
             [NSApp run];
         }
     }

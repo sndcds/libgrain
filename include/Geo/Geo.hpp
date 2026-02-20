@@ -16,7 +16,7 @@
 #include "Grain.hpp"
 #include "Type/Object.hpp"
 #include "Math/Vec2.hpp"
-#include "2d/RangeRect.hpp"
+#include "2d/Bounds2.hpp"
 #include "String/String.hpp"
 #include "Math/Math.hpp"
 
@@ -29,9 +29,9 @@ namespace Grain {
      */
     typedef struct GeoSRIDInfo {
         const char* m_id_str;       ///< SRID number as C-string
-        RangeRectd m_bounds;        ///< Bounds of thhe coordinate system
+        Bounds2d m_bounds;        ///< Bounds of thhe coordinate system
         Vec2d center_{};            ///< Center
-        RangeRectd m_wgs84_bounds;  ///< Corresponding bounds in WGS84 lon/lat coordinates
+        Bounds2d m_wgs84_bounds;  ///< Corresponding bounds in WGS84 lon/lat coordinates
     } GeoSRIDInfo;
 
 
@@ -150,7 +150,7 @@ namespace Grain {
         }
 
 
-        static void haversineWidthAndHeight(const RangeRectd& bounds, int32_t srid, double radius, BoundType bound_type, double& out_width, double& out_height) noexcept;
+        static void haversineWidthAndHeight(const Bounds2d& bounds, int32_t srid, double radius, BoundType bound_type, double& out_width, double& out_height) noexcept;
 
         static double sphericalLawOfCosinesDistance(const Vec2d& lonlat1, const Vec2d& lonlat2, double radius) noexcept {
             return sphericalLawOfCosinesDistance(lonlat1.x_, lonlat1.y_, lonlat2.x_, lonlat2.y_, radius);

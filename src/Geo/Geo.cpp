@@ -334,9 +334,9 @@ namespace Grain {
      *  @param[out] out_width The resulting width in meters.
      *  @param[out] out_height The resulting height in meters.
      */
-    void Geo::haversineWidthAndHeight(const RangeRectd& bounds, int32_t srid, double radius, BoundType bound_type, double& out_width, double& out_height) noexcept {
+    void Geo::haversineWidthAndHeight(const Bounds2d& bounds, int32_t srid, double radius, BoundType bound_type, double& out_width, double& out_height) noexcept {
 
-        RangeRectd used_bounds;
+        Bounds2d used_bounds;
         Vec2d p1, p2;
 
         if (srid != 4326) {

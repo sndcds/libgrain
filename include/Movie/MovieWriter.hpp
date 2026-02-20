@@ -11,14 +11,7 @@
 #define GrainMovieWriter_hpp
 
 #include "String/String.hpp"
-
-extern "C" {
-    #include <libavformat/avformat.h>
-    #include <libavcodec/avcodec.h>
-    #include <libavutil/imgutils.h>
-    #include <libswscale/swscale.h>
-    #include <libavutil/channel_layout.h>
-}
+#include "Movie/Movie.hpp"
 
 
 namespace Grain {
@@ -28,19 +21,10 @@ namespace Grain {
     class MovieWriter;
 
 
-    typedef void (*MovieWriterFrameCallbackFunc)(MovieWriter* movie_writer, Image* frame_image, int64_t frame_index);
+    typedef void (*MovieWriterFrameCallbackFunc)(MovieWriter* movie_writer, int64_t frame_index);
 
 
-    enum class MovieVideoCodec {
-        H264 = 0,
-        PRORES
-    };
-
-    enum class MovieAudioCodec {
-        AAC = 0
-    };
-
-    struct MovieWriterSetting {
+    struct MovieWriterConfig {
         int32_t width = 1920;
         int32_t height = 1080;
         int32_t video_fps = 25;
@@ -48,39 +32,42 @@ namespace Grain {
         int32_t video_quality = 23;
         MovieAudioCodec audio_codec = MovieAudioCodec::AAC;
         int32_t audio_bitrate = 128000;
-    };
 
-    class MovieWriter {
-    public:
-        MovieWriter() noexcept = default;
-        ~MovieWriter() noexcept = default;
-
-        ErrorCode writeVideoWithAudio(
-            const String& file_path,
-            int64_t video_frame_count,
-            const MovieWriterSetting& settings,
-            MovieWriterFrameCallbackFunc frame_callback,
-            Image* frame_image,
-            Signal* audio_signal) noexcept;
-
-
-        // Helper
-        AVCodecID avVideoCodecId(const MovieWriterSetting& settings) {
-            switch (settings.video_codec) {
+        AVCodecID avVideoCodecId() const {
+            switch (video_codec) {
                 case MovieVideoCodec::H264: return AV_CODEC_ID_H264;
                 case MovieVideoCodec::PRORES: return AV_CODEC_ID_PRORES;
                 default: return AV_CODEC_ID_NONE;
             }
         }
 
-        AVCodecID avAudioCodecId(const MovieWriterSetting& settings) {
-            switch (settings.audio_codec) {
+        AVCodecID avAudioCodecId() const {
+            switch (audio_codec) {
                 case MovieAudioCodec::AAC: return AV_CODEC_ID_AAC;
                 default: return AV_CODEC_ID_NONE;
             }
         }
+    };
+
+    class MovieWriter {
+    public:
+        MovieWriter() noexcept = default;
+        ~MovieWriter() noexcept;
+
+        ErrorCode writeVideoWithAudio(
+            const String& file_path,
+            int64_t video_frame_count,
+            const MovieWriterConfig& config,
+            MovieWriterFrameCallbackFunc frame_callback,
+            Signal* audio_signal,
+            void* ref) noexcept;
+
+        Image* videoFrameBufferPtr() { return video_frame_buffer_; }
+        void* refPtr() { return ref_ptr_; }
+
     protected:
-        Image* video_frame_image_{};
+        Image* video_frame_buffer_{};
+        void* ref_ptr_ = nullptr;
     };
     
  } // End of namespace

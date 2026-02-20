@@ -13,8 +13,8 @@
 #include "Grain.hpp"
 #include "Type/Object.hpp"
 #include "File/File.hpp"
-#include "2d/RangeRect.hpp"
-#include "3d/RangeCube.hpp"
+#include "2d/Bounds2.hpp"
+#include "3d/Bounds3.hpp"
 
 
 namespace Grain {
@@ -75,7 +75,7 @@ protected:
     uint32_t height_{};             ///< Height, number of values in Y direction
     LengthUnit unit_ = LengthUnit::Undefined;      ///< Unit of measurement for the stored values
     int32_t srid_{};                ///< Spatial Reference System Identifier (SRID)
-    RangeRectFix bbox_{};           ///< Bounding box for the region. If used in a geographic context, the coordinates must be in the coordinate system specified by `srid_`
+    Bounds2Fix bbox_{};           ///< Bounding box for the region. If used in a geographic context, the coordinates must be in the coordinate system specified by `srid_`
     int64_t min_value_{};           ///< Minimum value in value field
     int64_t max_value_{};           ///< Maximum value in value field
     Fix mean_value_{};              ///< Mean of all values in value field
@@ -139,7 +139,7 @@ public:
         bbox_.max_y_ = max_y;
     }
 
-    void setBbox(const RangeRectFix& bbox) noexcept {
+    void setBbox(const Bounds2Fix& bbox) noexcept {
         bbox_ = bbox;
     }
 

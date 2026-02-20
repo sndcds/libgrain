@@ -12,7 +12,7 @@
 
 #include "Math/Vec2.hpp"
 #include "2d/Rect.hpp"
-#include "2d/RangeRect.hpp"
+#include "2d/Bounds2.hpp"
 #include "Type/List.hpp"
 
 
@@ -64,8 +64,8 @@ public:
     [[nodiscard]] Vec2d* mutLastPointPtr() noexcept;
 
     [[nodiscard]] double length() noexcept;
-    [[nodiscard]] RangeRectd bounds() noexcept;
-    bool bounds(RangeRectd& out_bounds) noexcept;
+    [[nodiscard]] Bounds2d bounds() noexcept;
+    bool bounds(Bounds2d& out_bounds) noexcept;
 
     void clear() noexcept;
 

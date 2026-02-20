@@ -74,6 +74,7 @@
 #include "CSS/CSS.hpp"
 
 #include "Data/DataComposer.hpp"
+#include "Data/JSONWalker.hpp"
 
 #include "Database/PostgreSQL.hpp"
 #include "Database/DBaseFile.hpp"
@@ -122,7 +123,7 @@
 #include "GUI/Components/TextField.hpp"
 #include "GUI/Components/Slider.hpp"
 #include "GUI/Components/ColorWell.hpp"
-#include "GUI/Components/ColorWheel.hpp"
+#include "GUI/Components/AngleDial.hpp"
 #include "GUI/Views/View.hpp"
 #include "GUI/Views/Viewport.hpp"
 #include "GUI/Views/ScrollView.hpp"

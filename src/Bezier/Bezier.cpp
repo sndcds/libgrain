@@ -8,7 +8,7 @@
 //
 
 #include "Bezier/Bezier.hpp"
-#include "2d/RangeRect.hpp"
+#include "2d/Bounds2.hpp"
 #include "Bezier/BezierValueCurve.hpp"
 #include "Graphic/GraphicContext.hpp"
 // #include "GrViewport.hpp" !!!!!
@@ -72,7 +72,7 @@ namespace Grain {
         Vec2d p2 = pos_[2];
         Vec2d p3 = pos_[3];
 
-        RangeRectd range;
+        Bounds2d range;
         range = pos_[0];
         range += pos_[3];
 

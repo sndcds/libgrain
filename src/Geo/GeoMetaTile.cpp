@@ -308,7 +308,7 @@ namespace Grain {
      *              the meta-tile range. The coordinates in this rectangle must be
      *              in the SRID 4326 coordinate system.
      */
-    GeoMetaTileRange::GeoMetaTileRange(int32_t zoom, const RangeRectd& bbox) {
+    GeoMetaTileRange::GeoMetaTileRange(int32_t zoom, const Bounds2d& bbox) {
 
         setSetupTileSize(256);
         setByBbox(zoom, bbox);
@@ -341,7 +341,7 @@ namespace Grain {
      *  @param bbox A reference to a `RangeRectd` object defining the geographic
      *              bounding box of the meta tile range.
      */
-    void GeoMetaTileRange::setByBbox(int32_t zoom, const RangeRectd& bbox) noexcept {
+    void GeoMetaTileRange::setByBbox(int32_t zoom, const Bounds2d& bbox) noexcept {
 
         m_zoom = zoom;
 
@@ -484,7 +484,7 @@ namespace Grain {
     }
 
 
-    void GeoMetaTileRange::wgs84EnvelopeBbox(RangeRectd& out_bbox) const noexcept {
+    void GeoMetaTileRange::wgs84EnvelopeBbox(Bounds2d& out_bbox) const noexcept {
 
         Vec2i tile_min = m_first_tile;
         Vec2i tile_max = m_first_tile;

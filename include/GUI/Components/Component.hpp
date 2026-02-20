@@ -70,7 +70,7 @@ namespace Grain {
             Slider,
             ProgressBar,
             ColorWell,
-            ColorWheel,
+            AngleDial,
             ColorPaletteControl,
             GradientControl,
             SignalView,
@@ -220,12 +220,13 @@ namespace Grain {
         [[nodiscard]] virtual Vec2d center() const noexcept { return { rect_.width_ * 0.5, rect_.height_ * 0.5 }; }
         [[nodiscard]] double centerX() const noexcept { return rect_.width_ * 0.5; }
         [[nodiscard]] double centerY() const noexcept { return rect_.height_ * 0.5; }
+        [[nodiscard]] double radius() const noexcept { return rect_.shortSide() * 0.5; }
 
         [[nodiscard]] bool isTextField() const noexcept { return type_ == ComponentType::TextField; }
         [[nodiscard]] bool isKnob() const noexcept { return type_ == ComponentType::Knob; }
         [[nodiscard]] bool isSlider() const noexcept { return type_ == ComponentType::Slider; }
         [[nodiscard]] bool isColorWell() const noexcept { return type_ == ComponentType::ColorWell; }
-        [[nodiscard]] bool isColorWheel() const noexcept { return type_ == ComponentType::ColorWheel; }
+        [[nodiscard]] bool isAngleDial() const noexcept { return type_ == ComponentType::AngleDial; }
 
         // Flags
         [[nodiscard]] bool isEnabled() const noexcept { return is_enabled_; }

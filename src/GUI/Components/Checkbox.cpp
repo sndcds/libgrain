@@ -105,7 +105,7 @@ namespace Grain {
             Rectd text_rect = bounds_rect;
             text_rect.x_ += check_size + style->labelGap();
             text_rect.width_ -= check_size + style->labelGap();
-            gc->drawTextInRect(text_->utf8(), text_rect, Alignment::Left, style->font(), style->labelColor());
+            gc->drawTextInRect(text_->utf8(), text_rect, Alignment::Left, style->font(), style->labelColor(), 1);
         }
 
         Rectd check_rect(0, (bounds_rect.height_ - check_size) / 2, check_size, check_size);

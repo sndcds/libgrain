@@ -436,7 +436,7 @@ namespace Grain {
             polygon_file.writeInt32(0);
 
             // Write bounding box for all polygons
-            RangeRectd bbox(m_shape_bbox[0], m_shape_bbox[1], m_shape_bbox[2], m_shape_bbox[3]);
+            Bounds2d bbox(m_shape_bbox[0], m_shape_bbox[1], m_shape_bbox[2], m_shape_bbox[3]);
             proj.transform(bbox);
             bbox.writeToFile(polygon_file);
 
@@ -470,7 +470,7 @@ namespace Grain {
                         Exception::throwSpecific(kErrWrongShapeType);
                     }
 
-                    RangeRectd bbox;
+                    Bounds2d bbox;
                     bbox.readFromFile(*this);
                     proj.transform(bbox);
 

@@ -1787,7 +1787,7 @@ namespace Grain {
                             case GeoTileDrawMode::TextAtPoint: {
                                 const char* str = layer->m_data_property_list->stringFromPropertyAtIndex(0);
                                 if (str) {
-                                    gc->drawText(str, point, layer->m_draw_settings.font(this), layer->m_draw_settings.m_text_color);
+                                    gc->drawText(str, point, layer->m_draw_settings.font(this), layer->m_draw_settings.m_text_color, 1);
                                 }
                                 break;
                             }
@@ -1803,31 +1803,31 @@ namespace Grain {
 
                         switch (draw_settings.m_draw_mode) {
                             case GeoTileDrawMode::Fill:
-                                compound_path.fill(gc);
+                                compound_path.fill(*gc);
                                 if (fill_extend_flag) {
                                     // Workaround to close gaps between polygons
                                     gc->setStrokeRGBAndAlpha(draw_settings.m_fill_color, draw_settings.m_fill_opacity);
                                     gc->setStrokeWidth(fill_extend_width);
-                                    compound_path.stroke(gc);
+                                    compound_path.stroke(*gc);
                                 }
                                 fill_n = 1;
                                 break;
 
                             case GeoTileDrawMode::Stroke:
-                                compound_path.stroke(gc);
+                                compound_path.stroke(*gc);
                                 stroke_n = 1;
                                 break;
 
                             case GeoTileDrawMode::FillStroke:
-                                compound_path.fill(gc);
-                                compound_path.stroke(gc);
+                                compound_path.fill(*gc);
+                                compound_path.stroke(*gc);
                                 fill_n = 1;
                                 stroke_n = 1;
                                 break;
 
                             case GeoTileDrawMode::StrokeFill:
-                                compound_path.stroke(gc);
-                                compound_path.fill(gc);
+                                compound_path.stroke(*gc);
+                                compound_path.fill(*gc);
                                 fill_n = 1;
                                 stroke_n = 1;
                                 break;

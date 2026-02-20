@@ -16,6 +16,7 @@
 #include "String/String.hpp"
 #include "Type/List.hpp"
 #include "Core/Log.hpp"
+#include "Image/Image.hpp"
 
 
 namespace Grain {
@@ -24,9 +25,9 @@ class Font;
 class GraphicContext;
 
 enum {
-    kAppFlag_SDL2 = 0x1,        // Windowing and Events by SDL2, https://www.libsdl.org/
-    kAppFlag_Cairo = 0x1 << 1,  // Render with Cairo, https://cairographics.org/
-    kAppFlag_FFTW = 0x1 << 2,   // Use FFTW, https://www.fftw.org/
+    kAppFlag_SDL2 = 0x1,        ///< Windowing and Events by SDL2, https://www.libsdl.org/
+    kAppFlag_Cairo = 0x1 << 1,  ///< Render with Cairo, https://cairographics.org/
+    kAppFlag_FFTW = 0x1 << 2,   ///< Use FFTW, https://www.fftw.org/
 };
 
 enum {
@@ -97,13 +98,12 @@ public:
     Font* title_ui_font_ = nullptr;
     Font* mono_font_ = nullptr;
 
+    Image* hue_ring_image_ = nullptr;
+
     // Style
     GUIStyleSet gui_styles_set_;
 
     // GUI
-    float default_corner_radius_ = 5.0f;    // TODO: !!!!!
-
-
     timestamp_t double_click_ms_ = 250;     ///< Maximum time for detecting double clicks, default 250 msec ~ 1/4 sec
     float scroll_wheel_speed_ = 4;
 
@@ -183,8 +183,9 @@ public:
     [[nodiscard]] static Font* uiTitleFont() noexcept { return g_instance->title_ui_font_; }
     [[nodiscard]] static Font* monoFont() noexcept { return g_instance->mono_font_; }
 
+    [[nodiscard]] static Image* hueColorWHeelImage() noexcept { return g_instance->hue_ring_image_; }
+
     // GUI
-    [[nodiscard]] static float defaultCornerRadius() noexcept { return g_instance->default_corner_radius_; }
     [[nodiscard]] static timestamp_t doubleClickMillis() noexcept { return g_instance->double_click_ms_; }
 
 

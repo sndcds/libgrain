@@ -26,6 +26,7 @@
 #include "Math/Mat3.hpp"
 #include "2d/Line.hpp"
 #include "2d/Circle.hpp"
+#include "2d/Ring.hpp"
 #include "2d/Rect.hpp"
 #include "2d/Triangle.hpp"
 #include "2d/Quadrilateral.hpp"
@@ -260,7 +261,7 @@ namespace Grain {
 
         }
 
-        virtual void addRingPath(const Vec2d& center, double inner_radius, double outer_radius, double angle, double span) noexcept {}
+        virtual void addRingPath(const Ringd& ring, double angle, double span) noexcept {}
 
         virtual void addTrianglePath(const Triangled& triangle) noexcept;
         virtual void addTrianglePath(const Vec2d& point1, const Vec2d& point2, const Vec2d& point3) noexcept;
@@ -348,8 +349,8 @@ namespace Grain {
         void strokeCircle(const Rectd& rect, double min_radius, double max_radius) noexcept;
         void strokeCircle(const Vec2d& center, double radius) noexcept;
 
-        virtual void fillRing(const Vec2d& center, double inner_radius, double outer_radius, double angle, double span) noexcept;
-        virtual void fillColorWheel(const Vec2d& center, double outer_radius, double inner_radius) noexcept {}
+        virtual void fillRing(const Ringd& ring, double angle, double span) noexcept;
+        virtual void fillHueRing(const Ringd& ring) noexcept;
         virtual void fillAudioLocationControl(const Vec2d& center, double radius) noexcept {}
 
         virtual void drawGradient(Gradient* gradient, const Vec2d& start_pos, const Vec2d& end_pos, bool draw_before, bool draw_after) noexcept {}
@@ -358,7 +359,7 @@ namespace Grain {
         }
         virtual void drawRadialGradient(Gradient* gradient, const Vec2d& pos, double radius, bool draw_before, bool draw_after) noexcept {}
 
-        virtual void drawImage(Image* image, const Rectd& rect, float alpha = 1.0f) noexcept {}
+        virtual void drawImage(Image* image, const Rectd& rect, float alpha) noexcept {}
         virtual ErrorCode drawQuadrilateralImage(Image* image, const Quadrilateral& quadrilateral) noexcept { return ErrorCode::Unknown; }
         virtual ErrorCode drawQuadrilateralImage(Image* image, const Quadrilateral& quadrilateral, float alpha) noexcept { return ErrorCode::Unknown; }
 
@@ -370,19 +371,19 @@ namespace Grain {
         virtual Rectd textRect(const String& string, const Font* font) noexcept;
         virtual Rectd textRect(const char* text, const Font* font) noexcept { return Rectd{}; }
 
-        virtual void drawText(const String& string, const Vec2d& pos, const Font* font, const RGB& color, float alpha = 1.0f) noexcept;
-        virtual void drawText(const char* text, const Vec2d& pos, const Font* font, const RGB& color, float alpha = 1.0f) noexcept {}
-        virtual void drawTextInt(int64_t value, const Vec2d& pos, const Font* font, const RGB& color, float alpha = 1.0f) noexcept;
+        virtual void drawText(const String& string, const Vec2d& pos, const Font* font, const RGB& color, float alpha) noexcept;
+        virtual void drawText(const char* text, const Vec2d& pos, const Font* font, const RGB& color, float alpha) noexcept {}
+        virtual void drawTextInt(int64_t value, const Vec2d& pos, const Font* font, const RGB& color, float alpha) noexcept;
 
-        virtual double drawTextInRect(const String& string, const Rectd& rect, Alignment alignment, const Font* font, const RGB& color, float alpha = 1.0f) noexcept;
-        virtual double drawTextInRect(const char* text, const Rectd& rect, Alignment alignment, const Font* font, const RGB& color, float alpha = 1.0f) noexcept { return 0.0; }
-        virtual double drawTextIntInRect(int64_t value, const Rectd& rect, Alignment alignment, const Font* font, const RGB& color, float alpha = 1.0f) noexcept;
-        virtual double drawWrappedText(const char* text, const Rectd& bounds_rect, const Rectd& rect, TextAlignment alignment, double line_gap, const Font* font, const RGB& color, float alpha = 1.0f) noexcept { return 0.0; }
+        virtual double drawTextInRect(const String& string, const Rectd& rect, Alignment alignment, const Font* font, const RGB& color, float alpha) noexcept;
+        virtual double drawTextInRect(const char* text, const Rectd& rect, Alignment alignment, const Font* font, const RGB& color, float alpha) noexcept { return 0.0; }
+        virtual double drawTextIntInRect(int64_t value, const Rectd& rect, Alignment alignment, const Font* font, const RGB& color, float alpha) noexcept;
+        virtual double drawWrappedText(const char* text, const Rectd& bounds_rect, const Rectd& rect, TextAlignment alignment, double line_gap, const Font* font, const RGB& color, float alpha) noexcept { return 0.0; }
 
-        virtual void drawDebugText(const char* text, Vec2d& pos, int32_t spacing = 2) noexcept;
-        virtual void drawDebugBool(const char* label, bool value, Vec2d& pos, int32_t spacing = 2) noexcept;
-        virtual void drawDebugInt64(const char* label, int64_t value, Vec2d& pos, int32_t spacing = 2) noexcept;
-        virtual void drawDebugDouble(const char* label, double value, Vec2d& pos, int32_t spacing = 2) noexcept;
+        virtual void drawDebugText(const char* text, Vec2d& pos, int32_t spacing) noexcept;
+        virtual void drawDebugBool(const char* label, bool value, Vec2d& pos, int32_t spacing) noexcept;
+        virtual void drawDebugInt64(const char* label, int64_t value, Vec2d& pos, int32_t spacing) noexcept;
+        virtual void drawDebugDouble(const char* label, double value, Vec2d& pos, int32_t spacing) noexcept;
 
         virtual void addTextPath(const char* text, const Font* font) noexcept {}
 
@@ -391,9 +392,8 @@ namespace Grain {
         virtual void clipRect(const Rectd& rect) noexcept;
         virtual void clipRoundRect(const Rectd& rect, double radius) noexcept;
         virtual void clipEllipse(const Rectd& rect) noexcept;
-        virtual void clipCircle(double x, double y, double radius) noexcept;
         virtual void clipCircle(const Vec2d& center, double radius) noexcept;
-        virtual Rectd clipBoundsRect() noexcept { return Rectd(); }
+        virtual void clipRing(const Ringd& ring) noexcept;
         virtual void resetClip() noexcept {}
 
         virtual void translate(double tx, double ty) noexcept {}
@@ -424,10 +424,10 @@ namespace Grain {
             const RGBA& light_color, const RGBA& dark_color,
             const RGBA& bg_color, const RGBA& mark_color) noexcept;
 
-        void drawCircleSlider(
+        void drawRingSlider(
+            const Ringd& ring,
+            float indicator_radius,
             float offset, float value,
-            const Vec2d& center, float radius,
-            float track_size, float indicator_size,
             float start_angle, float angle_span,
             const RGBA& track_color, const RGBA& indicator_color,
             const RGBA& handle_color, bool enabled) noexcept;

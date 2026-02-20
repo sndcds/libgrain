@@ -15,7 +15,7 @@
 #include "Grain.hpp"
 #include "Math/Vec2.hpp"
 #include "2d/Rect.hpp"
-#include "2d/RangeRect.hpp"
+#include "2d/Bounds2.hpp"
 
 
 namespace Grain {

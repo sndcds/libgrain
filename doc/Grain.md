@@ -34,6 +34,7 @@ cloc .
 
 ## External libraries
 
+- nlohmann/json
 - ssh
 - webp
 - png
@@ -42,3 +43,10 @@ cloc .
 - tiff
 - proj
 - sndfile
+
+
+## Includes Standards
+
+- JSON via nlohmann/json
+- TOML
+- XML via tinyxml2

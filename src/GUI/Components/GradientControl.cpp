@@ -47,7 +47,7 @@ namespace Grain {
         bool result = Component::setEnabled(enabled);
 
         if (result) {
-            Component::setEnabled(m_color_wheel, enabled);
+            Component::setEnabled(m_angle_dial, enabled);
             Component::setEnabled(m_step_slider, enabled);
             Component::setEnabled(m_step_textfield, enabled);
         }
@@ -241,9 +241,9 @@ namespace Grain {
             new_stop->select();
             new_stop->remember();
 
-            if (m_color_wheel != nullptr) {
-                m_color_wheel->setReceiverComponent(this);
-                m_color_wheel->setColor(new_color);
+            if (m_angle_dial != nullptr) {
+                m_angle_dial->setReceiverComponent(this);
+                m_angle_dial->setColor(new_color);
             }
 
             event.mousePressedFinished();
@@ -312,9 +312,9 @@ namespace Grain {
         bool changed = false;
 
         if (component != nullptr) {
-            if (component->isColorWheel()) {
-                auto color_wheel = (ColorWheel*)component;
-                RGB rgb = color_wheel->color();
+            if (component->isAngleDial()) {
+                auto angle_dial = (AngleDial*)component;
+                RGB rgb = angle_dial->color();
                 changed = m_gradient->setColorOfSelectedStops(rgb);
             }
             else if (component->componentType() == ComponentType::Slider) {
@@ -401,16 +401,16 @@ namespace Grain {
     }
 
 
-    void GradientControl::setColorWheel(ColorWheel* color_wheel) noexcept {
+    void GradientControl::setAngleDial(AngleDial* angle_dial) noexcept {
 
-        if (m_color_wheel != nullptr) {
-            m_color_wheel->setReceiverComponent(nullptr);
+        if (m_angle_dial != nullptr) {
+            m_angle_dial->setReceiverComponent(nullptr);
         }
 
-        m_color_wheel = color_wheel;
-        if (m_color_wheel != nullptr) {
-            m_color_wheel->setReceiverComponent(this);
-            m_color_wheel->setEnabled(m_enabled);
+        m_angle_dial = angle_dial;
+        if (m_angle_dial != nullptr) {
+            m_angle_dial->setReceiverComponent(this);
+            m_angle_dial->setEnabled(m_enabled);
         }
     }
 
@@ -469,10 +469,10 @@ namespace Grain {
     void GradientControl::updateStopParameters(const GradientStop* stop) noexcept {
 
         if (stop != nullptr) {
-            if (m_color_wheel != nullptr) {
+            if (m_angle_dial != nullptr) {
                 RGBA color = stop->color(0);
-                m_color_wheel->setColor(color);
-                m_color_wheel->setReceiverComponent(this);
+                m_angle_dial->setColor(color);
+                m_angle_dial->setReceiverComponent(this);
             }
 
             if (m_step_slider != nullptr) {

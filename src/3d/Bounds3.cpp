@@ -7,7 +7,7 @@
 //  This file is part of GrainLib, see <https://grain.one>.
 //
 
-#include "3d/RangeCube.hpp"
+#include "3d/Bounds3.hpp"
 #include "Math/Vec3Fix.hpp"
 
 
