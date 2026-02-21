@@ -22,7 +22,7 @@ class GraphicContext;
 
 class Polygon {
 
-    protected:
+protected:
     List<Vec2d> points_;
     bool closed_ = false;
     bool must_update_ = false;
@@ -66,6 +66,9 @@ public:
     [[nodiscard]] double length() noexcept;
     [[nodiscard]] Bounds2d bounds() noexcept;
     bool bounds(Bounds2d& out_bounds) noexcept;
+
+    [[nodiscard]] double area() const noexcept;
+    [[nodiscard]] double signedArea() const noexcept;
 
     void clear() noexcept;
 

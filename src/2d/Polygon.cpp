@@ -104,13 +104,33 @@ bool Polygon::bounds(Bounds2d& out_bounds) noexcept {
     if (pointCount() < 1) {
         return false;
     }
-    else {
-        for (auto& point : points_) {
-            out_bounds.add(point);
-        }
 
-        return true;
+    for (auto& point : points_) {
+        out_bounds.add(point);
     }
+
+    return true;
+}
+
+
+double Polygon::area() const noexcept {
+    return fabs(signedArea());
+}
+
+
+double Polygon::signedArea() const noexcept {
+    double area = 0.0;
+
+    auto points = reinterpret_cast<const Vec2d*>(points_.dataPtr());
+    const int32_t n = points_.size();
+
+    for (int32_t i = 0; i < n; ++i) {
+        const Vec2d& p1 = points[i];
+        const Vec2d& p2 = points[(i + 1) % n]; // Closes polygon
+        area += p1.x_ * p2.y_ - p2.x_ * p1.y_;
+    }
+
+    return 0.5 * area; // Signed area
 }
 
 
@@ -140,71 +160,70 @@ bool Polygon::generateEvenlyDistributedPolygon(int32_t point_count, Polygon& out
     if (point_count < 2) {
         return false;
     }
-    else {
-        double length = this->length();
-        double step = length / (point_count - 1);
 
-        auto p1 = points_.elementAtIndex(0);
-        auto p2 = points_.elementAtIndex(1);
+    double length = this->length();
+    double step = length / (point_count - 1);
 
-        out_polygon.clear();
-        out_polygon.setCapacity(point_count);
-        out_polygon.addPoint(p1);
+    auto p1 = points_.elementAtIndex(0);
+    auto p2 = points_.elementAtIndex(1);
 
-        int32_t src_point_count = pointCount();
-        int32_t src_point_index = 1;
-        double step_rest = step;
+    out_polygon.clear();
+    out_polygon.setCapacity(point_count);
+    out_polygon.addPoint(p1);
 
-        while (true) {
-            double l = p1.distance(p2);
-            Vec2d dir = p2 - p1;
-            dir.normalize();
+    int32_t src_point_count = pointCount();
+    int32_t src_point_index = 1;
+    double step_rest = step;
 
-            if (step_rest <= l) {
-                p1 += dir * step_rest;
-                out_polygon.addPoint(p1);
+    while (true) {
+        double l = p1.distance(p2);
+        Vec2d dir = p2 - p1;
+        dir.normalize();
 
-                if (out_polygon.pointCount() >= (point_count - 1)) {
-                    break;
-                }
+        if (step_rest <= l) {
+            p1 += dir * step_rest;
+            out_polygon.addPoint(p1);
 
-                step_rest = step;
+            if (out_polygon.pointCount() >= (point_count - 1)) {
+                break;
             }
-            else {
-                step_rest -= l;
-                p1 = p2;
-                src_point_index++;
 
-                if (closed_) {
-                    if (src_point_index < src_point_count) {
-                        p2 = points_.elementAtIndex(src_point_index);
-                    }
-                    else if (src_point_index == src_point_count) {
-                        p2 = points_.elementAtIndex(0);
-                    }
-                    else {
-                        break;
-                    }
+            step_rest = step;
+        }
+        else {
+            step_rest -= l;
+            p1 = p2;
+            src_point_index++;
+
+            if (closed_) {
+                if (src_point_index < src_point_count) {
+                    p2 = points_.elementAtIndex(src_point_index);
+                }
+                else if (src_point_index == src_point_count) {
+                    p2 = points_.elementAtIndex(0);
                 }
                 else {
-                    if (src_point_index < src_point_count) {
-                        p2 = points_.elementAtIndex(src_point_index);
-                    }
-                    else {
-                        break;
-                    }
+                    break;
+                }
+            }
+            else {
+                if (src_point_index < src_point_count) {
+                    p2 = points_.elementAtIndex(src_point_index);
+                }
+                else {
+                    break;
                 }
             }
         }
-
-        out_polygon.setClosed(closed_);
-
-        if (!closed_) {
-            out_polygon.addPoint(p2);
-        }
-
-        return true;
     }
+
+    out_polygon.setClosed(closed_);
+
+    if (!closed_) {
+        out_polygon.addPoint(p2);
+    }
+
+    return true;
 }
 
 
@@ -217,7 +236,8 @@ bool Polygon::point(double t, Vec2d& out_point) noexcept {
         out_point = points_.elementAtIndex(0);
         return true;
     }
-    else if (t >= 1.0) {
+
+    if (t >= 1.0) {
         if (closed_) {
             out_point = points_.elementAtIndex(0);
         }
@@ -247,29 +267,28 @@ bool Polygon::point(double t, Vec2d& out_point) noexcept {
             out_point = p1;
             return true;
         }
-        else {
-            step_rest -= l;
-            p1 = p2;
-            src_point_index++;
 
-            if (closed_) {
-                if (src_point_index < src_point_count) {
-                    p2 = points_.elementAtIndex(src_point_index);
-                }
-                else if (src_point_index == src_point_count) {
-                    p2 = points_.elementAtIndex(0);
-                }
-                else {
-                    break;
-                }
+        step_rest -= l;
+        p1 = p2;
+        src_point_index++;
+
+        if (closed_) {
+            if (src_point_index < src_point_count) {
+                p2 = points_.elementAtIndex(src_point_index);
+            }
+            else if (src_point_index == src_point_count) {
+                p2 = points_.elementAtIndex(0);
             }
             else {
-                if (src_point_index < src_point_count) {
-                    p2 = points_.elementAtIndex(src_point_index);
-                }
-                else {
-                    break;
-                }
+                break;
+            }
+        }
+        else {
+            if (src_point_index < src_point_count) {
+                p2 = points_.elementAtIndex(src_point_index);
+            }
+            else {
+                break;
             }
         }
     }
