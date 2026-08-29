@@ -529,9 +529,9 @@ namespace Grain {
 
         [[nodiscard]] static File* createFile(const String& file_path);
 
-        [[nodiscard]] static bool fileExists(const char* file_path);
-        [[nodiscard]] static bool fileExists(const String& file_path);
-        [[nodiscard]] static bool fileExists(const String& dir_path, const String& file_name);
+        [[nodiscard]] static bool isFile(const char* file_path);
+        [[nodiscard]] static bool isFile(const String& file_path);
+        [[nodiscard]] static bool isFile(const String& dir_path, const String& file_name);
         [[nodiscard]] static File::Signature fileSignature(const String& file_path);
 
         [[nodiscard]] static bool isDir(const String& path) noexcept;

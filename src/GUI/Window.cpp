@@ -1,7 +1,7 @@
 //
 //  Window.cpp
 //
-//  Created by Roald Christesen on from 02.06.2014
+//  Created by Roald Christesen on 02.06.2014
 //  Copyright (C) 2025 Roald Christesen. All rights reserved.
 //
 //  This file is part of GrainLib, see <https://grain.one>.

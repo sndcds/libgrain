@@ -45,6 +45,20 @@ public:
 
     void draw(GraphicContext* gc, const Rectd& dirty_rect) noexcept override;
 
+    void handleMouseEntered(const Event &event) noexcept override {
+        needsDisplay();
+    }
+
+    void handleMouseExited(const Event &event) noexcept override {
+        needsDisplay();
+    }
+
+    void handleMouseMoved(const Event &event) noexcept override {
+        if (rect().contains(event.mousePos())) {
+            needsDisplay();
+        }
+    }
+
 protected:
     Component* first_key_component_ = nullptr;
     Component* curr_key_component_ = nullptr;

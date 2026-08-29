@@ -1,7 +1,7 @@
 //
 //  AppleCGContext.cpp
 //
-//  Created by Roald Christesen on from 24.08.2025
+//  Created by Roald Christesen on 24.08.2025
 //  Copyright (C) 2025 Roald Christesen. All rights reserved.
 //
 //  This file is part of GrainLib, see <https://grain.one>.

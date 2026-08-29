@@ -1296,7 +1296,7 @@ namespace Grain {
 
                     Geo::metaTilePathForTile(base_path, src_zoom, tile_index_src, "cvf", file_path);
 
-                    if (File::fileExists(file_path)) {
+                    if (File::isFile(file_path)) {
                         CVF2File cvf2_file(file_path);
                         cvf2_file.startRead();
 

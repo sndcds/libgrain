@@ -164,7 +164,7 @@ namespace Grain {
 
         try {
 
-            if (File::fileExists(file_path) == false) {
+            if (File::isFile(file_path) == false) {
                 throw ErrorCode::FileNotFound;
             }
 

@@ -1,7 +1,7 @@
 //
 //  ScrollBar.cpp
 //
-//  Created by Roald Christesen on from 05.06.15.
+//  Created by Roald Christesen on 05.06.15.
 //  Copyright (C) 2025 Roald Christesen. All rights reserved.
 //
 //  This file is part of GrainLib, see <https://grain.one>.

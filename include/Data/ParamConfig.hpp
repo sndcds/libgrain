@@ -6,7 +6,7 @@
 //
 //  This file is part of GrainLib, see <https://grain.one>.
 //
-//  Last viewed: 2026-02-15
+//  Last viewed: 15.02.2026
 //
 
 #ifndef GrainParamConfig_hpp

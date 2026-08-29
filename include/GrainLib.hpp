@@ -18,7 +18,27 @@
 
 #include "App/App.hpp"
 
+#include "Audio/AudioBackend.hpp"
+#include "Audio/AudioBuffer.hpp"
+#include "Audio/AudioDevice.hpp"
+#include "Audio/AudioDeviceList.hpp"
+#include "Audio/AudioEngine.hpp"
+#include "Audio/AudioFormat.hpp"
+#include "Audio/AudioGraph.hpp"
 #include "Audio/AudioInterface.hpp"
+#include "Audio/AudioMixerNode.hpp"
+#include "Audio/AudioNode.hpp"
+#include "Audio/AudioOscillatorNode.hpp"
+#include "Audio/AudioOscillatorSIMD.hpp"
+#include "Audio/AudioProcessContext.hpp"
+#include "Audio/AudioProcessor.hpp"
+#include "Audio/AudioRingBuffer.hpp"
+#include "Audio/AudioSIMD.hpp"
+#include "Audio/AudioTypes.hpp"
+
+#include "Audio/Mac/AudioCoreAudio.hpp"
+#include "Audio/Mac/AudioStreamCoreAudio.hpp"
+
 
 #include "2d/Line.hpp"
 #include "2d/Rect.hpp"
@@ -33,7 +53,6 @@
 #include "2d/GraphicPath.hpp"
 #include "2d/GraphicCompoundPath.hpp"
 #include "2d/CatmullRomCurve.hpp"
-#include "2d/RangeRect.hpp"
 #include "2d/Superellipse.hpp"
 #include "2d/Arc.hpp"
 #include "2d/PoissonDisc.hpp"
@@ -46,7 +65,6 @@
 #include "File/XYZFile.hpp"
 
 #include "3d/Cube.hpp"
-#include "3d/RangeCube.hpp"
 
 #include "Bezier/Bezier.hpp"
 #include "Bezier/BezierValueCurve.hpp"
@@ -76,8 +94,8 @@
 #include "Data/DataComposer.hpp"
 #include "Data/JSONWalker.hpp"
 
-#include "Database/PostgreSQL.hpp"
 #include "Database/DBaseFile.hpp"
+#include "Database/PSQL.hpp"
 
 #include "DSP/DSP.hpp"
 #include "DSP/FFT.hpp"

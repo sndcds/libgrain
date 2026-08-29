@@ -3545,6 +3545,8 @@ ErrorCode Signal::convolveChannel(
         Signal* signal = nullptr;
         SNDFILE *snd_file = nullptr;
 
+        // TODO: Implement support for m4a format
+
         try {
             switch (data_type) {
                 case DataType::Int8:

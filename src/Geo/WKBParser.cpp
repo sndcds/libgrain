@@ -1,7 +1,7 @@
 //
 //  WKBParser.cpp
 //
-//  Created by Roald Christesen on from 26.02.2024
+//  Created by Roald Christesen on 26.02.2024
 //  Copyright (C) 2025 Roald Christesen. All rights reserved.
 //
 //  This file is part of GrainLib, see <https://grain.one>.

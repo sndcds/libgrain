@@ -1,7 +1,7 @@
 //
 //  RGB.cpp
 //
-//  Created by Roald Christesen on from 17.04.2016
+//  Created by Roald Christesen on 17.04.2016
 //  Copyright (C) 2025 Roald Christesen. All rights reserved.
 //
 //  This file is part of GrainLib, see <https://grain.one>.

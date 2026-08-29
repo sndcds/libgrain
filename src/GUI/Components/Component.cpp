@@ -1,7 +1,7 @@
 //
 //  Component.cpp
 //
-//  Created by Roald Christesen on from 17.11.2015
+//  Created by Roald Christesen on 17.11.2015
 //  Copyright (C) 2025 Roald Christesen. All rights reserved.
 //
 //  This file is part of GrainLib, see <https://grain.one>.
@@ -27,6 +27,7 @@ namespace Grain {
     void _macosView_releaseView(Component* component);
     void _macosView_setNeedsDisplay(const Component* component);
     void _macosView_forcedDisplay(const Component* component);
+    Vec2d _macosView_mousePos(const Component* component);
     void _macosView_selectNextKeyView(Component* component);
     void _macosView_interpretKeyEvent(Component* component, const Event& event);
     void _macosView_setOpacity(Component* component, float opacity);
@@ -436,6 +437,14 @@ namespace Grain {
 #if defined(__APPLE__) && defined(__MACH__)
         _macosView_forcedDisplay(this);
 #endif
+    }
+
+
+    Vec2d Component::mousePos() noexcept {
+#if defined(__APPLE__) && defined(__MACH__)
+        return _macosView_mousePos(this);
+#endif
+        return { 0.0, 0.0 };
     }
 
 

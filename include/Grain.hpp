@@ -28,6 +28,7 @@
 #include <cstring>
 #include <algorithm>
 #include <cstdarg>
+#include <memory>
 
 #if defined(__APPLE__) && defined(__MACH__)
 #include <TargetConditionals.h>  // Required for TARGET_OS_* macros
@@ -130,6 +131,7 @@ namespace Grain {
 
         MemPointsToItself = 300,
         BufferTooSmall,             ///< A buffer is to small
+        BufferOverflow,
         StrBufferTooSmall,
         BuffersMustBeDifferent,
         IndexOutOfRange,            ///< An index is println of range

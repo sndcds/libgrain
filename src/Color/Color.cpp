@@ -1,7 +1,7 @@
 //
 //  Color.cpp
 //
-//  Created by Roald Christesen on from 28.06.2012
+//  Created by Roald Christesen on 28.06.2012
 //  Copyright (C) 2025 Roald Christesen. All rights reserved.
 //
 //  This file is part of GrainLib, see <https://grain.one>.

@@ -1,7 +1,7 @@
 //
 //  RGBLUT1.cpp
 //
-//  Created by Roald Christesen on from 05.02.2014
+//  Created by Roald Christesen on 05.02.2014
 //  Copyright (C) 2025 Roald Christesen. All rights reserved.
 //
 //  This file is part of GrainLib, see <https://grain.one>.

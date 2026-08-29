@@ -1,7 +1,7 @@
 //
 //  Toggle.cpp
 //
-//  Created by Roald Christesen on from 02.05.2015
+//  Created by Roald Christesen on 02.05.2015
 //  Copyright (C) 2025 Roald Christesen. All rights reserved.
 //
 //  This file is part of GrainLib, see <https://grain.one>.

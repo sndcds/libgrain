@@ -4,6 +4,11 @@
 cmake --build build
 sudo cmake --install build --prefix /usr/local
 ```
+or
+```bash
+cmake --build build --config Release
+sudo cmake --install build --prefix /usr/local
+```
 
 ## Checklist for Classes
 

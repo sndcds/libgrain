@@ -23,7 +23,6 @@ namespace Grain {
 
     void _macosEvent_set(Event* event, Component* component, const NSView* ns_view, const NSEvent* ns_event);
 
-
     void _macosView_initForUI(Component* component, const Rectd& rect) {
         component->setNSView([[GrainNSView alloc] initForUI:component rect:rect]);
     }
@@ -45,10 +44,8 @@ namespace Grain {
     }
 
     void _macosView_setNeedsDisplay(const Component* component) {
-        const auto& rect = component->boundsRect();
-        NSRect ns_rect = NSMakeRect(rect.x_, rect.y_, rect.width_, rect.height_);
-        [(NSView*)component->nsView() setNeedsDisplayInRect:ns_rect];
-        // [(NSView*)component->nsView() setNeedsDisplay:YES];
+        auto v = (NSView*)component->nsView();
+        [v setNeedsDisplay:YES];
     }
 
     void _macosView_forcedDisplay(const Component* component) {
@@ -56,6 +53,13 @@ namespace Grain {
         NSRect ns_rect = NSMakeRect(rect.x_, rect.y_, rect.width_, rect.height_);
         [(NSView*)component->nsView() setNeedsDisplayInRect:ns_rect];
         [(NSView*)component->nsView() displayIfNeeded];
+    }
+
+    Vec2d _macosView_mousePos(const Component* component) {
+        auto ns_view = (NSView*)component->nsView();
+        NSPoint mouseLocationInWindow = ns_view.window.mouseLocationOutsideOfEventStream;
+        NSPoint pointInView = [ns_view convertPoint:mouseLocationInWindow fromView:nil];
+        return { pointInView.x, pointInView.y };
     }
 
     void _macosView_selectNextKeyView(Component* component) {
@@ -246,7 +250,7 @@ if (i > 10) {
     BOOL result = [super becomeFirstResponder];
 
     if (result == YES) {
-        m_component->setFocusFlag(true);
+        m_component->setFocused(true);
         m_component->becomeFirstResponder();
     }
 
@@ -261,7 +265,7 @@ if (i > 10) {
 
 - (BOOL)resignFirstResponder {
     [super resignFirstResponder];
-    m_component->setFocusFlag(false);
+    m_component->setFocused(false);
 
     if (m_component->isKeyComponent()) {
         m_component->resignFirstResponder();

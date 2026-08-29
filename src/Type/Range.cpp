@@ -1,7 +1,7 @@
 //
 //  Range.hpp
 //
-//  Created by Roald Christesen on from 20.07.24
+//  Created by Roald Christesen on 20.07.24
 //  Copyright (C) 2025 Roald Christesen. All rights reserved.
 //
 //  This file is part of GrainLib, see <https://grain.one>.

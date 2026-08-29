@@ -1,7 +1,7 @@
 //
 //  GraphicPathPoint.cpp
 //
-//  Created by Roald Christesen on from 26.01.2024
+//  Created by Roald Christesen on 26.01.2024
 //  Copyright (C) 2025 Roald Christesen. All rights reserved.
 //
 //  This file is part of GrainLib, see <https://grain.one>.

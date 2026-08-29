@@ -387,6 +387,8 @@ namespace Grain {
         bool checkCapacity(int64_t needed, int64_t min) noexcept;
         void _updateInternalLengthInfo() noexcept;
 
+        [[nodiscard]] String extension(char c) const noexcept;
+
         [[nodiscard]] String fileExtension() const noexcept;
         [[nodiscard]] String fileBaseName() const noexcept;
         [[nodiscard]] String fileBaseNameWithoutExtension() const noexcept;

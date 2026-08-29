@@ -13,7 +13,6 @@ namespace Grain {
     }
 
     void _macosEvent_set(Event* event, Component* component, const NSView* ns_view, const NSEvent* ns_event) {
-
         Event::EventType event_type = Event::EventType::Undefined;
 
         event->_setNSEvent((void*)ns_event);
@@ -85,12 +84,10 @@ namespace Grain {
         if (modifierFlags & NSEventModifierFlagFunction) key_mask |= Event::KeyMask_Function;
         event->setKeyMask(key_mask);
 
-
         bool ignore = false;
         bool double_clicked = false;
 
         switch (event_type) {
-
             case Event::EventType::MouseDown:
                 if (!Event::g_mouse_pressed && !Event::g_right_mouse_pressed) {
                     Event::g_mouse_pressed = true;
@@ -191,7 +188,6 @@ namespace Grain {
                 break;
 
             case Event::EventType::KeyDown:
-
                 if (!Event::g_mouse_pressed && !Event::g_right_mouse_pressed) {
                     NSPoint mouse_location = [NSEvent mouseLocation];
                     NSRect rect = [[ns_view window] convertRectFromScreen:NSMakeRect(mouse_location.x, mouse_location.y, 1, 1)];
@@ -200,7 +196,7 @@ namespace Grain {
                     event->_setMousePos(Vec2d(pos.x, pos.y));
                     event->_setKeyCode([ns_event keyCode]);
                     NSString *key_characters = [ns_event charactersIgnoringModifiers];
-                    int32_t key_char_count = static_cast<int32_t>([key_characters length]);
+                    auto key_char_count = static_cast<int32_t>([key_characters length]);
                     if (key_char_count > 0) {
                         event->_setKeyChar([key_characters characterAtIndex:0]);
                     }

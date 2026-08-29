@@ -3629,6 +3629,29 @@ namespace Grain {
 
 
     /**
+     *  @brief Extracts the substring after the last occurrence of a given character.
+     *
+     *  This function searches for the last occurrence of the specified character in the
+     *  string and returns everything after it as a new String. If the character is not
+     *  found, an empty String is returned.
+     *
+     *  This is commonly used for extracting file extensions, path components, or
+     *  suffix-based parsing.
+     *
+     *  @param c The character to search for (e.g. '.', '/', '_').
+     *
+     *  @return A String containing the substring after the last occurrence of the
+     *          character, or an empty String if the character is not found.
+     */
+    String String::extension(char c) const noexcept {
+        const char* ext = strrchr(utf8(), c);
+        if (ext) {
+            return String(&ext[1]);
+        }
+        return String::emptyString();
+    }
+
+    /**
      *  @brief Get the file extension from a given file path.
      *
      *  This function extracts and returns the file extension from the provided file
@@ -3642,9 +3665,7 @@ namespace Grain {
         if (ext) {
             return String(&ext[1]);
         }
-        else {
-            return String::emptyString();
-        }
+        return String::emptyString();
     }
 
 
@@ -3663,9 +3684,7 @@ namespace Grain {
         if (base_name) {
             return String(base_name);
         }
-        else {
-            return String::emptyString();
-        }
+        return String::emptyString();
     }
 
 
@@ -3681,7 +3700,6 @@ namespace Grain {
         char* base_name = basename(buffer);
 
         if (base_name) {
-
             // Find the last dot (.) in the base name
             char* dot = strrchr(base_name, '.');
             if (dot) {
@@ -3690,9 +3708,7 @@ namespace Grain {
 
             return String(base_name);
         }
-        else {
-            return String::emptyString();
-        }
+        return String::emptyString();
     }
 
 
@@ -3712,9 +3728,7 @@ namespace Grain {
         if (dir_name) {
             return String(dir_name);
         }
-        else {
-            return String::emptyString();
-        }
+        return String::emptyString();
     }
 
 

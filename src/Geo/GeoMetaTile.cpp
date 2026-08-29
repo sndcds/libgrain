@@ -1,7 +1,7 @@
 //
 //  GeoMetaTile.hpp
 //
-//  Created by Roald Christesen on from 05.09.2024
+//  Created by Roald Christesen on 05.09.2024
 //  Copyright (C) 2025 Roald Christesen. All rights reserved.
 //
 //  This file is part of GrainLib, see <https://grain.one>.
@@ -73,7 +73,7 @@ namespace Grain {
                     std::snprintf(tile_name, 256, tile_name_format.utf8(), 8 * x + y);
                     std::snprintf(file_path, 2560, "%s/%s.%s", tiles_dir_path.utf8(), tile_name, file_ext.utf8());
                     int32_t tile_file_size = 0;
-                    if (File::fileExists(file_path)) {
+                    if (File::isFile(file_path)) {
                         File tile_file(file_path);
                         tile_file.startRead();
                         tile_file_size = static_cast<int32_t>(tile_file.size());
@@ -106,7 +106,7 @@ namespace Grain {
                 for (int32_t x = 0; x < 8; x++) {
                     std::snprintf(tile_name, 256, tile_name_format.utf8(), 8 * x + y);
                     std::snprintf(file_path, 2560, "%s/%s.%s", tiles_dir_path.utf8(), tile_name, file_ext.utf8());
-                    if (File::fileExists(file_path)) {
+                    if (File::isFile(file_path)) {
                         File tile_file(file_path);
                         tile_file.startRead();
                         auto tile_file_size = tile_file.size();
@@ -228,7 +228,7 @@ namespace Grain {
                     for (int32_t xi = 0; xi < tile_x_n; xi++) {
                         String tile_img_file_path = temp_path + "/_temp_" + temp_index + ".png";
                         int32_t tile_img_file_size = 0;
-                        if (File::fileExists(tile_img_file_path)) {
+                        if (File::isFile(tile_img_file_path)) {
                             File tile_img_file(tile_img_file_path);
                             tile_img_file.startRead();
                             tile_img_file_size = static_cast<int32_t>(tile_img_file.size());

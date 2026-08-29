@@ -1,7 +1,7 @@
 //
 //  Component.hpp
 //
-//  Created by Roald Christesen on from 17.11.2015
+//  Created by Roald Christesen on 17.11.2015
 //  Copyright (C) 2025 Roald Christesen. All rights reserved.
 //
 //  This file is part of GrainLib, see <https://grain.one>.
@@ -16,6 +16,7 @@
 #include "2d/Rect.hpp"
 #include "2d/Dimension.hpp"
 #include "2d/Border.hpp"
+#include "GUI/Event.hpp"
 #include "GUI/GUIStyle.hpp"
 
 #if defined(__APPLE__) && defined(__MACH__)
@@ -120,8 +121,10 @@ namespace Grain {
         bool is_editable_ = false;
         bool is_toggle_mode_ = false;
         bool is_number_mode_ = false;
+        bool is_focused_ = false;
+        bool is_hovered_ = false;
+        bool can_get_hover_ = false;
         bool can_get_focus_ = false;
-        bool focus_flag_ = false;
         bool continuous_update_flag_ = true;
         bool drag_entered_flag_ = false;
         bool simple_mode_flag_ = false;
@@ -184,7 +187,9 @@ namespace Grain {
 
         ~Component() noexcept override;
 
-        [[nodiscard]] const char* className() const noexcept override { return "Component"; }
+        [[nodiscard]] const char* className() const noexcept override {
+            return "Component";
+        }
 
         friend std::ostream& operator << (std::ostream& os, const Component* o) {
             o == nullptr ? os << "Component nullptr" : os << *o;
@@ -199,37 +204,85 @@ namespace Grain {
 
 
 #if defined(__APPLE__) && defined(__MACH__)
-        [[nodiscard]] virtual void* nsView() const noexcept { return ns_view_; }
-        virtual void setNSView(void* ns_view) noexcept { ns_view_ = ns_view; }
+        [[nodiscard]] virtual void* nsView() const noexcept {
+            return ns_view_;
+        }
+        virtual void setNSView(void* ns_view) noexcept {
+            ns_view_ = ns_view;
+        }
 #endif
 
-        [[nodiscard]] ComponentType componentType() const noexcept { return type_; }
+        [[nodiscard]] ComponentType componentType() const noexcept {
+            return type_;
+        }
 
-        [[nodiscard]] int32_t tag() const noexcept { return tag_; }
-        void setTag(int32_t tag) noexcept { tag_ = tag; }
+        [[nodiscard]] int32_t tag() const noexcept {
+            return tag_;
+        }
+        void setTag(int32_t tag) noexcept {
+            tag_ = tag;
+        }
 
-        [[nodiscard]] double x() const noexcept { return rect_.x_; }
-        [[nodiscard]] double y() const noexcept { return rect_.y_; }
-        [[nodiscard]] double width() const noexcept { return rect_.width_; }
-        [[nodiscard]] double height() const noexcept { return rect_.height_; }
-        [[nodiscard]] Dimensiond dimension() const noexcept { return { rect_.width_, rect_.height_ }; }
-        [[nodiscard]] double size(bool vertical) const noexcept { return vertical ? rect_.height_ : rect_.width_; }
-        [[nodiscard]] double aspectRatio() const noexcept { return rect_.width_ != 0.0 ? rect_.height_ / rect_.width_ : 1.0; }
-        [[nodiscard]] double shortSide() const noexcept { return rect_.shortSide(); }
-        [[nodiscard]] double longSide() const noexcept { return rect_.longSide(); }
-        [[nodiscard]] virtual Vec2d center() const noexcept { return { rect_.width_ * 0.5, rect_.height_ * 0.5 }; }
-        [[nodiscard]] double centerX() const noexcept { return rect_.width_ * 0.5; }
-        [[nodiscard]] double centerY() const noexcept { return rect_.height_ * 0.5; }
-        [[nodiscard]] double radius() const noexcept { return rect_.shortSide() * 0.5; }
+        [[nodiscard]] double x() const noexcept {
+            return rect_.x_;
+        }
+        [[nodiscard]] double y() const noexcept {
+            return rect_.y_;
+        }
+        [[nodiscard]] double width() const noexcept {
+            return rect_.width_;
+        }
+        [[nodiscard]] double height() const noexcept {
+            return rect_.height_;
+        }
+        [[nodiscard]] Dimensiond dimension() const noexcept {
+            return { rect_.width_, rect_.height_ };
+        }
+        [[nodiscard]] double size(bool vertical) const noexcept {
+            return vertical ? rect_.height_ : rect_.width_;
+        }
+        [[nodiscard]] double aspectRatio() const noexcept {
+            return rect_.width_ != 0.0 ? rect_.height_ / rect_.width_ : 1.0;
+        }
+        [[nodiscard]] double shortSide() const noexcept {
+            return rect_.shortSide();
+        }
+        [[nodiscard]] double longSide() const noexcept {
+            return rect_.longSide();
+        }
+        [[nodiscard]] virtual Vec2d center() const noexcept {
+            return { rect_.width_ * 0.5, rect_.height_ * 0.5 };
+        }
+        [[nodiscard]] double centerX() const noexcept {
+            return rect_.width_ * 0.5;
+        }
+        [[nodiscard]] double centerY() const noexcept {
+            return rect_.height_ * 0.5;
+        }
+        [[nodiscard]] double radius() const noexcept {
+            return rect_.shortSide() * 0.5;
+        }
 
-        [[nodiscard]] bool isTextField() const noexcept { return type_ == ComponentType::TextField; }
-        [[nodiscard]] bool isKnob() const noexcept { return type_ == ComponentType::Knob; }
-        [[nodiscard]] bool isSlider() const noexcept { return type_ == ComponentType::Slider; }
-        [[nodiscard]] bool isColorWell() const noexcept { return type_ == ComponentType::ColorWell; }
-        [[nodiscard]] bool isAngleDial() const noexcept { return type_ == ComponentType::AngleDial; }
+        [[nodiscard]] bool isTextField() const noexcept {
+            return type_ == ComponentType::TextField;
+        }
+        [[nodiscard]] bool isKnob() const noexcept {
+            return type_ == ComponentType::Knob;
+        }
+        [[nodiscard]] bool isSlider() const noexcept {
+            return type_ == ComponentType::Slider;
+        }
+        [[nodiscard]] bool isColorWell() const noexcept {
+            return type_ == ComponentType::ColorWell;
+        }
+        [[nodiscard]] bool isAngleDial() const noexcept {
+            return type_ == ComponentType::AngleDial;
+        }
 
         // Flags
-        [[nodiscard]] bool isEnabled() const noexcept { return is_enabled_; }
+        [[nodiscard]] bool isEnabled() const noexcept {
+            return is_enabled_;
+        }
         static bool setEnabled(Component* component, bool enabled) noexcept;
         virtual bool setEnabled(bool enabled) noexcept;
         bool enable() noexcept { return setEnabled(true); }
@@ -237,8 +290,12 @@ namespace Grain {
         void toggleEnabled() noexcept{ setEnabled(!is_enabled_); }
         void setVisibility(bool visibility) noexcept;
 
-        [[nodiscard]] bool isSelected() const noexcept { return is_selected_; }
-        virtual void setSelected(bool selected) noexcept { is_selected_ = selected; needsDisplay(); }
+        [[nodiscard]] bool isSelected() const noexcept {
+            return is_selected_;
+        }
+        virtual void setSelected(bool selected) noexcept {
+            is_selected_ = selected; needsDisplay();
+        }
         void select() noexcept { setSelected(true); }
         void deselect() noexcept { setSelected(false); }
         void deselectWithoutChecking() noexcept { is_selected_ = false; needsDisplay(); }
@@ -247,40 +304,80 @@ namespace Grain {
         void toggleSelection() noexcept { setSelected(!is_selected_); }
         void setToggleMode(bool toggle_mode) noexcept { is_toggle_mode_ = toggle_mode; }
 
-        [[nodiscard]] bool isFlippedView() const noexcept { return view_is_flipped_; }
-        void setFlippedView(bool flipped_view ) noexcept { view_is_flipped_ = flipped_view; }
+        [[nodiscard]] bool isFlippedView() const noexcept {
+            return view_is_flipped_;
+        }
+        void setFlippedView(bool flipped_view ) noexcept {
+            view_is_flipped_ = flipped_view;
+        }
 
-        [[nodiscard]] bool isNumberMode() const noexcept { return is_number_mode_; }
+        [[nodiscard]] bool isNumberMode() const noexcept {
+            return is_number_mode_;
+        }
         void virtual setNumberMode(bool mode) noexcept {};
         virtual void stepNumber(bool use_big_step, bool negative) noexcept {};
 
         [[nodiscard]] bool canGetFocus() const noexcept {
             return is_visible_ && can_get_focus_ && is_enabled_ && rect_.width_ > 0.0 && rect_.height_ > 0.0;
         }
-        void setFocusFlag(bool focus_flag) noexcept {
-            if (focus_flag_ != focus_flag) {
-                focus_flag_ = focus_flag;
+        void setFocused(bool focused) noexcept {
+            if (can_get_focus_ && is_focused_ != focused) {
+                is_focused_ = focused;
                 needsDisplay();
             }
         }
-        [[nodiscard]] bool hasFocusFlag() const noexcept { return focus_flag_; }
+        [[nodiscard]] bool isFocused() const noexcept {
+            return is_focused_;
+        }
+        void setHovered(bool hovered) noexcept {
+            if (can_get_hover_ && is_hovered_ != hovered) {
+                is_hovered_ = hovered;
+                needsDisplay();
+            }
+        }
+        [[nodiscard]] bool isHovered() const noexcept {
+            return is_hovered_;
+        }
 
+        [[nodiscard]] virtual bool isHorizontal() const noexcept {
+            return rect_.isHorizontal();
+        }
+        [[nodiscard]] virtual bool isVertical() const noexcept {
+            return rect_.isVertical();
+        }
+        [[nodiscard]] bool acceptsFirstMouse() const noexcept {
+            return is_visible_ ? accepts_first_mouse_ : false;
+        }
+        void setAcceptsFirstMouse(bool accepts_first_mouse ) noexcept {
+            accepts_first_mouse_ = accepts_first_mouse;
+        }
+        [[nodiscard]] bool isHandlingMouseMoved() const noexcept {
+            return handles_mouse_moved_;
+        }
+        void setHandlesMouseMoved(bool handles_mouse_moved) noexcept {
+            handles_mouse_moved_ = handles_mouse_moved;
+        }
+        [[nodiscard]] bool isMouseInView() const noexcept {
+            return mouse_is_in_view_;
+        }
 
-        [[nodiscard]] virtual bool isHorizontal() const noexcept { return rect_.isHorizontal(); }
-        [[nodiscard]] virtual bool isVertical() const noexcept { return rect_.isVertical(); }
-        [[nodiscard]] bool acceptsFirstMouse() const noexcept { return is_visible_ ? accepts_first_mouse_ : false; }
-        void setAcceptsFirstMouse(bool accepts_first_mouse ) noexcept { accepts_first_mouse_ = accepts_first_mouse; }
-        [[nodiscard]] bool isHandlingMouseMoved() const noexcept { return handles_mouse_moved_; }
-        void setHandlesMouseMoved(bool handles_mouse_moved) noexcept { handles_mouse_moved_ = handles_mouse_moved; }
-        [[nodiscard]] bool isMouseInView() const noexcept { return mouse_is_in_view_; }
-
-        [[nodiscard]] bool isDragEntered() const noexcept { return drag_entered_flag_; }
-        void setDragEntered(bool drag_entered) noexcept { drag_entered_flag_ = drag_entered; }
+        [[nodiscard]] bool isDragEntered() const noexcept {
+            return drag_entered_flag_;
+        }
+        void setDragEntered(bool drag_entered) noexcept {
+            drag_entered_flag_ = drag_entered;
+        }
 
         // Rect, Bounds
-        [[nodiscard]] Rectd rect() const noexcept { return rect_; }
-        [[nodiscard]] bool isRectUsable() const noexcept { return rect_.usable(); }
-        [[nodiscard]] Rectd boundsRect() const noexcept { return Rectd(rect_.width_, rect_.height_); }
+        [[nodiscard]] Rectd rect() const noexcept {
+            return rect_;
+        }
+        [[nodiscard]] bool isRectUsable() const noexcept {
+            return rect_.usable();
+        }
+        [[nodiscard]] Rectd boundsRect() const noexcept {
+            return Rectd(rect_.width_, rect_.height_);
+        }
         [[nodiscard]] Rectd contentRect() const noexcept;
 
         virtual void setColor(const RGB& color) noexcept {}
@@ -288,12 +385,18 @@ namespace Grain {
 
 
         // Style
-        [[nodiscard]] bool isOpaque() const noexcept { return true; }
-        void setStyleIndex(int32_t index) { style_index_ = index; }
+        [[nodiscard]] bool isOpaque() const noexcept {
+            return true;
+        }
+        void setStyleIndex(int32_t index) {
+            style_index_ = index;
+        }
         [[nodiscard]] GUIStyle* guiStyle() const noexcept;
 
         // Text
-        [[nodiscard]] bool hasText() const noexcept { return text_ ? text_->length() > 0 : false; }
+        [[nodiscard]] bool hasText() const noexcept {
+            return text_ ? text_->length() > 0 : false;
+        }
         void setText(const char* text_str) noexcept;
         void setText(const String& text) noexcept;
         [[nodiscard]] virtual int32_t textLength() const noexcept {
@@ -301,7 +404,9 @@ namespace Grain {
         }
 
         //
-        [[nodiscard]] virtual bool hasDescendant(const Component* component) noexcept { return false; }
+        [[nodiscard]] virtual bool hasDescendant(const Component* component) noexcept {
+            return false;
+        }
         void setNextKeyComponent(Component* component) noexcept;
         [[nodiscard]] bool isKeyComponent() const noexcept;
         bool gotoComponent(Component* component) noexcept;
@@ -319,17 +424,25 @@ namespace Grain {
             }
         }
         virtual void setByComponent(Component* component) noexcept {}
-        virtual void setReceiverComponent(Component* component) noexcept { receiver_component_ = component; }
-        virtual void setTextField(TextField* textfield) noexcept { textfield_ = textfield; }
+        virtual void setReceiverComponent(Component* component) noexcept {
+            receiver_component_ = component;
+        }
+        virtual void setTextField(TextField* textfield) noexcept {
+            textfield_ = textfield;
+        }
 
-        void setAction(ComponentAction action) noexcept { setAction(action, nullptr); }
+        void setAction(ComponentAction action) noexcept {
+            setAction(action, nullptr);
+        }
         void setAction(ComponentAction action, void* action_ref) noexcept {
             action_ = action;
             action_ref_ = action_ref;
         }
         void* actionRef() const noexcept { return action_ref_; }
 
-        void setTextChangedAction(ComponentAction action) noexcept { setTextChangedAction(action, nullptr); }
+        void setTextChangedAction(ComponentAction action) noexcept {
+            setTextChangedAction(action, nullptr);
+        }
         void setTextChangedAction(ComponentAction action, void* action_ref) noexcept {
             text_changed_action_ = action;
             text_changed_action_ref_ = action_ref;
@@ -364,8 +477,12 @@ namespace Grain {
         virtual void parentGeometryChanged() noexcept;
 
         // Radio Group
-        [[nodiscard]] virtual int32_t radioGroup() const noexcept { return std::numeric_limits<int32_t>::max(); }
-        [[nodiscard]] virtual int32_t radioValue() const noexcept { return std::numeric_limits<int32_t>::max(); }
+        [[nodiscard]] virtual int32_t radioGroup() const noexcept {
+            return std::numeric_limits<int32_t>::max();
+        }
+        [[nodiscard]] virtual int32_t radioValue() const noexcept {
+            return std::numeric_limits<int32_t>::max();
+        }
         virtual void setRadioGroup(int32_t radioGroup) noexcept {}
         virtual void setRadioValue(int32_t radioValue) noexcept {}
         virtual void deselectRadioGroup(int32_t radio_group) noexcept {}
@@ -381,17 +498,31 @@ namespace Grain {
         void setDelayed(bool delayed) noexcept { is_delayed_ = delayed; }
 
         // Value
-        [[nodiscard]] virtual Fix value() const noexcept { return Fix{}; }
-        virtual bool setValue(const Fix& value) noexcept { return false; }
+        [[nodiscard]] virtual Fix value() const noexcept {
+            return Fix{};
+        }
+        virtual bool setValue(const Fix& value) noexcept {
+            return false;
+        }
         virtual void setValueRange(const Fix& min, const Fix& max) noexcept {}
-        [[nodiscard]] virtual int32_t valueAsInt32() const noexcept { return 0; }
-        [[nodiscard]] virtual double valueAsDouble() const noexcept { return 0; }
-        virtual bool setValueInt(int32_t value) noexcept { return setValue(Fix(value)); }
-        virtual bool setValueDouble(double value) noexcept { return setValue(Fix(value)); }
+        [[nodiscard]] virtual int32_t valueAsInt32() const noexcept {
+            return 0;
+        }
+        [[nodiscard]] virtual double valueAsDouble() const noexcept {
+            return 0;
+        }
+        virtual bool setValueInt(int32_t value) noexcept {
+            return setValue(Fix(value));
+        }
+        virtual bool setValueDouble(double value) noexcept {
+            return setValue(Fix(value));
+        }
 
         // Event
         virtual void handleEvent(const Event& event) noexcept;
-        [[nodiscard]] bool hasHandleEventFunction() const noexcept { return handle_event_func_ != nullptr; }
+        [[nodiscard]] bool hasHandleEventFunction() const noexcept {
+            return handle_event_func_ != nullptr;
+        }
         void setHandleEventFunction(ComponentHandleEventFunc func, void* ref = nullptr) noexcept;
         bool callHandleEventFunction(const Event& event) noexcept;
         void _interpretKeyEvents(const Event& event) noexcept;
@@ -401,7 +532,9 @@ namespace Grain {
         virtual void updateBeforeDrawing(const Rectd& dirty_rect) noexcept {}
 
         // Custom draw function
-        [[nodiscard]] bool hasDrawFunction() const noexcept { return draw_func_ != nullptr; }
+        [[nodiscard]] bool hasDrawFunction() const noexcept {
+            return draw_func_ != nullptr;
+        }
         void setDrawFunction(ComponentDrawFunc func, void* ref = nullptr) noexcept;
         void callDrawFunction(GraphicContext* gc) noexcept;
 
@@ -418,6 +551,7 @@ namespace Grain {
         virtual void forcedDisplay() const noexcept;
 
         // Mouse
+        Vec2d mousePos() noexcept;
         virtual void updateAtMouseDown(const Event& event) noexcept {}
         virtual void handleMouseDown(const Event& event) noexcept {}
         virtual void handleMouseDrag(const Event& event) noexcept {}
@@ -425,8 +559,12 @@ namespace Grain {
         virtual void handleRightMouseDown(const Event& event) noexcept {}
         virtual void handleRightMouseDrag(const Event& event) noexcept {}
         virtual void handleRightMouseUp(const Event& event) noexcept {}
-        virtual void handleMouseEntered(const Event& event) noexcept {}
-        virtual void handleMouseExited(const Event& event) noexcept {}
+        virtual void handleMouseEntered(const Event& event) noexcept {
+            setHovered(true);
+        }
+        virtual void handleMouseExited(const Event& event) noexcept {
+            setHovered(false);
+        }
         virtual void handleMouseMoved(const Event& event) noexcept {}
         virtual void handleScrollWheel(const Event& event) noexcept {
             if (parent_) {
@@ -449,7 +587,9 @@ namespace Grain {
             }
         }
 
-        [[nodiscard]] bool hasAction() const noexcept { return action_ != nullptr; }
+        [[nodiscard]] bool hasAction() const noexcept {
+            return action_ != nullptr;
+        }
 
 
         // Geometry
@@ -462,12 +602,16 @@ namespace Grain {
 
         // Utils
         static Component* addComponentToView(Component* component, View* view, AddFlags flags = AddFlags::kNone) noexcept;
-        void _setParent(Component* parent) noexcept { parent_ = parent; }
-        [[nodiscard]] View* parentView() const noexcept { return reinterpret_cast<View*>(parent_); }
+        void _setParent(Component* parent) noexcept {
+            parent_ = parent;
+        }
+        [[nodiscard]] View* parentView() const noexcept {
+            return reinterpret_cast<View*>(parent_);
+        }
 
 
         virtual GraphicContext* graphicContextPtr() noexcept;
-        GraphicContext* gc() noexcept;
+        GraphicContext* gc() noexcept { return gc_ptr_; }
     };
 
 }

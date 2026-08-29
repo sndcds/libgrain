@@ -12,24 +12,8 @@
 #include "Data/JSONWalker.hpp"
 
 namespace Grain {
-
-void JSONWalker::addProperty(const std::string& path, const json& value) {
-    std::cout << "Primitive at " << path << " = ";
-
-    if (value.is_string()) {
-        std::cout << value.get<std::string>();
+    void JSONWalker::addProperty(const String &path, const JSONValue& value) {
+        std::cout << "Primitive at " << path << " = ";
+        std::cout << value.asString() << std::endl;
     }
-    else if (value.is_number()) {
-        std::cout << value;
-    }
-    else if (value.is_boolean()) {
-        std::cout << (value.get<bool>() ? "true" : "false");
-    }
-    else if (value.is_null()) {
-        std::cout << "null";
-    }
-
-    std::cout << "\n";
-}
-
 }

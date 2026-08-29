@@ -1,7 +1,7 @@
 //
 //  Button.cpp
 //
-//  Created by Roald Christesen on from 02.05.2015
+//  Created by Roald Christesen on 02.05.2015
 //  Copyright (C) 2025 Roald Christesen. All rights reserved.
 //
 //  This file is part of GrainLib, see <https://grain.one>.
@@ -21,6 +21,7 @@ namespace Grain {
 
     Button::Button(const Rectd& rect, const char* text, int32_t tag) noexcept : Component(rect, tag) {
         type_ = ComponentType::Button;
+        can_get_hover_ = true;
         can_get_focus_ = true;
         radio_group_ = 0;
         radio_value_ = 0;
@@ -84,6 +85,11 @@ namespace Grain {
         if (isKeyComponent()) {
             gc->setFillColor(1, 0, 0, 1);
             gc->fillFrame(boundsRect(), 2);
+        }
+
+        if (isHovered()) {
+            gc->setFillRGBA(RGBA(1, 0, 0, 0.2f));
+            gc->fillRect(boundsRect());
         }
     }
 

@@ -1,7 +1,7 @@
 //
 //  GeoShape.cpp
 //
-//  Created by Roald Christesen on from 13.09.2023
+//  Created by Roald Christesen on 13.09.2023
 //  Copyright (C) 2025 Roald Christesen. All rights reserved.
 //
 //  This file is part of GrainLib, see <https://grain.one>.
@@ -47,12 +47,12 @@ namespace Grain {
         GeoProj* proj = nullptr;
 
         try {
-            if (!File::fileExists(file_path)) {
+            if (!File::isFile(file_path)) {
                 throw ErrorCode::FileNotFound;
             }
 
             String prj_file_path = file_path.filePathWithChangedExtension("prj");
-            if (!File::fileExists(prj_file_path)) {
+            if (!File::isFile(prj_file_path)) {
                 throw ErrorCode::FileNotFound;
             }
 

@@ -1,7 +1,7 @@
 //
 //  CatmullRomCurve.hpp
 //
-//  Created by Roald Christesen on from 30.07.2023
+//  Created by Roald Christesen on 30.07.2023
 //  Copyright (C) 2025 Roald Christesen. All rights reserved.
 //
 //  This file is part of GrainLib, see <https://grain.one>.

@@ -57,7 +57,7 @@ namespace Grain {
             friend bool operator != (const Iterator& a, const Iterator& b) { return a.ptr_ != b.ptr_; }
             friend bool operator < (const Iterator& a, const Iterator& b) { return a.ptr_ < b.ptr_; }
             friend bool operator > (const Iterator& a, const Iterator& b) { return a.ptr_ > b.ptr_; }
-            friend bool operator <= (const Iterator& a, const Iterator& b) { return a.ptr <= b.ptr_; }
+            friend bool operator <= (const Iterator& a, const Iterator& b) { return a.ptr_ <= b.ptr_; }
             friend bool operator >= (const Iterator& a, const Iterator& b) { return a.ptr_ >= b.ptr_; }
 
         protected:
@@ -123,9 +123,7 @@ namespace Grain {
             if (index >= 0 && index < size_) {
                 return data_[index];
             }
-            else {
-                return dummy_;
-            }
+            return dummy_;
         }
 
         // Const version of operator[]
@@ -133,9 +131,7 @@ namespace Grain {
             if (index >= 0 && index < size_) {
                 return data_[index];
             }
-            else {
-                return dummy_;
-            }
+            return dummy_;
         }
 
         void free() noexcept {
@@ -169,9 +165,7 @@ namespace Grain {
             if (double_capacity_mode_) {
                 return capacity_ * 2;
             }
-            else {
-                return capacity_ + grow_step_;
-            }
+            return capacity_ + grow_step_;
         }
 
         bool reserve(int64_t capacity) noexcept {
@@ -282,9 +276,7 @@ namespace Grain {
                 removeLast();
                 return true;
             }
-            else {
-                return false;
-            }
+            return false;
         }
 
         [[nodiscard]] T first() noexcept { return elementAtIndex(0); }
@@ -295,20 +287,16 @@ namespace Grain {
             if (!element_ptr || !hasIndex(index)) {
                 return false;
             }
-            else {
-                data_[index] = *element_ptr;
-                return true;
-            }
+            data_[index] = *element_ptr;
+            return true;
         }
 
         virtual bool replaceLastElement(const T* element_ptr) noexcept {
             if (!element_ptr || size_ < 1) {
                 return false;
             }
-            else {
-                data_[size_] = *element_ptr;
-                return true;
-            }
+            data_[size_] = *element_ptr;
+            return true;
         }
 
         virtual void clear() noexcept {
@@ -349,63 +337,49 @@ namespace Grain {
                 out_element = data_[index];
                 return true;
             }
-            else {
-                return false;
-            }
+            return false;
         }
 
         [[nodiscard]] T elementAtIndex(int64_t index) const noexcept {
             if (index >= 0 && index < size_) {
                 return data_[index];
             }
-            else {
-                return dummy_;
-            }
+            return dummy_;
         }
 
         [[nodiscard]] const T* elementPtrAtIndex(int64_t index) const noexcept {
             if (index >= 0 && index < size_) {
                 return &data_[index];
             }
-            else {
-                return nullptr;
-            }
+            return nullptr;
         }
 
         [[nodiscard]] T* mutElementPtrAtIndex(int64_t index) const noexcept {
             if (index >= 0 && index < size_) {
                 return &data_[index];
             }
-            else {
-                return nullptr;
-            }
+            return nullptr;
         }
 
         [[nodiscard]] T lastElement() const noexcept {
             if (size_ > 0) {
                 return data_[size_ - 1];
             }
-            else {
-                return dummy_;
-            }
+            return dummy_;
         }
 
         [[nodiscard]] const T* lastElementPtr() const noexcept {
             if (size_ > 0) {
                 return &data_[size_ - 1];
             }
-            else {
-                return nullptr;
-            }
+            return nullptr;
         }
 
         [[nodiscard]] T* mutLastElementPtr() const noexcept {
             if (size_ > 0) {
                 return &data_[size_ - 1];
             }
-            else {
-                return nullptr;
-            }
+            return nullptr;
         }
 
         bool swapElements(int64_t index_a, int64_t index_b) noexcept {
@@ -415,9 +389,7 @@ namespace Grain {
                 data_[index_b] = temp;
                 return true;
             }
-            else {
-                return false;
-            }
+            return false;
         }
 
         /**
@@ -482,9 +454,7 @@ namespace Grain {
             if (size_ > 0) {
                 return removeAtIndex(lastIndex());
             }
-            else {
-                return ErrorCode::None;
-            }
+            return ErrorCode::None;
         }
 
         Iterator begin() const {
@@ -554,12 +524,11 @@ namespace Grain {
         /**
          *  @brief Clears all elements in the list and releases the objects.
          *
-         *  This method overrides the `clear` method and ensures all objects in the
-         *  list are released
-         *  using the `GRAIN_RELEASE` macro. It then calls the `clear` method of the
-         *  base `List` class to remove all elements.
+         *  This method overrides the `clear` method and ensures all objects in
+         *  the list are released using the `GRAIN_RELEASE` macro. It then calls
+         *  the `clear` method of the base `List` class to remove all elements.
          */
-        virtual void clear() noexcept override {
+        void clear() noexcept override {
             auto p = (Object** )List<T>::mutDataPtr();
             for (int64_t i = 0; i < List<T>::size_; i++) {
                 GRAIN_RELEASE(p[i]);

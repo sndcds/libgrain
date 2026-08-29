@@ -1,7 +1,7 @@
 //
 //  GeoTileRenderer.cpp
 //
-//  Created by Roald Christesen on from 06.04.2024
+//  Created by Roald Christesen on 06.04.2024
 //  Copyright (C) 2025 Roald Christesen. All rights reserved.
 //
 //  This file is part of GrainLib, see <https://grain.one>.
@@ -34,7 +34,6 @@
 #include "Color/Gradient.hpp"
 #include "Type/Type.hpp"
 #include "Geo/GeoMetaTile.hpp"
-#include "Database/PostgreSQL.hpp"
 #include "Time/TimeMeasure.hpp"
 
 #include <cstdlib>
@@ -193,13 +192,13 @@ namespace Grain {
                         Exception::throwStandard(ErrorCode::MemCantAllocate);
                     }
 
-                    db->m_identifier = table.asString("identifier", "");
-                    db->m_host = table.asString("host", "");
-                    db->m_port = table.asInt32("port", 5432);
-                    db->m_db_name = table.asStringThrow("db-name");
-                    db->m_user = table.asStringThrow("user");
-                    db->m_password = table.asString("password", "");
-                    db->m_timeout_sec = table.asDouble("timeout", 30.0);
+                    db->identifier_ = table.asString("identifier", "");
+                    db->host_ = table.asString("host", "");
+                    db->port_ = table.asInt32("port", 5432);
+                    db->db_name_ = table.asStringThrow("db-name");
+                    db->user_ = table.asStringThrow("user");
+                    db->password_ = table.asString("password", "");
+                    db->timeout_sec_ = table.asDouble("timeout", 30.0);
 
                     // TODO: Validate parameters!
                 }
@@ -354,7 +353,7 @@ namespace Grain {
 
             buildFilePath(layer->dir_path_, layer->m_file_name, layer->m_used_file_path);
 
-            if (!File::fileExists(layer->m_used_file_path)) {
+            if (!File::isFile(layer->m_used_file_path)) {
                 m_last_err_message.setFormatted(1000, "'file' %s/%s not found in layer \"%s\".", layer->dir_path_.utf8(), layer->m_file_name.utf8(), layer->m_name.utf8());
                 m_toml.throwParserError(m_last_err_message.utf8());
             }
@@ -1409,27 +1408,27 @@ namespace Grain {
     void GeoTileRenderer::_setLuaValueByPSQLProperty(const PSQLProperty* property) {
         // TODO: Move to Lua class!?
 
-        lua_pushstring(m_lua->luaState(), property->m_name.utf8());
+        lua_pushstring(m_lua->luaState(), property->name_.utf8());
 
-        switch (property->m_type) {
+        switch (property->type_) {
             case PSQLPropertyType::Boolean:
-                lua_pushboolean(m_lua->luaState(), property->m_integer != 0);
+                lua_pushboolean(m_lua->luaState(), property->integer_ != 0);
                 break;
 
             case PSQLPropertyType::Integer:
-                lua_pushinteger(m_lua->luaState(), property->m_integer);
+                lua_pushinteger(m_lua->luaState(), property->integer_);
                 break;
 
             case PSQLPropertyType::Double:
-                lua_pushnumber(m_lua->luaState(), property->m_double);
+                lua_pushnumber(m_lua->luaState(), property->double_);
                 break;
 
             case PSQLPropertyType::Numeric:
-                lua_pushnumber(m_lua->luaState(), property->m_double);
+                lua_pushnumber(m_lua->luaState(), property->double_);
                 break;
 
             case PSQLPropertyType::String:
-                lua_pushstring(m_lua->luaState(), property->m_string.utf8());
+                lua_pushstring(m_lua->luaState(), property->string_.utf8());
                 break;
 
             default:
@@ -1599,8 +1598,8 @@ namespace Grain {
                     for (int32_t field_index = 0; field_index < field_count; field_index++) {
                         auto field_name = psql_result.fieldName(field_index);
                         auto property = layer->m_data_property_list->mutPropertyPtrAtIndex(field_index);
-                        property->m_name.set(field_name);
-                        property->m_psql_type = psql_result.fieldType(field_index);
+                        property->name_.set(field_name);
+                        property->psql_type_ = psql_result.fieldType(field_index);
 
                         if (strcmp(field_name, "wkb") == 0) {
                             layer->m_db_wkb_field_index = field_index;
@@ -1871,9 +1870,9 @@ namespace Grain {
         }
 
         if (psql_connection) {
-            if ( psql_connection->m_psql_notices.size() > 0) {
+            if ( psql_connection->psql_notices_.size() > 0) {
                 int32_t i = 0;
-                for (auto notice : psql_connection->m_psql_notices) {
+                for (auto notice : psql_connection->psql_notices_) {
                     std::cout << i << ": " << notice << std::endl;
                     i++;
                 }

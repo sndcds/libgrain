@@ -59,6 +59,7 @@ namespace Grain {
 
         [ns_window setTitle:[NSString stringWithUTF8String:title]];
         [ns_window setAutorecalculatesKeyViewLoop:NO];
+        [ns_window setAcceptsMouseMovedEvents:YES];
 
         window->setNSWindow((__bridge void*)ns_window);
         window->setTitle(title);
@@ -127,7 +128,12 @@ namespace Grain {
 @implementation GrainNSWindow
 
 
-- (id)initWithContentRect:(NSRect)content_rect styleMask:(NSUInteger)a_style backing:(NSBackingStoreType)buffering_type defer:(BOOL)flag window:(Grain::Window*)window screen:(NSScreen*)screen {
+- (id)initWithContentRect:(NSRect)content_rect
+                styleMask:(NSUInteger)a_style
+                  backing:(NSBackingStoreType)buffering_type
+                    defer:(BOOL)flag
+                   window:(Grain::Window*)window
+                   screen:(NSScreen*)screen {
 
     GrainNSWindow* ns_window = [super initWithContentRect:content_rect
                                                 styleMask:a_style
@@ -145,7 +151,6 @@ namespace Grain {
 
 
 - (void)dealloc {
-
     [super dealloc];
 }
 
@@ -156,7 +161,7 @@ namespace Grain {
 
 
 - (void)becomeKeyWindow {
-   // TODO: Possibe optimization, only draw Component, which lost the focus!
+    // TODO: Possibe optimization, only draw Component, which lost the focus!
     // TODO: Not all windows must be redraw!
 
     Grain::App::setKeyWindow(m_window);
@@ -182,37 +187,31 @@ namespace Grain {
 
 
 - (void)windowDidResignMain:(NSNotification*)notification {
-
     // TODO: Your code to handle the window resigning as the main window.
 }
 
 
 - (void)windowWillClose:(NSNotification*)notification {
-
     // TODO: Your code to handle window closing.
 }
 
 
 - (void)windowDidMove:(NSNotification*)notification {
-
     // TODO: Your code to handle window resizing.
 }
 
 
 - (void)windowDidChangeScreen:(NSNotification*)notification {
-
     // TODO: Your code to handle window changing screen.
 }
 
 
 - (void)windowDidMiniaturize:(NSNotification*)notification {
-
     // TODO: Your code to handle window minimization.
 }
 
 
 - (NSSize)windowWillResize:(NSWindow*)sender toSize:(NSSize)frameSize {
-
     // TODO: Your code to handle window resizing dynamically.
     // You can modify the frameSize if needed.
 
@@ -221,14 +220,12 @@ namespace Grain {
 
 
 - (void)windowDidEndLiveResize:(NSNotification*)notification {
-
     // TODO: Your code to handle the completion of a live resize.
 
 }
 
 
 - (Grain::Window*)window {
-
     return m_window;
 }
 

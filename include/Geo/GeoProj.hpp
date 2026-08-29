@@ -1,7 +1,7 @@
 //
 //  GeoProj.hpp
 //
-//  Created by Roald Christesen on from 11.07.2023
+//  Created by Roald Christesen on 11.07.2023
 //  Copyright (C) 2025 Roald Christesen. All rights reserved.
 //
 //  This file is part of GrainLib, see <https://grain.one>.

@@ -133,7 +133,7 @@ namespace Grain {
             binary_flag_ = flags & AccessFlags::kBinary;
             can_overwrite_ = flags & AccessFlags::kOverwrite;
 
-            file_exists_ = File::fileExists(file_path_);
+            file_exists_ = File::isFile(file_path_);
 
             if (write_flag_ && file_exists_ && !can_overwrite_) {
                 Exception::throwStandard(ErrorCode::FileOverwriteNotAllowed);
@@ -2057,13 +2057,8 @@ namespace Grain {
     }
 
 
-    bool File::fileExists(const char* file_path) {
-        try {
-            return std::filesystem::exists(file_path);
-        }
-        catch (const std::filesystem::filesystem_error& exc) {
-            return false;
-        }
+    bool File::isFile(const char* file_path) {
+        return std::filesystem::is_regular_file(file_path);
     }
 
 
@@ -2076,8 +2071,8 @@ namespace Grain {
      *  @param file_path A String representing the file path to check.
      *  @return `true` if the file exists at the specified path; otherwise, `false`.
      */
-    bool File::fileExists(const String& file_path) {
-        return fileExists(file_path.utf8());
+    bool File::isFile(const String& file_path) {
+        return isFile(file_path.utf8());
     }
 
 
@@ -2088,14 +2083,14 @@ namespace Grain {
      *  @param file_name A String representing the file name to check.
      *  @return `true` if the file exists at the specified path; otherwise, `false`.
      */
-    bool File::fileExists(const String& dir_path, const String& file_name) {
+    bool File::isFile(const String& dir_path, const String& file_name) {
         if (dir_path.length() < 1) {
             String file_path = "./";
             file_path += file_name;
-            return fileExists(file_path);
+            return isFile(file_path);
         }
         else {
-            return fileExists(dir_path + "/" + file_name);
+            return isFile(dir_path + "/" + file_name);
         }
     }
 
@@ -2229,12 +2224,7 @@ namespace Grain {
      *  @return true if the path is a directory, false if it is not a directory.
      */
     bool File::isDir(const String& path) noexcept {
-        try {
-            return std::filesystem::is_directory(path.utf8());
-        }
-        catch (const std::filesystem::filesystem_error& exc) {
-            return false;
-        }
+        return std::filesystem::is_directory(path.utf8());
     }
 
 
@@ -2399,7 +2389,7 @@ NSString *file = [NSString stringWithUTF8String:file_path.utf8()];
         if (can_overwrite == CanOverwrite::Yes) {
             removeFile(file_path);
         }
-        else if (File::fileExists(file_path)) {
+        else if (File::isFile(file_path)) {
             Exception::throwStandard(ErrorCode::FileOverwriteNotAllowed);
         }
     }
@@ -2811,7 +2801,7 @@ NSString *file = [NSString stringWithUTF8String:file_path.utf8()];
         out_file_entry.file_size_ = 0;
 
         try {
-            if (File::fileExists(file_path)) {
+            if (File::isFile(file_path)) {
                 out_file_entry.path_ = path.string().c_str();
                 out_file_entry.name_ = path.filename().string().c_str();
                 out_file_entry.dir_flag_ = std::filesystem::is_directory(path);
@@ -2957,13 +2947,13 @@ NSString *file = [NSString stringWithUTF8String:file_path.utf8()];
 
     bool File::findFilePath(const String& file_path, const String& alt_root_dir, String& out_file_path) noexcept {
         try {
-            if (fileExists(file_path)) {
+            if (isFile(file_path)) {
                 out_file_path = file_path;
                 return true;
             }
 
             String altFilePath = buildFilePath(alt_root_dir, file_path.fileBaseName());
-            if (fileExists(altFilePath)) {
+            if (isFile(altFilePath)) {
                 out_file_path = altFilePath;
                 return true;
             }

@@ -1,7 +1,7 @@
 //
 //  Slider.hpp
 //
-//  Created by Roald Christesen on from 25.04.2014
+//  Created by Roald Christesen on 25.04.2014
 //  Copyright (C) 2025 Roald Christesen. All rights reserved.
 //
 //  This file is part of GrainLib, see <https://grain.one>.
@@ -17,6 +17,7 @@ namespace Grain {
 
 Slider::Slider(const Rectd& rect, int32_t tag) noexcept : ValueComponent(rect, tag) {
     type_ = ComponentType::Slider;
+    can_get_hover_ = true;
     can_get_focus_ = true;
     handle_size_ = 8;
     track_size_ = 4;
@@ -328,6 +329,11 @@ void Slider::draw(GraphicContext* gc, const Rectd& dirty_rect) noexcept {
     else {
         gc->setFillRGBA(handle_color);
         gc->fillEllipse(handle_rect_);
+    }
+
+    if (isHovered()) {
+        gc->setFillRGBA(RGBA(1, 0, 0, 0.2f));
+        gc->fillRect(boundsRect());
     }
 
     if (isKeyComponent()) {

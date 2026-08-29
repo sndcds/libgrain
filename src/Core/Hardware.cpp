@@ -1,7 +1,7 @@
 //
 //  Hardware.cpp
 //
-//  Created by Roald Christesen on from 25.08.2012
+//  Created by Roald Christesen on 25.08.2012
 //  Copyright (C) 2025 Roald Christesen. All rights reserved.
 //
 //  This file is part of GrainLib, see <https://grain.one>.

@@ -82,10 +82,8 @@ namespace Grain {
 
 
     App::~App() {
-        // Release all Screens
-        for (int32_t i = 0; i < kMaxScreenCount; i++) {
-            delete screens_[i];
-        }
+        std::cout << "App 1\n";
+        std::cout << "App 3\n";
     }
 
 

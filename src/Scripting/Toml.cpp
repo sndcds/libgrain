@@ -297,7 +297,11 @@ namespace Grain {
         uint8_t* data_buffer = nullptr;
 
         try {
+            File::isFile(file_path);
+
+
             String dir_path = file_path.fileDirPath();
+            std::cout << "dir_path: " << dir_path << std::endl;
             ObjectList<FileEntry*> files_list;
             FileEntry toml_file_entry;
             File::fileEntryByPath(file_path, toml_file_entry);
@@ -307,7 +311,7 @@ namespace Grain {
                 File file(file_path);
                 file.startReadAscii();
 
-                while (file.skipUntilLineWithText(include_token) == true) {
+                while (file.skipUntilLineWithText(include_token)) {
                     String key, external_file_path;
                     file.readTomlKeyValue(key, external_file_path);
 
@@ -335,12 +339,17 @@ namespace Grain {
                 }
 
                 if (m_included_files_count == 0 || m_included_files_total_size < 1) {
+                    // No includes, parse directly
+                    std::cout << "No included files, parsing main file directly: " << file_path << std::endl;
                     _m_tpp_parse_result = toml::parse_file(file_path.utf8());
                 }
                 else {
+                    // Calculate bytes needed and allocate buffer safely
                     int64_t bytes_needed = m_included_files_total_size + static_cast<int64_t>(toml_file_entry.file_size_);
+                    std::cout << "Total bytes needed for main + included files: " << bytes_needed << std::endl;
 
-                    data_buffer = (uint8_t*)malloc(bytes_needed);
+                    // Allocate one extra byte for null terminator
+                    data_buffer = (uint8_t*)malloc(bytes_needed + 1);
                     if (!data_buffer) {
                         Exception::throwStandard(ErrorCode::MemCantAllocate);
                     }
@@ -348,65 +357,114 @@ namespace Grain {
                     auto data_rest = bytes_needed;
                     auto data_ptr = data_buffer;
 
-                    String toml_data(bytes_needed);
-                    file.rewind();
-
+                    file.rewind(); // start reading main file again
                     int32_t included_file_index = 0;
                     String line;
+
                     while (file.readLine(line)) {
                         line.trim();
 
                         if (line == include_token) {
-                            file.skipLine(); // Skip the line defining the included file path
+                            // Skip the line defining included file
+                            file.skipLine();
+
                             auto file_entry = files_list.elementAtIndex(included_file_index);
                             if (!file_entry) {
-                                Exception::throwMessage(ErrorCode::NullPointer, "Missing file entry");
+                                Exception::throwMessage(ErrorCode::NullPointer, "Missing included file entry");
                             }
 
-                            if (file_entry->file_size_ > 0) {
-                                auto err = File::readToBuffer(file_entry->path_, data_rest, data_ptr);
-                                if (err != ErrorCode::None) {
-                                    Exception::throwSpecificFormattedMessage(
-                                            kErrFailedToIncludeFile,
-                                            "Unable to read included file: %s",
-                                            file_entry->path_.utf8());
-                                }
-
-                                data_ptr += file_entry->file_size_;
-                                data_rest -= static_cast<int32_t>(file_entry->file_size_);
-                                *data_ptr++ = '\n';
-                                data_rest--;
+                            if (file_entry->file_size_ <= 0) {
+                                Exception::throwSpecificFormattedMessage(
+                                    kErrFailedToIncludeFile,
+                                    "Included file is empty: %s",
+                                    file_entry->path_.utf8());
                             }
+
+                            // Ensure we have enough buffer space
+                            if (data_rest < file_entry->file_size_ + 1) {
+                                Exception::throwMessage(ErrorCode::BufferOverflow, "Buffer too small for included file content");
+                            }
+
+                            // Read file content into buffer
+                            auto err = File::readToBuffer(file_entry->path_, data_rest, data_ptr);
+                            if (err != ErrorCode::None) {
+                                Exception::throwSpecificFormattedMessage(
+                                    kErrFailedToIncludeFile,
+                                    "Unable to read included file: %s",
+                                    file_entry->path_.utf8());
+                            }
+
+                            data_ptr += file_entry->file_size_;
+                            data_rest -= static_cast<int32_t>(file_entry->file_size_);
+
+                            *data_ptr++ = '\n';
+                            data_rest--;
 
                             included_file_index++;
                         }
                         else {
+                            // Write main file line to buffer
                             auto line_bytes = line.byteLength();
+                            if (line_bytes + 1 > data_rest) {
+                                Exception::throwMessage(ErrorCode::BufferOverflow, "Buffer too small for main TOML line");
+                            }
+
                             memcpy(data_ptr, line.utf8(), line_bytes);
                             data_ptr += line_bytes;
                             data_rest -= line_bytes;
+
                             *data_ptr++ = '\n';
                             data_rest--;
-                        }
+                    }
                     }
 
-                    *data_ptr = '\0'; // End of string, important!
+                    // Null-terminate buffer
+                    *data_ptr = '\0';
 
-                    _m_tpp_parse_result = toml::parse(std::string_view((const char*)data_buffer));
+                    // Parse using string_view with exact length
+                    int64_t used_bytes = bytes_needed - data_rest;
+                    std::cout << "Parsing combined TOML content, bytes used: " << used_bytes << std::endl;
+                    _m_tpp_parse_result = toml::parse(std::string_view((const char*)data_buffer, used_bytes));
                 }
             }
             else {
+                std::cout << "Parsing from file: " << file_path.utf8() << std::endl;
                 _m_tpp_parse_result = toml::parse_file(file_path.utf8());
             }
         }
         catch (const Exception& e) {
+            // Log the Exception details
+            Log l;
+            l << "Caught custom Exception while parsing TOML file: " << file_path
+              << "\nError code: " << (int)e.code()
+              << "\nMessage: " << e.what()
+              << Log::endl;
+
             deferred_exception.createAndCaptureUnexpected(e);
         }
         catch (const toml::parse_error& err) {
+            // Log TOML parse error details
+            Log l;
+            l << "Caught toml::parse_error while parsing TOML file: " << file_path
+              << "\nError message: " << err.what()
+              << Log::endl;
+
             _tppParserError(err, m_last_err_message);
             deferred_exception.createAndCaptureUnexpected(m_last_err_message.utf8(), ErrorCode::TomlParseError);
         }
+        catch (const std::exception& e) {
+            // Catch standard C++ exceptions
+            Log l;
+            l << "Caught std::exception while parsing TOML file: " << file_path
+              << "\nMessage: " << e.what() << Log::endl;
+
+            deferred_exception.createAndCaptureUnexpected(e.what(), ErrorCode::Unknown);
+        }
         catch (...) {
+            // Truly unknown errors
+            Log l;
+            l << "Caught unknown exception while parsing TOML file: " << file_path << Log::endl;
+
             deferred_exception.createAndCaptureUnexpected("Unknown TOML parsing error", ErrorCode::Unknown);
         }
 

@@ -10,6 +10,7 @@
 #include "Movie/MovieWriter.hpp"
 #include "Image/Image.hpp"
 #include "Signal/Signal.hpp"
+#include "Core/Log.hpp"
 
 #include <iostream>
 
@@ -29,6 +30,8 @@ ErrorCode MovieWriter::writeVideoWithAudio(
         Signal* audio_signal,
         void* ref) noexcept
 {
+    Log l;
+
     // TODO: Validate settings
     // TODO: Implement video only version
 
@@ -126,7 +129,6 @@ ErrorCode MovieWriter::writeVideoWithAudio(
     // copy context parameters to stream
     avcodec_parameters_from_context(video_stream->codecpar, video_ctx);
     video_stream->time_base = video_ctx->time_base;
-
 
     // Audio
     auto av_audio_codec_id = Movie::avAudioCodecId(config.audio_codec);

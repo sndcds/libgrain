@@ -1,7 +1,7 @@
 //
 //  OKColor.hpp
 //
-//  Created by Roald Christesen on from 19.12.2024
+//  Created by Roald Christesen on 19.12.2024
 //  Copyright (C) 2025 Roald Christesen. All rights reserved.
 //
 //  This file is part of GrainLib, see <https://grain.one>.

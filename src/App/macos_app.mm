@@ -12,61 +12,48 @@ namespace Grain {
             [NSApplication sharedApplication];
             [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
             [NSApp activateIgnoringOtherApps:YES];
-/*
-            NSString *exePath = [[NSBundle mainBundle] executablePath];
-            std::cout << "exePath: " << [exePath UTF8String] << std::endl;
-            // TODO: Set correct path for app icons
-            // NSString *iconPath = [[NSBundle mainBundle] pathForResource:@"Grain" ofType:@"icns"];
-            // NSImage *icon = [[NSImage alloc] initByReferencingFile:iconPath];
-            NSImage *icon = [[NSImage alloc] initByReferencingFile:@"/Users/roaldchristesen/Documents/Developer/Projects/CLionProjects/grain_demo/Grain.icns"];
-            [NSApp setApplicationIconImage:icon];
-*/
-            NSString *exePath = [[NSBundle mainBundle] executablePath];
-            NSString *exeDir  = [exePath stringByDeletingLastPathComponent];
 
-            NSString *iconPath =
-                [exeDir stringByAppendingPathComponent:@"Grain.icns"];
+            NSString *exe_path = [[NSBundle mainBundle] executablePath];
+            NSString *exe_dir  = [exe_path stringByDeletingLastPathComponent];
 
-            NSImage *icon = [[NSImage alloc] initWithContentsOfFile:iconPath];
+            NSString *icon_path =
+                [exe_dir stringByAppendingPathComponent:@"Grain.icns"];
+
+            NSImage *icon = [[NSImage alloc] initWithContentsOfFile:icon_path];
             [NSApp setApplicationIconImage:icon];
 
             [NSApp run];
         }
     }
 
-
     void _macosApp_addMenu() {
         @autoreleasepool {
-            NSMenu* mainMenu = [[NSMenu alloc] initWithTitle:@"MainMenu"];
-            [NSApp setMainMenu:mainMenu];
+            NSMenu* main_menu = [[NSMenu alloc] initWithTitle:@"MainMenu"];
+            [NSApp setMainMenu:main_menu];
 
             // App Menu
-            NSMenuItem* appMenuItem = [[NSMenuItem alloc] init];
-            [mainMenu addItem:appMenuItem];
+            NSMenuItem* app_menu_item = [[NSMenuItem alloc] init];
+            [main_menu addItem:app_menu_item];
 
-            NSMenu* appMenu = [[NSMenu alloc] initWithTitle:@"App"];
-            [appMenuItem setSubmenu:appMenu];
+            NSMenu* app_menu = [[NSMenu alloc] initWithTitle:@"App"];
+            [app_menu_item setSubmenu:app_menu];
 
-            NSString* appName = [[NSProcessInfo processInfo] processName];
-            NSString* quitTitle = [NSString stringWithFormat:@"Quit %@", appName];
-            SEL quitSel = @selector(terminate:);
+            NSString* app_name = [[NSProcessInfo processInfo] processName];
+            NSString* quit_title = [NSString stringWithFormat:@"Quit %@", app_name];
+            SEL quit_sel = @selector(terminate:);
 
-            NSMenuItem* quitItem = [[NSMenuItem alloc] initWithTitle:quitTitle
-                                                              action:quitSel
-                                                       keyEquivalent:@"q"];
-            [appMenu addItem:quitItem];
+            NSMenuItem* quit_item = [[NSMenuItem alloc] initWithTitle:quit_title action:quit_sel keyEquivalent:@"q"];
+            [app_menu addItem:quit_item];
 
             // File Menu
-            NSMenuItem* fileMenuItem = [[NSMenuItem alloc] init];
-            [mainMenu addItem:fileMenuItem];
+            NSMenuItem* file_menu_item = [[NSMenuItem alloc] init];
+            [main_menu addItem:file_menu_item];
 
-            NSMenu* fileMenu = [[NSMenu alloc] initWithTitle:@"File"];
-            [fileMenuItem setSubmenu:fileMenu];
+            NSMenu* file_menu = [[NSMenu alloc] initWithTitle:@"File"];
+            [file_menu_item setSubmenu:file_menu];
 
-            NSMenuItem* newItem = [[NSMenuItem alloc] initWithTitle:@"New"
-                                                             action:@selector(newDocument:)
-                                                      keyEquivalent:@"n"];
-            [fileMenu addItem:newItem];
+            NSMenuItem* new_item = [[NSMenuItem alloc] initWithTitle:@"New" action:@selector(newDocument:) keyEquivalent:@"n"];
+            [file_menu addItem:new_item];
         }
     }
 
@@ -75,7 +62,6 @@ namespace Grain {
     }
 
     void _macosApp_updateScreenInfos(App* app) {
-
         NSArray* ns_screens = [NSScreen screens];
 
         auto screen_count = static_cast<int32_t>([ns_screens count]);
@@ -142,5 +128,4 @@ namespace Grain {
         }
         return 0;
     }
-
 }

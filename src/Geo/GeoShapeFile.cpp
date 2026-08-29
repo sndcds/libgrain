@@ -1,7 +1,7 @@
 //
 //  GeoShapeFile.cpp
 //
-//  Created by Roald Christesen on from 05.07.2023
+//  Created by Roald Christesen on 05.07.2023
 //  Copyright (C) 2025 Roald Christesen. All rights reserved.
 //
 //  This file is part of GrainLib, see <https://grain.one>.
@@ -412,7 +412,7 @@ namespace Grain {
             // Check if projection file exists
             String prj_file_path = file_path_;
             prj_file_path.replace(".shp", ".prj");
-            if (!File::fileExists(prj_file_path)) {
+            if (!File::isFile(prj_file_path)) {
                 Exception::throwStandard(ErrorCode::FileNotFound);
             }
 
