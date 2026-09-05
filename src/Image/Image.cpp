@@ -25,6 +25,13 @@
 #include <webp/encode.h>
 #include <png.h>
 #include <jpeglib.h>
+#include <curl/curl.h>
+
+#include "Graphic/AppleCGContext.hpp"
+#include <ImageIO/ImageIO.h>
+
+#include <limits>
+#include <new>
 
 
 #if defined(__APPLE__) && defined(__MACH__)
@@ -36,6 +43,54 @@ namespace Grain {
     Image* _mac_loadImageFromFile(const String& file_path, Image::PixelType pixel_type);
 } // namespace Grain
 #endif
+
+
+namespace {
+
+    constexpr size_t kMaxImageDownloadBytes = 32 * 1024 * 1024;
+
+    struct DownloadBuffer {
+        std::vector<uint8_t> bytes;
+        bool exceeds_max_size = false;
+    };
+
+    size_t curlWriteCallback(
+        void* contents,
+        size_t size,
+        size_t count,
+        void* user_data
+    ) noexcept {
+        auto* buffer = static_cast<DownloadBuffer*>(user_data);
+
+        if (!buffer || !contents) {
+            return 0;
+        }
+
+        const size_t byte_count = size * count;
+
+        if (byte_count > kMaxImageDownloadBytes ||
+            buffer->bytes.size() > kMaxImageDownloadBytes - byte_count) {
+            buffer->exceeds_max_size = true;
+            return 0;
+            }
+
+        try {
+            const auto* first = static_cast<const uint8_t*>(contents);
+
+            buffer->bytes.insert(
+                buffer->bytes.end(),
+                first,
+                first + byte_count
+            );
+        }
+        catch (...) {
+            return 0;
+        }
+
+        return byte_count;
+    }
+
+} // namespace
 
 
 namespace Grain {
@@ -2917,6 +2972,177 @@ namespace Grain {
         return ErrorCode::None;
     }
 
+    Image* Image::createFromData(
+        const void* data,
+        size_t data_size,
+        Image::PixelType pixel_type,
+        ErrorCode& out_error
+    ) noexcept {
+        out_error = ErrorCode::None;
+
+        if (!data || data_size == 0) {
+            out_error = ErrorCode::NullPointer;
+            return nullptr;
+        }
+
+        if (data_size > kMaxImageDownloadBytes) {
+            out_error = ErrorCode::FormatMismatch;
+            return nullptr;
+        }
+
+        CFDataRef cf_data = CFDataCreate(
+            kCFAllocatorDefault,
+            static_cast<const UInt8*>(data),
+            static_cast<CFIndex>(data_size)
+        );
+
+        if (!cf_data) {
+            out_error = ErrorCode::MemCantAllocate;
+            return nullptr;
+        }
+
+        CGImageSourceRef image_source =
+            CGImageSourceCreateWithData(cf_data, nullptr);
+
+        CFRelease(cf_data);
+
+        if (!image_source) {
+            out_error = ErrorCode::FormatMismatch;
+            return nullptr;
+        }
+
+        CGImageRef cg_image =
+            CGImageSourceCreateImageAtIndex(image_source, 0, nullptr);
+
+        CFRelease(image_source);
+
+        if (!cg_image) {
+            out_error = ErrorCode::FormatMismatch;
+            return nullptr;
+        }
+
+        const size_t source_width = CGImageGetWidth(cg_image);
+        const size_t source_height = CGImageGetHeight(cg_image);
+
+        if (source_width == 0 ||
+            source_height == 0 ||
+            source_width > std::numeric_limits<int32_t>::max() ||
+            source_height > std::numeric_limits<int32_t>::max()) {
+            CGImageRelease(cg_image);
+            out_error = ErrorCode::FormatMismatch;
+            return nullptr;
+        }
+
+        auto* image = new (std::nothrow) Image(
+            Color::Model::RGBA,
+            static_cast<int32_t>(source_width),
+            static_cast<int32_t>(source_height),
+            pixel_type
+        );
+
+        if (!image || !image->isUsable()) {
+            delete image;
+            CGImageRelease(cg_image);
+            out_error = ErrorCode::MemCantAllocate;
+            return nullptr;
+        }
+
+        AppleCGContext gc;
+
+        if (!image->graphicContext(&gc) || !gc.cgContext()) {
+            delete image;
+            CGImageRelease(cg_image);
+            out_error = ErrorCode::Fatal;
+            return nullptr;
+        }
+
+        CGContextRef context = gc.cgContext();
+
+        // Match Grain's top-left image coordinate convention.
+        CGContextTranslateCTM(context, 0, static_cast<CGFloat>(source_height));
+        CGContextScaleCTM(context, 1, -1);
+
+        CGContextSetBlendMode(context, kCGBlendModeCopy);
+
+        CGContextDrawImage(
+            context,
+            CGRectMake(
+                0,
+                0,
+                static_cast<CGFloat>(source_width),
+                static_cast<CGFloat>(source_height)
+            ),
+            cg_image
+        );
+
+        CGImageRelease(cg_image);
+
+        return image;
+    }
+
+
+    Image* Image::createFromURL(
+        const String& url,
+        Image::PixelType pixel_type,
+        ErrorCode& out_error
+    ) noexcept {
+        out_error = ErrorCode::None;
+
+        if (url.isEmpty()) {
+            out_error = ErrorCode::NullPointer;
+            return nullptr;
+        }
+
+        CURL* curl = curl_easy_init();
+
+        if (!curl) {
+            out_error = ErrorCode::MemCantAllocate;
+            return nullptr;
+        }
+
+        DownloadBuffer buffer;
+
+        curl_easy_setopt(curl, CURLOPT_URL, url.utf8());
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curlWriteCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &buffer);
+
+        curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+        curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 3L);
+        curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
+        curl_easy_setopt(curl, CURLOPT_TIMEOUT, 30L);
+
+        curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L);
+        curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
+
+        const CURLcode curl_result = curl_easy_perform(curl);
+
+        long response_code = 0;
+
+        curl_easy_getinfo(
+            curl,
+            CURLINFO_RESPONSE_CODE,
+            &response_code
+        );
+
+        curl_easy_cleanup(curl);
+
+        if (curl_result != CURLE_OK ||
+            response_code < 200 ||
+            response_code >= 300 ||
+            buffer.exceeds_max_size ||
+            buffer.bytes.empty()) {
+            out_error = ErrorCode::Fatal;
+            return nullptr;
+            }
+
+        return createFromData(
+            buffer.bytes.data(),
+            buffer.bytes.size(),
+            pixel_type,
+            out_error
+        );
+    }
+
 
     Image *Image::createFromFile(const String& file_path, Image::PixelType data_type) {
 #if defined(__APPLE__) && defined(__MACH__)
@@ -3148,9 +3374,9 @@ namespace Grain {
 
 
     Image *Image::copyWithNewSettings(
-            Color::Model color_model,
-            PixelType data_type)
-    noexcept {
+        Color::Model color_model,
+        PixelType data_type
+    ) noexcept {
 
         // TODO: Choose between 601 and 709 grayscale conversion!
         auto image = new (std::nothrow) Image(color_model, width_, height_, data_type);

@@ -378,9 +378,37 @@ namespace Grain {
 
         ErrorCode copyImageData(const ImageAccess& src_image_access) noexcept;
 
-        [[nodiscard]] static Image* createFromFile(const String& file_path, Image::PixelType pixel_type);
-        [[nodiscard]] static Image* createFromRawFile(const String& file_path, Image::PixelType pixel_type);
-        [[nodiscard]] Image* copyWithNewSettings(Color::Model color_model, PixelType pixel_type) noexcept;
+        [[nodiscard]]
+        static Image* createFromData(
+            const void* data,
+            size_t data_size,
+            PixelType pixel_type,
+            ErrorCode& out_error
+        ) noexcept;
+
+        [[nodiscard]]
+        static Image* createFromURL(
+            const String& url,
+            PixelType pixel_type,
+            ErrorCode& out_error
+        ) noexcept;
+
+        [[nodiscard]]
+        static Image* createFromFile(
+            const String& file_path,
+            PixelType pixel_type
+        );
+
+        [[nodiscard]]
+        static Image* createFromRawFile(
+            const String& file_path,
+            PixelType pixel_type
+        );
+
+        [[nodiscard]] Image* copyWithNewSettings(
+            Color::Model color_model,
+            PixelType pixel_type
+        ) noexcept;
 
         ErrorCode scanQuadrilateral(Image* src_image, Quadrilateral& quadrilateral) noexcept;
 

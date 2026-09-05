@@ -127,6 +127,8 @@
 #include "Graphic/Font.hpp"
 #include "Graphic/StrokeStyle.hpp"
 #include "Graphic/AnimationFrameDriver.hpp"
+#include "Graphic/QrCode.hpp"
+#include "Graphic/TextWordLayout.hpp"
 
 #include "GUI/Screen.hpp"
 #include "GUI/Window.hpp"

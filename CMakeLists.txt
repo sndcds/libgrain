@@ -155,6 +155,8 @@ target_sources(libgrain PRIVATE
         src/Graphic/Font.cpp
         src/Graphic/GraphicContext.cpp
         src/Graphic/StrokeStyle.cpp
+        src/Graphic/QrCode.cpp
+        src/Graphic/TextWordLayout.cpp
 
         src/GUI/Event.cpp
         src/GUI/GUIStyle.cpp
@@ -226,6 +228,7 @@ target_sources(libgrain PRIVATE
         src/Type/Type.cpp
 
         src/extern/tinyxml2.cpp
+        src/extern/qrcodegen.cpp
 )
 
 
