@@ -150,7 +150,7 @@ public:
 /**
  *  @brief A SQL database connection.
  */
-class PSQLConnection {
+class PSQLConnection : public Object {
 
 public:
     enum class Status {

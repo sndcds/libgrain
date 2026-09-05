@@ -20,7 +20,7 @@
 
 namespace Grain {
 
-    class SVGGradientColorStop : Object {
+    class SVGGradientColorStop : public Object {
         friend class SVGGradient;
 
     protected:

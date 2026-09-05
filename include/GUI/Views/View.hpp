@@ -46,16 +46,16 @@ public:
     void draw(GraphicContext* gc, const Rectd& dirty_rect) noexcept override;
 
     void handleMouseEntered(const Event &event) noexcept override {
-        needsDisplay();
+        // needsDisplay();
     }
 
     void handleMouseExited(const Event &event) noexcept override {
-        needsDisplay();
+        // needsDisplay();
     }
 
     void handleMouseMoved(const Event &event) noexcept override {
-        if (rect().contains(event.mousePos())) {
-            needsDisplay();
+        if (isHandlingMouseMoved() && rect().contains(event.mousePos())) {
+            // needsDisplay();
         }
     }
 

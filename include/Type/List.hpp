@@ -219,6 +219,9 @@ namespace Grain {
         }
 
         virtual bool resize(int64_t new_size, T value) noexcept {
+            if (new_size < 0) {
+                return false;
+            }
             if (new_size > size()) {
                 int64_t new_n = new_size - size();
                 if (!reserve(new_size)) {
@@ -529,11 +532,45 @@ namespace Grain {
          *  the `clear` method of the base `List` class to remove all elements.
          */
         void clear() noexcept override {
-            auto p = (Object** )List<T>::mutDataPtr();
-            for (int64_t i = 0; i < List<T>::size_; i++) {
+            auto p = (Object** )this->mutDataPtr();
+            for (int64_t i = 0; i < this->size_; i++) {
                 GRAIN_RELEASE(p[i]);
             }
             List<T>::clear();
+        }
+
+        bool resize(int64_t new_size, T value = nullptr) noexcept override {
+            if (new_size < 0) {
+                return false;
+            }
+
+            const int64_t old_size = this->size_;
+
+            if (new_size > old_size) {
+                if (!this->reserve(new_size)) {
+                    return false;
+                }
+
+                for (int64_t i = old_size; i < new_size; ++i) {
+                    this->data_[i] = value;
+
+                    if (value) {
+                        Object::retain(reinterpret_cast<Object*>(value));
+                    }
+
+                    ++this->size_;
+                }
+            }
+            else if (new_size < old_size) {
+                for (int64_t i = new_size; i < old_size; ++i) {
+                    auto _o = static_cast<Object*>(this->data_[i]);
+                    GRAIN_RELEASE(_o);
+                }
+
+                this->size_ = new_size;
+            }
+
+            return true;
         }
 
         /**
@@ -578,13 +615,13 @@ namespace Grain {
                 return ErrorCode::BadArgs;
             }
             if (this->size_ >= this->m_capacity) {
-                auto flag = List<T>::reserve(this->m_capacity + this->m_grow_step);
+                auto flag = this->reserve(this->m_capacity + this->m_grow_step);
                 if (!flag) {
                     return ErrorCode::MemCantGrow;
                 }
             }
 
-            auto data = List<T>::mutDataPtr();
+            auto data = this->mutDataPtr();
 
             // Move all references behind index position to the right
             for (int64_t i = this->size_; i > index; i--) {
@@ -610,13 +647,33 @@ namespace Grain {
          *    - Any other error code if removal failed.
          */
         ErrorCode removeAtIndex(int64_t index) noexcept override {
-            auto ob = List<T>::elementAtIndex(index);
+            auto ob = this->elementAtIndex(index);
             auto result = List<T>::removeAtIndex(index);
             if (result == ErrorCode::None) {
-                auto _ob = (Object*)ob;
-                GRAIN_RELEASE(_ob);
+                auto _o = static_cast<Object*>(ob);
+                GRAIN_RELEASE(_o);
             }
             return result;
+        }
+
+        ErrorCode removeAtIndexReorderingAllowed(int64_t index) noexcept override {
+            if (!this->hasIndex(index)) {
+                return ErrorCode::IndexOutOfRange;
+            }
+
+            const int64_t last_index = this->size_ - 1;
+            T object = this->data_[index];
+
+            if (index != last_index) {
+                this->swapElements(index, last_index);
+            }
+
+            this->size_--;
+
+            auto _o = static_cast<Object*>(object);
+            GRAIN_RELEASE(_o);
+
+            return ErrorCode::None;
         }
     };
 

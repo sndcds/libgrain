@@ -44,7 +44,7 @@ namespace Grain {
     typedef bool (*ComponentHandleEventFunc)(Component* component, const Event& event, void* ref);
     typedef bool (*ComponentHandleMessageFunc)(Component* component, const char* message, void* ref, void* data);
 
-    class Component : Object {
+    class Component : public Object {
 
     public:
         enum class ComponentType {

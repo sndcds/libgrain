@@ -21,7 +21,7 @@ namespace Grain {
     class SVG;
     class SVGPaintStyle;
 
-    class SVGElement : Object {
+    class SVGElement : public Object {
     public:
         enum class ElementType {
             Null = 0,

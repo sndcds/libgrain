@@ -40,7 +40,7 @@ public:
 };
 
 
-class GraphicPath : protected Object {
+class GraphicPath : public Object {
 
     friend class GraphicPathPoint;
     friend class GraphicCompoundPath;
