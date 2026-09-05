@@ -11,7 +11,8 @@
 
 #include "Graphic/TextWordLayout.hpp"
 
-#include <netdb.h>
+#include <algorithm>
+#include <cmath>
 
 
 namespace Grain {
@@ -24,29 +25,35 @@ namespace Grain {
 
     void TextWordLayout::setFont(const Font* font) noexcept {
         font_ = font;
+        clearResult();
     }
 
 
     void TextWordLayout::setText(const char* text) noexcept {
         text_ = text;
+        words_.clear();
+        clearResult();
     }
 
 
     void TextWordLayout::addWord(const char* str) noexcept {
+        clearResult();
         auto word = new(std::nothrow) TextWordLayoutWord();
         if (word) {
             word->text_ = str;
-            words_.push(word);
+            if (!words_.push(word)) {
+                delete word;
+            }
         }
     }
 
 
     void TextWordLayout::splitWords() noexcept {
+        words_.clear();
+        clearResult();
         if (!text_) {
             return;
         }
-
-        words_.clear();
 
         const char* word_start = text_;
         const char* p = text_;
@@ -63,21 +70,6 @@ namespace Grain {
                 continue;
             }
 
-            // UTF-8 soft hyphen: C2 AD
-            if (
-                static_cast<unsigned char>(p[0]) == 0xC2 &&
-                static_cast<unsigned char>(p[1]) == 0xAD
-            ) {
-                // End of word
-                if (p > word_start) {
-                    addWord(std::string(word_start, p - word_start).c_str());
-                }
-
-                p += 2;
-                word_start = p;
-                continue;
-            }
-
             ++p;
         }
 
@@ -85,14 +77,11 @@ namespace Grain {
         if (p > word_start) {
             addWord(std::string(word_start, p - word_start).c_str());
         }
-
-        for (auto word : words_) {
-            std::cout << word->text_ << std::endl;
-        }
     }
 
 
     void TextWordLayout::wordMetrics() noexcept {
+        clearResult();
         if (!font_) {
             return;
         }
@@ -105,19 +94,132 @@ namespace Grain {
     }
 
 
+    void TextWordLayout::clearResult() noexcept {
+        result_.lines_.clear();
+        result_.width_ = 0.0;
+        result_.height_ = 0.0;
+        fits_ = false;
+    }
+
+
+    void TextWordLayout::setDimension(double width, double height) noexcept {
+        dimension_.width_ = width;
+        dimension_.height_ = height;
+        clearResult();
+    }
+
+
+    void TextWordLayout::layout(double width, double height) noexcept {
+        setDimension(width, height);
+        layout();
+    }
+
+
+    int64_t TextWordLayout::wrap(double width, double space_width, double line_height,
+                                bool store, double& longest) noexcept {
+        longest = 0.0;
+        int64_t line_count = 0;
+        int64_t index = 0;
+        while (index < words_.size()) {
+            const auto first = index;
+            double line_width = 0.0;
+            while (index < words_.size()) {
+                auto word = words_.elementAtIndex(index);
+                const double x = index == first ? 0.0 : line_width + space_width;
+                const double next_width = x + word->rect_.width_;
+                // Always consume at least one word, including overwide words.
+                if (index > first && next_width > width) {
+                    break;
+                }
+                if (store) {
+                    word->rect_.x_ = x;
+                    word->rect_.y_ = line_count * line_height;
+                }
+                line_width = next_width;
+                ++index;
+            }
+            if (store) {
+                auto line = new(std::nothrow) TextWordLayoutLine();
+                if (!line) {
+                    return -1;
+                }
+                line->first_word_ = first;
+                line->word_count_ = index - first;
+                line->width_ = line_width;
+                if (!result_.lines_.push(line)) {
+                    delete line;
+                    return -1;
+                }
+            }
+            longest = std::max(longest, line_width);
+            ++line_count;
+        }
+        return line_count;
+    }
+
+
     void TextWordLayout::layout() noexcept {
+        clearResult();
         if (!text_ || !font_) {
             return;
         }
 
         splitWords();
-        wordMetrics();
-
-        int32_t i = 0;
-        for (auto word : words_) {
-            std::cout << i++ << ": " << word->text_ << ", " << word->rect_ << std::endl;
+        if (!std::isfinite(dimension_.width_) || dimension_.width_ <= 0.0 ||
+            !std::isfinite(dimension_.height_) || dimension_.height_ < 0.0) {
+            return;
         }
+        if (words_.size() == 0) {
+            fits_ = true;
+            return;
+        }
+        wordMetrics();
+        const double space_width = font_->textDimension(" ").width_;
+        double line_height = font_->lineHeight();
+        if (!std::isfinite(space_width) || space_width < 0.0 ||
+            !std::isfinite(line_height) || line_height < 0.0) {
+            return;
+        }
+        for (auto word : words_) {
+            if (!std::isfinite(word->rect_.width_) || word->rect_.width_ < 0.0 ||
+                !std::isfinite(word->rect_.height_) || word->rect_.height_ < 0.0) {
+                return;
+            }
+            line_height = std::max(line_height, word->rect_.height_);
+        }
+        if (line_height <= 0.0) {
+            return; // No usable font metrics.
+        }
+
+        int64_t line_count_status = words_.size();
+        double width = dimension_.width_;
+        double accepted_width = width;
+        while (true) {
+            double longest = 0.0;
+            const auto count = wrap(width, space_width, line_height, false, longest);
+            if (count > line_count_status) {
+                break; // Keep the last wrap with the original line count.
+            }
+            line_count_status = count;
+            accepted_width = width;
+            const double next_width = longest - space_width / 2.0;
+            // Single-word lines cannot be improved. Also guard against zero
+            // spaces and floating-point rounding preventing further progress.
+            if (count == words_.size() || next_width <= 0.0 || next_width >= width) {
+                break;
+            }
+            width = next_width;
+        }
+
+        double longest = 0.0;
+        const auto count = wrap(accepted_width, space_width, line_height, true, longest);
+        if (count < 0) {
+            clearResult();
+            return;
+        }
+        result_.width_ = longest;
+        result_.height_ = count * line_height;
+        fits_ = result_.width_ <= dimension_.width_ && result_.height_ <= dimension_.height_;
     }
 
 } // namespace Grain
-
